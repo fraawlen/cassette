@@ -128,11 +128,11 @@ clean:
 
 --build_demos:
 	mkdir -p ${DEST_BUILD}/bin
-	cc ${CFLAGS} ${INC_DEMO} ${LIBS} ${LIBS_DG} ${PATH_DEMO}/bar.c        -o ${DEST_BUILD}/bin/bar
-	cc ${CFLAGS} ${INC_DEMO} ${LIBS} ${LIBS_DG} ${PATH_DEMO}/dialog.c     -o ${DEST_BUILD}/bin/dialog
-	cc ${CFLAGS} ${INC_DEMO} ${LIBS} ${LIBS_DG} ${PATH_DEMO}/game.c       -o ${DEST_BUILD}/bin/game
-	cc ${CFLAGS} ${INC_DEMO} ${LIBS} ${LIBS_DG} ${PATH_DEMO}/hello.c      -o ${DEST_BUILD}/bin/hello
-	cc ${CFLAGS} ${INC_DEMO} ${LIBS} ${LIBS_DG} ${PATH_DEMO}/layouts.c    -o ${DEST_BUILD}/bin/layouts
-	cc ${CFLAGS} ${INC_DEMO} ${LIBS} ${LIBS_DG} ${PATH_DEMO}/navigation.c -o ${DEST_BUILD}/bin/navigation
-	cc ${CFLAGS} ${INC_DEMO} ${LIBS} ${LIBS_DG} ${PATH_DEMO}/showcase.c   -o ${DEST_BUILD}/bin/showcase
-	cc ${CFLAGS} ${INC_DEMO} ${LIBS} ${LIBS_DG} ${PATH_DEMO}/windows.c    -o ${DEST_BUILD}/bin/windows
+	cc -no-pie ${CFLAGS} ${INC_DEMO} ${PATH_DEMO}/bar.c        -o ${DEST_BUILD}/bin/bar        ${LIBS} ${LIBS_DG}
+	cc -no-pie ${CFLAGS} ${INC_DEMO} ${PATH_DEMO}/dialog.c     -o ${DEST_BUILD}/bin/dialog     ${LIBS} ${LIBS_DG}
+	cc -no-pie ${CFLAGS} ${INC_DEMO} ${PATH_DEMO}/game.c       -o ${DEST_BUILD}/bin/game       ${LIBS} ${LIBS_DG}
+	cc -no-pie ${CFLAGS} ${INC_DEMO} ${PATH_DEMO}/hello.c      -o ${DEST_BUILD}/bin/hello      ${LIBS} ${LIBS_DG}
+	cc -no-pie ${CFLAGS} ${INC_DEMO} ${PATH_DEMO}/layouts.c    -o ${DEST_BUILD}/bin/layouts    ${LIBS} ${LIBS_DG}
+	cc -no-pie ${CFLAGS} ${INC_DEMO} ${PATH_DEMO}/navigation.c -o ${DEST_BUILD}/bin/navigation ${LIBS} ${LIBS_DG}
+	cc -no-pie ${CFLAGS} ${INC_DEMO} ${PATH_DEMO}/showcase.c   -o ${DEST_BUILD}/bin/showcase   ${LIBS} ${LIBS_DG}
+	cc -no-pie ${CFLAGS} ${INC_DEMO} ${PATH_DEMO}/windows.c    -o ${DEST_BUILD}/bin/windows    ${LIBS} ${LIBS_DG}
