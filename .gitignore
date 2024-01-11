@@ -1,0 +1,13 @@
+concepts/**
+build/**
+misc/**
+prototypes/**
+website/**
+
+*.swj
+*.swk
+*.swl
+*.swm
+*.swn
+*.swo
+*.swp
