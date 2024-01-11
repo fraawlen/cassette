@@ -94,7 +94,7 @@ main(int argc, char **argv)
 	/* library modules initialisation */
 	dg_core_init(argc, argv, NULL, NULL, NULL);
 	dg_base_init();
-s/old-licenses/lgpl-2.1.html)
+
 	/* object instantiation */
 	dg_core_window_t *w = dg_core_window_create(DG_CORE_WINDOW_DEFAULT);
 	dg_core_grid_t   *g = dg_core_grid_create(1, 1);
