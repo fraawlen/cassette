@@ -23,12 +23,19 @@
 
 #include <dg/core/core.h>
 #include <dg/base/base.h>
+#include <dg/wm/wm.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define _MSG "Hello world !"
+#define _MSG "Reconfigure DG"
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+static void _callback_button (dg_core_cell_t *c);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -49,17 +56,19 @@ main(int argc, char **argv)
 
 	dg_core_init(argc, argv, NULL, NULL, NULL);
 	dg_base_init();
+	dg_wm_init(NULL);
 
 	/* object instantiation */
 
 	_w = dg_core_window_create(DG_CORE_WINDOW_DEFAULT);
 	_g = dg_core_grid_create(1, 1);
-	_c = dg_base_label_create();
+	_c = dg_base_button_create();
 
 	/* cell configuration */
 
-	dg_base_label_set_label(_c, _MSG);
-	dg_base_label_set_origin(_c, DG_BASE_ORIGIN_CENTER);
+	dg_base_button_set_label(_c, _MSG);
+	dg_base_button_set_label_origin(_c, DG_BASE_ORIGIN_CENTER);
+	dg_base_button_set_callback_pressed(_c, _callback_button);
 
 	/* grid configuration */
 
@@ -73,7 +82,7 @@ main(int argc, char **argv)
 
 	dg_core_window_push_grid(_w, _g);
 	dg_core_window_set_extra_size(_w, 10, 5);
-	dg_core_window_rename(_w, "Hello", NULL);
+	dg_core_window_rename(_w, "Reconfig", NULL);
 	dg_core_window_activate(_w);
 
 	/* event loop */
@@ -86,8 +95,19 @@ main(int argc, char **argv)
 	dg_core_grid_destroy(_g);
 	dg_core_cell_destroy(_c);
 
+	dg_wm_reset();
 	dg_base_reset();
 	dg_core_reset();
 
 	return 0;
+}
+
+/************************************************************************************************************/
+/* _ ********************************************************************************************************/
+/************************************************************************************************************/
+
+static void
+_callback_button(dg_core_cell_t *c)
+{
+	dg_wm_reconfig_all();
 }

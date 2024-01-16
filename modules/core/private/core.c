@@ -40,8 +40,9 @@
 #include <xcb/xinput.h>
 #include <xkbcommon/xkbcommon.h>
 
-#include "public/core.h"
+#include "public/atom.h"
 #include "public/config.h"
+#include "public/core.h"
 #include "public/errno.h"
 #include "public/input_buffer.h"
 #include "public/stack.h"
@@ -366,40 +367,45 @@ static bool (*_fn_event_preprocessor)  (xcb_generic_event_t *x_ev) = NULL;
 
 static void (*_fn_callback_loop_signal) (uint32_t serial) = NULL;
 
-/* recurrent x11 atoms */
+/* common X atoms */
 
-static xcb_atom_t _xa_clip = 0; /* "CLIPBOARD"              */
-static xcb_atom_t _xa_time = 0; /* "TIMESTAMP"              */
-static xcb_atom_t _xa_mult = 0; /* "MULTIPLE"               */
-static xcb_atom_t _xa_trgt = 0; /* "TARGETS"                */
-static xcb_atom_t _xa_utf8 = 0; /* "UTF8_STRING"            */
-static xcb_atom_t _xa_prot = 0; /* "WM_PROTOCOLS"           */
-static xcb_atom_t _xa_del  = 0; /* "WM_DELETE_WINDOW"       */ 
-static xcb_atom_t _xa_foc  = 0; /* "WM_TAKE_FOCUS"          */
-static xcb_atom_t _xa_nam  = 0; /* "WM_NAME"                */
-static xcb_atom_t _xa_ico  = 0; /* "WM_ICON_MANE"           */
-static xcb_atom_t _xa_cls  = 0; /* "WM_CLASS"               */
-static xcb_atom_t _xa_cmd  = 0; /* "WM_COMMAND"             */
-static xcb_atom_t _xa_host = 0; /* "WM_CLIENT_MACHINE"      */
-static xcb_atom_t _xa_lead = 0; /* "WM_CLIENT_LEADER"       */
-static xcb_atom_t _xa_ping = 0; /* "_NET_WM_PING"           */
-static xcb_atom_t _xa_pid  = 0; /* "_NET_WM_PID"            */
-static xcb_atom_t _xa_nnam = 0; /* "_NET_WM_NAME"           */
-static xcb_atom_t _xa_nico = 0; /* "_NET_WM_ICON_NAME"      */
-static xcb_atom_t _xa_isig = 0; /* "_INTERNAL_LOOP_SIGNAL"  */
-static xcb_atom_t _xa_sig  = 0; /* "_DG_SIGNALS"            */
-static xcb_atom_t _xa_vers = 0; /* "_DG_VERSION"            */
-static xcb_atom_t _xa_stt  = 0; /* "_DG_WINDOW_STATES"      */
-static xcb_atom_t _xa_dfoc = 0; /* "_DG_WINDOW_FOCUS"       */
-static xcb_atom_t _xa_tmp1 = 0; /* "_DG_PASTE_TMP_1"        */
-static xcb_atom_t _xa_tmp2 = 0; /* "_DG_PASTE_TMP_2"        */
-static xcb_atom_t _xa_tmp3 = 0; /* "_DG_PASTE_TMP_3"        */
-static xcb_atom_t _xa_won  = 0; /* "_DG_STATE_WIN_ACTIVE"   */
-static xcb_atom_t _xa_wena = 0; /* "_DG_STATE_WIN_DISABLED" */
-static xcb_atom_t _xa_plck = 0; /* "_DG_STATE_GRID_LOCK"    */
-static xcb_atom_t _xa_flck = 0; /* "_DG_STATE_FOCUS_LOCK"   */
+static xcb_atom_t _xa_clip = 0; /* "CLIPBOARD"         */
+static xcb_atom_t _xa_time = 0; /* "TIMESTAMP"         */
+static xcb_atom_t _xa_mult = 0; /* "MULTIPLE"          */
+static xcb_atom_t _xa_trgt = 0; /* "TARGETS"           */
+static xcb_atom_t _xa_utf8 = 0; /* "UTF8_STRING"       */
+static xcb_atom_t _xa_prot = 0; /* "WM_PROTOCOLS"      */
+static xcb_atom_t _xa_del  = 0; /* "WM_DELETE_WINDOW"  */ 
+static xcb_atom_t _xa_foc  = 0; /* "WM_TAKE_FOCUS"     */
+static xcb_atom_t _xa_nam  = 0; /* "WM_NAME"           */
+static xcb_atom_t _xa_ico  = 0; /* "WM_ICON_MANE"      */
+static xcb_atom_t _xa_cls  = 0; /* "WM_CLASS"          */
+static xcb_atom_t _xa_cmd  = 0; /* "WM_COMMAND"        */
+static xcb_atom_t _xa_host = 0; /* "WM_CLIENT_MACHINE" */
+static xcb_atom_t _xa_lead = 0; /* "WM_CLIENT_LEADER"  */
+static xcb_atom_t _xa_ping = 0; /* "_NET_WM_PING"      */
+static xcb_atom_t _xa_pid  = 0; /* "_NET_WM_PID"       */
+static xcb_atom_t _xa_nnam = 0; /* "_NET_WM_NAME"      */
+static xcb_atom_t _xa_nico = 0; /* "_NET_WM_ICON_NAME" */
 
-static xcb_atom_t _xa_accl[DG_CORE_CONFIG_MAX_ACCELS] = {0}; /* "_DG_WINDOW_FNx" x = 1..12 */
+/* DG custom atoms */
+
+static xcb_atom_t _xa_sig  = 0; /* DG_CORE_ATOM_SIGNALS           */
+static xcb_atom_t _xa_vers = 0; /* DG_CORE_ATOM_VERSION           */
+static xcb_atom_t _xa_stt  = 0; /* DG_CORE_ATOM_WINDOW_STATES     */
+static xcb_atom_t _xa_dfoc = 0; /* DG_CORE_ATOM_WINDOW_FOCUS      */
+static xcb_atom_t _xa_tmp1 = 0; /* DG_CORE_ATOM_PASTE_TMP_1       */
+static xcb_atom_t _xa_tmp2 = 0; /* DG_CORE_ATOM_PASTE_TMP_2       */
+static xcb_atom_t _xa_tmp3 = 0; /* DG_CORE_ATOM_PASTE_TMP_3       */
+static xcb_atom_t _xa_won  = 0; /* DG_CORE_ATOM_WINDOW_ACTIVE     */
+static xcb_atom_t _xa_wena = 0; /* DG_CORE_ATOM_WINDOW_DISABLED   */
+static xcb_atom_t _xa_plck = 0; /* DG_CORE_ATOM_WINDOW_GRID_LOCK  */
+static xcb_atom_t _xa_flck = 0; /* DG_CORE_ATOM_WINDOW_FOCUS_LOCK */
+static xcb_atom_t _xa_conf = 0; /* DG_CORE_ATOM_RECONFIG          */
+static xcb_atom_t _xa_acl  = 0; /* DG_CORE_ATOM_ACCEL             */
+
+static xcb_atom_t _xa_isig = 0;                              /* "_INTERNAL_LOOP_SIGNAL"        */
+static xcb_atom_t _xa_aclx[DG_CORE_CONFIG_MAX_ACCELS] = {0}; /* "_DG_WINDOW_ACCEL_x" x = 1..12 */
 
 /* extensions op codes */
 
@@ -529,7 +535,7 @@ dg_core_init(int argc, char *const *argv, const char *class_name, const char *cl
 		goto err_crit;
 	}
 
-	/* get custom atoms */
+	/* get atoms */
 
 	_xa_clip = _x_get_atom("CLIPBOARD");
 	_xa_time = _x_get_atom("TIMESTAMP");
@@ -550,22 +556,24 @@ dg_core_init(int argc, char *const *argv, const char *class_name, const char *cl
 	_xa_nnam = _x_get_atom("_NET_WM_NAME");
 	_xa_nico = _x_get_atom("_NET_WM_ICON_NAME");
 	_xa_isig = _x_get_atom("_INTERNAL_LOOP_SIGNAL");
-	_xa_sig  = _x_get_atom("_DG_SIGNALS");
-	_xa_vers = _x_get_atom("_DG_VERSION");
-	_xa_stt  = _x_get_atom("_DG_WINDOW_STATE");
-	_xa_dfoc = _x_get_atom("_DG_WINDOW_FOCUS");
-	_xa_tmp1 = _x_get_atom("_DG_PASTE_TMP_1");
-	_xa_tmp2 = _x_get_atom("_DG_PASTE_TMP_2");
-	_xa_tmp3 = _x_get_atom("_DG_PASTE_TMP_3");
-	_xa_won  = _x_get_atom("_DG_STATE_WIN_ACTIVE");
-	_xa_wena = _x_get_atom("_DG_STATE_WIN_DISABLED");
-	_xa_plck = _x_get_atom("_DG_STATE_GRID_LOCK");
-	_xa_flck = _x_get_atom("_DG_STATE_FOCUS_LOCK");
+	_xa_sig  = _x_get_atom(DG_CORE_ATOM_SIGNALS);
+	_xa_vers = _x_get_atom(DG_CORE_ATOM_VERSION);
+	_xa_stt  = _x_get_atom(DG_CORE_ATOM_WINDOW_STATES);
+	_xa_dfoc = _x_get_atom(DG_CORE_ATOM_WINDOW_FOCUS);
+	_xa_tmp1 = _x_get_atom(DG_CORE_ATOM_PASTE_TMP_1);
+	_xa_tmp2 = _x_get_atom(DG_CORE_ATOM_PASTE_TMP_2);
+	_xa_tmp3 = _x_get_atom(DG_CORE_ATOM_PASTE_TMP_3);
+	_xa_won  = _x_get_atom(DG_CORE_ATOM_WINDOW_ACTIVE);
+	_xa_wena = _x_get_atom(DG_CORE_ATOM_WINDOW_DISABLED);
+	_xa_plck = _x_get_atom(DG_CORE_ATOM_WINDOW_GRID_LOCK);
+	_xa_flck = _x_get_atom(DG_CORE_ATOM_WINDOW_FOCUS_LOCK);
+	_xa_conf = _x_get_atom(DG_CORE_ATOM_RECONFIG);
+	_xa_acl  = _x_get_atom(DG_CORE_ATOM_ACCEL);
 
 	char s[20];
-	for (int i = 0; i < sizeof(_xa_accl) / sizeof(xcb_atom_t); i++) {
-		sprintf(s, "_DG_WINDOW_FN%i", i + 1);
-		_xa_accl[i] = _x_get_atom(s);
+	for (int i = 0; i < sizeof(_xa_aclx) / sizeof(xcb_atom_t); i++) {
+		sprintf(s, DG_CORE_ATOM_ACCEL "_%i", i + 1);
+		_xa_aclx[i] = _x_get_atom(s);
 	}
 
 	_sel_targets[0] = _xa_trgt;
@@ -616,6 +624,7 @@ dg_core_init(int argc, char *const *argv, const char *class_name, const char *cl
 
 	/* set leader window properties */
 
+	const size_t vers_n = strlen(DG_CORE_VERSION);
 	const size_t name_n = strlen(_class[0]);
 	const size_t pid    = getpid();
 
@@ -628,8 +637,10 @@ dg_core_init(int argc, char *const *argv, const char *class_name, const char *cl
 	_x_set_prop(false, _x_win_l, _xa_lead, XCB_ATOM_WINDOW,   1,      &_x_win_l);
 	_x_set_prop(false, _x_win_l, _xa_pid,  XCB_ATOM_CARDINAL, 1,      &pid);
 	_x_set_prop(false, _x_win_l, _xa_nam,  XCB_ATOM_STRING,   host_n, host);
+	_x_set_prop(false, _x_win_l, _xa_vers, XCB_ATOM_STRING,   vers_n, DG_CORE_VERSION);
 	_x_set_prop(false, _x_win_l, _xa_nam,  XCB_ATOM_STRING,   name_n, _class[0]);
 	_x_set_prop(false, _x_win_l, _xa_nnam, _xa_utf8,          name_n, _class[0]);
+	_x_set_prop(false, _x_win_l, _xa_prot, XCB_ATOM_ATOM,     1,      &_xa_sig);
 	for (size_t i = 0; i < argc; i++) {
 		_x_set_prop(true, _x_win_l, _xa_cmd, XCB_ATOM_STRING, strlen(argv[i]) + 1, argv[i]);
 	}
@@ -755,9 +766,11 @@ dg_core_reset(void)
 	_xa_wena = 0;
 	_xa_plck = 0;
 	_xa_flck = 0;
+	_xa_conf = 0;
+	_xa_acl  = 0;
 
-	for (int i = 0; i < sizeof(_xa_accl) / sizeof(xcb_atom_t); i++) {
-		_xa_accl[i] = 0;
+	for (int i = 0; i < sizeof(_xa_aclx) / sizeof(xcb_atom_t); i++) {
+		_xa_aclx[i] = 0;
 	}
 
 	for (int i = 0; i < sizeof(_sel_targets) / sizeof(xcb_atom_t); i++) {
@@ -1369,7 +1382,7 @@ dg_core_window_set_accelerator(
 	w->accels[accel_id].fn = fn;
 	w->accels[accel_id].name = name;
 
-	_x_set_prop(false, w->x_win, _xa_accl[accel_id], _xa_utf8, strlen(name), name);
+	_x_set_prop(false, w->x_win, _xa_aclx[accel_id], _xa_utf8, strlen(name), name);
 	xcb_flush(_x_con);
 }
 
@@ -2778,11 +2791,13 @@ _event_client_message(xcb_client_message_event_t *x_ev)
 		return;
 	}
 
-	xcb_atom_t xa = x_ev->data.data32[0];
+	const xcb_atom_t xa  = x_ev->data.data32[0];
+	const xcb_atom_t xa2 = x_ev->data.data32[1];
+	const xcb_atom_t xa3 = x_ev->data.data32[2];
 
 	/* window independent messages */
 
-	if (xa == _xa_sig) {
+	if (xa == _xa_sig && xa2 == _xa_conf) {
 		_misc_reconfig();
 		return;
 	}
@@ -2791,6 +2806,13 @@ _event_client_message(xcb_client_message_event_t *x_ev)
 
 	dg_core_window_t *w = _loop_find_window(x_ev->window);
 	if (!w) {
+		return;
+	}
+
+	if (xa == _xa_sig && xa2 == _xa_acl) {
+		if (xa3 > 0 && xa3 <= DG_CORE_CONFIG_MAX_ACCELS) {
+			_RUN_FN(w->accels[xa3 - 1].fn, w, xa3);
+		}
 		return;
 	}
 
@@ -5136,9 +5158,9 @@ _window_update_wm_focus_hints(dg_core_window_t *w)
 		return;
 	}
 
-	/* otherwhise a focus info event to get the geometry of the subfocused cell in case the focused area */
-	/* hosts a meta-cell. If the event is refused, then the focused area/cell is not a meta-cell and its */
-	/* grid-level geometry can be used instead                                                           */
+	/* otherwhise send a focus info event to get the geometry of the subfocused cell in case the focused  */
+	/* area hosts a meta-cell. If the event is refused, then the focused area/cell is not a meta-cell and */
+	/* its grid-level geometry can be used instead                                                        */
 
 	_rect_t rect = {0};
 

@@ -35,7 +35,7 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DG_CORE_VERSION "0.8a"
+#define DG_CORE_VERSION "0.2.0"
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -50,7 +50,7 @@ typedef struct _window_t dg_core_window_t;
 typedef struct _grid_t dg_core_grid_t;
 
 /**
- * Opaque struct representing individual cell (or widgets) to be added to the grid layouts.
+ * Opaque struct representing individual cells (aka widgets) to be added to grids.
  */
 typedef struct _cell_t dg_core_cell_t;
 

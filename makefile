@@ -1,17 +1,3 @@
-# Copyright © 2024 Frawwlen <fraawlen@posteo.net>
-#
-# This file is part of the Derelict Graphics (DG) GUI library.
-#
-# This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
-# Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
-# License or (at your option) any later version.
-#
-# This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
-# See the LGPL for the specific language governing rights and limitations.
-#
-# You should have received a copy of the GNU Lesser General Public License along with this program. If not,
-# see <http://www.gnu.org/licenses/>.
-
 #############################################################################################################
 # DESTINATIONS ##############################################################################################
 #############################################################################################################
@@ -26,17 +12,21 @@ DEST_BUILD   = "build"
 
 PATH_CORE = "modules/core"
 PATH_BASE = "modules/base"
+PATH_WM   = "modules/wm"
 PATH_DEMO = "demos"
 
 INC_CORE = -I${PATH_CORE}
 INC_BASE = -I${DEST_BUILD}/include -I${PATH_BASE}
+INC_WM   = -I${DEST_BUILD}/include -I${PATH_WM}
 INC_DEMO = -I${DEST_BUILD}/include
 
 SRC_CORE = ${PATH_CORE}/private
 SRC_BASE = ${PATH_BASE}/private
+SRC_WM   = ${PATH_WM}/private
 
 OBJ_CORE = ${DEST_BUILD}/obj/core
 OBJ_BASE = ${DEST_BUILD}/obj/base
+OBJ_WM   = ${DEST_BUILD}/obj/wm
 
 CFLAGS = \
 	-std=c11                     \
@@ -63,13 +53,14 @@ LIBS_DG = \
 	-L${DEST_BUILD}/lib \
 	-Wl,-rpath='$$ORIGIN'/../lib \
 	-ldg \
-	-ldg-base
+	-ldg-base \
+	-ldg-wm
 
 #############################################################################################################
 # PUBLIC TARGETS ############################################################################################
 #############################################################################################################
 
-build: --build_prep --build_core --build_base
+build: --build_prep --build_core --build_base --build_wm
 
 demos: --build_demos
 
@@ -89,11 +80,14 @@ clean:
 --build_prep:
 	mkdir -p ${DEST_BUILD}/include/dg/core
 	mkdir -p ${DEST_BUILD}/include/dg/base
+	mkdir -p ${DEST_BUILD}/include/dg/wm
 	mkdir -p ${DEST_BUILD}/obj/core
 	mkdir -p ${DEST_BUILD}/obj/base
+	mkdir -p ${DEST_BUILD}/obj/wm
 	mkdir -p ${DEST_BUILD}/lib
 	cp -r ${PATH_CORE}/public/* ${DEST_BUILD}/include/dg/core
 	cp -r ${PATH_BASE}/public/* ${DEST_BUILD}/include/dg/base
+	cp -r ${PATH_WM}/public/*   ${DEST_BUILD}/include/dg/wm
 
 --build_core:
 	cc -fPIC ${CFLAGS} ${INC_CORE} -c ${SRC_CORE}/core.c         -o ${OBJ_CORE}/core.o
@@ -124,7 +118,11 @@ clean:
 	cc -fPIC ${CFLAGS} ${INC_BASE} -c ${SRC_BASE}/placeholder.c -o ${OBJ_BASE}/placeholder.o
 	cc -fPIC ${CFLAGS} ${INC_BASE} -c ${SRC_BASE}/spinner.c     -o ${OBJ_BASE}/spinner.o
 	cc -fPIC ${CFLAGS} ${INC_BASE} -c ${SRC_BASE}/switch.c      -o ${OBJ_BASE}/switch.o
-	cc -shared ${OBJ_BASE}/*.o -o ${DEST_BUILD}/lib/libdg-base.so ${LIBS}
+	cc -shared ${OBJ_BASE}/*.o -o ${DEST_BUILD}/lib/libdg-base.so ${LIBS} -ldg
+
+--build_wm:
+	cc -fPIC ${CFLAGS} ${INC_WM} -c ${SRC_WM}/wm.c -o ${OBJ_WM}/wm.o
+	cc -shared ${OBJ_WM}/*.o -o ${DEST_BUILD}/lib/libdg-wm.so ${LIBS} -ldg
 
 --build_demos:
 	mkdir -p ${DEST_BUILD}/bin
@@ -134,5 +132,7 @@ clean:
 	cc -no-pie ${CFLAGS} ${INC_DEMO} ${PATH_DEMO}/hello.c      -o ${DEST_BUILD}/bin/hello      ${LIBS} ${LIBS_DG}
 	cc -no-pie ${CFLAGS} ${INC_DEMO} ${PATH_DEMO}/layouts.c    -o ${DEST_BUILD}/bin/layouts    ${LIBS} ${LIBS_DG}
 	cc -no-pie ${CFLAGS} ${INC_DEMO} ${PATH_DEMO}/navigation.c -o ${DEST_BUILD}/bin/navigation ${LIBS} ${LIBS_DG}
+	cc -no-pie ${CFLAGS} ${INC_DEMO} ${PATH_DEMO}/reconfig.c   -o ${DEST_BUILD}/bin/reconfig   ${LIBS} ${LIBS_DG}
 	cc -no-pie ${CFLAGS} ${INC_DEMO} ${PATH_DEMO}/showcase.c   -o ${DEST_BUILD}/bin/showcase   ${LIBS} ${LIBS_DG}
 	cc -no-pie ${CFLAGS} ${INC_DEMO} ${PATH_DEMO}/windows.c    -o ${DEST_BUILD}/bin/windows    ${LIBS} ${LIBS_DG}
+	cc -no-pie ${CFLAGS} ${INC_DEMO} ${PATH_DEMO}/wm.c         -o ${DEST_BUILD}/bin/wm         ${LIBS} ${LIBS_DG}

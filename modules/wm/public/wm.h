@@ -18,10 +18,13 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef DG_BASE_H
-#define DG_BASE_H
+#ifndef DG_CORE_WM_H
+#define DG_CORE_WM_H
 
 #include <stdbool.h>
+#include <stdlib.h>
+
+#include <xcb/xcb.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,53 +35,78 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Initialises this module and enables the other functions of this header and sub-headers (unless explicitely
- * stated). Should only be called once until dg_base_reset(). Can be called again after, however all
- * components created with this header and sub-headers should only be used within the session they have been
- * instantiated in. This module and its initialisation is dependent on the core module and therefore requires
- * the core module to be initialised first to use it. If any error is raised when this function is called,
- * then the module failed to initialise and remain in an unitialised state.
+ * Initialises this module and enables the other functions of this header (unless explicitely stated).
+ * Should only be called once until dg_wm_reset(). Can be called again after.
  *
- * @error DG_CORE_ERRNO_DEPENDENCY : the core module has not been initialised before this function call.
- * @error DG_CORE_ERRNO_MEMORY     : internal configuration issues, the module can't initialize 
- * @error DG_CORE_ERRNO_STACK      : inherited from dg_core_resource_push_group()
- * @error DG_CORE_ERRNO_HASHTABLE  : inherited from dg_core_resource_load_group()
+ * @error DG_CORE_ERRNO_XCB          : failed to fetch X atoms
+ * @error DG_CORE_ERRNO_XCB_CRITICAL : failed to setup an X sesssion, the module can't initialize
  */
-void dg_base_init(void);
+void dg_wm_init(xcb_connection_t *connection);
 
 /**
- * Resets the module to its inital state pre dg_base_init() and frees all memory internally allocated.
+ * Resets the module to its inital state pre dg_wm_init() and frees all memory internally allocated.
  * This function can be used when the module is not initialized.
  */
-void dg_base_reset(void);
+void dg_wm_reset(void);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
- /**
+/**
  * Checks if the module has been initialized.
  * This function can be used when the module is not initialized.
  *
  * @return : self-explanatory
  */
-bool dg_base_is_init(void);
+bool dg_wm_is_init(void);
 
 /************************************************************************************************************/
-/* CELLS (SUB-INCLUDES) *************************************************************************************/
+/* WM HELPERS ***********************************************************************************************/
 /************************************************************************************************************/
 
-/* passives */
+/**
+ *
+ */
+void dg_wm_reconfig_client(xcb_window_t window);
 
-#include "cells/gap.h"
-#include "cells/gauge.h"
-#include "cells/indicator.h"
-#include "cells/label.h"
-#include "cells/placeholder.h"
-#include "cells/spinner.h"
+/**
+ *
+ */
+void dg_wm_reconfig_all(void);
 
-/* interactables */
+/**
+ *
+ */
+void dg_wm_trigger_accelerator(xcb_window_t window, int accel_id);
 
-#include "cells/button.h"
-#include "cells/switch.h"
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * Checks whether a given X window is a DG window or not.
+ *
+ * @param window  : window to check
+ * @param version : optional version string pointer, if given, the DG version string will be copied into it,
+ *                  the array is malloc'd internally and therefore needs to be explicitely freed.
+ *
+ * @return : self-explanatory
+ *
+ * @error DG_CORE_ERRNO_MEMORY : failed to copy version string
+ * @error DG_CORE_ERRNO_XCB    : failed to fetch X properties
+ */
+bool dg_wm_is_dg_client(xcb_window_t window, char **version);
+
+/**
+ *
+ */
+bool dg_wm_test_accelerator(xcb_window_t window, int accel_id, char **name);
+
+/**
+ * Checks whether a given X window supports DG signals.
+ *
+ * @param window : window to check
+ *
+ * @return : self-explanatory
+ */
+bool dg_wm_test_signals(xcb_window_t window);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -88,4 +116,5 @@ bool dg_base_is_init(void);
 }
 #endif
 
-#endif /* DG_BASE_H */
+#endif /* DG_CORE_WM_H */
+

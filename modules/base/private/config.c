@@ -332,7 +332,6 @@ _set_defaults(void)
 	_conf.common_cl[ 5] = (dg_core_color_t){0.659, 0.365, 0.498, 1.000};
 	_conf.common_cl[ 6] = (dg_core_color_t){0.388, 0.584, 0.396, 1.000};
 	_conf.common_cl[ 7] = (dg_core_color_t){0.627, 0.569, 0.490, 1.000};
-
 	_conf.common_cl[ 8] = (dg_core_color_t){0.545, 0.486, 0.431, 1.000};
 	_conf.common_cl[ 9] = (dg_core_color_t){0.933, 0.271, 0.192, 1.000};
 	_conf.common_cl[10] = (dg_core_color_t){0.686, 0.698, 0.141, 1.000};
@@ -353,29 +352,25 @@ _set_defaults(void)
 
 	/* cell styles */
 
-	_conf.gap_style         = style_passive;
-	_conf.label_style       = style_passive;
-	_conf.placeholder_style = style_passive;
-	_conf.spinner_style     = style_passive;
-
-	_conf.button_style[0] = style_clickable_idle;
-	_conf.button_style[1] = style_clickable_focused;
-	_conf.button_style[2] = style_clickable_pressed;
-	_conf.button_style[3] = style_clickable_disabled;
-
-	_conf.gauge_style[0] = style_passive;
-	_conf.gauge_style[1] = style_passive;
-	_conf.gauge_style[2] = style_passive;
-
+	_conf.gap_style          = style_passive;
+	_conf.label_style        = style_passive;
+	_conf.placeholder_style  = style_passive;
+	_conf.button_style[0]    = style_clickable_idle;
+	_conf.button_style[1]    = style_clickable_focused;
+	_conf.button_style[2]    = style_clickable_pressed;
+	_conf.button_style[3]    = style_clickable_disabled;
+	_conf.gauge_style[0]     = style_passive;
+	_conf.gauge_style[1]     = style_passive;
+	_conf.gauge_style[2]     = style_passive;
 	_conf.indicator_style[0] = style_passive;
 	_conf.indicator_style[1] = style_passive;
 	_conf.indicator_style[2] = style_passive;
 	_conf.indicator_style[3] = style_passive;
-
-	_conf.switch_style[0] = style_clickable_idle;
-	_conf.switch_style[1] = style_clickable_focused;
-	_conf.switch_style[2] = style_clickable_pressed;
-	_conf.switch_style[3] = style_clickable_disabled;
+	_conf.switch_style[0]    = style_clickable_idle;
+	_conf.switch_style[1]    = style_clickable_focused;
+	_conf.switch_style[2]    = style_clickable_pressed;
+	_conf.switch_style[3]    = style_clickable_disabled;
+	_conf.spinner_style      = style_passive;
 
 	/* style modifications */
 
@@ -435,24 +430,20 @@ _set_generated(void)
 	_scale_style(&_conf.gap_style);
 	_scale_style(&_conf.label_style);
 	_scale_style(&_conf.placeholder_style);
-	_scale_style(&_conf.spinner_style);
-
 	_scale_style(&_conf.button_style[0]);
 	_scale_style(&_conf.button_style[1]);
 	_scale_style(&_conf.button_style[2]);
 	_scale_style(&_conf.button_style[3]);
-
 	_scale_style(&_conf.gauge_style[0]);
 	_scale_style(&_conf.gauge_style[1]);
 	_scale_style(&_conf.gauge_style[2]);
-
 	_scale_style(&_conf.switch_style[0]);
 	_scale_style(&_conf.switch_style[1]);
 	_scale_style(&_conf.switch_style[2]);
 	_scale_style(&_conf.switch_style[3]);
-
 	_scale_style(&_conf.indicator_style[0]);
 	_scale_style(&_conf.indicator_style[1]);
 	_scale_style(&_conf.indicator_style[2]);
 	_scale_style(&_conf.indicator_style[3]);
+	_scale_style(&_conf.spinner_style);
 }

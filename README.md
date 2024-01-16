@@ -38,6 +38,7 @@ If you have any questions about this project, you can contact me by email : <fra
 To build DG you will need the following tools :
 - C11 compiler with a stdlib + POSIX 200809L
 - Make
+- RSync
 
 As well as these direct dependencies :
 - Cairo
