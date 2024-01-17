@@ -40,15 +40,14 @@
 #include <xcb/xinput.h>
 #include <xkbcommon/xkbcommon.h>
 
-#include "public/atom.h"
-#include "public/config.h"
-#include "public/core.h"
-#include "public/errno.h"
-#include "public/input_buffer.h"
-#include "public/stack.h"
-#include "public/util.h"
-
-#include "private/config.h"
+#include "atom.h"
+#include "config.h"
+#include "config-private.h"
+#include "core.h"
+#include "errno.h"
+#include "input_buffer.h"
+#include "stack.h"
+#include "util.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/

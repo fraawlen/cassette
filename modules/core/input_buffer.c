@@ -22,33 +22,33 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <unistd.h>
 
-#include "public/util.h"
+#include "errno.h"
+#include "input_buffer.h"
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-int16_t
-dg_core_util_convert_fp1616_to_int16(int32_t f)
+void
+dg_core_input_buffer_clear(dg_core_input_buffer_t *buf)
 {
-	return (int16_t)(f >> 16);
+	assert(buf);
+
+	buf->n = 0;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-dg_core_util_dict_match(const dg_core_util_dict_t *dict, size_t dict_n, const char *key, int *target)
+dg_core_input_buffer_find(dg_core_input_buffer_t *buf, uint32_t id, size_t *pos)
 {
-	assert(dict);
+	assert(buf);
 
-	for (int i = 0; i < dict_n; i++) {
-		if (!strcmp(key, dict[i].key)) {
-			if (target) {
-				*target = dict[i].value;
+	for (size_t i = 0; i < buf->n; i++) {
+		if (buf->inputs[i].id == id) {
+			if (pos) {
+				*pos = i;
 			}
 			return true;
 		}
@@ -59,78 +59,94 @@ dg_core_util_dict_match(const dg_core_util_dict_t *dict, size_t dict_n, const ch
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-const char *
-dg_core_util_dict_inverse_match(const dg_core_util_dict_t *dict, size_t dict_n, int value)
+bool
+dg_core_input_buffer_init(dg_core_input_buffer_t *buf, size_t n_alloc, dg_core_input_buffer_kind_t kind)
 {
-	assert(dict);
+	assert(buf && n_alloc > 0);
 
-	for (int i = 0; i < dict_n; i++) {
-		if (value == dict[i].value) {
-			return dict[i].key;
-		}
+	buf->inputs = malloc(n_alloc * sizeof(dg_core_input_buffer_slot_t));
+	if (!buf->inputs) {
+		dg_core_errno_set(DG_CORE_ERRNO_MEMORY);	
+		return false;
 	}
 
-	return NULL;
-}
+	buf->kind = kind;
+	buf->n_alloc = n_alloc;
+	buf->n = 0;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-unsigned long
-dg_core_util_get_time(void)
-{
-	struct timespec ts = {0};
-
-	clock_gettime(CLOCK_MONOTONIC, &ts);
-
-	return ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
+	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-dg_core_util_test_bounds(int16_t x_test,  int16_t y_test, int16_t x_bound, int16_t y_bound, int16_t w_bound,
-	int16_t h_bound)
+dg_core_input_buffer_pull(dg_core_input_buffer_t *buf, uint32_t id)
 {
-	if (w_bound < 0) {
-		w_bound *= -1;
-		x_bound -= w_bound;
+	assert(buf);
+
+	size_t i = 0;
+
+	if (!dg_core_input_buffer_find(buf, id, &i)) {
+		return false;
 	}
 
-	if (h_bound < 0) {
-		h_bound *= -1;
-		y_bound -= h_bound;
+	buf->n--;
+	for (; i < buf->n; i++) {
+		buf->inputs[i] = buf->inputs[i + 1];
 	}
 
-	return x_test >= x_bound && x_test < x_bound + w_bound &&
-	       y_test >= y_bound && y_test < y_bound + h_bound;
+	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-dg_core_util_test_env(const char *name)
+dg_core_input_buffer_push_coord(dg_core_input_buffer_t *buf, uint32_t id, int16_t x, int16_t y)
 {
-	const char *val = getenv(name);
+	assert(buf && buf->kind == DG_CORE_INPUT_BUFFER_COORD);
 
-	return val && val[0] != '\0';
+	dg_core_input_buffer_pull(buf, id);
+
+	if (buf->n >= buf->n_alloc) {
+		return false;
+	}
+
+	buf->inputs[buf->n].id = id;
+	buf->inputs[buf->n].x  = x;
+	buf->inputs[buf->n].y  = y;
+	buf->n++;
+
+	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-char *
-dg_core_util_trim_str(char *str)
+bool
+dg_core_input_buffer_push_ref(dg_core_input_buffer_t *buf, uint32_t id, void *ref)
 {
-	if (!str) {
-		return NULL;
+	assert(buf && buf->kind == DG_CORE_INPUT_BUFFER_REF);
+
+	dg_core_input_buffer_pull(buf, id);
+
+	if (buf->n >= buf->n_alloc) {
+		return false;
 	}
 
-	for (size_t i = strlen(str) - 1; i > 0 && (str[i] == ' ' || str[i] == '\t' || str[i] == '\n'); i--) {
-		str[i] = '\0';
-	}
+	buf->inputs[buf->n].id  = id;
+	buf->inputs[buf->n].ref = ref;
+	buf->n++;
 
-	while (str[0] != '\0' && (str[0] == ' ' || str[0] == '\t' || str[0] == '\n')) {
-		str++;
-	}
+	return true;
+}
 
-	return str[0] != '\0' ? str : NULL;
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+dg_core_input_buffer_reset(dg_core_input_buffer_t *buf)
+{
+	assert(buf);
+
+	buf->n = 0;
+	buf->n_alloc = 0;
+	free(buf->inputs);
 }

@@ -26,14 +26,13 @@
 
 #include <cairo/cairo.h>
 
-#include "public/color.h"
-#include "public/config.h"
-#include "public/errno.h"
-#include "public/hashtable.h"
-#include "public/resource.h"
-#include "public/util.h"
-
-#include "private/config.h"
+#include "color.h"
+#include "config.h"
+#include "config-private.h"
+#include "errno.h"
+#include "hashtable.h"
+#include "resource.h"
+#include "util.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/

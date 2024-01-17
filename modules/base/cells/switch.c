@@ -26,23 +26,22 @@
 #include <dg/core/config.h>
 #include <dg/core/errno.h>
 
-#include "public/base.h"
-#include "public/config.h"
-#include "public/draw.h"
-#include "public/origin.h"
-#include "public/rotation.h"
-#include "public/string.h"
-#include "public/util.h"
-#include "public/zone.h"
-
-#include "private/base.h"
+#include "../base.h"
+#include "../base-private.h"
+#include "../config.h"
+#include "../draw.h"
+#include "../origin.h"
+#include "../rotation.h"
+#include "../string.h"
+#include "../util.h"
+#include "../zone.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
 #define _PROPS ((_props_t*)dg_core_cell_get_props(c))
-#define _STYLE (&dg_base_config_get()->button_style[_PROPS->state])
+#define _STYLE (&dg_base_config_get()->switch_style[_PROPS->state])
 #define _CL(X) dg_base_config_get()->common_cl[X]
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -60,9 +59,8 @@ typedef struct {
 	_state_t state;
 	dg_base_string_t label;
 	dg_base_origin_t label_og;
-	dg_base_button_icon_t icon;
-	void (*fn_press)(dg_core_cell_t *c);
-	void (*fn_icon)(dg_core_cell_t *c, dg_base_zone_t *z);
+	void (*fn_press)(dg_core_cell_t *c, bool is_on);
+	bool on;
 } _props_t;
 
 /************************************************************************************************************/
@@ -73,62 +71,16 @@ static void _destroy (dg_core_cell_t *c);
 static void _events  (dg_core_cell_t *c, dg_core_cell_event_t *ev);
 static void _draw    (dg_core_cell_t *c, dg_core_cell_drawing_context_t *dc);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-const dg_base_draw_point_t link_box[5] = {
-	{0.3, 0.0},
-	{0.0, 0.0},
-	{0.0, 1.0},
-	{1.0, 1.0},
-	{1.0, 0.7},
-};
-
-const dg_base_draw_point_t link_head_in[3] = {
-	{0.3, 0.4},
-	{0.3, 0.7},
-	{0.6, 0.7},
-};
-
-const dg_base_draw_point_t link_head_out[3] = {
-	{0.7, 0.0},
-	{1.0, 0.0},
-	{1.0, 0.3},
-};
-
-const dg_base_draw_point_t _left[3] = {
-	{0.5, 0.0},
-	{0.0, 0.5},
-	{0.5, 1.0},
-};
-
-const dg_base_draw_point_t _right[3] = {
-	{0.5, 0.0},
-	{1.0, 0.5},
-	{0.5, 1.0},
-};
-
-const dg_base_draw_point_t _up[3] = {
-	{0.0, 0.5},
-	{0.5, 0.0},
-	{1.0, 0.5},
-};
-
-const dg_base_draw_point_t _down[3] = {
-	{0.0, 0.5},
-	{0.5, 1.0},
-	{1.0, 0.5},
-};
-
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 dg_core_cell_t *
-dg_base_button_create(void)
+dg_base_switch_create(void)
 {
 	DG_BASE_IS_INIT;
 
-	const unsigned int serial = dg_base_get_type_serial(DG_BASE_BUTTON);
+	const unsigned int serial = dg_base_get_type_serial(DG_BASE_SWITCH);
 
 	_props_t *props = malloc(sizeof(_props_t));
 	if (!props) {
@@ -145,31 +97,30 @@ dg_base_button_create(void)
 	props->state    = _IDLE;
 	props->label    = DG_BASE_STRING_EMPTY;
 	props->label_og = DG_BASE_ORIGIN_LEFT;
-	props->icon     = DG_BASE_BUTTON_ICON_NONE;
 	props->fn_press = NULL;
-	props->fn_icon  = NULL;
+	props->on       = false;
 
 	return c;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-dg_base_button_set_callback_icon(dg_core_cell_t *c, void (*fn)(dg_core_cell_t *c, dg_base_zone_t *z))
+bool
+dg_base_switch_is_on(dg_core_cell_t *c)
 {
 	DG_BASE_IS_INIT;
-	DG_BASE_IS_CELL(c, DG_BASE_BUTTON);
+	DG_BASE_IS_CELL(c, DG_BASE_SWITCH);
 
-	_PROPS->fn_icon = fn;
+	return _PROPS->on;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dg_base_button_set_callback_pressed(dg_core_cell_t *c, void (*fn)(dg_core_cell_t *c))
+dg_base_switch_set_callback_pressed(dg_core_cell_t *c, void (*fn)(dg_core_cell_t *c, bool is_on))
 {
 	DG_BASE_IS_INIT;
-	DG_BASE_IS_CELL(c, DG_BASE_BUTTON);
+	DG_BASE_IS_CELL(c, DG_BASE_SWITCH);
 
 	_PROPS->fn_press = fn;
 }
@@ -177,38 +128,64 @@ dg_base_button_set_callback_pressed(dg_core_cell_t *c, void (*fn)(dg_core_cell_t
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dg_base_button_set_icon(dg_core_cell_t *c, dg_base_button_icon_t icon)
+dg_base_switch_set_label(dg_core_cell_t *c, const char *str)
 {
 	DG_BASE_IS_INIT;
-	DG_BASE_IS_CELL(c, DG_BASE_BUTTON);
-
-	_PROPS->icon = icon;
-	
-	dg_core_cell_redraw(c);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-dg_base_button_set_label(dg_core_cell_t *c, const char *str)
-{
-	DG_BASE_IS_INIT;
-	DG_BASE_IS_CELL(c, DG_BASE_BUTTON);
+	DG_BASE_IS_CELL(c, DG_BASE_SWITCH);
 	
 	dg_base_string_set(&_PROPS->label, str);
 	
 	dg_core_cell_redraw(c);
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+dg_base_switch_set_label_origin(dg_core_cell_t *c, dg_base_origin_t og)
+{
+	DG_BASE_IS_INIT;
+	DG_BASE_IS_CELL(c, DG_BASE_SWITCH);
+	
+	_PROPS->label_og = og;
+	
+	dg_core_cell_redraw(c);
+}
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dg_base_button_set_label_origin(dg_core_cell_t *c, dg_base_origin_t og)
+dg_base_switch_set_off(dg_core_cell_t *c)
 {
 	DG_BASE_IS_INIT;
-	DG_BASE_IS_CELL(c, DG_BASE_BUTTON);
+	DG_BASE_IS_CELL(c, DG_BASE_SWITCH);
+
+	_PROPS->on = false;
 	
-	_PROPS->label_og = og;
+	dg_core_cell_redraw(c);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+dg_base_switch_set_on(dg_core_cell_t *c)
+{
+	DG_BASE_IS_INIT;
+	DG_BASE_IS_CELL(c, DG_BASE_SWITCH);
+
+	_PROPS->on = true;
+	
+	dg_core_cell_redraw(c);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+dg_base_switch_toggle(dg_core_cell_t *c)
+{
+	DG_BASE_IS_INIT;
+	DG_BASE_IS_CELL(c, DG_BASE_SWITCH);
+
+	_PROPS->on = !_PROPS->on;
 	
 	dg_core_cell_redraw(c);
 }
@@ -229,95 +206,18 @@ _destroy(dg_core_cell_t *c)
 static void
 _draw(dg_core_cell_t *c, dg_core_cell_drawing_context_t *dc)
 {
+	const dg_core_color_t cl = _PROPS->on ? _STYLE->cl_highlight : _CL(DG_BASE_CONFIG_COLOR_BLACK);
+
 	dg_base_zone_t zb = dg_base_zone_get_body(dc,  _STYLE);
-	dg_base_zone_t zl = dg_base_zone_get_label(dc, _STYLE, _PROPS->icon != DG_BASE_BUTTON_ICON_NONE);
+	dg_base_zone_t zl = dg_base_zone_get_label(dc, _STYLE, true);
 	dg_base_zone_t zi = dg_base_zone_get_icon(dc,  _STYLE);
 	
 	dg_base_draw_body(&zb,  _STYLE);
 	dg_base_draw_focus(&zb, _STYLE, dc);
 	dg_base_draw_label(&zl, _STYLE, &_PROPS->label, _PROPS->label_og);
 
-	/* if there is no label, center the icon */
-
-	if (_PROPS->label.n_chars == 0) {
-		zi.px = dc->cell_px + (dc->cell_pw - zi.pw) / 2;
-		zi.py = dc->cell_py + (dc->cell_ph - zi.ph) / 2;
-	}
-
-	/* icons */
-
-	switch (_PROPS->icon) {
-
-		case DG_BASE_BUTTON_ICON_NONE:
-			break;
-
-		case DG_BASE_BUTTON_ICON_YES:
-			dg_base_draw_rectangle(&zi, _CL(DG_BASE_CONFIG_COLOR_GREEN), 0.25, 0.25, 0.75, 0.75, 0);
-			dg_base_draw_rectangle(&zi, _STYLE->cl_secondary, 0.25, 0.25, 0.75, 0.75, _STYLE->thick_icon * 2);
-			break;
-
-		case DG_BASE_BUTTON_ICON_NO:
-			dg_base_draw_rectangle(&zi, _CL(DG_BASE_CONFIG_COLOR_RED), 0.25, 0.25, 0.75, 0.75, 0);
-			dg_base_draw_rectangle(&zi, _STYLE->cl_secondary, 0.25, 0.25, 0.75, 0.75, _STYLE->thick_icon * 2);
-			break;
-
-		case DG_BASE_BUTTON_ICON_NEUTRAL:
-			dg_base_draw_rectangle(&zi, _CL(DG_BASE_CONFIG_COLOR_BRIGHT_BLACK), 0.25, 0.25, 0.75, 0.75, 0);
-			dg_base_draw_rectangle(&zi, _STYLE->cl_secondary, 0.25, 0.25, 0.75, 0.75, _STYLE->thick_icon * 2);
-			break;
-
-		case DG_BASE_BUTTON_ICON_LINK_IN:
-			dg_base_draw_lines(&zi,   _STYLE->cl_primary, link_box,     DG_BASE_DRAW_POINTS_LEN(link_box),      _STYLE->thick_icon);
-			dg_base_draw_lines(&zi,   _STYLE->cl_primary, link_head_in, DG_BASE_DRAW_POINTS_LEN(link_head_out), _STYLE->thick_icon);
-			dg_base_draw_segment(&zi, _STYLE->cl_primary, 0.3, 0.7, 1.0, 0.0, _STYLE->thick_icon);
-			break;
-
-		case DG_BASE_BUTTON_ICON_LINK_OUT:
-			dg_base_draw_lines(&zi,   _STYLE->cl_primary, link_box,      DG_BASE_DRAW_POINTS_LEN(link_box),      _STYLE->thick_icon);
-			dg_base_draw_lines(&zi,   _STYLE->cl_primary, link_head_out, DG_BASE_DRAW_POINTS_LEN(link_head_out), _STYLE->thick_icon);
-			dg_base_draw_segment(&zi, _STYLE->cl_primary, 1.0, 0.0, 0.3, 0.7, _STYLE->thick_icon);
-			break;
-
-		case DG_BASE_BUTTON_ICON_CROSS:
-			dg_base_draw_segment(&zi, _STYLE->cl_primary, 0.0, 0.0, 1.0, 1.0, _STYLE->thick_icon);
-			dg_base_draw_segment(&zi, _STYLE->cl_primary, 0.0, 1.0, 1.0, 0.0, _STYLE->thick_icon);
-			break;
-
-		case DG_BASE_BUTTON_ICON_PLUS:
-			dg_base_draw_segment(&zi, _STYLE->cl_primary, 0.0, 0.5, 1.0, 0.5, _STYLE->thick_icon);
-			dg_base_draw_segment(&zi, _STYLE->cl_primary, 0.5, 0.0, 0.5, 1.0, _STYLE->thick_icon);
-			break;
-
-		case DG_BASE_BUTTON_ICON_MINUS:
-			dg_base_draw_segment(&zi, _STYLE->cl_primary, 0.0, 0.5, 1.0, 0.5, _STYLE->thick_icon);
-			break;
-
-		case DG_BASE_BUTTON_ICON_LEFT:
-			dg_base_draw_lines(&zi,   _STYLE->cl_primary, _left, DG_BASE_DRAW_POINTS_LEN(_left), _STYLE->thick_icon);
-			dg_base_draw_segment(&zi, _STYLE->cl_primary, 0.0, 0.5, 1.0, 0.5, _STYLE->thick_icon);
-			break;
-
-		case DG_BASE_BUTTON_ICON_RIGHT:
-			dg_base_draw_lines(&zi,   _STYLE->cl_primary, _right, DG_BASE_DRAW_POINTS_LEN(_right), _STYLE->thick_icon);
-			dg_base_draw_segment(&zi, _STYLE->cl_primary, 0.0, 0.5, 1.0, 0.5, _STYLE->thick_icon);
-			break;
-
-		case DG_BASE_BUTTON_ICON_UP:
-			dg_base_draw_lines(&zi,   _STYLE->cl_primary, _up,  DG_BASE_DRAW_POINTS_LEN(_up), _STYLE->thick_icon);
-			dg_base_draw_segment(&zi, _STYLE->cl_primary, 0.5, 0.0, 0.5, 1.0, _STYLE->thick_icon);
-			break;
-
-		case DG_BASE_BUTTON_ICON_DOWN:
-			dg_base_draw_lines(&zi,   _STYLE->cl_primary, _down,  DG_BASE_DRAW_POINTS_LEN(_down), _STYLE->thick_icon);
-			dg_base_draw_segment(&zi, _STYLE->cl_primary, 0.5, 0.0, 0.5, 1.0, _STYLE->thick_icon);
-			break;
-
-		case DG_BASE_BUTTON_ICON_CUSTOM:
-			if (_PROPS->fn_icon) {
-				_PROPS->fn_icon(c, &zi);
-			}
-			break;
-	}
+	dg_base_draw_rectangle(&zi, cl,                 0.00, 0.00, 1.00, 1.00, 0);
+	dg_base_draw_rectangle(&zi, _STYLE->cl_primary, 0.00, 0.00, 1.00, 1.00, _STYLE->thick_icon * 2);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -416,8 +316,11 @@ _events(dg_core_cell_t *c, dg_core_cell_event_t *ev)
 
 	if (old_state != _PROPS->state) {
 		ev->msg |= DG_CORE_CELL_EVENT_MSG_REQUEST_UPDATE;
-		if (run_callback && _PROPS->fn_press) {
-			_PROPS->fn_press(c);
+		if (run_callback) {
+			_PROPS->on = !_PROPS->on;
+			if (_PROPS->fn_press) {
+				_PROPS->fn_press(c, _PROPS->on);
+			}
 		}
 	}
 }

@@ -18,7 +18,6 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -26,29 +25,40 @@
 #include <dg/core/config.h>
 #include <dg/core/errno.h>
 
-#include "public/base.h"
-#include "public/config.h"
-#include "public/draw.h"
-#include "public/origin.h"
-#include "public/string.h"
-#include "public/zone.h"
-
-#include "private/base.h"
+#include "../base.h"
+#include "../base-private.h"
+#include "../config.h"
+#include "../draw.h"
+#include "../origin.h"
+#include "../string.h"
+#include "../zone.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
 #define _PROPS ((_props_t*)dg_core_cell_get_props(c))
-#define _STYLE (&dg_base_config_get()->spinner_style)
+#define _STYLE (&dg_base_config_get()->indicator_style[_PROPS->state])
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+typedef enum {
+	_OFF       = 0,
+	_ON        = 1,
+	_CRIT_LOW  = 2,
+	_CRIT_HIGH = 3,
+} _state_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 typedef struct {
+	_state_t state;
 	dg_base_string_t label;
 	dg_base_origin_t label_og;
-	double angle;
-	bool spinning;
+	bool blink_on;
+	void (*fn_blink)(dg_core_cell_t *c, bool crit_on);
+	unsigned long anim_count;
+	unsigned int  anim_multi;
 } _props_t;
 
 /************************************************************************************************************/
@@ -64,11 +74,11 @@ static void _draw    (dg_core_cell_t *c, dg_core_cell_drawing_context_t *dc);
 /************************************************************************************************************/
 
 dg_core_cell_t *
-dg_base_spinner_create(void)
+dg_base_indicator_create(void)
 {
 	DG_BASE_IS_INIT;
 
-	const unsigned int serial = dg_base_get_type_serial(DG_BASE_SPINNER);
+	const unsigned int serial = dg_base_get_type_serial(DG_BASE_INDICATOR);
 
 	_props_t *props = malloc(sizeof(_props_t));
 	if (!props) {
@@ -82,10 +92,13 @@ dg_base_spinner_create(void)
 		return NULL;
 	}
 
-	props->label    = DG_BASE_STRING_EMPTY;
-	props->label_og = DG_BASE_ORIGIN_LEFT;
-	props->angle    = 0.0;
-	props->spinning = true;
+	props->state      = _OFF;
+	props->label      = DG_BASE_STRING_EMPTY;
+	props->label_og   = DG_BASE_ORIGIN_CENTER;
+	props->blink_on   = false;
+	props->fn_blink   = NULL; 
+	props->anim_multi = 1;
+	props->anim_count = 0;
 
 	return c;
 }
@@ -93,12 +106,27 @@ dg_base_spinner_create(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dg_base_spinner_pause(dg_core_cell_t *c)
+dg_base_indicator_set_callback_blink(dg_core_cell_t *c, void (*fn)(dg_core_cell_t *c, bool crit_on))
 {
 	DG_BASE_IS_INIT;
-	DG_BASE_IS_CELL(c, DG_BASE_SPINNER);
+	DG_BASE_IS_CELL(c, DG_BASE_INDICATOR);
+	
+	_PROPS->fn_blink = fn;
+}
 
-	_PROPS->spinning = false;
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+dg_base_indicator_set_critical(dg_core_cell_t *c, unsigned int blink_multiplier)
+{
+	DG_BASE_IS_INIT;
+	DG_BASE_IS_CELL(c, DG_BASE_INDICATOR);
+	
+	_PROPS->anim_multi = blink_multiplier;
+	if (_PROPS->state != _CRIT_HIGH && _PROPS->state != _CRIT_LOW) {
+		_PROPS->state = _CRIT_HIGH;
+		_PROPS->anim_count = 0;
+	}
 
 	dg_core_cell_redraw(c);
 }
@@ -106,36 +134,23 @@ dg_base_spinner_pause(dg_core_cell_t *c)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dg_base_spinner_play(dg_core_cell_t *c)
+dg_base_indicator_set_label(dg_core_cell_t *c, const char *str)
 {
 	DG_BASE_IS_INIT;
-	DG_BASE_IS_CELL(c, DG_BASE_SPINNER);
-
-	_PROPS->spinning = false;
-
-	dg_core_cell_redraw(c);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-dg_base_spinner_set_label(dg_core_cell_t *c, const char *str)
-{
-	DG_BASE_IS_INIT;
-	DG_BASE_IS_CELL(c, DG_BASE_SPINNER);
-
+	DG_BASE_IS_CELL(c, DG_BASE_INDICATOR);
+	
 	dg_base_string_set(&_PROPS->label, str);
-
+	
 	dg_core_cell_redraw(c);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dg_base_spinner_set_label_origin(dg_core_cell_t *c, dg_base_origin_t og)
+dg_base_indicator_set_label_origin(dg_core_cell_t *c, dg_base_origin_t og)
 {
 	DG_BASE_IS_INIT;
-	DG_BASE_IS_CELL(c, DG_BASE_SPINNER);
+	DG_BASE_IS_CELL(c, DG_BASE_INDICATOR);
 	
 	_PROPS->label_og = og;
 	
@@ -145,13 +160,26 @@ dg_base_spinner_set_label_origin(dg_core_cell_t *c, dg_base_origin_t og)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dg_base_spinner_toggle(dg_core_cell_t *c)
+dg_base_indicator_set_off(dg_core_cell_t *c)
 {
 	DG_BASE_IS_INIT;
-	DG_BASE_IS_CELL(c, DG_BASE_SPINNER);
+	DG_BASE_IS_CELL(c, DG_BASE_INDICATOR);
+	
+	_PROPS->state = _OFF;
+	
+	dg_core_cell_redraw(c);
+}
 
-	_PROPS->spinning = !_PROPS->spinning;
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void
+dg_base_indicator_set_on(dg_core_cell_t *c)
+{
+	DG_BASE_IS_INIT;
+	DG_BASE_IS_CELL(c, DG_BASE_INDICATOR);
+	
+	_PROPS->state = _ON;
+	
 	dg_core_cell_redraw(c);
 }
 
@@ -162,13 +190,21 @@ dg_base_spinner_toggle(dg_core_cell_t *c)
 static void
 _animate(dg_core_cell_t *c, dg_core_cell_drawing_context_t *dc)
 {
-	if (!_PROPS->spinning) {
+	if (_PROPS->state == _ON || _PROPS->state == _OFF) {
 		return;
 	}
-	
-	_PROPS->angle += _STYLE->anim_speed / 1000000.0 * dc->delay;
-	fmod(_PROPS->angle, DG_BASE_DRAW_PI * 2);
 
+	const bool high = _PROPS->state == _CRIT_HIGH;
+
+	_PROPS->anim_count += dc->delay;
+	if (_PROPS->anim_count >= _STYLE->anim_speed * 1000 / _PROPS->anim_multi) {
+		_PROPS->anim_count = 0;
+		_PROPS->state = high ? _CRIT_LOW : _CRIT_HIGH;
+		if (_PROPS->fn_blink) {
+			_PROPS->fn_blink(c, high);
+		}
+	}
+	
 	dc->msg |= DG_CORE_CELL_DRAW_MSG_REQUEST_UPDATE;
 }
 
@@ -185,25 +221,18 @@ _destroy(dg_core_cell_t *c)
 
 static void
 _draw(dg_core_cell_t *c, dg_core_cell_drawing_context_t *dc)
-{
+{	
 	/* update animation */
 
 	_animate(c, dc);
 
 	/* draw */
-
-	const double x1 = 0.5 + 0.5 * cos(_PROPS->angle);
-	const double x2 = 0.5 + 0.5 * cos(_PROPS->angle + DG_BASE_DRAW_PI);
-	const double y1 = 0.5 + 0.5 * sin(_PROPS->angle);
-	const double y2 = 0.5 + 0.5 * sin(_PROPS->angle + DG_BASE_DRAW_PI);
-
-	dg_base_zone_t zb = dg_base_zone_get_body(dc,  _STYLE);
-	dg_base_zone_t zl = dg_base_zone_get_label(dc, _STYLE, true);
-	dg_base_zone_t zi = dg_base_zone_get_icon(dc,  _STYLE);
+	
+	dg_base_zone_t zb = dg_base_zone_get_body(dc, _STYLE);
+	dg_base_zone_t zf = dg_base_zone_get_foreground(dc, _STYLE);
+	dg_base_zone_t zl = dg_base_zone_get_label(dc, _STYLE, false);
 
 	dg_base_draw_body(&zb,  _STYLE);
+	dg_base_draw_fill(&zf,  _STYLE->cl_highlight);
 	dg_base_draw_label(&zl, _STYLE, &_PROPS->label, _PROPS->label_og);
-
-	dg_base_draw_circle(&zi,  _STYLE->cl_primary, 0.5, 0.5, 0.5,     _STYLE->thick_icon);
-	dg_base_draw_segment(&zi, _STYLE->cl_primary, x1,  y1,  x2,  y2, _STYLE->thick_icon);
 }

@@ -24,11 +24,10 @@
 #include <dg/core/core.h>
 #include <dg/core/errno.h>
 
-#include "public/base.h"
-#include "public/config.h"
-
-#include "private/base.h"
-#include "private/config.h"
+#include "base.h"
+#include "base-private.h"
+#include "config.h"
+#include "config-private.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/

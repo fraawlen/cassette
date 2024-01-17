@@ -22,12 +22,11 @@
 
 #include <dg/core/core.h>
 
-#include "public/base.h"
-#include "public/config.h"
-#include "public/draw.h"
-#include "public/zone.h"
-
-#include "private/base.h"
+#include "../base.h"
+#include "../base-private.h"
+#include "../config.h"
+#include "../draw.h"
+#include "../zone.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/

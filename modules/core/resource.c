@@ -31,12 +31,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "public/color.h"
-#include "public/errno.h"
-#include "public/hashtable.h"
-#include "public/resource.h"
-#include "public/stack.h"
-#include "public/util.h"
+#include "color.h"
+#include "errno.h"
+#include "hashtable.h"
+#include "resource.h"
+#include "stack.h"
+#include "util.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/

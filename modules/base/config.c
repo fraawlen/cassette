@@ -24,9 +24,8 @@
 #include <dg/core/config.h>
 #include <dg/core/resource.h>
 
-#include "public/config.h"
-
-#include "private/config.h"
+#include "config.h"
+#include "config-private.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/

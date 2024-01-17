@@ -27,15 +27,14 @@
 #include <dg/core/config.h>
 #include <dg/core/errno.h>
 
-#include "public/base.h"
-#include "public/config.h"
-#include "public/draw.h"
-#include "public/origin.h"
-#include "public/rotation.h"
-#include "public/string.h"
-#include "public/zone.h"
-
-#include "private/base.h"
+#include "../base.h"
+#include "../base-private.h"
+#include "../config.h"
+#include "../draw.h"
+#include "../origin.h"
+#include "../rotation.h"
+#include "../string.h"
+#include "../zone.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/

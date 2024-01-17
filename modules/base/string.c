@@ -23,11 +23,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include </usr/include/string.h>
 
 #include <dg/core/errno.h>
 
-#include "public/string.h"
+#include "string.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
