@@ -1,5 +1,5 @@
 /**
- * Copyright © 2024 Frawwlen <fraawlen@posteo.net>
+ * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
  * This file is part of the Derelict Graphics (DG) GUI library.
  *
