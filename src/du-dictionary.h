@@ -106,6 +106,16 @@ void du_dictionary_reset(du_dictionary_t *dict);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Finds the slot matching key + group and frees it. If the key + group combo does not exist this function
+ * has no effect.
+ *
+ * @param dict  : dictionary to search through
+ * @param key   : string key to use
+ * @param group : group to match
+ */
+void du_dictionary_erase_value(du_dictionary_t *dict, const char *key, int group);
+
+/**
  * Finds a suitable slot for a matching key + group and fills it with the given group, computed hash and value.
  * If the key + group combo already exists its value will be overwritten. A NULL key is allowed but is
  * equivalent to a "" key.
@@ -118,16 +128,6 @@ void du_dictionary_reset(du_dictionary_t *dict);
  * @param value : value to set
  */
 void du_dictionary_set_value(du_dictionary_t *dict, const char *key, int group, int64_t value);
-
-/**
- * Finds the slot matching key + group and frees it. If the key + group combo does not exists this function
- * has no effect.
- *
- * @param dict  : dictionary to search through
- * @param key   : string key to use
- * @param group : group to match
- */
-void du_dictionary_erase_value(du_dictionary_t *dict, const char *key, int group);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
