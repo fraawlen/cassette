@@ -10,6 +10,8 @@ DEST_BUILD   := build
 # INTERNAL VARIABLES ########################################################################################
 #############################################################################################################
 
+OUTPUT_NAME := du
+
 DIR_SRC := src
 DIR_INC := $(DEST_BUILD)/inc
 DIR_LIB := $(DEST_BUILD)/lib
@@ -26,16 +28,16 @@ FLAGS := -std=c99 -pedantic -Wall -Wextra -O3 -D_POSIX_C_SOURCE=200809L
 #############################################################################################################
 
 build: --prep $(LIST_OBJ)
-	cc -shared ${DIR_OBJ}/*.o -o ${DIR_LIB}/libdu.so ${DIR_LIBS}
-	ar rcs ${DIR_LIB}/libdu.a ${DIR_OBJ}/*.o
+	cc -shared $(DIR_OBJ)/*.o -o $(DIR_LIB)/lib$(OUTPUT_NAME).so $(DIR_LIBS)
+	ar rcs $(DIR_LIB)/lib$(OUTPUT_NAME).a $(DIR_OBJ)/*.o
 
 install:
-	mkdir -p ${DEST_HEADERS}
+	mkdir -p $(DEST_HEADERS)
 	cp $(DIR_INC)/* $(DEST_HEADERS)/
 	cp $(DIR_LIB)/* $(DEST_LIBS)/
 
 clean:
-	rm -rf ${DEST_BUILD}
+	rm -rf $(DEST_BUILD)
 
 #############################################################################################################
 # PRIVATE TARGETS ###########################################################################################
