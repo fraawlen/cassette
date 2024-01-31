@@ -79,6 +79,7 @@ void
 du_tracker_init(du_tracker_t *tracker, size_t n_alloc)
 {
 	assert(tracker);
+	du_status_test(tracker->status, return);
 
 	if (n_alloc == 0) {
 		*tracker = (du_tracker_t)DU_TRACKER_EMPTY;

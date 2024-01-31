@@ -79,7 +79,7 @@ du_string_t
 du_string_duplicate(const du_string_t *str)
 {
 	assert(str);
-	du_status_test(str->status, return (du_string_t)DU_STRING_EMPTY);
+	du_status_test(str->status, return *str);
 
 	du_string_t str_dup = DU_STRING_EMPTY;
 	du_string_set(&str_dup, str->chars);
@@ -95,7 +95,7 @@ du_string_from_double(double d, int precision)
 	du_string_t str = DU_STRING_EMPTY;
 
 	char *tmp = malloc(25);
-	du_status_assert(str.status, tmp, return str);
+	du_status_assert(str.status, tmp, str.status = DU_STATUS_FAILURE; return str);
 		
 	str.chars = tmp;
 	sprintf(str.chars, "%.*f", precision, d);

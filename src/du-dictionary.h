@@ -119,6 +119,16 @@ void du_dictionary_reset(du_dictionary_t *dict);
  */
 void du_dictionary_set_value(du_dictionary_t *dict, const char *key, int group, int64_t value);
 
+/**
+ * Finds the slot matching key + group and frees it. If the key + group combo does not exists this function
+ * has no effect.
+ *
+ * @param dict  : dictionary to search through
+ * @param key   : string key to use
+ * @param group : group to match
+ */
+void du_dictionary_erase_value(du_dictionary_t *dict, const char *key, int group);
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**

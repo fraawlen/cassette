@@ -37,10 +37,22 @@ static uint32_t              _hash      (const char *key);
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
+void
+du_dictionary_erase_value(du_dictionary_t *dict, const char *key, int group)
+{
+	assert(dict);
+	du_status_test(dict->status, return);
+
+	_find_slot(dict, _hash(key), group)->used = false;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 bool
 du_dictionary_find_value(const du_dictionary_t *dict, const char *key, int group, int64_t *value)
 {
 	assert(dict);
+	du_status_test(dict->status, return false);
 
 	du_dictionary_slot_t *slot = _find_slot(dict, _hash(key), group);
 	
@@ -57,6 +69,7 @@ int64_t
 du_dictionary_get_value(const du_dictionary_t *dict, const char *key, int group, bool *found)
 {
 	assert(dict);
+	du_status_test(dict->status, if (found) {found = false;} return 0);
 
 	du_dictionary_slot_t *slot = _find_slot(dict, _hash(key), group);
 	
@@ -74,6 +87,7 @@ du_dictionary_init(du_dictionary_t *dict, uint32_t n_alloc, du_ratio_t max_load)
 {
 	assert(dict);
 	assert(max_load > 0.0);
+	du_status_test(dict->status, return);
 
 	const uint32_t m = n_alloc / du_ratio_bind(&max_load);
 
@@ -106,6 +120,7 @@ void
 du_dictionary_set_value(du_dictionary_t *dict, const char *key, int group, int64_t value)
 {
 	assert(dict);
+	du_status_test(dict->status, return);
 
 	if (dict->n / dict->max_load >= dict->n_alloc && !_extend(dict)) {
 		return;
