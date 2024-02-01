@@ -55,8 +55,9 @@ extern "C" {
  * simplicity.
  */
 typedef enum {
-	DU_STATUS_SUCCESS = 0,
-	DU_STATUS_FAILURE = 1,
+	DU_STATUS_NOT_INIT = 0,
+	DU_STATUS_SUCCESS  = 1,
+	DU_STATUS_FAILURE  = 2,
 } du_status_t;
 
 /************************************************************************************************************/

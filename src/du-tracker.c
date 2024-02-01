@@ -80,15 +80,10 @@ du_tracker_init(du_tracker_t *tracker, size_t n_alloc)
 {
 	assert(tracker);
 
-	if (n_alloc == 0) {
-		*tracker = (du_tracker_t)DU_TRACKER_EMPTY;
-		return;
-	}
-
-	tracker->ptr = calloc(n_alloc, sizeof(void*));
 	tracker->n = 0;
 	tracker->n_alloc = n_alloc;
-	tracker->status = tracker->ptr ? DU_STATUS_SUCCESS : DU_STATUS_FAILURE;
+	tracker->ptr = n_alloc > 0 ? calloc(n_alloc, sizeof(void*)) : NULL;
+	tracker->status = n_alloc == 0 || tracker->ptr ? DU_STATUS_SUCCESS : DU_STATUS_FAILURE;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -143,7 +138,7 @@ du_tracker_reset(du_tracker_t *tracker)
 	assert(tracker);
 
 	free(tracker->ptr);
-	*tracker = (du_tracker_t)DU_TRACKER_EMPTY;
+	tracker->status = DU_STATUS_NOT_INIT;
 }
 
 /************************************************************************************************************/

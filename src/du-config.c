@@ -29,19 +29,35 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#define _DICT_RAW_VALUE 0
+#define _DICT_RESOURCE  1
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+typedef struct {
+	void *target;
+	void (*fn_convert)(void *target, char *raw_value);
+} _resource_t;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 struct _config_t {
 	du_status_t status;
 	du_string_t path;
 	du_string_t source;
 	du_tracker_t resources;
 	du_tracker_t callbacks;
-	du_dictionary_t dict_file;
-	du_dictionary_t dict_resources;
+	du_tracker_t raw_values;
+	du_dictionary_t dict;
 };
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
+
+static void _run_postprocessors (du_config_t *cfg);
+static void _run_preprocessors  (du_config_t *cfg);
+static void _refresh_resource   (du_config_t *cfg, _resource_t *r);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -62,15 +78,15 @@ du_config_create(const char *source, const char *path, uint32_t n_resources)
 	du_string_init(&cfg->path, path);
 	du_tracker_init(&cfg->resources, n_resources);
 	du_tracker_init(&cfg->callbacks, 1);
-	du_dictionary_init(&cfg->dict_file, n_resources * 2, 0.6);
-	du_dictionary_init(&cfg->dict_resources, n_resources, 0.6);
+	du_tracker_init(&cfg->raw_values, n_resources * 2);
+	du_dictionary_init(&cfg->dict, n_resources * 3, 0.6);
 
-	du_status_test(cfg->source.status,         goto fail_init);
-	du_status_test(cfg->path.status,           goto fail_init);
-	du_status_test(cfg->resources.status,      goto fail_init);
-	du_status_test(cfg->callbacks.status,      goto fail_init);
-	du_status_test(cfg->dict_file.status,      goto fail_init);
-	du_status_test(cfg->dict_resources.status, goto fail_init);
+	du_status_test(cfg->source.status,     goto fail_init);
+	du_status_test(cfg->path.status,       goto fail_init);
+	du_status_test(cfg->resources.status,  goto fail_init);
+	du_status_test(cfg->callbacks.status,  goto fail_init);
+	du_status_test(cfg->raw_values.status, goto fail_init);
+	du_status_test(cfg->dict.status,       goto fail_init);
 
 	return cfg;
 
@@ -91,8 +107,8 @@ du_config_destroy(du_config_t *cfg)
 	du_string_reset(&cfg->path);
 	du_tracker_reset(&cfg->resources);
 	du_tracker_reset(&cfg->callbacks);
-	du_dictionary_reset(&cfg->dict_file);
-	du_dictionary_reset(&cfg->dict_resources);
+	du_tracker_reset(&cfg->raw_values);
+	du_dictionary_reset(&cfg->dict);
 
 	free(cfg);
 }
@@ -114,8 +130,10 @@ du_config_load(du_config_t *cfg)
 {
 	assert(cfg);
 	du_status_test(cfg->status, return);
-	
+
 	// TODO
+
+	du_config_refresh_resources(cfg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -167,12 +185,45 @@ du_config_push_resource(du_config_t *cfg, const char *name, void *target, du_con
 
 void
 du_config_push_resource_custom(du_config_t *cfg, const char *name, void *target,
-	void (*fn_parser)(void *target, char *value))
+	void (*fn_convert)(void *target, char *value))
 {
 	assert(cfg);
 	du_status_test(cfg->status, return);
 
-	// TODO
+	_resource_t *r;
+
+	/* wrap the resource */
+
+	r = malloc(sizeof(_resource_t));
+	du_status_assert(cfg->status, r, goto fail_alloc);
+
+	r->target = target;
+	r->fn_convert = fn_convert;
+
+	/* add the resource to the resource tracker and add its tracker position to the dictionary */
+
+	size_t i = 0;
+
+	du_tracker_push(&cfg->resources, r, &i);
+	du_status_test(cfg->resources.status, goto fail_tracker);
+
+	du_dictionary_set_value(&cfg->dict, name, _DICT_RESOURCE, i);
+	du_status_test(cfg->dict.status, goto fail_dict);
+
+	/* update the resource's target */
+
+	_refresh_resource(cfg, r);
+
+	/* end */
+
+	return;
+
+fail_dict:
+	du_tracker_pull(&cfg->resources, r);
+fail_tracker:
+	free(r);
+fail_alloc:
+	cfg->status = DU_STATUS_FAILURE;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -183,10 +234,47 @@ du_config_refresh_resources(du_config_t *cfg)
 	assert(cfg);
 	du_status_test(cfg->status, return);
 
-	// TODO
+	_run_preprocessors(cfg);
+
+	_run_postprocessors(cfg);
 }
 
 /************************************************************************************************************/
 /* _ ********************************************************************************************************/
 /************************************************************************************************************/
 
+static void
+_refresh_resource(du_config_t *cfg, _resource_t *r)
+{
+
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_run_postprocessors(du_config_t *cfg)
+{
+	void (*fn)(void);
+
+	for (size_t i = 0; i < cfg->callbacks.n; i++) {
+		fn = ((du_config_callbacks_t*)cfg->callbacks.ptr[i])->fn_postprocessor;
+		if (fn) {
+			fn();
+		}	
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_run_preprocessors(du_config_t *cfg)
+{
+	void (*fn)(void);
+
+	for (size_t i = 0; i < cfg->callbacks.n; i++) {
+		fn = ((du_config_callbacks_t*)cfg->callbacks.ptr[i])->fn_preprocessor;
+		if (fn) {
+			fn();
+		}	
+	}
+}

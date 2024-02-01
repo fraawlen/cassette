@@ -143,20 +143,6 @@ void du_dictionary_set_value(du_dictionary_t *dict, const char *key, int group, 
  */
 bool du_dictionary_find_value(const du_dictionary_t *dict, const char *key, int group, int64_t *value);
 
-/**
- * Similar function to du_dictionary_find_value() except the found value is instead returned while the
- * presence of a match is indicated with a bool pointer.
- *
- * @param dict  : dictionary to search through
- * @param key   : string key to use
- * @param group : group to match
- * @param found : optional, pointed value is set to true if a matching slot was found, false otherwhise.
- *
- * @return : value of a matching slot, defaults to 0 if none is found
- */
-int64_t du_dictionary_get_value(const du_dictionary_t *dict, const char *key, int group, bool *found);
-
-
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/

@@ -31,7 +31,7 @@
 
 static bool                  _extend    (du_dictionary_t *dict);
 static du_dictionary_slot_t *_find_slot (const du_dictionary_t *dict, uint32_t hash, int group);
-static uint32_t              _hash      (const char *key);
+static uint32_t              _hash      (const char *str);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -65,28 +65,10 @@ du_dictionary_find_value(const du_dictionary_t *dict, const char *key, int group
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-int64_t
-du_dictionary_get_value(const du_dictionary_t *dict, const char *key, int group, bool *found)
-{
-	assert(dict);
-	du_status_test(dict->status, if (found) found = false; return 0);
-
-	du_dictionary_slot_t *slot = _find_slot(dict, _hash(key), group);
-	
-	if (found) {
-		*found = slot->used;
-	}
-
-	return slot->value;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 void
 du_dictionary_init(du_dictionary_t *dict, uint32_t n_alloc, du_ratio_t max_load)
 {
 	assert(dict);
-	assert(max_load > 0.0);
 
 	const uint32_t m = n_alloc / du_ratio_bind(&max_load);
 
@@ -150,7 +132,7 @@ _extend(du_dictionary_t *dict)
 	du_dictionary_init(&dict_new, dict->n_alloc > 0 ? dict->n_alloc * 2 : 1, dict->max_load);
 	du_status_test(dict->status, return false);
 
-	for (uint32_t i = 0; i < dict->n_alloc; i++) {
+	for (size_t i = 0; i < dict->n_alloc; i++) {
 		slot = &dict->slots[i];
 		if (slot->used) {
 			*_find_slot(&dict_new, slot->hash, slot->group) = *slot;
@@ -169,7 +151,7 @@ _extend(du_dictionary_t *dict)
 static du_dictionary_slot_t *
 _find_slot(const du_dictionary_t *dict, uint32_t hash, int group)
 {
-	uint32_t i = hash % dict->n_alloc;
+	size_t i = hash % dict->n_alloc;
 	du_dictionary_slot_t *slot = &dict->slots[i];
 
 	while (slot->used && (slot->group != group || slot->hash != hash)) {
@@ -182,16 +164,14 @@ _find_slot(const du_dictionary_t *dict, uint32_t hash, int group)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static uint32_t
-_hash(const char *key)
+static uint32_t 
+_hash(const char *str)
 {
-	/* fnv1a algorithm */
-
 	uint32_t h = 2166136261;
 
-	if (key) {
-		for (size_t i = 0; i < strlen(key); i++) {
-			h ^= key[i];
+	if (str) {
+		for (size_t i = 0; i < strlen(str); i++) {
+			h ^= str[i];
 			h *= 16777619;
 		}
 	}

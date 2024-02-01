@@ -65,15 +65,10 @@ du_inputs_init(du_inputs_t *inputs, size_t n_alloc)
 {
 	assert(inputs);
 
-	if (n_alloc == 0) {
-		*inputs = (du_inputs_t)DU_INPUTS_EMPTY;
-		return;
-	}
-
-	inputs->slots = calloc(n_alloc, sizeof(du_inputs_slot_t));
 	inputs->n = 0;
 	inputs->n_alloc = n_alloc;
-	inputs->status = inputs->slots ? DU_STATUS_SUCCESS : DU_STATUS_FAILURE;
+	inputs->slots = n_alloc > 0 ? calloc(n_alloc, sizeof(du_inputs_slot_t)) : NULL;
+	inputs->status = n_alloc == 0 || inputs->slots ? DU_STATUS_SUCCESS : DU_STATUS_FAILURE;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -128,5 +123,5 @@ du_inputs_reset(du_inputs_t *inputs)
 	assert(inputs);
 
 	free(inputs->slots);
-	*inputs = (du_inputs_t)DU_INPUTS_EMPTY;
+	inputs->status = DU_STATUS_NOT_INIT;
 }

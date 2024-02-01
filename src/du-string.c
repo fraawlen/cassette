@@ -64,7 +64,7 @@ du_string_duplicate(const du_string_t *str)
 	assert(str);
 	du_status_test(str->status, return *str);
 
-	du_string_t str_dup = DU_STRING_EMPTY;
+	du_string_t str_dup;
 	du_string_init(&str_dup, str->chars);
 
 	return str_dup;
@@ -75,14 +75,13 @@ du_string_duplicate(const du_string_t *str)
 du_string_t
 du_string_from_double(double d, int precision)
 {
-	du_string_t str = DU_STRING_EMPTY;
+	du_string_t str;
 
 	char *tmp = malloc(25);
-	du_status_assert(str.status, tmp, str.status = DU_STATUS_FAILURE; return str);
+	du_status_assert(str.status, tmp, return str);
 		
-	str.chars = tmp;
-	sprintf(str.chars, "%.*f", precision, d);
-	du_string_recalculate_n_values(&str);
+	sprintf(tmp, "%.*f", precision, d);
+	du_string_init(&str, tmp);
 
 	return str;
 }
@@ -94,8 +93,8 @@ du_string_init(du_string_t *str, const char *c_str)
 {
 	assert(str);
 
-	str->chars = c_str ? strdup(c_str) : NULL;
-	str->status = str->chars || !c_str ? DU_STATUS_SUCCESS : DU_STATUS_FAILURE;
+	str->chars = strdup(c_str ? c_str : "");
+	str->status = str->chars ? DU_STATUS_SUCCESS : DU_STATUS_FAILURE;
 	du_string_recalculate_n_values(str);
 }
 
@@ -168,10 +167,6 @@ du_string_recalculate_n_values(du_string_t *str)
 	str->n_chars = 0;
 	str->n_codepoints = 0;
 
-	if (!str->chars) {
-		return;
-	}
-
 	for (; !end; str->n_chars++) {
 
 		if (!_is_end_char(str->chars[str->n_chars])) {
@@ -229,7 +224,7 @@ du_string_reset(du_string_t *str)
 	str->n_cols = 0;
 	str->n_chars = 0;
 	str->n_codepoints = 0;
-	str->status = DU_STATUS_SUCCESS;
+	str->status = DU_STATUS_NOT_INIT;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

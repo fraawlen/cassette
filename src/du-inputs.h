@@ -36,10 +36,6 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DU_INPUTS_EMPTY {.slots = NULL, .n = 0, .n_alloc = 0}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Input list slot.
  *
@@ -58,7 +54,7 @@ typedef struct {
  * button and key presses. Hence the coordinate associated to each tracked input. n <= n_alloc. Unlike
  * du_tracker_t, the array is not auto-extensible, instead, if the maximum amount of inputs is reached, the
  * following inputs get ignored.
- * If status is set to DU_STATUS_FAILURE all handler functions will have no effect with the exception of
+ * If status is not set to DU_STATUS_SUCCESS all handler functions will have no effect with the exception of
  * du_inputs_reset() and du_inputs_init().
  *
  * @param slots
@@ -77,9 +73,9 @@ typedef struct {
 
 /**
  * Pre-allocate memory to the input tracker and set its variables appropriately. Allocated memory in the
- * array is initialised to 0. If n = 0, no memory is allocated and *tracker is set to DU_TRACKER_EMPTY.
- * In case of error, tracker->status will be set to DU_STATUS_FAILURE. It's set to DU_STATUS_SUCCESS
- * otherwhise.
+ * array is initialised to 0. If n = 0, no memory is pre-allocated and but the structure will be considered
+ * initialised. In case of error, tracker->status will be set to DU_STATUS_FAILURE.
+ * It's set to DU_STATUS_SUCCESS otherwhise.
  *
  * @param inputs : input list to init
  * @param n_alloc : initial size of the pointer array to pre-allocate.
@@ -87,6 +83,8 @@ typedef struct {
 void du_inputs_init(du_inputs_t *inputs, size_t n_alloc);
 
 /**
+ * Allocated memory is freed and the structure will be put in an unitialised state with inputs->status set to
+ * DU_STATUS_NOT_INIT. The given structure itself is not freed, and may require an explicit free operation.
  *
  * @param inputs : input list to reset
  */
@@ -96,6 +94,7 @@ void du_inputs_reset(du_inputs_t *inputs);
 
 /**
  * Removes all tracked values. Internal memory however is not freed, use du_inputs_reset() for that.
+ * The given structure needs to be initialised beforehand.
  *
  * @param inputs : input list to clear
  */
@@ -113,6 +112,7 @@ void du_inputs_pull(du_inputs_t *inputs, uint32_t id);
  * Adds a new input to the end of the array. If the input's id is already present in the input list it's
  * data will just be updated. If the maximum amount of inputs is reached, this a function has no effect and
  * the input will not be tracked.
+ * The given structure needs to be initialised beforehand.
  *
  * @param inputs : input list to pull from
  * @param id     : input id to match
@@ -126,6 +126,7 @@ void du_inputs_push(du_inputs_t *inputs, uint32_t id, void *ref, du_position_t x
 
 /**
  * Locates a given input id if it is present in the array.
+ * The given structure needs to be initialised beforehand.
  *
  * @param inputs : input list to search
  * @param id     : input id to match

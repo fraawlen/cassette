@@ -39,6 +39,7 @@ extern "C" {
  *
  */
 typedef struct _config_t du_config_t;
+
 /**
  *
  */
@@ -53,6 +54,9 @@ typedef enum {
 	DU_CONFIG_BOOL,
 } du_config_kind_t;
 
+/**
+ *
+ */
 typedef struct {
 	void (*fn_preprocessor)(void);
 	void (*fn_postprocessor)(void);
@@ -108,7 +112,7 @@ void du_config_push_resource(du_config_t *cfg, const char *name, void *target, d
  *
  */
 void du_config_push_resource_custom(du_config_t *cfg, const char *name, void *target, 
-                                    void (*fn_parser)(void *target, char *value));
+                                    void (*fn_convert)(void *target, char *value));
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

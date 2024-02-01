@@ -35,15 +35,10 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DU_STRING_EMPTY {.chars = NULL, .n_rows = 0, .n_cols = 0, .n_chars = 0, .n_codepoints = 0, \
-                         .status = DU_STATUS_SUCCESS}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Wrapper struct for storing a multi-row UTF8 string.
- * If status is set to DU_STATUS_FAILURE all handler functions will have no effect with the exception of
- * du_string_clear() and du_string_init().
+ * If status is not set to DU_STATUS_SUCCESS all handler functions will have no effect with the exception of
+ * du_string_clear(), du_string_init() and du_string_duplicate().
  *
  * @param chars        : raw C string array
  * @param n_rows       : number of UTF8 chars rows taken by the string
@@ -71,13 +66,13 @@ typedef struct {
  * In case of error, str->status will be set to DU_STATUS_FAILURE. It's set to DU_STATUS_SUCCESS otherwhise.
  *
  * @param str   : DU string to modify
- * @param c_str : raw C string to set as content
+ * @param c_str : raw C string to set as content, passing NULL is the same as passing "".
  */
 void du_string_init(du_string_t *str, const char *c_str);
 
 /**
- * Frees memory and zeros all paramaters of a given DU string. stk->status will also be set to
- * DU_STATUS_SUCCESS.
+ * Frees memory and zeros all paramaters of a given DU string then puts it in a uninitialised state.
+ * stk->status will also be set to DU_STATUS_NOT_INIT.
  *
  * @param str : DU string to clear
  */
@@ -89,6 +84,7 @@ void du_string_reset(du_string_t *str);
  * Adds a C string to the end of a given DU string. The given C string is copied into the DU string.
  * The string's geometry and length will be automatically recalculated.
  * In case of error, str->status will be set to DU_STATUS_FAILURE.
+ * The given structure needs to be initialised beforehand.
  *
  * @param str   : DU string to modify
  * @param c_str : raw C string to append
@@ -102,6 +98,7 @@ void du_string_append(du_string_t *str, const char *c_str);
  * the other n_* parameters.
  * The string's geometry and length will be automatically recalculated.
  * In case of error, str->status will be set to DU_STATUS_FAILURE.
+ * The given structure needs to be initialised beforehand.
  *
  * @param str        : DU string to pad
  * @param padder     : C string to use as padding
@@ -114,6 +111,7 @@ void du_string_pad(du_string_t *str, const char *padder, size_t pad_n, bool alig
  * Adds a C string to the begining of a given DU string. The given C string is copied into the DU string.
  * The string's geometry and length will be automatically recalculated.
  * In case of error, str->status will be set to DU_STATUS_FAILURE.
+ * The given structure needs to be initialised beforehand.
  *
  * @param str   : DU string to modify
  * @param c_str : raw C string to prepend
@@ -122,6 +120,7 @@ void du_string_prepend(du_string_t *str, const char *c_str);
 
 /**
  * Recalculates a DU string's geometry and size.
+ * The given structure needs to be initialised beforehand.
  *
  * @param str : DU string to use
  */
@@ -133,6 +132,7 @@ void du_string_recalculate_n_values(du_string_t *str);
  * this function expects the given DU string to be fully initialised.
  * The string's geometry and length will be automatically recalculated.
  * In case of error, str->status will be set to DU_STATUS_FAILURE.
+ * The given structure needs to be initialised beforehand.
  *
  * @param str   : DU string to modify
  * @param c_str : raw C string to set as content
@@ -143,6 +143,7 @@ void du_string_replace(du_string_t *str, const char *c_str);
  * Wraps the contents of a given DU string after a given UTF8 character column limit.
  * The string's geometry and length will be automatically recalculated.
  * In case of error, str->status will be set to DU_STATUS_FAILURE.
+ * The given structure needs to be initialised beforehand.
  *
  * @param str      : DU string to modify
  * @param max_cols : column width limit
@@ -179,6 +180,7 @@ du_string_t du_string_from_double(double d, int precision);
 /**
  * Returns the amount of row a given DU string will be after a potential wrapping operation. The string is
  * however not actually wrapped or modified.
+ * The given structure needs to be initialised beforehand.
  *
  * @param str      : DU string to test
  * @param max_cols : column width limit

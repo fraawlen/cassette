@@ -34,14 +34,10 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DU_TRACKER_EMPTY {.ptr = NULL, .n = 0, .n_alloc = 0, .status = DU_STATUS_SUCCESS}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Stack of arbitrary pointers. Used to store, retrieve and track any arbitrary element of data, which is
  * referenced inside the tracker by the generic void pointer array. n <= n_alloc.
- * If status is set to DU_STATUS_FAILURE all handler functions will have no effect with the exception of
+ * If status is not set to DU_STATUS_SUCCESS all handler functions will have no effect with the exception of
  * du_tracker_reset() and du_tracker_init();
  *
  * @param ptr     : array of stored pointers
@@ -61,9 +57,8 @@ typedef struct {
 /**
  * Preallocate memory to the tracker and set its variables appropriately. Allocated memory in the array is
  * initialised to 0. This function is optional because a tracker can allocate memory automatically when
- * needed. If n = 0, no memory is allocated and *tracker is set to DU_TRACKER_EMPTY.
- * In case of error, tracker->status will be set to DU_STATUS_FAILURE. It's set to DU_STATUS_SUCCESS
- * otherwhise.
+ * needed. If n = 0, no memory is pre-allocated and but the structure will be considered initialised. In case
+ * of error, tracker->status will be set to DU_STATUS_FAILURE. It's set to DU_STATUS_SUCCESS otherwhise.
  *
  * @param tracker : tracker to init
  * @param n_alloc : initial size of the pointer array to pre-allocate. 
@@ -71,9 +66,9 @@ typedef struct {
 void du_tracker_init(du_tracker_t *tracker, size_t n_alloc);
 
 /**
- * Zeroes the tracker and free allocated memory within the structure. The given structure itself is not freed,
- * and may require an explicit free operation. The pointers that were referenced in **ptr are not freed
- * either. The status of the structure is also reset to DU_STATUS_SUCCESS.
+ * Frees allocated memory within the structure and the structure will be put in an unitialised state with
+ * inputs->status set to DU_STATUS_NOT_INIT. The given structure itself is not freed, and may require an
+ * explicit free operation. The pointers that were referenced in **ptr are not freed either.
  *
  * @param tracker : tracker to reset
  */
@@ -86,6 +81,7 @@ void du_tracker_reset(du_tracker_t *tracker);
  * The tracker is not shrinked when a pointer is pulled from it, unless there is no remaining pointer in it
  * (n == 0), in which case du_tracker_reset() is called internally and memory is freed. If the given
  * pointer was not already part of tracker, nothing happens.
+ * The given structure needs to be initialised beforehand.
  *
  * @param tracker : tracker to remove items from
  * @param ptr     : pointer to pull from the tracker
@@ -97,6 +93,7 @@ void du_tracker_pull(du_tracker_t *tracker, const void *ptr);
  * this function has no effect. New pointers are always added at the end of the array inside the struct. The
  * tracker's array is automatically expands as needed. In case of expansion failure, tracker->status will be set
  * to DU_STATUS_FAILURE.
+ * The given structure needs to be initialised beforehand.
  *
  * @param tracker : tracker to add items to
  * @param ptr     : pointer to push to tracker
@@ -112,6 +109,7 @@ void du_tracker_push(du_tracker_t *tracker, const void *ptr, size_t *index);
 
 /**
  * Checks if given pointer is present in the tracker.
+ * The given structure needs to be initialised beforehand.
  *
  * @param tracker : tracker to search
  * @param ptr     : pointer to find
