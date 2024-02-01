@@ -43,7 +43,7 @@ extern "C" {
 /**
  * Wrapper struct for storing a multi-row UTF8 string.
  * If status is set to DU_STATUS_FAILURE all handler functions will have no effect with the exception of
- * du_string_clear().
+ * du_string_clear() and du_string_init().
  *
  * @param chars        : raw C string array
  * @param n_rows       : number of UTF8 chars rows taken by the string
@@ -64,6 +64,28 @@ typedef struct {
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Initialises a DU string and copies into it the given C string. This function is similar to
+ * du_string_replace(), but not the same. Unlike du_string_replace(), this function does not free current
+ * str->chars value before copying the given string into it.
+ * The string's geometry and length will be automatically calculated.
+ * In case of error, str->status will be set to DU_STATUS_FAILURE. It's set to DU_STATUS_SUCCESS otherwhise.
+ *
+ * @param str   : DU string to modify
+ * @param c_str : raw C string to set as content
+ */
+void du_string_init(du_string_t *str, const char *c_str);
+
+/**
+ * Frees memory and zeros all paramaters of a given DU string. stk->status will also be set to
+ * DU_STATUS_SUCCESS.
+ *
+ * @param str : DU string to clear
+ */
+void du_string_reset(du_string_t *str);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
  * Adds a C string to the end of a given DU string. The given C string is copied into the DU string.
  * The string's geometry and length will be automatically recalculated.
  * In case of error, str->status will be set to DU_STATUS_FAILURE.
@@ -72,14 +94,6 @@ typedef struct {
  * @param c_str : raw C string to append
  */
 void du_string_append(du_string_t *str, const char *c_str);
-
-/**
- * Frees memory and zeros all paramaters of a given DU string. stk->status will also be set to
- * DU_STATUS_SUCCESS.
- *
- * @param str : DU string to clear
- */
-void du_string_clear(du_string_t *str);
 
 /**
  * Pads a given DU string. If said string is shorter than pad_n, the padder C string will be appended or
@@ -114,14 +128,16 @@ void du_string_prepend(du_string_t *str, const char *c_str);
 void du_string_recalculate_n_values(du_string_t *str);
 
 /**
- * Sets the contents of a DU string. The given C string is copied into the DU string.
+ * Replaces the contents of a DU string. The old str-chars value gets freed then the given C string is copied
+ * into the DU string. This function is similar to du_string_init(), but not the same. Unlike du_string_init()
+ * this function expects the given DU string to be fully initialised.
  * The string's geometry and length will be automatically recalculated.
  * In case of error, str->status will be set to DU_STATUS_FAILURE.
  *
  * @param str   : DU string to modify
  * @param c_str : raw C string to set as content
  */
-void du_string_set(du_string_t *str, const char *c_str);
+void du_string_replace(du_string_t *str, const char *c_str);
 
 /**
  * Wraps the contents of a given DU string after a given UTF8 character column limit.

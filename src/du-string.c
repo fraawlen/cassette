@@ -58,23 +58,6 @@ du_string_append(du_string_t *str, const char *c_str)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-du_string_clear(du_string_t *str)
-{
-	assert(str);
-
-	free(str->chars);
-
-	str->chars = NULL;
-	str->n_rows = 0;
-	str->n_cols = 0;
-	str->n_chars = 0;
-	str->n_codepoints = 0;
-	str->status = DU_STATUS_SUCCESS;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 du_string_t
 du_string_duplicate(const du_string_t *str)
 {
@@ -82,7 +65,7 @@ du_string_duplicate(const du_string_t *str)
 	du_status_test(str->status, return *str);
 
 	du_string_t str_dup = DU_STRING_EMPTY;
-	du_string_set(&str_dup, str->chars);
+	du_string_init(&str_dup, str->chars);
 
 	return str_dup;
 }
@@ -102,6 +85,18 @@ du_string_from_double(double d, int precision)
 	du_string_recalculate_n_values(&str);
 
 	return str;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+du_string_init(du_string_t *str, const char *c_str)
+{
+	assert(str);
+
+	str->chars = c_str ? strdup(c_str) : NULL;
+	str->status = str->chars || !c_str ? DU_STATUS_SUCCESS : DU_STATUS_FAILURE;
+	du_string_recalculate_n_values(str);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -207,21 +202,34 @@ du_string_recalculate_n_values(du_string_t *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_set(du_string_t *str, const char *c_str)
+du_string_replace(du_string_t *str, const char *c_str)
 {
 	assert(str);
 	du_status_test(str->status, return);
 
-	char *tmp = NULL;
-
-	if (c_str) {
-		tmp = strdup(c_str);
-		du_status_assert(str->status, tmp, return);
-	}
+	char *tmp = c_str ? strdup(c_str) : NULL;
+	du_status_assert(str->status, tmp || !c_str, return);
 
 	free(str->chars);
 	str->chars = tmp;
 	du_string_recalculate_n_values(str);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+du_string_reset(du_string_t *str)
+{
+	assert(str);
+
+	free(str->chars);
+
+	str->chars = NULL;
+	str->n_rows = 0;
+	str->n_cols = 0;
+	str->n_chars = 0;
+	str->n_codepoints = 0;
+	str->status = DU_STATUS_SUCCESS;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

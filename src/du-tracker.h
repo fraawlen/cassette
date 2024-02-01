@@ -42,7 +42,7 @@ extern "C" {
  * Stack of arbitrary pointers. Used to store, retrieve and track any arbitrary element of data, which is
  * referenced inside the tracker by the generic void pointer array. n <= n_alloc.
  * If status is set to DU_STATUS_FAILURE all handler functions will have no effect with the exception of
- * du_tracker_reset().
+ * du_tracker_reset() and du_tracker_init();
  *
  * @param ptr     : array of stored pointers
  * @param n       : size of actively used array space

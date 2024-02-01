@@ -64,7 +64,6 @@ void
 du_inputs_init(du_inputs_t *inputs, size_t n_alloc)
 {
 	assert(inputs);
-	du_status_test(inputs->status, return);
 
 	if (n_alloc == 0) {
 		*inputs = (du_inputs_t)DU_INPUTS_EMPTY;

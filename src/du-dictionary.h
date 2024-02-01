@@ -63,7 +63,7 @@ typedef struct {
  * reaches a load factor of max_load. However, to minize resizes, which involve copying and rehashing every
  * slots, it is recommended to initialise it with the appropriate amount of slots. n <= n_alloc / max_load.
  * If status is set to DU_STATUS_FAILURE all handler functions will have no effect with the exception of
- * du_dictionary_reset().
+ * du_dictionary_reset() and du_dictionary_init().
  *
  * @param slots    : slot array
  * @param n        : number of occupied slots
@@ -117,7 +117,7 @@ void du_dictionary_erase_value(du_dictionary_t *dict, const char *key, int group
 
 /**
  * Finds a suitable slot for a matching key + group and fills it with the given group, computed hash and value.
- * If the key + group combo already exists its value will be overwritten. A NULL key is allowed but is
+ * If the key + group combo already exists its value will be overwritten. A NULL key is allowed, but is
  * equivalent to a "" key.
  * The given dictionary will be expanded automatically to maintain a load factor < dict->max_load.
  * In case of error, dict->status will be set to DU_STATUS_FAILURE.
@@ -132,7 +132,7 @@ void du_dictionary_set_value(du_dictionary_t *dict, const char *key, int group, 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Finds a suitable slot for a matching key + group. A NULL key is allowed but is equivalent to a "" key.
+ * Finds a suitable slot for a matching key + group. A NULL key is allowed, but is equivalent to a "" key.
  *
  * @param dict  : dictionary to search through
  * @param key   : string key to use

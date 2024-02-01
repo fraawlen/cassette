@@ -69,7 +69,7 @@ int64_t
 du_dictionary_get_value(const du_dictionary_t *dict, const char *key, int group, bool *found)
 {
 	assert(dict);
-	du_status_test(dict->status, if (found) {found = false;} return 0);
+	du_status_test(dict->status, if (found) found = false; return 0);
 
 	du_dictionary_slot_t *slot = _find_slot(dict, _hash(key), group);
 	
@@ -87,7 +87,6 @@ du_dictionary_init(du_dictionary_t *dict, uint32_t n_alloc, du_ratio_t max_load)
 {
 	assert(dict);
 	assert(max_load > 0.0);
-	du_status_test(dict->status, return);
 
 	const uint32_t m = n_alloc / du_ratio_bind(&max_load);
 

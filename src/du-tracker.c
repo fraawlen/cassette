@@ -79,7 +79,6 @@ void
 du_tracker_init(du_tracker_t *tracker, size_t n_alloc)
 {
 	assert(tracker);
-	du_status_test(tracker->status, return);
 
 	if (n_alloc == 0) {
 		*tracker = (du_tracker_t)DU_TRACKER_EMPTY;
@@ -107,13 +106,8 @@ du_tracker_pull(du_tracker_t *tracker, const void *ptr)
 	}
 
 	tracker->n--;
-
-	if (tracker->n > 0) {
-		for (; i < tracker->n; i++) {
-			tracker->ptr[i] = tracker->ptr[i + 1];
-		}
-	} else {
-		du_tracker_reset(tracker);
+	for (; i < tracker->n; i++) {
+		tracker->ptr[i] = tracker->ptr[i + 1];
 	}
 }
 

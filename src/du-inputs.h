@@ -59,7 +59,7 @@ typedef struct {
  * du_tracker_t, the array is not auto-extensible, instead, if the maximum amount of inputs is reached, the
  * following inputs get ignored.
  * If status is set to DU_STATUS_FAILURE all handler functions will have no effect with the exception of
- * du_inputs_reset().
+ * du_inputs_reset() and du_inputs_init().
  *
  * @param slots
  * @param n
