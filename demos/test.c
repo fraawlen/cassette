@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <derelict/du.h>
+#include "du.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -20,8 +20,8 @@ main(int argc, char **argv)
 
 	/* setup */
 
-	n_str  = argc > 1 && strtol(argv[1], NULL, 0) >  0 ? strtol(argv[1], NULL, 0) : n_str;
-	n_dict = argc > 2 && strtol(argv[2], NULL, 0) >= 0 ? strtol(argv[2], NULL, 0) : n_str;
+	n_str  = argc > 1 ? strtoul(argv[1], NULL, 0) : n_str;
+	n_dict = argc > 2 ? strtoul(argv[2], NULL, 0) : n_str;
 
 	du_dictionary_init(&dict, n_dict, 0.6);
 

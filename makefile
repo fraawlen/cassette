@@ -12,14 +12,18 @@ DEST_BUILD   := build
 
 OUTPUT_NAME := du
 
-DIR_SRC := src
-DIR_INC := $(DEST_BUILD)/inc
-DIR_LIB := $(DEST_BUILD)/lib
-DIR_OBJ := $(DEST_BUILD)/obj
+DIR_DEMOS := demos
+DIR_SRC   := src
+DIR_INC   := $(DEST_BUILD)/inc
+DIR_LIB   := $(DEST_BUILD)/lib
+DIR_OBJ   := $(DEST_BUILD)/obj
+DIR_BIN   := $(DEST_BUILD)/bin
 
-LIST_SRC := $(wildcard $(DIR_SRC)/*.c)
-LIST_INC := $(wildcard $(DIR_SRC)/*.h)
-LIST_OBJ := $(patsubst $(DIR_SRC)/%.c, $(DIR_OBJ)/%.o, $(LIST_SRC))
+LIST_DEMOS := $(wildcard $(DIR_DEMOS)/*.c)
+LIST_SRC   := $(wildcard $(DIR_SRC)/*.c)
+LIST_INC   := $(wildcard $(DIR_SRC)/*.h)
+LIST_OBJ   := $(patsubst $(DIR_SRC)/%.c,   $(DIR_OBJ)/%.o, $(LIST_SRC))
+LIST_BIN   := $(patsubst $(DIR_DEMOS)/%.c, $(DIR_BIN)/%,   $(LIST_DEMOS))
 
 FLAGS := -std=c99 -pedantic -Wall -Wextra -O3 -D_POSIX_C_SOURCE=200809L
 
@@ -30,6 +34,8 @@ FLAGS := -std=c99 -pedantic -Wall -Wextra -O3 -D_POSIX_C_SOURCE=200809L
 build: --prep $(LIST_OBJ)
 	cc -shared $(DIR_OBJ)/*.o -o $(DIR_LIB)/lib$(OUTPUT_NAME).so $(DIR_LIBS)
 	ar rcs $(DIR_LIB)/lib$(OUTPUT_NAME).a $(DIR_OBJ)/*.o
+
+demos: --prep $(LIST_BIN)
 
 install:
 	mkdir -p $(DEST_HEADERS)
@@ -47,7 +53,11 @@ clean:
 	mkdir -p $(DIR_INC)
 	mkdir -p $(DIR_LIB)
 	mkdir -p $(DIR_OBJ)
+	mkdir -p $(DIR_BIN)
 	cp src/*.h $(DIR_INC)
 
 $(DIR_OBJ)/%.o: $(DIR_SRC)/%.c $(LIST_INC)
 	$(CC) -c $(FLAGS) -c $< -o $@
+
+$(DIR_BIN)%: $(DIR_DEMOS)/%.c
+	$(CC) -no-pie -static $(FLAGS) $< -o $@ -I$(DIR_INC) -L$(DIR_LIB) -ldu
