@@ -32,7 +32,6 @@ main(int argc, char **argv)
 
 	for (size_t i = 0; i < n_str; i++) {
 		str = du_string_from_double(i, 0);
-		du_string_prepend(&str, "ooooooooooooooooooooooooooooooooovalue-");
 		du_status_test(str.status, printf("string error, aborting\n"); return 0);
 		du_dictionary_set_value(&dict, str.chars, 0, i);
 		du_status_test(dict.status, printf("dictionary error, aborting\n"); return 0);

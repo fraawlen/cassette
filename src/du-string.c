@@ -18,7 +18,6 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -62,9 +61,9 @@ du_string_t
 du_string_duplicate(const du_string_t *str)
 {
 	assert(str);
-	du_status_test(str->status, return *str);
 
-	du_string_t str_dup;
+	du_string_t str_dup = {.status = DU_STATUS_FAILURE};
+	du_status_test(str->status, return str_dup);
 	du_string_init(&str_dup, str->chars);
 
 	return str_dup;
@@ -75,7 +74,7 @@ du_string_duplicate(const du_string_t *str)
 du_string_t
 du_string_from_double(double d, int precision)
 {
-	du_string_t str;
+	du_string_t str = {.status = DU_STATUS_FAILURE};
 
 	char *tmp = malloc(25);
 	du_status_assert(str.status, tmp, return str);
@@ -202,8 +201,12 @@ du_string_replace(du_string_t *str, const char *c_str)
 	assert(str);
 	du_status_test(str->status, return);
 
-	char *tmp = c_str ? strdup(c_str) : NULL;
-	du_status_assert(str->status, tmp || !c_str, return);
+	if (!c_str) {
+		c_str = "";
+	}
+
+	char *tmp = strdup(c_str);
+	du_status_assert(str->status, tmp, return);
 
 	free(str->chars);
 	str->chars = tmp;
@@ -218,12 +221,6 @@ du_string_reset(du_string_t *str)
 	assert(str);
 
 	free(str->chars);
-
-	str->chars = NULL;
-	str->n_rows = 0;
-	str->n_cols = 0;
-	str->n_chars = 0;
-	str->n_codepoints = 0;
 	str->status = DU_STATUS_NOT_INIT;
 }
 

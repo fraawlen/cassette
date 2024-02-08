@@ -26,7 +26,6 @@
 /************************************************************************************************************/
 
 #include "du-color.h"
-#include "du-config.h"
 #include "du-dictionary.h"
 #include "du-inputs.h"
 #include "du-misc.h"

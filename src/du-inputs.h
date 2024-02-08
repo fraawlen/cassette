@@ -39,7 +39,7 @@ extern "C" {
 /**
  * Input list slot.
  *
- * @param id     : input's identifier (touchid, mouse button, keycode. ...)
+ * @param id     : input's identifier (touch id, mouse button, keycode, ...)
  * @param ref    : arbitrary reference to link the input to
  * @param coords : input coordinates
  */
@@ -52,7 +52,7 @@ typedef struct {
 /**
  * Specialized structure to keep track of active end-user inputs, such as, but not limited to, screen touches,
  * button and key presses. Hence the coordinate associated to each tracked input. n <= n_alloc. Unlike
- * du_tracker_t, the array is not auto-extensible, instead, if the maximum amount of inputs is reached, the
+ * du_tracker_t, its array is not auto-extensible, instead, if the maximum amount of inputs is reached, the
  * following inputs get ignored.
  * If status is not set to DU_STATUS_SUCCESS all handler functions will have no effect with the exception of
  * du_inputs_reset() and du_inputs_init().
@@ -73,11 +73,11 @@ typedef struct {
 
 /**
  * Pre-allocate memory to the input tracker and set its variables appropriately. Allocated memory in the
- * array is initialised to 0. If n = 0, no memory is pre-allocated and but the structure will be considered
- * initialised. In case of error, tracker->status will be set to DU_STATUS_FAILURE.
+ * array is initialised to 0. If n = 0, no memory is pre-allocated and but the structure will still be
+ * considered to have been initialised. In case of error, tracker->status will be set to DU_STATUS_FAILURE.
  * It's set to DU_STATUS_SUCCESS otherwhise.
  *
- * @param inputs : input list to init
+ * @param inputs  : input list to init
  * @param n_alloc : initial size of the pointer array to pre-allocate.
  */
 void du_inputs_init(du_inputs_t *inputs, size_t n_alloc);
@@ -102,19 +102,20 @@ void du_inputs_clear(du_inputs_t *inputs);
 
 /**
  * Removes a tracked input.
+ * The given structure needs to be initialised beforehand.
  *
- * @param inputs : input list to push to
+ * @param inputs : input list to pull from
  * @param id     : input id to match
  */
 void du_inputs_pull(du_inputs_t *inputs, uint32_t id);
 
 /**
  * Adds a new input to the end of the array. If the input's id is already present in the input list it's
- * data will just be updated. If the maximum amount of inputs is reached, this a function has no effect and
- * the input will not be tracked.
+ * data will just be updated. If the maximum amount of inputs is reached, this a function won't have an
+ * effect until one or more inputs get untracked.
  * The given structure needs to be initialised beforehand.
  *
- * @param inputs : input list to pull from
+ * @param inputs : input list to push to
  * @param id     : input id to match
  * @param ref    : arbitrary pointer reference of the input
  * @param x      : coordinate x
@@ -130,9 +131,8 @@ void du_inputs_push(du_inputs_t *inputs, uint32_t id, void *ref, du_position_t x
  *
  * @param inputs : input list to search
  * @param id     : input id to match
- * @param index  : optional, pointer whose value will be set to the position index of the input with the
- *                 matching id. If the item is not found this paramater is not modified. This parameter is
- *                 optional and can be set to NULL
+ * @param index  : optional, if non NULL, the given pointer's value will be set to the position index of the
+ *                 found input. If the input is not found this paramater is not modified.
  */
 bool du_inputs_find(const du_inputs_t *inputs, uint32_t id, size_t *index);
 

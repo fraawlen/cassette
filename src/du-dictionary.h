@@ -36,12 +36,6 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DU_DICTIONARY_SLOT_EMPTY {.hash = 0, .value = 0, .group = 0, .free = true}
-#define DU_DICTIONARY_EMPTY      {.slots = NULL, .n = 0, .n_alloc = 0, .max_load = 0.6, \
-                                  .status = DU_STATUS_SUCCESS}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Slot in the dictionary.
  *
@@ -58,11 +52,11 @@ typedef struct {
 } du_dictionary_slot_t;
 
 /**
- * Full dictionary struct, with its slots held in an array. Key values are hashed with the 32-bit fnv1a
+ * Dictionary struct, with its slots held in an array. Key values are hashed with the 32-bit fnv1a
  * algorithm and collisions are handled using linear probing. The dictionary's size is doubled everytime its
- * reaches a load factor of max_load. However, to minize resizes, which involve copying and rehashing every
- * slots, it is recommended to initialise it with the appropriate amount of slots. n <= n_alloc / max_load.
- * If status is set to DU_STATUS_FAILURE all handler functions will have no effect with the exception of
+ * reaches a load factor of max_load. However, to minimize resizes, it is recommended to initialise it with
+ * the appropriate amount of slots. n <= n_alloc / max_load.
+ * If status is not set to DU_STATUS_SUCCESS all handler functions will have no effect with the exception of
  * du_dictionary_reset() and du_dictionary_init().
  *
  * @param slots    : slot array
@@ -82,11 +76,12 @@ typedef struct {
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Preallocate memory to the dictionary and set its variables appropriately. Allocated slots within the
- * dictionary are also  initialised to 0. This function is optional because a dictionary can allocate memory
+ * Pre-allocate memory to the dictionary and set its variables appropriately. Allocated slots within the
+ * dictionary are all initialised to 0. This function is optional because a dictionary can allocate memory
  * automatically as needed (specificaly, everytime it reaches a load factor of dict->max_load, to stay under
- * it). The actual amount of slots allocated is therefore n_alloc / max_load, with max_load <= 1.0 and >= 0.
- * If n_alloc = 0, no memory is allocated and *dict is instead set to DU_DICTIONARY_EMPTY.
+ * it). The actual amount of slots allocated is therefore n_alloc / max_load, with max_load <= 1.0 and
+ * >= 0.0. If n_alloc = 0, no memory is allocated but the structure will still be considered to have been
+ * initialised.
  * In case of error, dict->status will be set to DU_STATUS_FAILURE. It's set to DU_STATUS_SUCCESS otherwhise.
  *
  * @param dict     : dictionary to init

@@ -68,20 +68,15 @@ du_dictionary_find_value(const du_dictionary_t *dict, const char *key, int group
 void
 du_dictionary_init(du_dictionary_t *dict, uint32_t n_alloc, du_ratio_t max_load)
 {
-	assert(dict);
+	assert(dict && max_load > 0.0);
 
 	const uint32_t m = n_alloc / du_ratio_bind(&max_load);
 
-	if (m == 0) {
-		*dict = (du_dictionary_t)DU_DICTIONARY_EMPTY;
-		return;
-	}
-
-	dict->slots = calloc(m, sizeof(du_dictionary_slot_t));
 	dict->n = 0;
 	dict->n_alloc = m;
 	dict->max_load = max_load;
-	dict->status = dict->slots ? DU_STATUS_SUCCESS : DU_STATUS_FAILURE;
+	dict->slots = m > 0 ? calloc(m, sizeof(du_dictionary_slot_t)) : NULL;
+	dict->status = m == 0 || dict->slots ? DU_STATUS_SUCCESS : DU_STATUS_FAILURE;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -92,7 +87,7 @@ du_dictionary_reset(du_dictionary_t *dict)
 	assert(dict);
 
 	free(dict->slots);	
-	*dict = (du_dictionary_t)DU_DICTIONARY_EMPTY;
+	dict->status = DU_STATUS_NOT_INIT;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
