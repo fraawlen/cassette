@@ -4,29 +4,25 @@ Derelict Utilities
 Gist
 ----
 
-Derelict Utilities (DU) is a collection of data structures and convenience functions for the [Derelict Graphics](https://codeberg.org/fraawlen/derelict-graphics) (DG) library as well as other projects part of the Derelict ecosystem. This library is far from being exhaustive but is incrementally updated with new features when needed.
+Derelict Utilities (DU) is a collection of data structures and convenience functions for the [Derelict Graphics](https://codeberg.org/fraawlen/derelict-graphics) (DG) library as well as other projects part of the Derelict ecosystem. This library is far from being exhaustive but it is incrementally updated with new features when they are needed by DU dependent projects. If you wish to use this library but need a specific feature related to the existing data structures, feel free to create a feature request.
 
 Currently provided components:
 
-- Dictionary : a hashmap implementation of string-value-group triplets
+- Dictionary : a string-group-value hashmap
 - Tracker : a hybrid pointer vector-stack data structure to keep track of instanced components.
 - String : a 2D UTF-8 C-string wrapper with simple to use string manipulation methods
 - Color : RGBA color representation, manipulation and conversion
 - Input : similar to Trackers but dedicated to end-user input tracking (screen touches, mouse buttons, ...)
-- Status : a simple way to represent an error state
-- Numeral types like position, length, angle, ratio, 2D size, and 2D coordinates
-- Some extra miscellaneous functions
+- Some extra small miscellaneous functions and types
 
 Status
 ------
 
-Latest release : **1.0.0**
+Latest release : **1.1.0**
 
-This library was built in DG < 0.2.0. However, to better separate the actual GUI components from internal data structures, and to re-use said data structures in other not necessarily GUI-related projects, it has been split into its own library.
+This library was initialy embeded within DG < 0.2.0. However, to better separate the actual GUI components from internal data structures, and to re-use said data structures in other not necessarily GUI-related projects, it has been split into its own library.
 
-Complete documentation is currently being written and should be published soon. In the meantime, consult the headers. All functions, structures, and behaviors are fully commented on.
-
-If you have any questions about this project, you can contact me by email : <fraawlen@posteo.net>
+Complete documentation is currently being written and should be published soon. In the meantime, consult the headers. All functions, structures, and behaviors are fully commented.
 
 Setup
 -----
@@ -45,7 +41,16 @@ Once you have met all the necessary requirements, you can build and install DU b
 make
 make install
 ```
-After these steps, both a shared binary and static archive will be generated and installed on your system. By default, headers and library binaries will be respectively placed in `/usr/derelict/`  and `/usr/lib`. If you want to install them elsewhere modify the `DEST_HEADERS` and `DEST_LIBS` variables inside the makefile.
+After these steps, both a shared binary and static archive will be generated and installed on your system. By default, headers and library binaries will be respectively placed in `/usr/derelict/`  and `/usr/lib`. If you want to install them elsewhere modify the `DEST_HEADERS` and `DEST_LIBS` makefile variables.
+
+### Demos
+
+The DU project also include a few demos programs that showcase different use-cases and capabilities of the library.
+You can build them with the following command (you will need to build the library first, but installation is not necessary) :
+```
+make demos
+```
+The resulting executable binaries will be placed in `build/bin`.
 
 ### Clean-up
 
@@ -61,13 +66,9 @@ Simply add the following include to use all that the library has to offer :
 ```
 #include <derelict/du.h>
 ```
-Then add these compilation flags to link your project to DU :
+Then add this compilation flag to link your project to DU :
 ```
 -ldu
-```
-Alternatively, you can also statically link against DU :
-```
--static -ldu
 ```
 
 License
