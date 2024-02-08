@@ -4,7 +4,7 @@ Derelict Utilities
 Gist
 ----
 
-Derelict Utilities (DU) is a collection of data structures and convenience functions for the [Derelict Graphics](https://codeberg.org/fraawlen/derelict-graphics) (DG) library as well as other projects part of the Derelict ecosystem. This library is far from being exhaustive but it is incrementally updated with new features when they are needed by DU dependent projects. If you wish to use this library but need a specific feature related to the existing data structures, feel free to create a feature request.
+Derelict Utilities (DU) is a collection of data structures and convenience functions for the [Derelict Graphics (DG)](https://codeberg.org/fraawlen/derelict-graphics) library as well as other projects part of the Derelict ecosystem. This library is far from being exhaustive but it is incrementally updated with new features when they are needed by DU dependent projects. If you wish to use this library but need a specific feature related to the existing data structures, feel free to create a feature request.
 
 Currently provided components:
 
