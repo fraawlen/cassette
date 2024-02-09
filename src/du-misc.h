@@ -42,6 +42,16 @@ extern "C" {
 int16_t du_misc_convert_fp1616_to_int16(int32_t f);
 
 /**
+ * Puts into the given buffer the path of the home directory of the current user.
+ *
+ * @param buf : buffer
+ * @param n   : size of the buffer
+ *
+ * @return : pointer to the begining of the buffer.
+ */
+char *du_misc_get_home_path(char *buf, size_t n);
+
+/**
  * Gets an UNIX timestamp in microseconds.
  *
  * @return : self-explanatory

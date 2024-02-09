@@ -18,6 +18,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <assert.h>
+#include <pwd.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -35,6 +37,18 @@ int16_t
 du_misc_convert_fp1616_to_int16(int32_t f)
 {
 	return (int16_t)(f >> 16);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+char *
+du_misc_get_home_path(char *buf, size_t n)
+{
+	assert(buf);
+
+	strncpy(buf, du_misc_test_env("HOME") ? getenv("HOME") : getpwuid(getuid())->pw_dir, n);
+
+	return buf;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
