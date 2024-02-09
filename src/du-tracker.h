@@ -77,15 +77,26 @@ void du_tracker_reset(du_tracker_t *tracker);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Removes a pointer from the tracker. The value pointed to by the removed pointer is not freed nor modified.
- * The tracker is not shrinked when a pointer is pulled from it. If the given pointer was not already part of
- * tracker, nothing happens.
+ * Removes a pointer from the tracker at the given index. The value pointed to by the removed pointer is not
+ * freed nor modified. The tracker is not shrinked when a pointer is pulled from it. If the given index was
+ * out of bounds (index >= n) then nothing happens.
+ * The given structure needs to be initialised beforehand.
+ *
+ * @param tracker : tracker to remove pointerz from
+ * @param index   : position of the pointer to pull within the tracker
+ */
+void du_tracker_pull_index(du_tracker_t *tracker, size_t index);
+
+/**
+ * Removes the given pointer from the tracker. The value pointed to by the removed pointer is not freed nor
+ * modified. The tracker is not shrinked when a pointer is pulled from it. If the given pointer was not
+ * already part of tracker then nothing happens.
  * The given structure needs to be initialised beforehand.
  *
  * @param tracker : tracker to remove pointerz from
  * @param ptr     : pointer to pull from the tracker
  */
-void du_tracker_pull(du_tracker_t *tracker, const void *ptr);
+void du_tracker_pull_pointer(du_tracker_t *tracker, const void *ptr);
 
 /**
  * Adds a pointer to the tracker. A given pointer can only be added once, if a duplicate pointer is given,

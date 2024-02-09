@@ -89,20 +89,32 @@ du_tracker_init(du_tracker_t *tracker, size_t n_alloc)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_tracker_pull(du_tracker_t *tracker, const void *ptr)
+du_tracker_pull_index(du_tracker_t *tracker, size_t index)
+{
+	assert(tracker);
+	du_status_test(tracker->status, return);
+
+	if (index < tracker->n) {
+		tracker->n--;
+	}
+
+	for (; index < tracker->n; index++) {
+		tracker->ptr[index] = tracker->ptr[index + 1];
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+du_tracker_pull_pointer(du_tracker_t *tracker, const void *ptr)
 {
 	assert(tracker);
 	du_status_test(tracker->status, return);
 
 	size_t i = 0;
 
-	if (!du_tracker_find(tracker, ptr, &i)) {
-		return;
-	}
-
-	tracker->n--;
-	for (; i < tracker->n; i++) {
-		tracker->ptr[i] = tracker->ptr[i + 1];
+	if (du_tracker_find(tracker, ptr, &i)) {
+		du_tracker_pull_index(tracker, i);
 	}
 }
 

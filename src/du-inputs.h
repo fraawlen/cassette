@@ -101,13 +101,23 @@ void du_inputs_reset(du_inputs_t *inputs);
 void du_inputs_clear(du_inputs_t *inputs);
 
 /**
- * Removes a tracked input.
+ * Removes a tracked input of a given id.If the given id was not already tracked then nothing happens.
  * The given structure needs to be initialised beforehand.
  *
  * @param inputs : input list to pull from
  * @param id     : input id to match
  */
-void du_inputs_pull(du_inputs_t *inputs, uint32_t id);
+void du_inputs_pull_id(du_inputs_t *inputs, uint32_t id);
+
+/**
+ * Removes a tracked input at the given index.If the given index was out of bounds (index >= n) then nothing
+ * happens.
+ * The given structure needs to be initialised beforehand.
+ *
+ * @param inputs : input list to pull from
+ * @param index  : position of the input to pull
+ */
+void du_inputs_pull_index(du_inputs_t *inputs, size_t index);
 
 /**
  * Adds a new input to the end of the array. If the input's id is already present in the input list it's

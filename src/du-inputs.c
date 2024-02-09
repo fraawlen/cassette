@@ -74,20 +74,32 @@ du_inputs_init(du_inputs_t *inputs, size_t n_alloc)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_inputs_pull(du_inputs_t *inputs, uint32_t id)
+du_inputs_pull_id(du_inputs_t *inputs, uint32_t id)
 {
 	assert(inputs);
 	du_status_test(inputs->status, return);
 
 	size_t i = inputs->n;
 
-	if (!du_inputs_find(inputs, id, &i)) {
-		return;
+	if (du_inputs_find(inputs, id, &i)) {
+		du_inputs_pull_index(inputs, i);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+du_inputs_pull_index(du_inputs_t *inputs, size_t index)
+{
+	assert(inputs);
+	du_status_test(inputs->status, return);
+
+	if (index < inputs->n) {
+		inputs->n--;
 	}
 
-	inputs->n--;
-	for (; inputs->n; i++) {
-		inputs->slots[i] = inputs->slots[i + 1];
+	for (; inputs->n; index++) {
+		inputs->slots[index] = inputs->slots[index + 1];
 	}
 }
 
