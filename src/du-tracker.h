@@ -76,6 +76,15 @@ void du_tracker_reset(du_tracker_t *tracker);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+ /**
+ * Removes all tracked pointers. Internal pointer array is freed and n_* values are zeroed, but unlike
+ * du_inputs_reset() the given tracker is not put in an unintiliased state.
+ * The given structure needs to be initialised beforehand.
+ *
+ * @param tracker : tracker to clear
+ */
+void du_tracker_clear(du_tracker_t *tracker);
+
 /**
  * Removes a pointer from the tracker at the given index. The value pointed to by the removed pointer is not
  * freed nor modified. The tracker is not shrinked when a pointer is pulled from it. If the given index was

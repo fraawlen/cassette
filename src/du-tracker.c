@@ -35,6 +35,20 @@ static bool _extend (du_tracker_t *tracker);
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
+void
+du_tracker_clear(du_tracker_t *tracker)
+{
+	assert(tracker);
+	du_status_test(tracker->status, return);
+
+	free(tracker->ptr);
+	tracker->ptr = NULL;
+	tracker->n = 0;
+	tracker->n_alloc = 0;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 bool
 du_tracker_find(const du_tracker_t *tracker, const void *ptr, size_t *index)
 {
