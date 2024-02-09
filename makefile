@@ -26,6 +26,7 @@ LIST_OBJ   := $(patsubst $(DIR_SRC)/%.c,   $(DIR_OBJ)/%.o, $(LIST_SRC))
 LIST_BIN   := $(patsubst $(DIR_DEMOS)/%.c, $(DIR_BIN)/%,   $(LIST_DEMOS))
 
 FLAGS := -std=c99 -pedantic -Wall -Wextra -O3 -D_POSIX_C_SOURCE=200809L
+LIBS  :=
 
 #############################################################################################################
 # PUBLIC TARGETS ############################################################################################
@@ -57,7 +58,7 @@ clean:
 	cp src/*.h $(DIR_INC)
 
 $(DIR_OBJ)/%.o: $(DIR_SRC)/%.c $(LIST_INC)
-	$(CC) -c $(FLAGS) -c $< -o $@
+	$(CC) -c -fPIC $(FLAGS) -c $< -o $@
 
 $(DIR_BIN)%: $(DIR_DEMOS)/%.c
-	$(CC) -no-pie -static $(FLAGS) $< -o $@ -I$(DIR_INC) -L$(DIR_LIB) -ldu
+	$(CC) -static $(FLAGS) $< -o $@ -I$(DIR_INC) -L$(DIR_LIB) -l$(OUTPUT_NAME) $(LIBS)

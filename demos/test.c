@@ -25,9 +25,6 @@ main(int argc, char **argv)
 
 	du_dictionary_init(&dict, n_dict, 0.6);
 
-	printf("amount of strings to process = %li\n", n_str);
-	printf("dictionary initial size      = %li\n", n_dict);
-
 	/* add values to dict */
 
 	for (size_t i = 0; i < n_str; i++) {
