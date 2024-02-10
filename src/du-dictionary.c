@@ -38,6 +38,34 @@ static uint32_t              _hash      (const char *str);
 /************************************************************************************************************/
 
 void
+du_dictionary_clear_all(du_dictionary_t *dict)
+{
+	assert(dict);
+	du_status_test(dict->status, return);
+
+	memset(dict->slots, 0, dict->n_alloc * sizeof(du_dictionary_slot_t));
+	dict->n = 0;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+du_dictionary_clear_group(du_dictionary_t *dict, int group)
+{
+	assert(dict);
+	du_status_test(dict->status, return);
+	
+	for (size_t i = 0; i < dict->n_alloc; i++) {
+		if (dict->slots[i].used && dict->slots[i].group == group) {
+			dict->slots[i].used = false;
+			dict->n--;
+		}
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 du_dictionary_erase_value(du_dictionary_t *dict, const char *key, int group)
 {
 	assert(dict);

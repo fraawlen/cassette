@@ -101,6 +101,22 @@ void du_dictionary_reset(du_dictionary_t *dict);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Erases all saved values within the given dictionary. However, unlike du_dictionary_reset(), allocated
+ * memory is not freed nor reallocated, thus maintaining the size of the dictionary.
+ *
+ * @param dict : dictionary to clear
+ */
+void du_dictionary_clear_all(du_dictionary_t *dict);
+
+/**
+ * Erases all saved values of a given group within the given dictionary.
+ *
+ * @param dict  : dictionary to search through
+ * @param group : group to clear
+ */
+void du_dictionary_clear_group(du_dictionary_t *dict, int group);
+
+/**
  * Finds the slot matching key + group and frees it. If the key + group combo does not exist this function
  * has no effect.
  *
