@@ -85,7 +85,7 @@ make clean
 ## Example
 
 One of the simplest GUI programs, a HelloWorld :
-```
+```c
 #include <dg/core/core.h>
 #include <dg/base/base.h>
 
