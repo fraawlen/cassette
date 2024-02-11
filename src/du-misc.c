@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <pwd.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,7 +45,7 @@ du_misc_convert_fp1616_to_int16(int32_t f)
 char *
 du_misc_get_home_path(char *buf, size_t n)
 {
-	assert(buf);
+	assert(buf && n > 0);
 
 	strncpy(buf, du_misc_test_env("HOME") ? getenv("HOME") : getpwuid(getuid())->pw_dir, n);
 
@@ -61,6 +62,97 @@ du_misc_get_time(void)
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 
 	return ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+char *
+du_misc_read_word(char *buf, size_t n, FILE *f, bool *eol)
+{
+	assert(buf && n > 0);
+
+	bool quotes  = false;
+	bool quotes2 = false;
+	size_t i = 0;
+	int c;
+
+	if (eol) {
+		*eol = false;
+	}
+
+	/* check if any char can be read */
+
+	if ((c = fgetc(f)) == EOF) {
+		buf[0] = '\0';
+		return NULL;
+	}
+
+	/* ignore leading whitespace */
+
+	for (;;) {
+		switch (c) {
+			
+			case ' ':
+			case '\t':
+				c = fgetc(f);
+				break;
+
+			default:
+				goto exit_lead;
+		}
+	}
+
+exit_lead:
+
+	/* read chars */
+
+	for (;;) {
+		switch (c) {
+
+			case '\'':
+				if (!quotes2) {
+					quotes = !quotes;
+					break;
+				}
+				goto word_add;
+
+			case '\"':
+				if (!quotes) {
+					quotes2 = !quotes2;
+					break;
+				}
+				goto word_add;
+
+			case '\n':
+				if (eol) {
+					*eol = true;
+				}
+				/* fallthrough */
+
+			case ' ':
+			case '\t':
+				if (quotes || quotes2) {
+					goto word_add;
+				}
+				goto word_end;
+
+			default:
+			word_add:
+				if (i < n - 1) {
+					buf[i] = (char)c;
+					i++;
+					break;
+				}
+				/* fallthrough */
+
+			case EOF:
+			word_end:
+				buf[i] = '\0';
+				return buf;
+		}
+
+		c = fgetc(f);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -82,13 +174,40 @@ du_misc_trim_str(char *str)
 		return NULL;
 	}
 
-	for (size_t i = strlen(str) - 1; i > 0 && (str[i] == ' ' || str[i] == '\t' || str[i] == '\n'); i--) {
-		str[i] = '\0';
+	/* trail */
+
+	for (size_t i = strlen(str); i > 0; i--) {
+		switch(str[i - 1]) {
+			
+			case ' ':
+			case '\t':
+			case '\n':
+				break;
+
+			default:
+				str[i] = '\0';
+				goto exit_trail;
+		}
 	}
 
-	while (str[0] != '\0' && (str[0] == ' ' || str[0] == '\t' || str[0] == '\n')) {
-		str++;
-	}
+exit_trail:
 
-	return str[0] != '\0' ? str : NULL;
+	/* lead */
+
+	for (;;) {
+		switch(str[0]) {
+
+			case ' ':
+			case '\t':
+			case '\n':
+				str++;
+				break;
+
+			case '\0':
+				return NULL;
+		
+			default:
+				return str;
+		}
+	}
 }

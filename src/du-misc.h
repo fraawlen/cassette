@@ -22,6 +22,7 @@
 #define DU_MISC_H
 
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -44,7 +45,7 @@ int16_t du_misc_convert_fp1616_to_int16(int32_t f);
 /**
  * Puts into the given buffer the path of the home directory of the current user.
  *
- * @param buf : buffer
+ * @param buf : string buffer to write to
  * @param n   : size of the buffer
  *
  * @return : pointer to the begining of the buffer.
@@ -59,6 +60,25 @@ char *du_misc_get_home_path(char *buf, size_t n);
 unsigned long du_misc_get_time(void);
 
 /**
+ * Reads characters from the stream f and stores them into the buffer pointed to by buf. Reading stops after
+ * an EOF, the numbers of characters added to the buffer is n - 1, or the read word ends. A word is an array
+ * of adjacent non whitespace characters (space, tab or newline). Leading whitespaces are ignored and not
+ * added to the buffer. If there a no words on a line of the read stream the first character of the buffer
+ * will just be set to '\0'. End of lines can be detected with the parameter eol. Whitespaces within quotes or
+ * double quotes are kept and are considered to be part of the word being read. If quotes needs to be part of
+ * the word, wrap them with doube quotes. Double quotes can be wrapped in simple quotes.
+ *
+ * @param buf : string buffer to write to
+ * @param n   : size of the buffer
+ * @param f   : file stram to read from
+ * @param eol : optional, if given set to true if a newline has been reached, set to false otherwhise
+ *
+ * @return : pointer to the begining of the buffer. If no byte has been read before reaching EOF, NULL will
+ *           be returned instead
+ */
+char *du_misc_read_word(char *buf, size_t n, FILE *f, bool *eol);
+
+/**
  * Check if a given environment variable exists and if its value is not an empty string.
  *
  * @param name : name of the environment variable to check
@@ -68,12 +88,12 @@ unsigned long du_misc_get_time(void);
 bool du_misc_test_env(const char *name);
 
 /**
- * Removes trailing and leading spaces and tabs from a string.
+ * Removes trailing and leading spaces, tabs and newlines from the given string.
  *
  * @param str : string to trim
  *
  * @return : NULL if the resulting string is of lenght 0 or if the input string is NULL, otherwise a pointer
- *           to the modified string is returned
+ *           to the beginning of the modified string is returned
  */
 char *du_misc_trim_str(char *str);
 
