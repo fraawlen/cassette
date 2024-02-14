@@ -68,6 +68,25 @@ du_book_get_next_word(const du_book_t *book, char **s)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 char *
+du_book_get_new_word(du_book_t *book, bool new_group)
+{
+	assert(book);
+	du_status_test(book->status, return NULL);
+
+	if (book->n_words >= book->n_alloc && !_extend(book)) {
+		return NULL;
+	}
+
+	if (new_group || book->n_words == 0) {
+		book->groups[book->n_groups++] = book->n_words;
+	}
+
+	return &book->words[(book->n_words++) * book->word_n];
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+char *
 du_book_get_word(const du_book_t *book, size_t index)
 {
 	assert(book);
@@ -110,33 +129,13 @@ du_book_reset(du_book_t *book)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-char *
-du_book_start_next_word(du_book_t *book, bool new_group)
-{
-	assert(book);
-	du_status_test(book->status, return NULL);
-
-	if (book->n_words >= book->n_alloc && !_extend(book)) {
-		return NULL;
-	}
-
-	if (new_group || book->n_words == 0) {
-		book->groups[book->n_groups] = book->n_words;
-		book->n_groups++;
-	}
-
-	return &book->words[(book->n_words++) * book->word_n];
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 void
-du_book_write_next_word(du_book_t *book, bool new_group, const char *str)
+du_book_write_new_word(du_book_t *book, bool new_group, const char *str)
 {
 	assert(book);
 	du_status_test(book->status, return);
 
-	char *word = du_book_start_next_word(book, new_group);
+	char *word = du_book_get_new_word(book, new_group);
 	if (word) {
 		strncpy(word, str, book->word_n - 1);
 		word[book->word_n - 1] = '\0';

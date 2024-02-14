@@ -30,7 +30,7 @@ main(int argc, char **argv)
 	/* write */
 
 	for (size_t i = 0; i < n; i++) {
-		s = du_book_start_next_word(&book, false);
+		s = du_book_get_new_word(&book, false);
 		sprintf(s, "word_%li", i);
 	}
 

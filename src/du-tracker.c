@@ -96,7 +96,7 @@ du_tracker_init(du_tracker_t *tracker, size_t n_alloc)
 
 	tracker->n = 0;
 	tracker->n_alloc = n_alloc;
-	tracker->ptr = n_alloc > 0 ? malloc(n_alloc, sizeof(void*)) : NULL;
+	tracker->ptr = n_alloc > 0 ? malloc(n_alloc * sizeof(void*)) : NULL;
 	tracker->status = n_alloc == 0 || tracker->ptr ? DU_STATUS_SUCCESS : DU_STATUS_FAILURE;
 }
 

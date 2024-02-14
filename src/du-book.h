@@ -64,19 +64,19 @@ void du_book_reset(du_book_t *book);
 /**
  *
  */
-char *du_book_start_next_word(du_book_t *book, bool new_group);
-
-/**
- *
- */
 void du_book_clear(du_book_t *book);
 
 /**
  *
  */
-void du_book_write_next_word(du_book_t *book, bool new_group, const char *str);
+void du_book_write_new_word(du_book_t *book, bool new_group, const char *str);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ */
+char *du_book_get_new_word(du_book_t *book, bool new_group);
 
 /**
  *
