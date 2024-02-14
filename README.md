@@ -8,6 +8,7 @@ Derelict Utilities (DU) is a collection of data structures and convenience funct
 
 Currently provided components:
 
+- Book : a fancy dynamic array / vector for c-strings
 - Dictionary : a string-group-value hashmap
 - Tracker : a hybrid pointer vector-stack data structure to keep track of instanced components.
 - String : a 2D UTF-8 C-string wrapper with simple to use string manipulation methods
@@ -18,7 +19,7 @@ Currently provided components:
 Status
 ------
 
-Latest release : **1.1.0**
+Latest release : **n/a**
 
 This library was initialy embeded within DG < 0.2.0. However, to better separate the actual GUI components from internal data structures, and to re-use said data structures in other not necessarily GUI-related projects, it has been split into its own library.
 
