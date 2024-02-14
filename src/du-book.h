@@ -76,7 +76,12 @@ void du_book_write_new_word(du_book_t *book, bool new_group, const char *str);
 /**
  *
  */
-char *du_book_get_new_word(du_book_t *book, bool new_group);
+char *du_book_get_group(const du_book_t *book, size_t index);
+
+/**
+ *
+ */
+size_t du_book_get_group_length(const du_book_t *book, size_t index);
 
 /**
  *
@@ -86,7 +91,17 @@ char *du_book_get_next_word(const du_book_t *book, char **s);
 /**
  *
  */
+char *du_book_get_new_word(du_book_t *book, bool new_group);
+
+/**
+ *
+ */
 char *du_book_get_word(const du_book_t *book, size_t index);
+
+/**
+ *
+ */
+char *du_book_get_word_in_group(const du_book_t *book, size_t index_group, size_t index_word);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

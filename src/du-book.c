@@ -49,6 +49,36 @@ du_book_clear(du_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 char *
+du_book_get_group(const du_book_t *book, size_t index)
+{
+	assert(book);
+	du_status_test(book->status, return NULL);
+
+	if (index >= book->n_groups) {
+		return NULL;
+	}
+
+	return &book->words[book->groups[index] * book->word_n];
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+du_book_get_group_length(const du_book_t *book, size_t index)
+{
+	assert(book);
+	du_status_test(book->status, return 0);
+
+	if (index >= book->n_groups) {
+		return 0;
+	}
+
+	return (index < book->n_groups - 1 ? book->groups[index + 1] : book->n_words) - book->groups[index];
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+char *
 du_book_get_next_word(const du_book_t *book, char **s)
 {
 	assert(book && s);
@@ -101,15 +131,30 @@ du_book_get_word(const du_book_t *book, size_t index)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+char *
+du_book_get_word_in_group(const du_book_t *book, size_t index_group, size_t index_word)
+{
+	assert(book);
+	du_status_test(book->status, return NULL);
+
+	if (du_book_get_group_length(book, index_group) == 0) {
+		return NULL;
+	}
+
+	return &book->words[(book->groups[index_group] + index_word) * book->word_n];
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 du_book_init(du_book_t *book, size_t n_alloc, size_t word_n)
 {
 	assert(book && word_n > 0);
 
+	book->word_n = word_n;
 	book->n_words = 0;
 	book->n_groups = 0;
 	book->n_alloc = n_alloc;
-	book->word_n = word_n;
 	book->words  = n_alloc > 0 ? malloc(n_alloc * word_n) : NULL;
 	book->groups = n_alloc > 0 ? malloc(n_alloc * sizeof(size_t)) : NULL;
 	book->status = n_alloc == 0 || (book->groups && book->words) ? DU_STATUS_SUCCESS : DU_STATUS_FAILURE;
