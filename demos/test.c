@@ -10,8 +10,6 @@
 int
 main(int argc, char **argv)
 {
-	/* variables */
-
 	du_dictionary_t dict;
 	du_string_t str;
 

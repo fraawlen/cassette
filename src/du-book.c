@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "du.h"
 
@@ -29,142 +30,117 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _extend (du_tracker_t *tracker);
+static bool _extend (du_book_t *book);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 void
-du_tracker_clear(du_tracker_t *tracker)
+du_book_clear(du_book_t *book)
 {
-	assert(tracker);
-	du_status_test(tracker->status, return);
+	assert(book);
+	du_status_test(book->status, return);
 
-	free(tracker->ptr);
-	tracker->ptr = NULL;
-	tracker->n = 0;
-	tracker->n_alloc = 0;
+	book->n_words  = 0;
+	book->n_groups = 0;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
-du_tracker_find(const du_tracker_t *tracker, const void *ptr, size_t *index)
+char *
+du_book_get_next_word(const du_book_t *book, char **s)
 {
-	assert(tracker);
-	du_status_test(tracker->status, return false);
+	assert(book && s);
+	du_status_test(book->status, return NULL);
 
-	const size_t i0 = index && *index < tracker->n ? *index : tracker->n - 1;
-	size_t i;
+	if (!*s) {
+		return *s = book->words;
+	}	
 
-	/* first scan from i0 to 0 */
-
-	for (i = i0; i < SIZE_MAX; i--) {
-		if (tracker->ptr[i] == ptr) {
-			goto found;
-		}
+	if (*s < book->words || *s >= book->words + ((book->n_words - 1) * book->word_n)) {
+		return NULL;
 	}
 
-	/* second scan, from i0 + 1 to max */
+	return *s = &book->words[((*s - book->words) / book->word_n + 1) * book->word_n];
+}
 
-	for (i = i0 + 1; i < tracker->n; i++) {
-		if (tracker->ptr[i] == ptr) {
-			goto found;
-		}
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+char *
+du_book_get_word(const du_book_t *book, size_t index)
+{
+	assert(book);
+	du_status_test(book->status, return NULL);
+
+	if (index >= book->n_words) {
+		return NULL;
 	}
 
-	/*****/
-
-	return false;
-
-found:
-
-	if (index) {
-		*index = i;
-	}
-	
-	return true;
+	return &book->words[index * book->word_n];
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_tracker_init(du_tracker_t *tracker, size_t n_alloc)
+du_book_init(du_book_t *book, size_t n_alloc, size_t word_n)
 {
-	assert(tracker);
+	assert(book && word_n > 0);
 
-	tracker->n = 0;
-	tracker->n_alloc = n_alloc;
-	tracker->ptr = n_alloc > 0 ? malloc(n_alloc, sizeof(void*)) : NULL;
-	tracker->status = n_alloc == 0 || tracker->ptr ? DU_STATUS_SUCCESS : DU_STATUS_FAILURE;
+	book->n_words = 0;
+	book->n_groups = 0;
+	book->n_alloc = n_alloc;
+	book->word_n = word_n;
+	book->words  = n_alloc > 0 ? malloc(n_alloc * word_n) : NULL;
+	book->groups = n_alloc > 0 ? malloc(n_alloc * sizeof(size_t)) : NULL;
+	book->status = n_alloc == 0 || (book->groups && book->words) ? DU_STATUS_SUCCESS : DU_STATUS_FAILURE;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_tracker_pull_index(du_tracker_t *tracker, size_t index)
+du_book_reset(du_book_t *book)
 {
-	assert(tracker);
-	du_status_test(tracker->status, return);
+	assert(book);
 
-	if (index < tracker->n) {
-		tracker->n--;
+	free(book->words);
+	free(book->groups);
+	book->status = DU_STATUS_NOT_INIT;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+char *
+du_book_start_next_word(du_book_t *book, bool new_group)
+{
+	assert(book);
+	du_status_test(book->status, return NULL);
+
+	if (book->n_words >= book->n_alloc && !_extend(book)) {
+		return NULL;
 	}
 
-	for (; index < tracker->n; index++) {
-		tracker->ptr[index] = tracker->ptr[index + 1];
+	if (new_group || book->n_words == 0) {
+		book->groups[book->n_groups] = book->n_words;
+		book->n_groups++;
 	}
+
+	return &book->words[(book->n_words++) * book->word_n];
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_tracker_pull_pointer(du_tracker_t *tracker, const void *ptr)
+du_book_write_next_word(du_book_t *book, bool new_group, const char *str)
 {
-	assert(tracker);
-	du_status_test(tracker->status, return);
+	assert(book);
+	du_status_test(book->status, return);
 
-	size_t i = 0;
-
-	if (du_tracker_find(tracker, ptr, &i)) {
-		du_tracker_pull_index(tracker, i);
+	char *word = du_book_start_next_word(book, new_group);
+	if (word) {
+		strncpy(word, str, book->word_n - 1);
+		word[book->word_n - 1] = '\0';
 	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-du_tracker_push(du_tracker_t *tracker, const void *ptr, size_t *index)
-{
-	assert(tracker);
-	du_status_test(tracker->status, return);
-
-	if (du_tracker_find(tracker, ptr, index)) {
-		return;
-	}
-
-	if (tracker->n >= tracker->n_alloc && !_extend(tracker)) {
-		return;
-	}
-
-	if (index) {
-		*index = tracker->n;
-	}
-
-	tracker->ptr[tracker->n] = ptr;
-	tracker->n++;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-du_tracker_reset(du_tracker_t *tracker)
-{
-	assert(tracker);
-
-	free(tracker->ptr);
-	tracker->status = DU_STATUS_NOT_INIT;
 }
 
 /************************************************************************************************************/
@@ -172,15 +148,19 @@ du_tracker_reset(du_tracker_t *tracker)
 /************************************************************************************************************/
 
 static bool
-_extend(du_tracker_t *tracker)
+_extend(du_book_t *book)
 {
-	const size_t n_alloc = tracker->n_alloc > 0 ? tracker->n_alloc * 2 : 1;
+	const size_t n_alloc = book->n_alloc > 0 ? book->n_alloc * 2 : 1;
 
-	void *tmp = realloc(tracker->ptr, n_alloc * sizeof(void*));
-	du_status_assert(tracker->status, tmp, return false);
+	void *tmp1 = realloc(book->words, n_alloc * book->word_n);
+	du_status_assert(book->status, tmp1, return false);
+	book->words = tmp1;
 
-	tracker->ptr = tmp;
-	tracker->n_alloc = n_alloc;
+	void *tmp2 = realloc(book->groups, n_alloc * sizeof(size_t));
+	du_status_assert(book->status, tmp2, return false);
+	book->groups = tmp2;
+
+	book->n_alloc = n_alloc;
 
 	return true;
 }
