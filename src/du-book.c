@@ -54,11 +54,7 @@ du_book_get_group(const du_book_t *book, size_t index)
 	assert(book);
 	du_status_test(book->status, return NULL);
 
-	if (index >= book->n_groups) {
-		return NULL;
-	}
-
-	return &book->words[book->groups[index] * book->word_n];
+	return index < book->n_groups ? book->words + book->groups[index] * book->word_n : NULL;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -88,11 +84,11 @@ du_book_get_next_word(const du_book_t *book, char **s)
 		return *s = book->words;
 	}	
 
-	if (*s < book->words || *s >= book->words + ((book->n_words - 1) * book->word_n)) {
+	if (*s < book->words || *s >= book->words + (book->n_words - 1) * book->word_n) {
 		return NULL;
 	}
 
-	return *s = &book->words[((*s - book->words) / book->word_n + 1) * book->word_n];
+	return *s = book->words + ((*s - book->words) / book->word_n + 1) * book->word_n;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -111,7 +107,7 @@ du_book_get_new_word(du_book_t *book, bool new_group)
 		book->groups[book->n_groups++] = book->n_words;
 	}
 
-	return &book->words[(book->n_words++) * book->word_n];
+	return book->words + (book->n_words++) * book->word_n;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -126,7 +122,7 @@ du_book_get_word(const du_book_t *book, size_t index)
 		return NULL;
 	}
 
-	return &book->words[index * book->word_n];
+	return book->words + index * book->word_n;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -141,7 +137,7 @@ du_book_get_word_in_group(const du_book_t *book, size_t index_group, size_t inde
 		return NULL;
 	}
 
-	return &book->words[(book->groups[index_group] + index_word) * book->word_n];
+	return book->words + (book->groups[index_group] + index_word) * book->word_n;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -194,17 +190,15 @@ du_book_write_new_word(du_book_t *book, bool new_group, const char *str)
 static bool
 _extend(du_book_t *book)
 {
-	const size_t n_alloc = book->n_alloc > 0 ? book->n_alloc * 2 : 1;
+	book->n_alloc = book->n_alloc > 0 ? book->n_alloc * 2 : 1;
 
-	void *tmp1 = realloc(book->words, n_alloc * book->word_n);
+	void *tmp1 = realloc(book->words, book->n_alloc * book->word_n);
 	du_status_assert(book->status, tmp1, return false);
 	book->words = tmp1;
 
-	void *tmp2 = realloc(book->groups, n_alloc * sizeof(size_t));
+	void *tmp2 = realloc(book->groups, book->n_alloc * sizeof(size_t));
 	du_status_assert(book->status, tmp2, return false);
 	book->groups = tmp2;
-
-	book->n_alloc = n_alloc;
 
 	return true;
 }

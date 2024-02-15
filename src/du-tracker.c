@@ -174,13 +174,11 @@ du_tracker_reset(du_tracker_t *tracker)
 static bool
 _extend(du_tracker_t *tracker)
 {
-	const size_t n_alloc = tracker->n_alloc > 0 ? tracker->n_alloc * 2 : 1;
+	tracker->n_alloc = tracker->n_alloc > 0 ? tracker->n_alloc * 2 : 1;
 
-	void *tmp = realloc(tracker->ptr, n_alloc * sizeof(void*));
+	void *tmp = realloc(tracker->ptr, tracker->n_alloc * sizeof(void*));
 	du_status_assert(tracker->status, tmp, return false);
-
 	tracker->ptr = tmp;
-	tracker->n_alloc = n_alloc;
 
 	return true;
 }
