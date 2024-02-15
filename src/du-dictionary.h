@@ -106,25 +106,7 @@ void du_dictionary_reset(du_dictionary_t *dict);
  *
  * @param dict : dictionary to clear
  */
-void du_dictionary_clear_all(du_dictionary_t *dict);
-
-/**
- * Erases all saved values of a given group within the given dictionary.
- *
- * @param dict  : dictionary to search through
- * @param group : group to clear
- */
-void du_dictionary_clear_group(du_dictionary_t *dict, int group);
-
-/**
- * Finds the slot matching key + group and frees it. If the key + group combo does not exist this function
- * has no effect.
- *
- * @param dict  : dictionary to search through
- * @param key   : string key to use
- * @param group : group to match
- */
-void du_dictionary_erase_value(du_dictionary_t *dict, const char *key, int group);
+void du_dictionary_clear(du_dictionary_t *dict);
 
 /**
  * Finds a suitable slot for a matching key + group and fills it with the given group, computed hash and value.

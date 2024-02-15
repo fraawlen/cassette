@@ -66,7 +66,8 @@ unsigned long du_misc_get_time(void);
  * added to the buffer. If there a no words on a line of the read stream the first character of the buffer
  * will just be set to '\0'. End of lines can be detected with the parameter eol. Whitespaces within quotes or
  * double quotes are kept and are considered to be part of the word being read. If quotes needs to be part of
- * the word, wrap them with doube quotes. Double quotes can be wrapped in simple quotes.
+ * the word, wrap them with doube quotes. Double quotes can be wrapped in simple quotes. Newline character
+ * get replaced by the null character.
  *
  * @param buf : string buffer to write to
  * @param n   : size of the buffer

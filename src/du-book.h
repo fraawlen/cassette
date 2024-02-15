@@ -69,6 +69,16 @@ void du_book_clear(du_book_t *book);
 /**
  *
  */
+void du_book_erase_last_group(du_book_t *book);
+
+/**
+ *
+ */
+void du_book_erase_last_word(du_book_t *book);
+
+/**
+ *
+ */
 void du_book_write_new_word(du_book_t *book, bool new_group, const char *str);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -82,6 +92,16 @@ char *du_book_get_group(const du_book_t *book, size_t index);
  *
  */
 size_t du_book_get_group_length(const du_book_t *book, size_t index);
+
+/**
+ *
+ */
+char *du_book_get_last_group(const du_book_t *book);
+
+/**
+ *
+ */
+char *du_book_get_last_word(const du_book_t *book);
 
 /**
  *

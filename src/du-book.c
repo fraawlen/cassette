@@ -45,6 +45,31 @@ du_book_clear(du_book_t *book)
 	book->n_words  = 0;
 	book->n_groups = 0;
 }
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+du_book_erase_last_group(du_book_t *book)
+{
+	assert(book);
+	du_status_test(book->status, return);
+
+	if (book->n_words > 0) {
+		book->n_words = book->groups[--book->n_groups];
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+du_book_erase_last_word(du_book_t *book)
+{
+	assert(book);
+	du_status_test(book->status, return);
+
+	if (book->n_words > 0 && book->groups[book->n_groups - 1] == --book->n_words) {
+		book->n_groups--;
+	}
+}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -70,6 +95,27 @@ du_book_get_group_length(const du_book_t *book, size_t index)
 	}
 
 	return (index < book->n_groups - 1 ? book->groups[index + 1] : book->n_words) - book->groups[index];
+}
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+char *
+du_book_get_last_group(const du_book_t *book)
+{
+	assert(book);
+	du_status_test(book->status, return NULL);
+
+	return book->n_words > 0 ? book->words + book->groups[book->n_groups - 1] : NULL;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+char *
+du_book_get_last_word(const du_book_t *book)
+{
+	assert(book);
+	du_status_test(book->status, return NULL);
+
+	return book->n_words > 0 ? book->words + (book->n_words - 1) * book->word_n : NULL;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -118,11 +164,7 @@ du_book_get_word(const du_book_t *book, size_t index)
 	assert(book);
 	du_status_test(book->status, return NULL);
 
-	if (index >= book->n_words) {
-		return NULL;
-	}
-
-	return book->words + index * book->word_n;
+	return index < book->n_words ? book->words + index * book->word_n : NULL;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
