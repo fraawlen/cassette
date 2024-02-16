@@ -57,10 +57,10 @@ typedef struct {
  * If status is not set to DU_STATUS_SUCCESS all handler functions will have no effect with the exception of
  * du_inputs_reset() and du_inputs_init().
  *
- * @param slots
- * @param n
- * @param n_alloc
- * @param status
+ * @param slots   : slot array
+ * @param n       : number of occupied slots
+ * @param n_alloc : total number of allocated slots
+ * @param status  : error state
  */
 typedef struct {
 	du_inputs_slot_t *slots;

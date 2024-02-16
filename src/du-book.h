@@ -35,7 +35,21 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
+ * Fancy dynamic string array / vector that can autoresize itself to accomodate more words (aka C-strings).
+ * Words can be grouped to create sub-string-arrays. All words are stored in a single continuous block of
+ * memory. There can't be more groups than words. The groups array values points to index position (not the
+ * exact byte offset) of the first word of each group. Words are added or erased from a given book
+ * sequencially, but their value can be accessed randomly.
+ * If status is not set to DU_STATUS_SUCCESS all handler functions will have no effect with the exception of
+ * du_book_reset() and du_book_init().
  *
+ * @param words    : words array
+ * @param groups   : groups array
+ * @param word_n   : maximum size (in bytes) of a single word
+ * @param n_words  : current amount of words
+ * @param n_groups : current amount of groups
+ * @param n_alloc  : amount of allocated words (exact amount of allocated bytes is word_n * n_alloc)
+ * @param status   : error state
  */
 typedef struct {
 	char *words;
@@ -50,76 +64,127 @@ typedef struct {
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Pre-allocate memory to the book and set its variables appropriately. If n = 0, no memory is
+ * pre-allocated, but the structure will still be considered to have been initialised. In case of error,
+ * book->status will be set to DU_STATUS_FAILURE. It's set to DU_STATUS_SUCCESS otherwhise.
  *
+ * @param book    : book to init 
+ * @param n_alloc : initial size of the word array to pre-allocate
+ * @param word_n  : maximum size (in bytes) of a single word
  */
 void du_book_init(du_book_t *book, size_t n_alloc, size_t word_n);
 
 /**
+ * Allocated memory is freed and the structure will be put in an unitialised state with book->status set to
+ * DU_STATUS_NOT_INIT. The given structure itself is not freed, and may require an explicit free operation.
  *
+ * @param book : book to reset
  */
 void du_book_reset(du_book_t *book);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Removes all words and groups. Internal memory however is not freed, use du_book_reset() for that.
+ * The given structure needs to be initialised beforehand.
  *
+ * @param book : book to clear
  */
 void du_book_clear(du_book_t *book);
 
 /**
+ * Removes the last groups and words assotiated to it.
+ * The given structure needs to be initialised beforehand.
  *
+ * @param book : book to remove data from
  */
 void du_book_erase_last_group(du_book_t *book);
 
 /**
+ * Removes the last word. If that word was the first in its group, the group will be deleted too.
+ * The given structure needs to be initialised beforehand.
  *
+ * @param book : book to remove data from
  */
 void du_book_erase_last_word(du_book_t *book);
 
 /**
+ * Writes the given string as a new word in the book.
+ * The given structure needs to be initialised beforehand.
  *
+ * @param book      : book to add the word to
+ * @param new_group : make the added word part of a new group
+ * @param str       : C-string to add as a word
  */
 void du_book_write_new_word(du_book_t *book, bool new_group, const char *str);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Gets the first word of the index-th group in the given book.
+ * The given structure needs to be initialised beforehand.
  *
+ * @param book : book to get data from
  */
 char *du_book_get_group(const du_book_t *book, size_t index);
 
 /**
+ * Gets the length of the index-th group in the given book.
+ * The given structure needs to be initialised beforehand.
  *
+ * @param book : book to get data from
  */
 size_t du_book_get_group_length(const du_book_t *book, size_t index);
 
 /**
+ * Gets the first word of the last group that has been added to the book.
+ * The given structure needs to be initialised beforehand.
  *
+ * @param book : book to get data from
  */
 char *du_book_get_last_group(const du_book_t *book);
 
 /**
+ * Gets the last word that has been added to the book. It does not takes groups into account.
+ * The given structure needs to be initialised beforehand.
  *
+ * @param book : book to get data from
  */
 char *du_book_get_last_word(const du_book_t *book);
 
 /**
+ * Gets the word after the one pointer to by s. Use this function to easily iterate over a book.
+ * The given structure needs to be initialised beforehand.
  *
+ * @param book : book to get data from
  */
 char *du_book_get_next_word(const du_book_t *book, char **s);
 
 /**
+ * Similar to du_book_get_new_word(). However, exeptionally, this getter function has a side effect of
+ * incrementing words and possibly group (if new_group is set to true) counters. That's because this function
+ * is intended to be an alternative to du_book_write_new_word(), by giving the caller direct access to the
+ * exact memory location to write to, all while taking care of incrementing the different counters
+ * appropriately.
+ * The given structure needs to be initialised beforehand.
  *
+ * @param book : book to get data from
  */
 char *du_book_get_new_word(du_book_t *book, bool new_group);
 
 /**
+ * Gets the index-th word of a book irrespectively of groups.
+ * The given structure needs to be initialised beforehand.
  *
+ * @param book : book to get data from
  */
 char *du_book_get_word(const du_book_t *book, size_t index);
 
 /**
+ * Gets the index_word-th word from the index_group-th group of a book.
+ * The given structure needs to be initialised beforehand.
  *
+ * @param book : book to get data from
  */
 char *du_book_get_word_in_group(const du_book_t *book, size_t index_group, size_t index_word);
 

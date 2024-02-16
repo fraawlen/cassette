@@ -55,10 +55,9 @@ typedef struct {
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Pre-allocate memory to the tracker and set its variables appropriately. Allocated memory in the array is
- * initialised to 0. If n = 0, no memory is pre-allocated and but the structure will still be considered to
- * have been initialised. In case of error, tracker->status will be set to DU_STATUS_FAILURE. It's set to
- * DU_STATUS_SUCCESS otherwhise.
+ * Pre-allocate memory to the tracker and set its variables appropriately. If n = 0, no memory is
+ * pre-allocated, but the structure will still be considered to have been initialised. In case of error,
+ * tracker->status will be set to DU_STATUS_FAILURE. It's set to DU_STATUS_SUCCESS otherwhise.
  *
  * @param tracker : tracker to init
  * @param n_alloc : initial size of the pointer array to pre-allocate. 

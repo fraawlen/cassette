@@ -100,10 +100,10 @@ typedef struct {
 void du_dictionary_init(du_dictionary_t *dict, uint32_t n_alloc, du_ratio_t max_load);
 
 /**
- * Resets a given dictionary and free memory.
- * The status of the structure is also reseted to DU_STATUS_SUCCESS.
+ * Allocated memory is freed and the structure will be put in an unitialised state with dict->status set to
+ * DU_STATUS_NOT_INIT. The given structure itself is not freed, and may require an explicit free operation.
  *
- * @param : dictionary to reset
+ * @param dict : dictionary to reset
  */
 void du_dictionary_reset(du_dictionary_t *dict);
 
