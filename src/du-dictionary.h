@@ -37,6 +37,15 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
+ * Slot occupation states. DU_DICTIONARY_DELETED value stands for tombstones.
+ */
+typedef enum {
+	DU_DICTIONARY_UNUSED   = 0,
+	DU_DICTIONARY_DELETED  = 1,
+	DU_DICTIONARY_OCCUPIED = 2,
+} du_dictionary_usage_t;
+
+/**
  * Slot in the dictionary.
  *
  * @param hash  : hash of the key used to get the slot
@@ -47,8 +56,8 @@ extern "C" {
 typedef struct {
 	uint32_t hash;
 	int64_t value;
-	int64_t group;
-	bool used;
+	int group;
+	du_dictionary_usage_t usage;
 } du_dictionary_slot_t;
 
 /**
@@ -107,6 +116,24 @@ void du_dictionary_reset(du_dictionary_t *dict);
  * @param dict : dictionary to clear
  */
 void du_dictionary_clear(du_dictionary_t *dict);
+
+/**
+ * Erases all saved values of a given group within the given dictionary.
+ *
+ * @param dict  : dictionary to search through
+ * @param group : group to clear
+ */
+void du_dictionary_erase_group(du_dictionary_t *dict, int group);
+
+/**
+ * Finds the slot matching key + group and frees it. If the key + group combo does not exist this function
+ * has no effect.
+ *
+ * @param dict  : dictionary to search through
+ * @param key   : string key to use
+ * @param group : group to match
+ */
+void du_dictionary_erase_value(du_dictionary_t *dict, const char *key, int group);
 
 /**
  * Finds a suitable slot for a matching key + group and fills it with the given group, computed hash and value.

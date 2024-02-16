@@ -29,9 +29,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool                  _extend    (du_dictionary_t *dict);
-static du_dictionary_slot_t *_find_slot (const du_dictionary_t *dict, uint32_t hash, int group);
-static uint32_t              _hash      (const char *str);
+static bool     _extend (du_dictionary_t *dict);
+static uint32_t _hash   (const char *str);
+
+static du_dictionary_slot_t *_find_slot (const du_dictionary_t *dict, uint32_t hash, int group,
+                                         du_dictionary_usage_t mode);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -49,19 +51,51 @@ du_dictionary_clear(du_dictionary_t *dict)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void
+du_dictionary_erase_group(du_dictionary_t *dict, int group)
+{
+	assert(dict);
+	du_status_test(dict->status, return);
+	
+	for (size_t i = 0; i < dict->n_alloc; i++) {
+		if (dict->slots[i].usage == DU_DICTIONARY_OCCUPIED && dict->slots[i].group == group) {
+			dict->slots[i].usage =  DU_DICTIONARY_DELETED;
+			dict->n--;
+		}
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+du_dictionary_erase_value(du_dictionary_t *dict, const char *key, int group)
+{
+	assert(dict);
+	du_status_test(dict->status, return);
+
+	if ((_find_slot(dict, _hash(key), group, DU_DICTIONARY_UNUSED)->usage = DU_DICTIONARY_DELETED)) {
+		dict->n--;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 bool
 du_dictionary_find_value(const du_dictionary_t *dict, const char *key, int group, int64_t *value)
 {
 	assert(dict);
 	du_status_test(dict->status, return false);
 
-	du_dictionary_slot_t *slot = _find_slot(dict, _hash(key), group);
+	du_dictionary_slot_t *slot = _find_slot(dict, _hash(key), group, DU_DICTIONARY_UNUSED);
 	
-	if (value && slot->used) {
-		*value = slot->value;
+	if (slot->usage == DU_DICTIONARY_OCCUPIED) {
+		if (value) {
+			*value = slot->value;
+		}
+		return true;
 	}
 
-	return slot->used;
+	return false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -104,14 +138,23 @@ du_dictionary_set_value(du_dictionary_t *dict, const char *key, int group, int64
 	}
 
 	const uint32_t hash = _hash(key);
-	du_dictionary_slot_t *slot = _find_slot(dict, hash, group);
+	du_dictionary_slot_t *slot = _find_slot(dict, hash, group, DU_DICTIONARY_DELETED);
 
-	slot->value = value;
-	if (!slot->used) {
-		slot->group = group;
-		slot->hash = hash;
-		slot->used = true;
-		dict->n++;
+	switch (slot->usage) {
+		
+		case DU_DICTIONARY_DELETED:
+			_find_slot(dict, hash, group, DU_DICTIONARY_UNUSED)->usage = DU_DICTIONARY_DELETED;
+			/* fallthrough */
+
+		case DU_DICTIONARY_UNUSED:
+			slot->group = group;
+			slot->hash  = hash;
+			slot->usage = DU_DICTIONARY_OCCUPIED;
+			dict->n++;
+			/* fallthrough */
+
+		case DU_DICTIONARY_OCCUPIED:
+			slot->value = value;
 	}
 }
 
@@ -130,8 +173,8 @@ _extend(du_dictionary_t *dict)
 
 	for (size_t i = 0; i < dict->n_alloc; i++) {
 		slot = &dict->slots[i];
-		if (slot->used) {
-			*_find_slot(&dict_new, slot->hash, slot->group) = *slot;
+		if (slot->usage == DU_DICTIONARY_OCCUPIED) {
+			*_find_slot(&dict_new, slot->hash, slot->group, DU_DICTIONARY_UNUSED) = *slot;
 		}
 	}
 
@@ -145,14 +188,18 @@ _extend(du_dictionary_t *dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static du_dictionary_slot_t *
-_find_slot(const du_dictionary_t *dict, uint32_t hash, int group)
+_find_slot(const du_dictionary_t *dict, uint32_t hash, int group, du_dictionary_usage_t mode)
 {
 	size_t i = hash % dict->n_alloc;
 	du_dictionary_slot_t *slot = &dict->slots[i];
 
-	while (slot->used && (slot->group != group || slot->hash != hash)) {
+	while (mode < slot->usage && (slot->group != group || slot->hash != hash)) {
 		i = i >= dict->n_alloc - 1 ? 0 : i + 1;
 		slot = &dict->slots[i];
+	}
+
+	if (i != hash % dict->n_alloc) {
+		printf(">> %u (%li)\n", hash, i - (hash % dict->n_alloc));
 	}
 
 	return slot;
