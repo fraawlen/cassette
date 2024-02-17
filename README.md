@@ -10,7 +10,7 @@ Currently provided components:
 
 - Book : a fancy dynamic array / vector for c-strings
 - Dictionary : a string-group-value hashmap
-- Tracker : a hybrid pointer vector-stack data structure to keep track of instanced components.
+- Tracker : a hybrid pointer vector / stack data structure to keep track of instanced components.
 - String : a 2D UTF-8 C-string wrapper with simple to use string manipulation methods
 - Color : RGBA color representation, manipulation and conversion
 - Input : similar to Trackers but dedicated to end-user input tracking (screen touches, mouse buttons, ...)
