@@ -110,6 +110,8 @@ void du_book_erase_last_word(du_book_t *book);
 
 /**
  * Writes the given string as a new word in the book.
+ * If needed, the book's internal arrays will be automatically expanded. In case of failure, the book's
+ * status will be set to DU_STATUS_FAILURE.
  * The given structure needs to be initialised beforehand.
  *
  * @param book      : book to add the word to
@@ -124,7 +126,10 @@ void du_book_write_new_word(du_book_t *book, bool new_group, const char *str);
  * Gets the first word of the index-th group in the given book.
  * The given structure needs to be initialised beforehand.
  *
- * @param book : book to get data from
+ * @param book  : book to get data from
+ * @param index : index position of the group to look for
+ *
+ * @return :
  */
 char *du_book_get_group(const du_book_t *book, size_t index);
 
@@ -133,6 +138,9 @@ char *du_book_get_group(const du_book_t *book, size_t index);
  * The given structure needs to be initialised beforehand.
  *
  * @param book : book to get data from
+ * @param index : index position of the group to look for
+ *
+ * @return :
  */
 size_t du_book_get_group_length(const du_book_t *book, size_t index);
 
@@ -141,6 +149,8 @@ size_t du_book_get_group_length(const du_book_t *book, size_t index);
  * The given structure needs to be initialised beforehand.
  *
  * @param book : book to get data from
+ *
+ * @return :
  */
 char *du_book_get_last_group(const du_book_t *book);
 
@@ -149,14 +159,18 @@ char *du_book_get_last_group(const du_book_t *book);
  * The given structure needs to be initialised beforehand.
  *
  * @param book : book to get data from
+ * @return :
  */
 char *du_book_get_last_word(const du_book_t *book);
 
 /**
- * Gets the word after the one pointer to by s. Use this function to easily iterate over a book.
+ * Gets the word after the one pointer to by word. Use this function to easily iterate over a book.
  * The given structure needs to be initialised beforehand.
  *
  * @param book : book to get data from
+ * @param word : pointer to current word from book.
+ *
+ * @return :
  */
 char *du_book_get_next_word(const du_book_t *book, char **s);
 
@@ -166,9 +180,14 @@ char *du_book_get_next_word(const du_book_t *book, char **s);
  * is intended to be an alternative to du_book_write_new_word(), by giving the caller direct access to the
  * exact memory location to write to, all while taking care of incrementing the different counters
  * appropriately.
+ * If needed, the book's internal arrays will be automatically expanded. In case of failure, the book's
+ * status will be set to DU_STATUS_FAILURE.
  * The given structure needs to be initialised beforehand.
  *
- * @param book : book to get data from
+ * @param book      : book to get data from
+ * @param new_group : make the returned word part of a new group
+ *
+ * @return :
  */
 char *du_book_get_new_word(du_book_t *book, bool new_group);
 
@@ -176,7 +195,10 @@ char *du_book_get_new_word(du_book_t *book, bool new_group);
  * Gets the index-th word of a book irrespectively of groups.
  * The given structure needs to be initialised beforehand.
  *
- * @param book : book to get data from
+ * @param book  : book to get data from
+ * @param index : index position of the word to look for
+ *
+ * @return :
  */
 char *du_book_get_word(const du_book_t *book, size_t index);
 
@@ -184,7 +206,11 @@ char *du_book_get_word(const du_book_t *book, size_t index);
  * Gets the index_word-th word from the index_group-th group of a book.
  * The given structure needs to be initialised beforehand.
  *
- * @param book : book to get data from
+ * @param book        : book to get data from
+ * @param index_group : index position of the group to look for
+ * @param index_word  : index position of the word to look for within the group
+ *
+ * @return :
  */
 char *du_book_get_word_in_group(const du_book_t *book, size_t index_group, size_t index_word);
 
