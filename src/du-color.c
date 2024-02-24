@@ -128,10 +128,10 @@ du_color_to_argb_uint(du_color_t cl)
 {
 	_bind_cl(&cl);
 
-	const uint32_t a = cl.r * 256;
+	const uint32_t a = cl.a * 256;
 	const uint32_t r = cl.r * 256;
-	const uint32_t g = cl.r * 256;
-	const uint32_t b = cl.r * 256;
+	const uint32_t g = cl.g * 256;
+	const uint32_t b = cl.b * 256;
 
 	return (a << 24) + (r << 16) + (g << 8) + b;
 }
