@@ -73,12 +73,9 @@ du_misc_read_word(char *buf, size_t n, FILE *f, bool *eol)
 
 	bool quotes  = false;
 	bool quotes2 = false;
+	bool end = false;
 	size_t i = 0;
 	int c;
-
-	if (eol) {
-		*eol = false;
-	}
 
 	/* check if any char can be read */
 
@@ -87,7 +84,8 @@ du_misc_read_word(char *buf, size_t n, FILE *f, bool *eol)
 		return NULL;
 	}
 
-	/* ignore leading whitespace */
+
+	/* skip leading whitespace */
 
 	for (;;) {
 		switch (c) {
@@ -104,7 +102,7 @@ du_misc_read_word(char *buf, size_t n, FILE *f, bool *eol)
 
 exit_lead:
 
-	/* read chars */
+	/* read word */
 
 	for (;;) {
 		switch (c) {
@@ -124,35 +122,65 @@ exit_lead:
 				goto word_add;
 
 			case '\n':
-				if (eol) {
-					*eol = true;
-				}
-				/* fallthrough */
-
-			case ' ':
 			case '\t':
+			case ' ':
 				if (quotes || quotes2) {
 					goto word_add;
-				}
-				goto word_end;
-
-			default:
-			word_add:
-				if (i < n - 1) {
-					buf[i] = (char)c;
-					i++;
-					break;
 				}
 				/* fallthrough */
 
 			case EOF:
-			word_end:
-				buf[i] = '\0';
-				return buf;
+				goto exit_word;
+
+			default:
+			word_add:
+				if (i < n - 1) {
+					buf[i++] = (char)c;
+					break;
+				} else {
+					goto end;
+				}
 		}
 
 		c = fgetc(f);
 	}
+
+exit_word:
+
+	/* advance stream pointer until next word, newline or EOF */
+
+	for (;;) {
+		switch(c) {
+
+			case ' ':
+			case '\t':
+				c = fgetc(f);
+				break;
+			
+			case EOF:
+			case '\n':
+				end = true;
+				goto exit_trail;
+
+			default:
+				fseek(f, -1, SEEK_CUR);
+				goto exit_trail;
+		}
+	}
+
+exit_trail:
+
+	/* end */
+
+end:
+
+	if (eol) {
+		*eol = end;
+	}
+
+	buf[i] = '\0';
+
+	return buf;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

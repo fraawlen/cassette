@@ -62,20 +62,20 @@ unsigned long du_misc_get_time(void);
 /**
  * Reads characters from the stream f and stores them into the buffer pointed to by buf. Reading stops after
  * an EOF, the numbers of characters added to the buffer is n - 1, or the read word ends. A word is an array
- * of adjacent non whitespace characters (space, tab or newline). Leading whitespaces are ignored and not
- * added to the buffer. If there a no words on a line of the read stream the first character of the buffer
- * will just be set to '\0'. End of lines can be detected with the parameter eol. Whitespaces within quotes or
- * double quotes are kept and are considered to be part of the word being read. If quotes needs to be part of
- * the word, wrap them with doube quotes. Double quotes can be wrapped in simple quotes. Newline character
- * get replaced by the null character.
+ * of adjacent non whitespace characters (space, tab or newline). Leading and trailing whitespaces are ignored
+ * and not added to the buffer. If there are no words on a line, the first character of the buffer will just
+ * be set to '\0'. End of lines can be detected with the parameter eol. Whitespaces or newlines within quotes
+ * or double quotes are kept and are considered to be part of the word being read. If quotes needs to be part
+ * of the word, wrap them with doube quotes. Inversely, double quotes can be wrapped in simple quotes.
+ * Newline characters get replaced by the null character in the buffer.
  *
  * @param buf : string buffer to write to
  * @param n   : size of the buffer
- * @param f   : file stram to read from
+ * @param f   : file stream to read from
  * @param eol : optional, if given set to true if a newline has been reached, set to false otherwhise
  *
- * @return : pointer to the begining of the buffer. If no byte has been read before reaching EOF, NULL will
- *           be returned instead
+ * @return : pointer to the begining of the buffer. If no byte has been read before EOF, NULL will be returned
+ *           instead (note : buf's first char will still be set to '\0')
  */
 char *du_misc_read_word(char *buf, size_t n, FILE *f, bool *eol);
 
