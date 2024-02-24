@@ -84,7 +84,6 @@ du_misc_read_word(char *buf, size_t n, FILE *f, bool *eol)
 		return NULL;
 	}
 
-
 	/* skip leading whitespace */
 
 	for (;;) {

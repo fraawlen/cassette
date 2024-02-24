@@ -129,7 +129,8 @@ void du_book_write_new_word(du_book_t *book, bool new_group, const char *str);
  * @param book  : book to get data from
  * @param index : index position of the group to look for
  *
- * @return :
+ * @return : pointer to the first character of the first word within the target group. If index is out of
+ *           bounds, NULL will be returned instead
  */
 char *du_book_get_group(const du_book_t *book, size_t index);
 
@@ -140,7 +141,7 @@ char *du_book_get_group(const du_book_t *book, size_t index);
  * @param book : book to get data from
  * @param index : index position of the group to look for
  *
- * @return :
+ * @return : length (in words) of the target group. If index is out of bounds, 0 will be returned instead
  */
 size_t du_book_get_group_length(const du_book_t *book, size_t index);
 
@@ -150,7 +151,8 @@ size_t du_book_get_group_length(const du_book_t *book, size_t index);
  *
  * @param book : book to get data from
  *
- * @return :
+ * @return : pointer to the first character of the first word within the last group. If no word has been
+ *           written into the book yet, NULL will be returned instead
  */
 char *du_book_get_last_group(const du_book_t *book);
 
@@ -159,20 +161,26 @@ char *du_book_get_last_group(const du_book_t *book);
  * The given structure needs to be initialised beforehand.
  *
  * @param book : book to get data from
- * @return :
+ *
+ * @return : pointer to the first character of the last word. If no word has been written into the book yet,
+ *           NULL will be returned instead
  */
 char *du_book_get_last_word(const du_book_t *book);
 
 /**
- * Gets the word after the one pointer to by word. Use this function to easily iterate over a book.
+ * Gets the word following the word pointed to. Use this function to easily iterate over a book.
+ * Unlike du_book_get_new_word(), the book is not modified in any manner.
  * The given structure needs to be initialised beforehand.
  *
  * @param book : book to get data from
  * @param word : pointer to current word from book.
  *
- * @return :
+ * @return : pointer to the first character of the next word to be read from the book. If the word pointer
+ *           is out of bounds of the word array, or if no words have been written yet into the book, NULL
+ *           will be returned instead. But if the word pointer is set to NULL, the first character of the
+ *           first word within the book will be returned instead.
  */
-char *du_book_get_next_word(const du_book_t *book, char **s);
+char *du_book_get_next_word(const du_book_t *book, char **word);
 
 /**
  * Similar to du_book_get_new_word(). However, exeptionally, this getter function has a side effect of
@@ -187,7 +195,8 @@ char *du_book_get_next_word(const du_book_t *book, char **s);
  * @param book      : book to get data from
  * @param new_group : make the returned word part of a new group
  *
- * @return :
+ * @return : pointer to the first character of the new word. In case of extension failure, NULL will be
+ *           returned instead.
  */
 char *du_book_get_new_word(du_book_t *book, bool new_group);
 
@@ -198,7 +207,8 @@ char *du_book_get_new_word(du_book_t *book, bool new_group);
  * @param book  : book to get data from
  * @param index : index position of the word to look for
  *
- * @return :
+ * @return : pointer to the first character of the target word. If index is out of bounds, NULL will be
+ *           returned instead.
  */
 char *du_book_get_word(const du_book_t *book, size_t index);
 
@@ -210,7 +220,8 @@ char *du_book_get_word(const du_book_t *book, size_t index);
  * @param index_group : index position of the group to look for
  * @param index_word  : index position of the word to look for within the group
  *
- * @return :
+ * @return : pointer to the first character of the target word within the target group. If index_group is out
+ *           of bound, or if index_word >= than the target group size, then NULL will be returned instead.
  */
 char *du_book_get_word_in_group(const du_book_t *book, size_t index_group, size_t index_word);
 
