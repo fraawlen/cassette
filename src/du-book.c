@@ -175,8 +175,7 @@ du_book_get_word_in_group(const du_book_t *book, size_t index_group, size_t inde
 	assert(book);
 	du_status_test(book->status, return NULL);
 
-	size_t n = du_book_get_group_length(book, index_group);
-	if (n == 0 || index_word >= n) {
+	if (index_word >= du_book_get_group_length(book, index_group)) {
 		return NULL;
 	}
 
