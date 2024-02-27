@@ -60,14 +60,14 @@ char *du_misc_get_home_path(char *buf, size_t n);
 unsigned long du_misc_get_time(void);
 
 /**
- * Reads characters from the stream f and stores them into the buffer pointed to by buf. Reading stops after
- * an EOF, the numbers of characters added to the buffer is n - 1, or the read word ends. A word is an array
- * of adjacent non whitespace characters (space, tab or newline). Leading and trailing whitespaces are ignored
- * and not added to the buffer. If there are no words on a line, the first character of the buffer will just
- * be set to '\0'. End of lines can be detected with the parameter eol. Whitespaces or newlines within quotes
- * or double quotes are kept and are considered to be part of the word being read. If quotes needs to be part
- * of the word, wrap them with doube quotes. Inversely, double quotes can be wrapped in simple quotes.
- * Newline characters get replaced by the null character in the buffer.
+ * Reads characters from the stream f and stores them into the buffer pointed to by buf. Buffer writting stops
+ * after an EOF, the numbers of characters added to the buffer is n - 1, or the read word ends. A word is an
+ * array of adjacent non whitespace characters (space, tab or newline). Leading and trailing whitespaces are
+ * ignored and not added to the buffer. If there are no words on a line, the first character of the buffer
+ * will just be set to '\0'. End of lines can be detected with the parameter eol. Whitespaces or newlines
+ * within quotes or double quotes are kept and are considered to be part of the word being read. If quotes
+ * needs to be part of the word, wrap them with doube quotes. Inversely, double quotes can be wrapped in
+ * simple quotes. Newline characters and EOF get replaced by the '\0' character in the buffer.
  *
  * @param buf : string buffer to write to
  * @param n   : size of the buffer

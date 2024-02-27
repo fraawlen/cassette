@@ -136,8 +136,6 @@ exit_lead:
 				if (i < n - 1) {
 					buf[i++] = (char)c;
 					break;
-				} else {
-					goto end;
 				}
 		}
 
@@ -170,8 +168,6 @@ exit_word:
 exit_trail:
 
 	/* end */
-
-end:
 
 	if (eol) {
 		*eol = end;
