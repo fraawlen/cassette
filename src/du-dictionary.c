@@ -73,6 +73,10 @@ du_dictionary_erase_value(du_dictionary_t *dict, const char *key, int group)
 	assert(dict);
 	du_status_test(dict->status, return);
 
+	if (dict->n == 0) {
+		return;
+	}
+
 	du_dictionary_slot_t *slot = _find_slot(dict, _hash(key), group, DU_DICTIONARY_UNUSED);
 
 	if (slot->usage == DU_DICTIONARY_OCCUPIED) {
@@ -88,6 +92,10 @@ du_dictionary_find_value(const du_dictionary_t *dict, const char *key, int group
 {
 	assert(dict);
 	du_status_test(dict->status, return false);
+
+	if (dict->n == 0) {
+		return false;
+	}
 
 	du_dictionary_slot_t *slot = _find_slot(dict, _hash(key), group, DU_DICTIONARY_UNUSED);
 	
@@ -173,7 +181,7 @@ _extend(du_dictionary_t *dict)
 	du_dictionary_slot_t *slot;
 
 	du_dictionary_init(&dict_new, dict->n_alloc > 0 ? dict->n_alloc * 2 : 1, dict->max_load);
-	du_status_test(dict->status, return false);
+	du_status_test(dict_new.status, dict->status = DU_STATUS_FAILURE; return false);
 
 	for (size_t i = 0; i < dict->n_alloc; i++) {
 		slot = &dict->slots[i];
