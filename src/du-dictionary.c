@@ -226,7 +226,7 @@ _hash(const char *str)
 	uint32_t h = 2166136261;
 
 	if (str) {
-		for (size_t i = 0; i < strlen(str); i++) {
+		for (size_t i = 0; str[i] != '\0'; i++) {
 			h ^= str[i];
 			h *= 16777619;
 		}
