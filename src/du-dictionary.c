@@ -203,13 +203,15 @@ _extend(du_dictionary_t *dict)
 static du_dictionary_slot_t *
 _find_slot(const du_dictionary_t *dict, uint32_t hash, int group, du_dictionary_usage_t mode)
 {
-	size_t i0 = hash % dict->n_alloc;
+	const size_t i0 = hash % dict->n_alloc;
+
+	du_dictionary_slot_t *slot = &dict->slots[i0];
 	size_t i = i0;
-	du_dictionary_slot_t *slot = &dict->slots[i];
 
 	while (mode < slot->usage && (slot->group != group || slot->hash != hash)) {
-		i = i >= dict->n_alloc - 1 ? 0 : i + 1;
-		if (i == i0) {
+		if (++i >= dict->n_alloc) {
+			i = 0;
+		} else if (i == i0) {
 			return NULL;
 		}
 		slot = &dict->slots[i];
