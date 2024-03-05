@@ -72,15 +72,16 @@ typedef struct {
  * 	#rrggbb
  * 	rrggbbaa
  * 	rrggbb
+ * If the alpha value is not provided, the alpha component of the target color is set to 1.0.
  *
  * @param str : source string to convert
- * @param err : optional, set to true if the string was converted with no issue, false otherwhise
+ * @param cl  : target color struct to fill with converted values, in case of failure nothing is modified
  *
- * @return : a filled color struct, if no alpha was provided in the string, .a is set to 1.0. In case of 
- *           a formating error all fields of the returned color are set to 0.0, check *err to be certain of
- *           the return's validity
+ * @return : true if the conversion was successful, false otherwhise.
  */
-du_color_t du_color_from_str(const char *str, bool *err);
+bool du_color_from_str(du_color_t *cl, const char *str);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Interpolates a color between two given colors.

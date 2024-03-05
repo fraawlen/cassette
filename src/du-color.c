@@ -18,10 +18,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "du.h"
 
@@ -29,77 +29,41 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _bind_cl (du_color_t *cl);
+static void _bind_cl    (du_color_t *cl);
+static int  _hex_to_int (char c);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-du_color_t
-du_color_from_str(const char *str, bool *err)
+bool
+du_color_from_str(du_color_t *cl, const char *str)
 {
-	if (!str) {
-		goto err;
-	}
+	assert(cl);
 
-	du_color_t c = {0};
-	char s[3] = "\0\0\0";
-	char *e[4];
-	size_t l;
+	int v[8] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xF, 0xF};
+	size_t i;
 
 	if (str[0] == '#') {
 		str++;
 	}
 
-	l = strlen(str);
-	if (l != 6 && l != 8) {
-		goto err;
-	}
-
-	/* rgb base parameters */
-
-	strncpy(s, str, 2);
-	c.r = (double)strtol(s, e, 16) / 255;
-
-	strncpy(s, str + 2, 2);
-	c.g = (double)strtol(s, e + 1, 16) / 255;
-
-	strncpy(s, str + 4, 2);
-	c.b = (double)strtol(s, e + 2, 16) / 255;
-
-	if (*e[0] != '\0' || *e[1] != '\0' || *e[2] != '\0') {
-		goto err;
-	}
-
-	/* optional alpha parameter */
-
-	if (l != 8) {
-		c.a = 1.0;
-	} else {
-		strncpy(s, str + 6, 2);
-		c.a = (double)strtol(s, e + 3, 16) / 255;
-		if (*e[3] != '\0') {
-			goto err;
+	for (i = 0; i < 8 && str[i] != '\0'; i++) {
+		if ((v[i] =_hex_to_int(str[i])) == -1) {
+			return false;
 		}
 	}
 
-	/* end */
-
-	if (err) {
-		*err = false;
+	if (i != 6 && i != 8) {
+		return false;
 	}
 
-	return c;
+	cl->r = ((v[0] << 4) + v[1]) / 255.0;
+	cl->g = ((v[2] << 4) + v[3]) / 255.0;
+	cl->b = ((v[4] << 4) + v[5]) / 255.0;
+	cl->a = ((v[6] << 4) + v[7]) / 255.0;
 
-	/* error */
-
-err:
-
-	if (err) {
-		*err = true;
-	}
-
-	return (du_color_t){0};
+	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -147,4 +111,70 @@ _bind_cl(du_color_t *cl)
 	du_ratio_bind(&cl->g);
 	du_ratio_bind(&cl->b);
 	du_ratio_bind(&cl->a);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static int
+_hex_to_int(char c)
+{
+	switch (c) {
+		
+		case '0':
+			return 0x0;
+
+		case '1':
+			return 0x1;
+
+		case '2':
+			return 0x2;
+
+		case '3':
+			return 0x3;
+
+		case '4':
+			return 0x4;
+
+		case '5':
+			return 0x5;
+
+		case '6':
+			return 0x6;
+
+		case '7':
+			return 0x7;
+
+		case '8':
+			return 0x8;
+
+		case '9':
+			return 0x9;
+		
+		case 'a':
+		case 'A':
+			return 0xA;
+
+		case 'b':
+		case 'B':
+			return 0xB;
+
+		case 'c':
+		case 'C':
+			return 0xC;
+
+		case 'd':
+		case 'D':
+			return 0xD;
+
+		case 'e':
+		case 'E':
+			return 0xE;
+
+		case 'f':
+		case 'F':
+			return 0xF;
+
+		default:
+			return -1;
+	}
 }
