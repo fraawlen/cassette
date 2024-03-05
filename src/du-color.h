@@ -84,17 +84,9 @@ bool du_color_from_str(du_color_t *cl, const char *str);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Interpolates a color between two given colors.
  *
- * @param cl_1  : first  color
- * @param cl_2  : second color
- * @param ratio : second/first color ratio used for the interpolation. Values are bounded between 0.0 and 1.0
- *
- * @return : interpolated color
  */
-du_color_t du_color_interpolate(du_color_t cl_1, du_color_t cl_2, double ratio);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+du_color_t du_color_from_argb_uint(uint32_t argb);
 
 /*
  * Converts a given color struct to its equivalent ARGB representation within a single 32-bit unsigned int.
@@ -105,6 +97,19 @@ du_color_t du_color_interpolate(du_color_t cl_1, du_color_t cl_2, double ratio);
  * @return : 32-bit argb color value
  */
 uint32_t du_color_to_argb_uint(du_color_t cl);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * Interpolates a color between two given colors.
+ *
+ * @param cl_1  : first  color
+ * @param cl_2  : second color
+ * @param ratio : second/first color ratio used for the interpolation. Values are bounded between 0.0 and 1.0
+ *
+ * @return : interpolated color
+ */
+du_color_t du_color_interpolate(du_color_t cl_1, du_color_t cl_2, double ratio);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
