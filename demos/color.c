@@ -32,9 +32,10 @@ main(void)
 static void
 _print_cl(const char *str)
 {
-	du_color_t cl;
+	bool err;
+	du_color_t cl = du_color_from_str(str, &err);
 
-	if (du_color_from_str(&cl, str)) {
+	if (!err) {
 		printf("color : r = %f,\tg = %f,\tb = %f,\ta = %f\n", cl.r, cl.g, cl.b, cl.a);
 	} else {
 		printf("failed to convert color \'%s\'\n", str);

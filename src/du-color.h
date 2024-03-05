@@ -65,38 +65,29 @@ typedef struct {
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Gets the rgba values in a color struct by converting a string.
+ * Converts a 32-bits ARGB color representation into a DU color struct.
+ *
+ * @param argb : color uint to convert
+ *
+ * @return : color struct
+ */
+du_color_t du_color_from_argb_uint(uint32_t argb);
+
+/**
+ * Converts an RGBA HEX color string into a DU color struct.
  * The string format should be one the following hexadecimal sequences, with the alpha paramter being
- * optional :
+ * optional (if it is ommited, the default value 0xFF will then be used) :
  * 	#rrggbbaa
  * 	#rrggbb
  * 	rrggbbaa
  * 	rrggbb
- * If the alpha value is not provided, the alpha component of the target color is set to 1.0.
  *
  * @param str : source string to convert
- * @param cl  : target color struct to fill with converted values, in case of failure nothing is modified
+ * @param err : optional, set to true if the string was converted with no issue, false otherwhise
  *
- * @return : true if the conversion was successful, false otherwhise.
+ * @return : color struct. Check *err to be certain of the return's validity
  */
-bool du_color_from_str(du_color_t *cl, const char *str);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
-du_color_t du_color_from_argb_uint(uint32_t argb);
-
-/*
- * Converts a given color struct to its equivalent ARGB representation within a single 32-bit unsigned int.
- * Useful when using colors directly with XCB.
- *
- * @param cl : color struct to convert
- *
- * @return : 32-bit argb color value
- */
-uint32_t du_color_to_argb_uint(du_color_t cl);
+du_color_t du_color_from_str(const char *str, bool *err);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -110,6 +101,18 @@ uint32_t du_color_to_argb_uint(du_color_t cl);
  * @return : interpolated color
  */
 du_color_t du_color_interpolate(du_color_t cl_1, du_color_t cl_2, double ratio);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/*
+ * Converts a given color struct to its equivalent ARGB representation within a single 32-bit unsigned int.
+ * Useful when using colors directly with XCB.
+ *
+ * @param cl : color struct to convert
+ *
+ * @return : 32-bit argb color value
+ */
+uint32_t du_color_to_argb_uint(du_color_t cl);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

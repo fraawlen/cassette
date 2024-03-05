@@ -51,13 +51,17 @@ du_color_from_argb_uint(uint32_t argb)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
-du_color_from_str(du_color_t *cl, const char *str)
+du_color_t
+du_color_from_str(const char *str, bool *err)
 {
-	assert(cl);
-
 	int v[8] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xF, 0xF};
+	bool fail = false;
 	size_t i;
+
+	if (!str) {
+		fail = true;
+		goto skip;
+	}
 
 	if (str[0] == '#') {
 		str++;
@@ -65,20 +69,30 @@ du_color_from_str(du_color_t *cl, const char *str)
 
 	for (i = 0; i < 8 && str[i] != '\0'; i++) {
 		if ((v[i] =_hex_to_int(str[i])) == -1) {
-			return false;
+			fail = true;
 		}
 	}
 
 	if (i != 6 && i != 8) {
-		return false;
+		fail = true;
 	}
 
-	cl->r = ((v[0] << 4) + v[1]) / 255.0;
-	cl->g = ((v[2] << 4) + v[3]) / 255.0;
-	cl->b = ((v[4] << 4) + v[5]) / 255.0;
-	cl->a = ((v[6] << 4) + v[7]) / 255.0;
+skip:;
 
-	return true;
+	/* apply conversion */
+
+	du_color_t cl;
+
+	cl.r = ((v[0] << 4) + v[1]) / 255.0;
+	cl.g = ((v[2] << 4) + v[3]) / 255.0;
+	cl.b = ((v[4] << 4) + v[5]) / 255.0;
+	cl.a = ((v[6] << 4) + v[7]) / 255.0;
+
+	if (err) {
+		*err = fail;
+	}
+
+	return cl;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
