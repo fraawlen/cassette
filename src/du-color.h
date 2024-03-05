@@ -74,6 +74,18 @@ typedef struct {
 du_color_t du_color_from_argb_uint(uint32_t argb);
 
 /**
+ * Converts a RGBA color representation into a DU color struct.
+ *
+ * @param r : red   color component
+ * @param g : green color component
+ * @param b : blue  color component
+ * @param a : alpha color component
+ *
+ * @return : color struct
+ */
+du_color_t du_color_from_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+
+/**
  * Converts an RGBA HEX color string into a DU color struct.
  * The string format should be one the following hexadecimal sequences, with the alpha paramter being
  * optional (if it is ommited, the default value 0xFF will then be used) :

@@ -27,8 +27,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _bind_cl    (du_color_t *cl);
-static int  _hex_to_int (char c);
+static void    _bind_cl    (du_color_t *cl);
+static uint8_t _hex_to_int (char c);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -37,12 +37,24 @@ static int  _hex_to_int (char c);
 du_color_t
 du_color_from_argb_uint(uint32_t argb)
 {
+	return du_color_from_rgba(
+		(argb >> 16) & 0xFF,
+		(argb >>  8) & 0xFF,
+		(argb >>  0) & 0xFF,
+		(argb >> 24) & 0xFF);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+du_color_t
+du_color_from_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+{
 	du_color_t cl;
 
-	cl.a = ((argb >> 24) & 0xFF) / 255.0;
-	cl.r = ((argb >> 16) & 0xFF) / 255.0;
-	cl.g = ((argb >>  8) & 0xFF) / 255.0;
-	cl.b = ((argb >>  0) & 0xFF) / 255.0;
+	cl.a = a / 255.0;
+	cl.r = r / 255.0;
+	cl.g = g / 255.0;
+	cl.b = b / 255.0;
 
 	return cl;
 }
@@ -52,7 +64,7 @@ du_color_from_argb_uint(uint32_t argb)
 du_color_t
 du_color_from_str(const char *str, bool *err)
 {
-	int v[8] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xF, 0xF};
+	uint8_t v[8] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xF, 0xF};
 	bool fail = false;
 	size_t i;
 
@@ -66,7 +78,7 @@ du_color_from_str(const char *str, bool *err)
 	}
 
 	for (i = 0; i < 8 && str[i] != '\0'; i++) {
-		if ((v[i] =_hex_to_int(str[i])) == -1) {
+		if ((v[i] =_hex_to_int(str[i])) == UINT8_MAX) {
 			fail = true;
 		}
 	}
@@ -75,22 +87,19 @@ du_color_from_str(const char *str, bool *err)
 		fail = true;
 	}
 
-skip:;
+skip:
 
 	/* apply conversion */
-
-	du_color_t cl;
-
-	cl.r = ((v[0] << 4) + v[1]) / 255.0;
-	cl.g = ((v[2] << 4) + v[3]) / 255.0;
-	cl.b = ((v[4] << 4) + v[5]) / 255.0;
-	cl.a = ((v[6] << 4) + v[7]) / 255.0;
 
 	if (err) {
 		*err = fail;
 	}
 
-	return cl;
+	return du_color_from_rgba(
+		(v[0] << 4) + v[1],
+		(v[2] << 4) + v[3],
+		(v[4] << 4) + v[5],
+		(v[6] << 4) + v[7]);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -142,7 +151,7 @@ _bind_cl(du_color_t *cl)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static int
+static uint8_t
 _hex_to_int(char c)
 {
 	switch (c) {
@@ -202,6 +211,6 @@ _hex_to_int(char c)
 			return 0xF;
 
 		default:
-			return -1;
+			return UINT8_MAX;
 	}
 }
