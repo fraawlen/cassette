@@ -12,16 +12,16 @@ DEST_BUILD   := build
 
 OUTPUT_NAME := du
 
-DIR_DEMOS := demos
+DIR_DEMOS := examples
 DIR_SRC   := src
-DIR_INC   := $(DEST_BUILD)/inc
+DIR_INC   := include
 DIR_LIB   := $(DEST_BUILD)/lib
 DIR_OBJ   := $(DEST_BUILD)/obj
 DIR_BIN   := $(DEST_BUILD)/bin
 
 LIST_DEMOS := $(wildcard $(DIR_DEMOS)/*.c)
 LIST_SRC   := $(wildcard $(DIR_SRC)/*.c)
-LIST_INC   := $(wildcard $(DIR_SRC)/*.h)
+LIST_HEAD  := $(wildcard $(DIR_SRC)/*.h)
 LIST_OBJ   := $(patsubst $(DIR_SRC)/%.c,   $(DIR_OBJ)/%.o, $(LIST_SRC))
 LIST_BIN   := $(patsubst $(DIR_DEMOS)/%.c, $(DIR_BIN)/%,   $(LIST_DEMOS))
 
@@ -53,14 +53,14 @@ force: clean build demos
 #############################################################################################################
 
 --prep:
-	mkdir -p $(DIR_INC)
 	mkdir -p $(DIR_LIB)
 	mkdir -p $(DIR_OBJ)
 	mkdir -p $(DIR_BIN)
-	cp src/*.h $(DIR_INC)
 
-$(DIR_OBJ)/%.o: $(DIR_SRC)/%.c $(LIST_INC)
-	$(CC) -c -fPIC $(FLAGS) -c $< -o $@
+$(DIR_OBJ)/%.o: $(DIR_SRC)/%.c $(DIR_INC)/%.h $(LIST_HEAD)
+	$(CC) -c -fPIC $(FLAGS) -c $< -o $@ -I$(DIR_INC)
 
 $(DIR_BIN)%: $(DIR_DEMOS)/%.c
 	$(CC) -static $(FLAGS) $< -o $@ -I$(DIR_INC) -L$(DIR_LIB) -l$(OUTPUT_NAME) $(LIBS)
+
+
