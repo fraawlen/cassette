@@ -49,7 +49,7 @@ After these steps, both a shared binary and static archive will be generated and
 The DU project also include a few demos programs that showcase different use-cases and capabilities of the library.
 You can build them with the following command (you will need to build the library first, but installation is not necessary) :
 ```
-make demos
+make examples
 ```
 The resulting executable binaries will be placed in `build/bin`.
 

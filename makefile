@@ -36,7 +36,7 @@ build: --prep $(LIST_OBJ)
 	cc -shared $(DIR_OBJ)/*.o -o $(DIR_LIB)/lib$(OUTPUT_NAME).so $(DIR_LIBS)
 	ar rcs $(DIR_LIB)/lib$(OUTPUT_NAME).a $(DIR_OBJ)/*.o
 
-demos: --prep $(LIST_BIN)
+examples: --prep $(LIST_BIN)
 
 install:
 	mkdir -p $(DEST_HEADERS)
@@ -46,7 +46,7 @@ install:
 clean:
 	rm -rf $(DEST_BUILD)
 
-force: clean build demos
+force: clean build examples
 
 #############################################################################################################
 # PRIVATE TARGETS ###########################################################################################
