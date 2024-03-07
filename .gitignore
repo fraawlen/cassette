@@ -1,0 +1,9 @@
+build/**
+
+*.swj
+*.swk
+*.swl
+*.swm
+*.swn
+*.swo
+*.swp
