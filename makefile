@@ -10,8 +10,6 @@ DEST_BUILD   := build
 # INTERNAL VARIABLES ########################################################################################
 #############################################################################################################
 
-OUTPUT_NAME := du
-
 DIR_DEMOS := examples
 DIR_SRC   := src
 DIR_INC   := include
@@ -25,8 +23,9 @@ LIST_HEAD  := $(wildcard $(DIR_SRC)/*.h) $(wildcard $(DIR_INC)/*.h)
 LIST_OBJ   := $(patsubst $(DIR_SRC)/%.c,   $(DIR_OBJ)/%.o, $(LIST_SRC))
 LIST_BIN   := $(patsubst $(DIR_DEMOS)/%.c, $(DIR_BIN)/%,   $(LIST_DEMOS))
 
-FLAGS := -std=c99 -pedantic -Wall -Wextra -O3 -D_POSIX_C_SOURCE=200809L
-LIBS  :=
+OUTPUT := du
+FLAGS  := -std=c99 -pedantic -Wall -Wextra -O3 -D_POSIX_C_SOURCE=200809L
+LIBS   :=
 
 #############################################################################################################
 # PUBLIC TARGETS ############################################################################################
@@ -35,8 +34,8 @@ LIBS  :=
 all: lib examples
 
 lib: --prep $(LIST_OBJ)
-	cc -shared $(DIR_OBJ)/*.o -o $(DIR_LIB)/lib$(OUTPUT_NAME).so $(DIR_LIBS)
-	ar rcs $(DIR_LIB)/lib$(OUTPUT_NAME).a $(DIR_OBJ)/*.o
+	cc -shared $(DIR_OBJ)/*.o -o $(DIR_LIB)/lib$(OUTPUT).so $(DIR_LIBS)
+	ar rcs $(DIR_LIB)/lib$(OUTPUT).a $(DIR_OBJ)/*.o
 
 examples: --prep lib $(LIST_BIN)
 
@@ -63,4 +62,4 @@ $(DIR_OBJ)/%.o: $(DIR_SRC)/%.c $(LIST_HEAD)
 	$(CC) -c -fPIC $(FLAGS) -c $< -o $@ -I$(DIR_INC) $(LIBS)
 
 $(DIR_BIN)%: $(DIR_DEMOS)/%.c
-	$(CC) -static $(FLAGS) $< -o $@ -I$(DIR_INC) -L$(DIR_LIB) -l$(OUTPUT_NAME) $(LIBS)
+	$(CC) -static $(FLAGS) $< -o $@ -I$(DIR_INC) -L$(DIR_LIB) -l$(OUTPUT) $(LIBS)
