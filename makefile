@@ -21,7 +21,7 @@ DIR_BIN   := $(DEST_BUILD)/bin
 
 LIST_DEMOS := $(wildcard $(DIR_DEMOS)/*.c)
 LIST_SRC   := $(wildcard $(DIR_SRC)/*.c)
-LIST_HEAD  := $(wildcard $(DIR_SRC)/*.h)
+LIST_HEAD  := $(wildcard $(DIR_SRC)/*.h) $(wildcard $(DIR_INC)/*.h)
 LIST_OBJ   := $(patsubst $(DIR_SRC)/%.c,   $(DIR_OBJ)/%.o, $(LIST_SRC))
 LIST_BIN   := $(patsubst $(DIR_DEMOS)/%.c, $(DIR_BIN)/%,   $(LIST_DEMOS))
 
@@ -32,11 +32,13 @@ LIBS  :=
 # PUBLIC TARGETS ############################################################################################
 #############################################################################################################
 
-build: --prep $(LIST_OBJ)
+all: lib examples
+
+lib: --prep $(LIST_OBJ)
 	cc -shared $(DIR_OBJ)/*.o -o $(DIR_LIB)/lib$(OUTPUT_NAME).so $(DIR_LIBS)
 	ar rcs $(DIR_LIB)/lib$(OUTPUT_NAME).a $(DIR_OBJ)/*.o
 
-examples: --prep $(LIST_BIN)
+examples: --prep lib $(LIST_BIN)
 
 install:
 	mkdir -p $(DEST_HEADERS)
@@ -46,7 +48,7 @@ install:
 clean:
 	rm -rf $(DEST_BUILD)
 
-force: clean build examples
+force: clean all
 
 #############################################################################################################
 # PRIVATE TARGETS ###########################################################################################
@@ -57,10 +59,8 @@ force: clean build examples
 	mkdir -p $(DIR_OBJ)
 	mkdir -p $(DIR_BIN)
 
-$(DIR_OBJ)/%.o: $(DIR_SRC)/%.c $(DIR_INC)/%.h $(LIST_HEAD)
-	$(CC) -c -fPIC $(FLAGS) -c $< -o $@ -I$(DIR_INC)
+$(DIR_OBJ)/%.o: $(DIR_SRC)/%.c $(LIST_HEAD)
+	$(CC) -c -fPIC $(FLAGS) -c $< -o $@ -I$(DIR_INC) $(LIBS)
 
 $(DIR_BIN)%: $(DIR_DEMOS)/%.c
 	$(CC) -static $(FLAGS) $< -o $@ -I$(DIR_INC) -L$(DIR_LIB) -l$(OUTPUT_NAME) $(LIBS)
-
-
