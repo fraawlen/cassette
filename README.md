@@ -1,5 +1,4 @@
-Derelict Resources
-==================
+![Derelict Resources banner](./extras/banner.png)
 
 Derelict Resources (DR) is a configuration language and parser library featuring array based values and short s-like expressions based functions. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
 
