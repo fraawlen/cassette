@@ -1,7 +1,7 @@
 DR - Specification & Syntax (WIP)
 ===========================
 
-Derelict Resources (DR) is an array-based configuration language and parser library. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
+Derelict Resources (DR) is a configuration language and parser library featuring array based values and short s-like expressions based functions. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
 
 This document specifies and details all of DR's features and syntax rules. It's aimed at both end-users of software that uses this language and developers of such software.
 
