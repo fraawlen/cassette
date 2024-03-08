@@ -58,6 +58,7 @@ dr_token_init_dictionary(du_dictionary_t *dict)
 	du_dictionary_set_value(dict, "==",     0, DR_TOKEN_IF_EQ);
 	du_dictionary_set_value(dict, "!=",     0, DR_TOKEN_IF_EQ_NOT);
 	
+	du_dictionary_set_value(dict, "TIME",   0, DR_TOKEN_TIMESTAMP);
 	du_dictionary_set_value(dict, "PI",     0, DR_TOKEN_CONST_PI);
 	du_dictionary_set_value(dict, "E",      0, DR_TOKEN_CONST_EULER);
 	du_dictionary_set_value(dict, "TRUE",   0, DR_TOKEN_CONST_TRUE);
@@ -104,4 +105,5 @@ dr_token_init_dictionary(du_dictionary_t *dict)
 	du_dictionary_set_value(dict, "SECTION_DEL", 0, DR_TOKEN_SECTION_DEL);
 	du_dictionary_set_value(dict, "INCLUDE",     0, DR_TOKEN_INCLUDE);
 	du_dictionary_set_value(dict, "ITERATE",     0, DR_TOKEN_ITERATOR);
+	du_dictionary_set_value(dict, "RAND_SEED",   0, DR_TOKEN_RAND_SEED);
 }

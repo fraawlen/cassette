@@ -55,6 +55,7 @@ typedef enum {
 	DR_TOKEN_IF_MORE_EQ,
 	DR_TOKEN_IF_EQ,
 	DR_TOKEN_IF_EQ_NOT,
+	DR_TOKEN_TIMESTAMP,
 	DR_TOKEN_CONST_PI,
 	DR_TOKEN_CONST_EULER,
 	DR_TOKEN_CONST_TRUE,
@@ -95,6 +96,7 @@ typedef enum {
 	DR_TOKEN_SECTION_DEL,
 	DR_TOKEN_INCLUDE,
 	DR_TOKEN_ITERATOR,
+	DR_TOKEN_RAND_SEED,
 } dr_token_kind_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

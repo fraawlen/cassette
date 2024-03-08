@@ -53,6 +53,7 @@ static dr_token_kind_t _parse_token_number (dr_parse_context_t *ctx, char *token
 
 static void _sequence_include       (dr_parse_context_t *ctx);
 static void _sequence_iterate       (dr_parse_context_t *ctx);
+static void _sequence_random_seed   (dr_parse_context_t *ctx);
 static void _sequence_resource      (dr_parse_context_t *ctx, const char *namespace);
 static void _sequence_section_add   (dr_parse_context_t *ctx);
 static void _sequence_section_begin (dr_parse_context_t *ctx);
@@ -292,6 +293,10 @@ _parse_sequence(dr_parse_context_t *ctx)
 			_sequence_iterate(ctx);
 			break;
 
+		case DR_TOKEN_RAND_SEED:
+			_sequence_random_seed(ctx);
+			break;
+
 		case DR_TOKEN_INVALID:
 			break;
 
@@ -350,6 +355,7 @@ _parse_token(dr_parse_context_t *ctx, char *token, double *math_result)
 		case DR_TOKEN_IF_EQ_NOT:
 			return _token_condition(ctx, token, math_result, id);
 
+		case DR_TOKEN_TIMESTAMP:
 		case DR_TOKEN_CONST_PI:
 		case DR_TOKEN_CONST_EULER:
 		case DR_TOKEN_CONST_TRUE:
@@ -520,6 +526,19 @@ end:
 
 	ctx->book_iteration = NULL;
 	du_book_reset(&iteration);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_sequence_random_seed(dr_parse_context_t *ctx)
+{
+	char token[DR_TOKEN_N] = "";
+	double d;
+
+	if (_parse_token_number(ctx, token, &d) != DR_TOKEN_INVALID) {
+		srand(d);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -814,6 +833,10 @@ _token_math(dr_parse_context_t *ctx, char *token, double *math_result, dr_token_
 	switch (type) {
 
 		/* 0 parameters */
+
+		case DR_TOKEN_TIMESTAMP:
+			result = du_misc_get_time();
+			break;
 
 		case DR_TOKEN_CONST_PI:
 			result = 3.1415926535897932;
