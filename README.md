@@ -1,10 +1,14 @@
 Derelict Resources
 ==================
 
-Derelict Resources (DR) is a configuration language and parser library. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly. As a core feature, DR represents, and stores, all resources as arrays of strings that can be then converted to any type.
+Derelict Resources (DR) is a configuration language and parser library featuring array based values and short s-like expressions based functions. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
 
-Other notable language features :
+The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems, and except for the compiler and build system, is not dependent on third-party software.
 
+Language Features
+-----------------
+
+- comments
 - variables
 - user-defined sections
 - arithmetic operations
@@ -14,9 +18,7 @@ Other notable language features :
 - conditionals
 - child file inclusion
 
-The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems, and except for the compiler and build system, is not dependent on third-party software.
-
-For more information about the language features, syntax and spec, [check out this page](./doc/spec.md).
+For more information about the language usage, features and syntax check out the [full language spec](./doc/spec.md).
 
 Dependencies
 ------------
