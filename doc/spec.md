@@ -43,8 +43,6 @@ TODO
 Fundamentals
 ------------
 
-#### Sequences
-
 Every DR configuration file is series of 'sequences' separated by newlines until EOF is reached. Empty lines between sequences are ignored. Leading and trailing whitespaces (either space or tab characters) are ignored too.
 
 ```
@@ -53,8 +51,6 @@ sequence
 sequence
 sequence
 ```
-
-#### Tokens
 
 Sequences themselves are a series of 'tokens', words encoded in UTF-8 separated by any amount of whitespace in-between.
 
@@ -84,8 +80,6 @@ Following that, token can be of 4 types:
 - invalid, in case of a parsing or conversion error.
 
 When an invalid type token is encountered in the middle of a sequence, the sequence is ended prematurely and the remaining tokens until a newline are skipped.
-
-#### Numeral tokens
 
 Numeral token values can be represented in 3 styles:
 
