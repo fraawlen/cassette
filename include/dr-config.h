@@ -95,8 +95,8 @@ du_status_t dr_config_get_status(const dr_config_t *cfg);
 /**
  *
  */
-size_t dr_config_get_values(const dr_config_t *cfg, const char *namespace, const char *property, char **values,
-                          size_t n_values, size_t value_n);
+size_t dr_config_find_resource(const dr_config_t *cfg, const char *namespace, const char *property,
+                               char *values_buf, size_t n_values, size_t value_n);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

@@ -119,8 +119,8 @@ dr_config_get_status(const dr_config_t *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
  
 size_t
-dr_config_get_values(const dr_config_t *cfg, const char *namespace, const char *property, char **values,
-                     size_t n_values, size_t value_n)
+dr_config_find_resource(const dr_config_t *cfg, const char *namespace, const char *property, char *values_buf,
+                        size_t n_values, size_t value_n)
 {
 	assert(cfg && property);
 	du_status_test(cfg->status, return 0);
@@ -142,11 +142,11 @@ dr_config_get_values(const dr_config_t *cfg, const char *namespace, const char *
 	/* write sequence tokens into target value array */
 
 	const size_t n = du_book_get_group_length(&cfg->data, i_property);
-	const size_t n_vals = n_values > n ? n : n_values;
 	const size_t val_n = value_n > DR_TOKEN_N ? DR_TOKEN_N : value_n;
+	const size_t n_vals = n_values > n ? n : n_values;
 
 	for (size_t i = 0; i < n_vals; i++) {
-		strncpy(values[i], du_book_get_word_in_group(&cfg->data, i_property, i), val_n);
+		strncpy(values_buf + i * value_n, du_book_get_word_in_group(&cfg->data, i_property, i), val_n);
 	}
 
 	return n_vals;

@@ -36,7 +36,6 @@ main(void)
 
 	_reset(cfg);
 
-	return 0;
 }
 /************************************************************************************************************/
 /* _ ********************************************************************************************************/
@@ -64,9 +63,9 @@ _load(dr_config_t *cfg)
 static void
 _read(dr_config_t *cfg,  const char *namespace, const char *property)
 {
-	char *value = malloc(32);
+	char value[32];
 
-	if (dr_config_get_values(cfg, namespace, property, &value, 1, 32)) {
+	if (dr_config_find_resource(cfg, namespace, property, value, 1, 32)) {
 		printf(">> %s\t%s\t%s\n", namespace, property, value);
 	} else {
 		printf("couln't find the following resource : %s - %s\n", namespace, property);
