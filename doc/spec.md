@@ -49,7 +49,7 @@ sequence
 
 ### 2.2. Tokens
 
-Sequences themselves are a series of 'tokens'. Tokens are 32 bytes words, null terminator included, encoded in ASCII / UTF-8, separated by any amount of white space in-between. If the word's length exceeds 31 bytes, only the first 31 ASCII characters are kept and a null terminator is appended at the 32th byte.
+Sequences themselves are a series of 'tokens'. Tokens are 32 bytes words, null terminator included, encoded in ASCII / UTF-8, separated by any amount of white space in-between. If the word's length exceeds 31 bytes, only the first 31 bytes are kept and a null terminator is appended at the 32th byte.
 
 ```
 token token token
@@ -61,7 +61,7 @@ token token token token
 
 In DR, there is no concept of priority based on the presence of parenthesis, brackets, or braces. Tokens are strictly parsed from left to right and any language function that gets triggered should happen as the tokens are read. Thanks to that, words read from a source configuration file only need to be parsed and processed once. The only exception to this rule is the [iteration-type sequences]().
 
-If white spaces need to be explicitly part of a token, said token can be wrapped in single or double quotes. Likewise, single quotes can be wrapped in double quotes and vice-versa. Additionally, within quote wraps, newlines are also conserved and do not sequences. Non white-space characters directly preceding or following quotes are considered to be part of the same word. The same applies to multiple groups of quoted word sections.
+If white spaces need to be explicitly part of a token, said token can be wrapped in single or double quotes. Likewise, single quotes can be wrapped in double quotes and vice-versa. Additionally, within quote wraps, newlines are also conserved and do not terminate sequences. Non white space characters directly preceding or following quotes are considered to be part of the same word. The same applies to multiple groups of quoted word sections.
 
 ```
 "  token "
@@ -76,7 +76,7 @@ token'
 
 ### 2.3. Resources
 
-Sequences that make up a program's configuration are called resources. The first token represents the resource's namespace and the second one is the resource's name. Namespaces help reuse resource names without collisions. The tokens that follow until the end of the sequence are interpreted as values attributed to the resource. Resources definitions with no values are ignored. Therefore, valid resources are sequences of at least 3 tokens. But there is no upper token count limit (apart from the system's memory). If the same resource is defined more than once, the latest definition overwrites the previous ones.
+Sequences that make up a program's configuration are called resources. The first token represents the resource's namespace and the second one is the resource's name. Namespaces help reuse resource names without collisions. The tokens that follow until the end of the sequence are interpreted as values attributed to the resource. Resources definitions with no values are ignored. Therefore, valid resources are sequences of at least 3 tokens. There are no upper token count limit (apart from the system's memory). If the same resource is defined more than once, the latest definition overwrites the previous ones.
 
 ```
 namespace name value_1 value_2 value_3 ...
@@ -84,9 +84,9 @@ namespace name value_1 value_2 value_3 ...
 
 If a program requires a resource with N values and the matching resource in the configuration file has less than N values defined, the interpretation of missing values is up to the program.
 
-By convention, and to minimize possible collision with function tokens, resources namespaces, resources names and, if possible, resource values should be written in full lowercase.
+By convention, and to minimize possible collision with function tokens, resources namespaces, resources names and (if possible) resource values should be written in full lowercase.
 
-At its simplest, a DR configuration file can then be just a series of resources. In this example, for a hypothetical GUI library, we define 6 resources spread across 2 widgets, `button` and `label`. The resources namespaces borrow their widget name. The resources named `corner-radius` get assigned 4 values, one for each widget corner.
+At its simplest, a DR configuration file can just be a series of resources. In this example, for a hypothetical GUI library, we define 6 resources spread across 2 widgets, `button` and `label`. The resources namespaces borrow their widget name. The resources named `corner-radius` get assigned 4 values, one for each widget corner.
 
 ```
 button background_color #808080
@@ -109,11 +109,11 @@ label corner-radius 0 0 0 0
 
 ### 3.1. Invalids
 
-If any error during token parsing happens, like a failed conversion, wrong or missing function parameters, or a system error, the token will be marked as invalid. If an invalid type token is encountered in the middle of a sequence, the sequence is ended prematurely and the following tokens are skipped until a newline is met.
+If any error during token parsing happens, like a failed conversion, wrong or missing function parameters, or a system error, the token will be marked as invalid. If an invalid type token is encountered in the middle of a sequence, the sequence is ended prematurely and the following tokens are skipped until a new sequence begins.
 
 ### 3.2. Strings
 
-String tokens are the default token type, as they are just a string that represents a resource namespace, resource name, or sequence general purpose value with no language function. 
+String tokens are the default token type, as they are just a text value that represents a resource namespace, resource name, or general purpose value with no language function. 
 
 ### 3.3. Numerals
 
@@ -159,7 +159,7 @@ Function tokens are defined by an exact, case-sensitive ASCII sequence of non-wh
 
 By convention, and to minimize possible collision with user strings, all function tokens are defined in fully capitalized characters.
 
-Transformation tokens are inline function tokens that may optionally take the next few tokens as input parameters, and then return a different token as a function result. Multiple transformation tokens can be chained together, resulting in nested functions. Some functions may take string or numeral tokens as inputs, it is up to the parser to make the necessary implicit conversions. In the next few examples, the `JOIN` function tokens take the next 2 string tokens and return a concatenated string token.
+Transformation tokens are inline function tokens that may optionally take the next few tokens as input parameters, and then return a different token as a function result. These functions feature an s-like expression syntax without parenthesis. Parenthesis in DR functions are unnecessary because the amount of input parameters for each function is known in advance. Multiple transformation tokens can be chained together, resulting in nested functions. Some functions may take string or numeral tokens as inputs, it is up to the parser to make the necessary implicit conversions. In the next few examples, the `JOIN` function tokens take the next 2 string tokens and return a concatenated string token.
 
 ```
 a b
@@ -194,7 +194,7 @@ INCLUDE path1 path2
 -> open and parse file at path1 then do the same for path2
 
 a INCLUDE path1 path2
--> not an inclusion because INCLUDE is not first, instead the sequence is now a resource definition
+-> not an inclusion because INCLUDE is not first, instead the sequence is now a resource definition with a resource namespace "a", resource name "INCLUDE", and assigned resource values "path_1" and "path_2"
 ```
 
 ## 4. Sequences Leads
@@ -205,7 +205,7 @@ Sequences can be grouped into user-defined sections. Sections can be then select
 
 A section sequence is defined with a `SECTION` lead token, followed by section names. All section names need to be enabled (see [Section Additions]() and [Section Deletions]()) for the given section to be allowed to be parsed. Sections can be repeated. By convention, to differentiate section names from function tokens and generic strings or values, section names should capitalize their first character.
 
-Before a section is defined, all sequences are part of the 'always' section, and will always be read and processed. Likewise, if a section definition does not have any section name following it, the following sequences will be considered to belong to the 'always' section and will always be processed.
+Before a section is defined, all sequences are part of the 'always' section, and will always be read and processed. Likewise, if a section definition does not have any section name following it, the following sequences will also belong to the 'always' section and will always be processed.
 
 ```
 	sequence // always read
