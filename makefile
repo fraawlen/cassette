@@ -24,7 +24,7 @@ LIST_OBJ   := $(patsubst $(DIR_SRC)/%.c,   $(DIR_OBJ)/%.o, $(LIST_SRC))
 LIST_BIN   := $(patsubst $(DIR_DEMOS)/%.c, $(DIR_BIN)/%,   $(LIST_DEMOS))
 
 OUTPUT := du
-FLAGS  := -std=c99 -pedantic -Wall -Wextra -O3 -D_POSIX_C_SOURCE=200809L
+FLAGS  := -std=c99 -pedantic -Wall -Wextra -O3
 LIBS   :=
 
 #############################################################################################################
