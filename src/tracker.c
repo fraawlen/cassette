@@ -58,7 +58,14 @@ static bool _resize(du_tracker_t *tracker, size_t n, size_t a, size_t b);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-du_tracker_t _err_tracker = {.slots = NULL, .n = 0, .n_alloc = 0, .failed = false};
+static du_tracker_t _err_tracker = 
+{
+	.slots    = NULL,
+	.n        = 0,
+	.n_alloc  = 0,
+	.iterator = 0,
+	.failed   = false,
+};
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -90,10 +97,10 @@ du_tracker_create(size_t n_alloc)
 	}
 
 	tracker->slots    = NULL;
-	tracker->failed   = false;
-	tracker->iterator = 0;
 	tracker->n        = 0;
 	tracker->n_alloc  = n_alloc;
+	tracker->iterator = 0;
+	tracker->failed   = false;
 
 	_resize(tracker, n_alloc, 1, 0);
 
@@ -178,7 +185,7 @@ found:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_tracker_get_alloc_size(du_tracker_t *tracker)
+du_tracker_get_alloc_size(const du_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -193,7 +200,7 @@ du_tracker_get_alloc_size(du_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const void *
-du_tracker_get_index(du_tracker_t *tracker, size_t index, unsigned long *n_ref)
+du_tracker_get_index(const du_tracker_t *tracker, size_t index, unsigned long *n_ref)
 {
 	assert(tracker);
 
@@ -243,7 +250,7 @@ du_tracker_get_next(du_tracker_t *tracker, unsigned long *n_ref)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_tracker_get_size(du_tracker_t *tracker)
+du_tracker_get_size(const du_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -258,7 +265,7 @@ du_tracker_get_size(du_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-du_tracker_has_failed(du_tracker_t *tracker)
+du_tracker_has_failed(const du_tracker_t *tracker)
 {
 	assert(tracker);
 

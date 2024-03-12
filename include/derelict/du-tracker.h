@@ -129,12 +129,12 @@ unsigned long du_tracker_find(const du_tracker_t *tracker, const void *ptr, size
 /**
  *
  */
-size_t du_tracker_get_alloc_size(du_tracker_t *tracker);
+size_t du_tracker_get_alloc_size(const du_tracker_t *tracker);
 
 /**
  *
  */
-const void *du_tracker_get_index(du_tracker_t *tracker, size_t index, unsigned long *n_ref);
+const void *du_tracker_get_index(const du_tracker_t *tracker, size_t index, unsigned long *n_ref);
 
 /**
  *
@@ -144,12 +144,12 @@ const void *du_tracker_get_next(du_tracker_t *tracker, unsigned long *n_ref);
 /**
  *
  */
-size_t du_tracker_get_size(du_tracker_t *tracker);
+size_t du_tracker_get_size(const du_tracker_t *tracker);
 
 /**
  *
  */
-bool du_tracker_has_failed(du_tracker_t *tracker);
+bool du_tracker_has_failed(const du_tracker_t *tracker);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
