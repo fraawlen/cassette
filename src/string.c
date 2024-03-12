@@ -45,8 +45,9 @@ struct _string_t
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _is_end_char     (char c);
-static void _update_n_values (du_string_t *str);
+static bool             _is_end_char     (char c);
+static du_string_side_t _opposite_side   (du_string_side_t side);
+static void             _update_n_values (du_string_t *str);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -229,6 +230,44 @@ du_string_create_slice(const du_string_t *str, size_t n_codepoints, size_t offse
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+du_string_cut(du_string_t *str, size_t offset, size_t n_codepoints, du_string_side_t side)
+{
+	assert(str);
+
+	if (str->failed)
+	{
+		return;
+	}
+
+	if (n_codepoints == 0 || offset >= str->n_codepoints)
+	{
+		return;
+	}
+
+	if (offset == 0)
+	{
+		du_string_trim(str, n_codepoints, side);
+		return;
+	}
+
+	if (n_codepoints > str->n_codepoints)
+	{
+		du_string_limit(str, offset, side);
+		return;
+	}
+
+	du_string_t *tmp = du_string_create_duplicate(str);
+
+	du_string_limit(str, offset, side);
+	du_string_trim(tmp, offset + n_codepoints, side);
+	du_string_attach(str, tmp, _opposite_side(side));
+
+	du_string_destroy(&tmp);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 du_string_destroy(du_string_t **str)
 {
 	assert(str && *str);
@@ -332,6 +371,54 @@ du_string_has_failed(const du_string_t *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+du_string_insert(du_string_t *str, const du_string_t *str_src, size_t offset, du_string_side_t side)
+{
+	assert(str);
+
+	if (str_src->failed)
+	{
+		return;
+	}
+
+	du_string_insert_raw(str, str_src->chars, offset, side);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+du_string_insert_raw(du_string_t *str, const char *c_str, size_t offset, du_string_side_t side)
+{
+	assert(str);
+
+	if (str->failed)
+	{
+		return;
+	}
+
+	if (offset == 0)
+	{
+		du_string_attach_raw(str, c_str, side);
+		return;
+	}
+
+	if (offset >= str->n_codepoints)
+	{
+		du_string_attach_raw(str, c_str, _opposite_side(side));
+		return;
+	}
+
+	du_string_t *tmp = du_string_create_duplicate(str);
+
+	du_string_limit(str, offset, side);
+	du_string_trim(tmp, offset, side);
+	du_string_attach_raw(str, c_str, _opposite_side(side));
+	du_string_attach(str, tmp, _opposite_side(side));
+
+	du_string_destroy(&tmp);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+void
 du_string_limit(du_string_t *str, size_t n_codepoints, du_string_side_t side)
 {
 	assert(str);
@@ -346,19 +433,7 @@ du_string_limit(du_string_t *str, size_t n_codepoints, du_string_side_t side)
 		return;
 	}
 
-	switch (side)
-	{
-		case DU_STRING_LEAD:
-			du_string_trim(str, str->n_codepoints - n_codepoints, DU_STRING_TAIL);
-			break;
-
-		case DU_STRING_TAIL:
-			du_string_trim(str, str->n_codepoints - n_codepoints, DU_STRING_LEAD);
-			break;
-
-		default:
-			break;
-	}
+	du_string_trim(str, str->n_codepoints - n_codepoints, _opposite_side(side));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -707,6 +782,24 @@ static bool
 _is_end_char(char c)
 {
 	return !!(((uint8_t)c >> 6) ^ 0x02); /* bitmask = 10xxxxxx */
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static
+du_string_side_t _opposite_side(du_string_side_t side)
+{
+	switch (side)
+	{
+		case DU_STRING_LEAD:
+			return DU_STRING_TAIL;
+
+		case DU_STRING_TAIL:
+			return DU_STRING_LEAD;
+
+		default:
+			return side;
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

@@ -82,6 +82,21 @@ main(void)
 	du_string_attach(str, str2, DU_STRING_LEAD);
 	_print_str(str, "attached the slice to the beginning of the main string");
 
+	du_string_insert_raw(str, "OYA", 4, DU_STRING_LEAD);
+	_print_str(str, "inserted \"OYA\" after the 4th position from the left");
+
+	du_string_insert_raw(str, "OYA", 2, DU_STRING_TAIL);
+	_print_str(str, "inserted \"OYA\" after the 2th position from the right");
+
+	du_string_cut(str, 5, 5, DU_STRING_LEAD);
+	_print_str(str, "cut 5 codepoints offseted by 5 from the left");
+
+	du_string_cut(str, 5, 5, DU_STRING_TAIL);
+	_print_str(str, "cut 5 codepoints offseted by 5 from the right");
+
+	du_string_clear(str);
+	_print_str(str, "cleared string of all content");
+
 	/* end */
 
 	if (du_string_has_failed(str))

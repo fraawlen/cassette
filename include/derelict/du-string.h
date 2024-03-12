@@ -68,6 +68,12 @@ void du_string_attach_raw(du_string_t *str, const char *c_str, du_string_side_t 
 
 void du_string_clear(du_string_t *str);
 
+void du_string_cut(du_string_t *str, size_t offset, size_t n_codepoints, du_string_side_t side);
+
+void du_string_insert(du_string_t *str, const du_string_t *str_src, size_t offset, du_string_side_t side);
+
+void du_string_insert_raw(du_string_t *str, const char *c_str, size_t offset, du_string_side_t side);
+
 void du_string_limit(du_string_t *str, size_t n_codepoints, du_string_side_t side);
 
 void du_string_pad(du_string_t *str, const char *padder, size_t n_pad, du_string_side_t side);
