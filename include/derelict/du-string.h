@@ -94,9 +94,17 @@ size_t du_string_get_alloc_size(const du_string_t *str);
 
 const char *du_string_get_chars(const du_string_t *str);
 
+const char *du_string_get_chars_at_offset(const du_string_t *str, size_t offset, du_string_side_t side);
+
+const char *du_string_get_chars_at_coordinates(const du_string_t *str, size_t row, size_t col);
+
+const char *du_string_get_chars_at_row(const du_string_t *str, size_t row);
+
 size_t du_string_get_height(const du_string_t *str);
 
 size_t du_string_get_length(const du_string_t *str);
+
+size_t du_string_get_row_width(const du_string_t *str, size_t row);
 
 size_t du_string_get_width(const du_string_t *str);
 

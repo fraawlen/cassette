@@ -45,9 +45,11 @@ struct _string_t
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool             _is_end_char     (char c);
-static du_string_side_t _opposite_side   (du_string_side_t side);
-static void             _update_n_values (du_string_t *str);
+static const char *     _get_next_codepoint (const char *codepoint);
+static const char *     _get_prev_codepoint (const char *codepoint, const du_string_t *str);
+static bool             _is_end_char        (char c);
+static du_string_side_t _opposite_side      (du_string_side_t side);
+static void             _update_n_values    (du_string_t *str);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -194,16 +196,7 @@ du_string_create_duplicate(const du_string_t *str)
 {
 	assert(str);
 
-	if (str->failed)
-	{
-		return &_err_str;
-	}
-
-	du_string_t *str_dup = du_string_create();
-
-	du_string_set(str_dup, str);
-
-	return str_dup;
+	return du_string_create_slice(str, SIZE_MAX, 0, DU_STRING_LEAD);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -239,18 +232,12 @@ du_string_cut(du_string_t *str, size_t offset, size_t n_codepoints, du_string_si
 		return;
 	}
 
-	if (n_codepoints == 0 || offset >= str->n_codepoints)
+	if (offset >= str->n_codepoints || n_codepoints == 0)
 	{
 		return;
 	}
 
-	if (offset == 0)
-	{
-		du_string_trim(str, n_codepoints, side);
-		return;
-	}
-
-	if (n_codepoints > str->n_codepoints)
+	if (n_codepoints >= SIZE_MAX - offset)
 	{
 		du_string_limit(str, offset, side);
 		return;
@@ -307,10 +294,132 @@ du_string_get_chars(const du_string_t *str)
 
 	if (str->failed)
 	{
-		return NULL;
+		return "";
 	}
 
 	return str->chars;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+const char *
+du_string_get_chars_at_offset(const du_string_t *str, size_t offset, du_string_side_t side)
+{
+	assert(str);
+
+	if (str->failed)
+	{
+		return "";
+	}
+
+	const char *codepoint;
+
+	switch (side)
+	{
+		case DU_STRING_LEAD:
+			break;
+
+		case DU_STRING_TAIL:
+			goto tail;
+
+		default:
+			return "";
+	}
+
+	/* lead seek */
+
+	if (offset >= str->n_codepoints)
+	{
+		return str->chars + str->n_bytes - 1;
+	}
+	
+	for (codepoint = str->chars; offset > 0; offset--)
+	{
+		codepoint = _get_next_codepoint(codepoint);
+	}
+
+	return codepoint;
+
+	/* tail seek */
+
+tail:
+
+	if (offset >= str->n_codepoints)
+	{
+		return str->chars;
+	}
+
+	for (codepoint = str->chars + str->n_bytes - 1; offset > 0; offset--)
+	{
+		codepoint = _get_prev_codepoint(codepoint, str);
+	}
+
+	return codepoint;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+const char *
+du_string_get_chars_at_coordinates(const du_string_t *str, size_t row, size_t col)
+{
+	assert(str);
+
+	if (str->failed)
+	{
+		return "";
+	}
+
+	const char *codepoint = str->chars;
+
+	/* seek to skip rows */
+
+	if (row >= str->n_rows)
+	{
+		row = str->n_rows - 1;
+	}
+
+	while (row > 0)
+	{
+		if (*codepoint == '\n')
+		{
+			row--;
+		}
+		codepoint = _get_next_codepoint(codepoint);
+	}
+
+	/* seek until right column is reached */
+
+	if (col >= str->n_cols)
+	{
+		col = str->n_cols;
+	}
+
+	while (col > 0)
+	{
+		switch (*codepoint)
+		{
+			case '\0':
+			case '\n':
+				return codepoint;
+
+			default:
+				col--;
+				break;
+		}
+		codepoint = _get_next_codepoint(codepoint);
+	}
+
+	return codepoint;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+const char *
+du_string_get_chars_at_row(const du_string_t *str, size_t row)
+{
+	assert(str);
+
+	return du_string_get_chars_at_coordinates(str, row, 0);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -341,6 +450,43 @@ du_string_get_length(const du_string_t *str)
 	}
 
 	return str->n_codepoints;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+du_string_get_row_width(const du_string_t *str, size_t row)
+{
+	assert(str);
+
+	if (str->failed)
+	{
+		return 0;
+	}
+
+	if (row >= str->n_rows)
+	{
+		return 0;
+	}
+
+	const char *codepoint = du_string_get_chars_at_row(str, row);
+	size_t col = 0;
+
+	for (;;)
+	{
+		switch (*codepoint)
+		{
+			case '\0':
+			case '\n':
+				return col;
+
+			default:
+				col++;
+				break;
+		}
+
+		codepoint = _get_next_codepoint(codepoint);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -395,18 +541,6 @@ du_string_insert_raw(du_string_t *str, const char *c_str, size_t offset, du_stri
 		return;
 	}
 
-	if (offset == 0)
-	{
-		du_string_attach_raw(str, c_str, side);
-		return;
-	}
-
-	if (offset >= str->n_codepoints)
-	{
-		du_string_attach_raw(str, c_str, _opposite_side(side));
-		return;
-	}
-
 	du_string_t *tmp = du_string_create_duplicate(str);
 
 	du_string_limit(str, offset, side);
@@ -418,6 +552,7 @@ du_string_insert_raw(du_string_t *str, const char *c_str, size_t offset, du_stri
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 du_string_limit(du_string_t *str, size_t n_codepoints, du_string_side_t side)
 {
@@ -550,7 +685,7 @@ du_string_test_wrap(const du_string_t *str, size_t max_cols)
 		return 0;
 	}
 
-	if (max_cols > str->n_cols)
+	if (max_cols >= str->n_cols)
 	{
 		return str->n_rows;
 	}
@@ -559,25 +694,24 @@ du_string_test_wrap(const du_string_t *str, size_t max_cols)
 	size_t col = 0;
 	size_t n   = 0;
 
-	for (; str->chars[n] != '\0'; n++)
+	for (const char *codepoint = str->chars; *codepoint != '\0'; n++)
 	{
-		if (_is_end_char(str->chars[n]))
+		if (*codepoint == '\n')
 		{
-			if (str->chars[n] == '\n')
-			{
-				col = 0;
-				row++;
-			}
-			else if (col == max_cols)
-			{
-				col = 1;
-				row++;
-			}
-			else
-			{
-				col++;
-			}
+			col = 0;
+			row++;
 		}
+		else if (col == max_cols)
+		{
+			col = 1;
+			row++;
+		}
+		else
+		{
+			col++;
+		}
+
+		codepoint = _get_next_codepoint(codepoint);
 	}
 
 	return row;
@@ -595,59 +729,29 @@ du_string_trim(du_string_t *str, size_t n_codepoints, du_string_side_t side)
 		return;
 	}
 
-	if (n_codepoints == 0)
-	{
-		return;
-	}
-
-	if (n_codepoints >= str->n_codepoints)
-	{
-		du_string_clear(str);
-		return;
-	}
-
-	size_t offset;
+	char *c = (char*)du_string_get_chars_at_offset(str, n_codepoints, side);
 
 	switch (side)
 	{
 		case DU_STRING_LEAD:
+			du_string_set_raw(str, c);
 			break;
 
 		case DU_STRING_TAIL:
-			goto trim_after;
+			if (*c != '\0')
+			{
+				*c = '\0';
+				du_string_set_raw(str, str->chars);
+			}
+			else
+			{
+				du_string_clear(str);
+			}
+			break;
 
 		default:
-			return;
+			break;
 	}
-
-	/* trim before */
-
-	for (offset = 0; n_codepoints > 0; offset++)
-	{
-		if (_is_end_char(str->chars[offset]))
-		{
-			n_codepoints--;
-		}
-	}
-
-	du_string_set_raw(str, str->chars + offset);
-	return;
-
-	/* trim after */
-
-trim_after:
-
-	n_codepoints++;
-	for (offset = str->n_bytes - 1; n_codepoints > 0; offset--)
-	{
-		if (_is_end_char(str->chars[offset]))
-		{
-			n_codepoints--;
-		}
-	}
-
-	str->chars[offset + 1] = '\0';
-	du_string_set_raw(str, str->chars);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -777,6 +881,44 @@ du_string_wrap(du_string_t *str, size_t max_cols)
 /************************************************************************************************************/
 /* _ ********************************************************************************************************/
 /************************************************************************************************************/
+
+static const char *
+_get_next_codepoint(const char *codepoint)
+{
+	if (*codepoint != '\0')
+	{
+		do
+		{
+			codepoint++;
+		}
+		while (!_is_end_char(*codepoint));
+	}
+
+	return codepoint;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static const char *
+_get_prev_codepoint(const char *codepoint, const du_string_t *str)
+{
+	if (codepoint == str->chars)
+	{
+		return codepoint;
+	}
+
+	while (--codepoint != str->chars)
+	{
+		if (_is_end_char(*(codepoint - 1)))
+		{
+			break;
+		}
+	}
+
+	return codepoint;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
 _is_end_char(char c)
