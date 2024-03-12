@@ -285,6 +285,21 @@ du_string_destroy(du_string_t **str)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+size_t
+du_string_get_alloc_size(const du_string_t *str)
+{
+	assert(str);
+
+	if (str->failed)
+	{
+		return 0;
+	}
+
+	return str->n_bytes;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 const char *
 du_string_get_chars(const du_string_t *str)
 {
@@ -301,37 +316,7 @@ du_string_get_chars(const du_string_t *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_string_get_codepoints_size(const du_string_t *str)
-{
-	assert(str);
-
-	if (str->failed)
-	{
-		return 0;
-	}
-
-	return str->n_codepoints;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-size_t
-du_string_get_cols_size(const du_string_t *str)
-{
-	assert(str);
-
-	if (str->failed)
-	{
-		return 0;
-	}
-
-	return str->n_cols;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-size_t
-du_string_get_rows_size(const du_string_t *str)
+du_string_get_height(const du_string_t *str)
 {
 	assert(str);
 
@@ -346,7 +331,7 @@ du_string_get_rows_size(const du_string_t *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_string_get_size(const du_string_t *str)
+du_string_get_length(const du_string_t *str)
 {
 	assert(str);
 
@@ -355,7 +340,22 @@ du_string_get_size(const du_string_t *str)
 		return 0;
 	}
 
-	return str->n_bytes;
+	return str->n_codepoints;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+du_string_get_width(const du_string_t *str)
+{
+	assert(str);
+
+	if (str->failed)
+	{
+		return 0;
+	}
+
+	return str->n_cols;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

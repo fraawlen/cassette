@@ -90,15 +90,15 @@ void du_string_wrap(du_string_t *str, size_t max_cols);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+size_t du_string_get_alloc_size(const du_string_t *str);
+
 const char *du_string_get_chars(const du_string_t *str);
 
-size_t du_string_get_codepoints_size(const du_string_t *str);
+size_t du_string_get_height(const du_string_t *str);
 
-size_t du_string_get_cols_size(const du_string_t *str);
+size_t du_string_get_length(const du_string_t *str);
 
-size_t du_string_get_rows_size(const du_string_t *str);
-
-size_t du_string_get_size(const du_string_t *str);
+size_t du_string_get_width(const du_string_t *str);
 
 bool du_string_has_failed(const du_string_t *str);
 

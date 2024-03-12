@@ -97,6 +97,9 @@ main(void)
 	du_string_clear(str);
 	_print_str(str, "cleared string of all content");
 
+	du_string_t *str3 = du_string_create_double(3405.234523, 2);
+	_print_str(str3, "created string from double");
+
 	/* end */
 
 	if (du_string_has_failed(str))
@@ -106,7 +109,8 @@ main(void)
 
 	du_string_destroy(&str);
 	du_string_destroy(&str2);
-	du_string_destroy(&str2); /* safe against double destructions / free */
+	du_string_destroy(&str3);
+	du_string_destroy(&str3); /* safe against double destructions / free */
 
 	return 0;
 }
@@ -121,9 +125,9 @@ _print_str(du_string_t *str, const char *comment)
 	printf(
 		"%s\n\t-> %lix%li / %li / %li (%s)\n",
 		du_string_get_chars(str),
-		du_string_get_rows_size(str),
-		du_string_get_cols_size(str),
-		du_string_get_codepoints_size(str),
-		du_string_get_size(str),
+		du_string_get_height(str),
+		du_string_get_width(str),
+		du_string_get_length(str),
+		du_string_get_alloc_size(str),
 		comment);
 }
