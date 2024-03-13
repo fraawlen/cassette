@@ -411,7 +411,7 @@ _resize(du_tracker_t *tracker, size_t n, size_t a, size_t b)
 
 	/* test for overflow */
 
-	if (n > ((SIZE_MAX - 1) / sizeof(_slot_t) - b) / a)
+	if (n > SIZE_MAX / a || n * a > SIZE_MAX - b || n * a + b > (SIZE_MAX - 1) / sizeof(_slot_t))
 	{
 		tracker->failed = true;
 		return false;
@@ -441,4 +441,3 @@ _resize(du_tracker_t *tracker, size_t n, size_t a, size_t b)
 
 	return true;
 }
-
