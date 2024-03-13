@@ -37,81 +37,37 @@ static void _print_str(du_string_t *str, const char *comment);
 int
 main(void)
 {
-	/* init */
+	size_t offset_og;
+	size_t offset_wrap;
 
-	du_string_t *str = du_string_create();
+	du_string_t *str_og   = du_string_create();
+	du_string_t *str_wrap = du_string_create();
 
-	/* operations */
+	/* setup */
 
-	du_string_set_raw(str, "test\ntest");
-	_print_str(str, "set initial value");
+	du_string_set_raw(str_og, "This is a loooooooooooong line of text !");
+	du_string_set(str_wrap, str_og);
+	du_string_wrap(str_wrap, 10);
 
-	du_string_attach_raw(str, "\nTEST", DU_STRING_TAIL);
-	_print_str(str, "append \"\\nTEST\"");
+	_print_str(str_og,   "original string");
+	_print_str(str_wrap, "wrapped string");
 
-	du_string_attach_raw(str, "hehehe", DU_STRING_LEAD);
-	_print_str(str, "prepend \"hehehe\"");
+	/* get insersion offset for wrapped string */
 
-	du_string_pad(str, "_", 22, DU_STRING_LEAD);
-	_print_str(str, "left padded with \"_\"");
+	offset_wrap = du_string_get_offset_at_coords(str_wrap, 2, 5);
 
-	du_string_pad(str, "_", 24, DU_STRING_TAIL);
-	_print_str(str, "right padded with \"_\"");
+	/* convert that offset to match the original string */
 
-	du_string_wrap(str, 5);
-	_print_str(str, "wrapped string after 5th column");
+	offset_og = du_string_convert_wrapped_offset(str_og, str_wrap, offset_wrap);
 
-	du_string_trim(str, 2, DU_STRING_LEAD);
-	_print_str(str, "trimmed 2 codepoints at the beginning");
+	/* insert new text in the original string and update the wrapped one */
 
-	du_string_trim(str, 5, DU_STRING_TAIL);
-	_print_str(str, "trimmed 5 codepoints at the end");
+	du_string_insert_raw(str_og, "ER", offset_og, DU_STRING_LEAD);
+	du_string_set(str_wrap, str_og);
+	du_string_wrap(str_wrap, 10);
 
-	du_string_attach_raw(str, "   ", DU_STRING_LEAD);
-	du_string_attach_raw(str, "   ", DU_STRING_TAIL);
-	_print_str(str, "attached 3 spaces at the beginning and end of string");
-
-	du_string_trim_whitespaces(str);
-	_print_str(str, "trimmed leading and trailing whitespaces");
-
-	du_string_limit(str, 9, DU_STRING_LEAD);
-	_print_str(str, "limited the string's length to 9 codepoints from the left");
-
-	du_string_t *str2 = du_string_create_slice(str, 6, 2, DU_STRING_LEAD);
-	_print_str(str2, "created a slice (of size 6 and offset 2 from the left) of the original string");
-
-	du_string_attach(str, str2, DU_STRING_LEAD);
-	_print_str(str, "attached the slice to the beginning of the main string");
-
-	du_string_insert_raw(str, "OYA", 4, DU_STRING_LEAD);
-	_print_str(str, "inserted \"OYA\" after the 4th position from the left");
-
-	du_string_insert_raw(str, "OYA", 2, DU_STRING_TAIL);
-	_print_str(str, "inserted \"OYA\" after the 2th position from the right");
-
-	du_string_cut(str, 5, 5, DU_STRING_LEAD);
-	_print_str(str, "cut 5 codepoints offseted by 5 from the left");
-
-	du_string_cut(str, 5, 5, DU_STRING_TAIL);
-	_print_str(str, "cut 5 codepoints offseted by 5 from the right");
-
-	du_string_clear(str);
-	_print_str(str, "cleared string of all content");
-
-	du_string_t *str3 = du_string_create_double(3405.234523, 2);
-	_print_str(str3, "created string from double");
-
-	/* end */
-
-	if (du_string_has_failed(str))
-	{
-		printf("string failed during operation\n");
-	}
-
-	du_string_destroy(&str);
-	du_string_destroy(&str2);
-	du_string_destroy(&str3);
-	du_string_destroy(&str3); /* safe against double destructions / free */
+	_print_str(str_og,   "original string with insertion based on wrapped string coords");
+	_print_str(str_wrap, "updated wrapped string");
 
 	return 0;
 }
