@@ -153,6 +153,44 @@ du_string_clear(du_string_t *str)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+size_t
+du_string_convert_wrapped_offset(const du_string_t *str, const du_string_t *str_wrap, size_t offset)
+{
+	assert(str && str_wrap);
+
+	if (str->failed || str_wrap->failed)
+	{
+		return 0;
+	}
+
+	if (offset >= str_wrap->n_codepoints)
+	{
+		return str->n_codepoints;
+	}
+
+	const char *codepoint_1 = str->chars;
+	const char *codepoint_2 = str_wrap->chars;
+	size_t diff = 0;
+
+	for (size_t i = 0; i < offset; i++)
+	{
+		if (*codepoint_1 == *(codepoint_2))
+		{
+			codepoint_1 = _get_next_codepoint(codepoint_1);
+		}
+		else
+		{
+			diff++;
+		}
+
+		codepoint_2 = _get_next_codepoint(codepoint_2);
+	}
+
+	return offset - diff;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 du_string_t *
 du_string_create(void)
 {
@@ -360,7 +398,7 @@ tail:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-du_string_get_chars_at_coordinates(const du_string_t *str, size_t row, size_t col)
+du_string_get_chars_at_coords(const du_string_t *str, size_t row, size_t col)
 {
 	assert(str);
 
@@ -369,47 +407,10 @@ du_string_get_chars_at_coordinates(const du_string_t *str, size_t row, size_t co
 		return "";
 	}
 
-	const char *codepoint = str->chars;
-
-	/* seek to skip rows */
-
-	if (row >= str->n_rows)
-	{
-		row = str->n_rows - 1;
-	}
-
-	while (row > 0)
-	{
-		if (*codepoint == '\n')
-		{
-			row--;
-		}
-		codepoint = _get_next_codepoint(codepoint);
-	}
-
-	/* seek until right column is reached */
-
-	if (col >= str->n_cols)
-	{
-		col = str->n_cols;
-	}
-
-	while (col > 0)
-	{
-		switch (*codepoint)
-		{
-			case '\0':
-			case '\n':
-				return codepoint;
-
-			default:
-				col--;
-				break;
-		}
-		codepoint = _get_next_codepoint(codepoint);
-	}
-
-	return codepoint;
+	return du_string_get_chars_at_offset(
+		str,
+		du_string_get_offset_at_coords(str, row, col),
+		DU_STRING_LEAD);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -419,7 +420,7 @@ du_string_get_chars_at_row(const du_string_t *str, size_t row)
 {
 	assert(str);
 
-	return du_string_get_chars_at_coordinates(str, row, 0);
+	return du_string_get_chars_at_coords(str, row, 0);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -569,6 +570,64 @@ du_string_limit(du_string_t *str, size_t n_codepoints, du_string_side_t side)
 	}
 
 	du_string_trim(str, str->n_codepoints - n_codepoints, _opposite_side(side));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+du_string_get_offset_at_coords(const du_string_t *str, size_t row, size_t col)
+{
+	assert(str);
+
+	if (str->failed)
+	{
+		return 0;
+	}
+
+	const char *codepoint = str->chars;
+	size_t offset = 0;
+
+	/* seek to skip rows */
+
+	if (row >= str->n_rows)
+	{
+		row = str->n_rows - 1;
+	}
+
+	while (row > 0)
+	{
+		if (*codepoint == '\n')
+		{
+			row--;
+		}
+		codepoint = _get_next_codepoint(codepoint);
+		offset++;
+	}
+
+	/* seek until right column is reached */
+
+	if (col >= str->n_cols)
+	{
+		col = str->n_cols;
+	}
+
+	while (col > 0)
+	{
+		switch (*codepoint)
+		{
+			case '\0':
+			case '\n':
+				return offset;
+
+			default:
+				break;
+		}
+		codepoint = _get_next_codepoint(codepoint);
+		offset++;
+		col--;
+	}
+
+	return offset;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
