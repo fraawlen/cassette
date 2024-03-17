@@ -54,7 +54,7 @@ main(void)
 
 	/* get insersion offset for wrapped string */
 
-	offset_wrap = du_string_get_offset_at_coords(str_wrap, 2, 5);
+	offset_wrap = du_string_convert_coords_to_offset(str_wrap, 2, 5);
 
 	/* convert that offset to match the original string */
 
@@ -62,7 +62,7 @@ main(void)
 
 	/* insert new text in the original string and update the wrapped one */
 
-	du_string_insert_raw(str_og, "ER", offset_og, DU_STRING_LEAD);
+	du_string_insert_raw(str_og, "ER", offset_og);
 	du_string_set(str_wrap, str_og);
 	du_string_wrap(str_wrap, 10);
 

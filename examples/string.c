@@ -37,81 +37,67 @@ static void _print_str(du_string_t *str, const char *comment);
 int
 main(void)
 {
+	du_string_t *str;
+	const char *codepoint;
+
 	/* init */
 
-	du_string_t *str = du_string_create();
+	str = du_string_create();
 
 	/* operations */
 
-	du_string_set_raw(str, "test\ntest");
+	du_string_set_raw(str, "t↑↑t\ntest\ntest");
 	_print_str(str, "set initial value");
 
-	du_string_attach_raw(str, "\nTEST", DU_STRING_TAIL);
-	_print_str(str, "append \"\\nTEST\"");
+	du_string_insert_raw(str, "insertion\n", 5);
+	_print_str(str, "insertion at codepoint offset 5");
 
-	du_string_attach_raw(str, "hehehe", DU_STRING_LEAD);
-	_print_str(str, "prepend \"hehehe\"");
+	du_string_cut(str, 0, 5);
+	_print_str(str, "cut 5 codepoints at offset 0");
 
-	du_string_pad(str, "_", 22, DU_STRING_LEAD);
-	_print_str(str, "left padded with \"_\"");
+	du_string_wrap(str, 4);
+	_print_str(str, "wrapped to 4 columns");
 
-	du_string_pad(str, "_", 24, DU_STRING_TAIL);
-	_print_str(str, "right padded with \"_\"");
+	du_string_append_raw(str, "\nok");
+	_print_str(str, "append");
 
-	du_string_wrap(str, 5);
-	_print_str(str, "wrapped string after 5th column");
+	du_string_slice(str, 5, 6);
+	_print_str(str, "slice with offset 4 and length 6");
 
-	du_string_trim(str, 2, DU_STRING_LEAD);
-	_print_str(str, "trimmed 2 codepoints at the beginning");
+	du_string_prepend_raw(str, "    \t\t");
+	_print_str(str, "appended whitespace");
 
-	du_string_trim(str, 5, DU_STRING_TAIL);
-	_print_str(str, "trimmed 5 codepoints at the end");
+	du_string_trim(str);
+	_print_str(str, "trimmed whitespaces");
 
-	du_string_attach_raw(str, "   ", DU_STRING_LEAD);
-	du_string_attach_raw(str, "   ", DU_STRING_TAIL);
-	_print_str(str, "attached 3 spaces at the beginning and end of string");
+	du_string_pad(str, "→", 0, 10);
+	_print_str(str, "padded beginning of string with dots to reach a length of 10");
 
-	du_string_trim_whitespaces(str);
-	_print_str(str, "trimmed leading and trailing whitespaces");
+	du_string_realloc(str);
+	_print_str(str, "reallocted memory to get rid off excess unused space");
 
-	du_string_limit(str, 9, DU_STRING_LEAD);
-	_print_str(str, "limited the string's length to 9 codepoints from the left");
+	/* manual iteration */
 
-	du_string_t *str2 = du_string_create_slice(str, 6, 2, DU_STRING_LEAD);
-	_print_str(str2, "created a slice (of size 6 and offset 2 from the left) of the original string");
+	size_t i = 0;
 
-	du_string_attach(str, str2, DU_STRING_LEAD);
-	_print_str(str, "attached the slice to the beginning of the main string");
+	codepoint = du_string_get_chars(str);
+	while (*codepoint != '\0')
+	{
+		i++;
+		codepoint = du_string_seek_next_codepoint(codepoint);
+	}
 
-	du_string_insert_raw(str, "OYA", 4, DU_STRING_LEAD);
-	_print_str(str, "inserted \"OYA\" after the 4th position from the left");
-
-	du_string_insert_raw(str, "OYA", 2, DU_STRING_TAIL);
-	_print_str(str, "inserted \"OYA\" after the 2th position from the right");
-
-	du_string_cut(str, 5, 5, DU_STRING_LEAD);
-	_print_str(str, "cut 5 codepoints offseted by 5 from the left");
-
-	du_string_cut(str, 5, 5, DU_STRING_TAIL);
-	_print_str(str, "cut 5 codepoints offseted by 5 from the right");
-
-	du_string_clear(str);
-	_print_str(str, "cleared string of all content");
-
-	du_string_t *str3 = du_string_create_double(3405.234523, 2);
-	_print_str(str3, "created string from double");
+	printf("\t-> counted %li codepoints manually\n", i);
 
 	/* end */
 
 	if (du_string_has_failed(str))
 	{
-		printf("string failed during operation\n");
+		printf("\t->string failed during operation\n");
 	}
 
 	du_string_destroy(&str);
-	du_string_destroy(&str2);
-	du_string_destroy(&str3);
-	du_string_destroy(&str3); /* safe against double destructions / free */
+	du_string_destroy(&str); /* safe against double destructions/free */
 
 	return 0;
 }
@@ -124,7 +110,7 @@ static void
 _print_str(du_string_t *str, const char *comment)
 {
 	printf(
-		"%s\n\t-> %lix%li / %li / %li (%s)\n\n",
+		"%s\n\t-> %lix%li / %li / %li (%s)\n",
 		du_string_get_chars(str),
 		du_string_get_height(str),
 		du_string_get_width(str),

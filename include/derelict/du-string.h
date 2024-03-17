@@ -32,19 +32,6 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-/**
- *
- */
-typedef enum 
-{
-	DU_STRING_LEAD,
-	DU_STRING_TAIL,
-}
-du_string_side_t;
-
-/**
- *
- */
 typedef struct _string_t du_string_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -55,40 +42,45 @@ du_string_t *du_string_create_double(double d, int precision);
 
 du_string_t *du_string_create_duplicate(const du_string_t *str);
 
-du_string_t *du_string_create_slice(const du_string_t *str, size_t n_codepoints, size_t offset,
-                                    du_string_side_t side);
-
 void du_string_destroy(du_string_t **str);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void du_string_attach(du_string_t *str, const du_string_t *str_src, du_string_side_t side);
+void du_string_cut(du_string_t *str, size_t offset, size_t n_codepoints);
 
-void du_string_attach_raw(du_string_t *str, const char *c_str, du_string_side_t side);
-
-void du_string_clear(du_string_t *str);
-
-void du_string_cut(du_string_t *str, size_t offset, size_t n_codepoints, du_string_side_t side);
-
-void du_string_insert(du_string_t *str, const du_string_t *str_src, size_t offset, du_string_side_t side);
-
-void du_string_insert_raw(du_string_t *str, const char *c_str, size_t offset, du_string_side_t side);
-
-void du_string_limit(du_string_t *str, size_t n_codepoints, du_string_side_t side);
-
-void du_string_pad(du_string_t *str, const char *padder, size_t n_pad, du_string_side_t side);
+void du_string_insert(du_string_t *str, const du_string_t *str_src, size_t offset);
 
 void du_string_set(du_string_t *str, const du_string_t *str_src);
 
-void du_string_set_raw(du_string_t *str, const char *c_str);
-
-void du_string_trim(du_string_t *str, size_t n_codepoints, du_string_side_t side);
-
-void du_string_trim_whitespaces(du_string_t *str);
-
 void du_string_wrap(du_string_t *str, size_t max_cols);
 
+void du_string_realloc(du_string_t *str);
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void du_string_append(du_string_t *str, const du_string_t *str_src);
+
+void du_string_append_raw(du_string_t *str, const char *c_str);
+
+void du_string_clear(du_string_t *str);
+
+void du_string_insert_raw(du_string_t *str, const char *c_str, size_t offset);
+
+void du_string_pad(du_string_t *str, const char *pattern, size_t offset, size_t n_codepoints_target);
+
+void du_string_prepend(du_string_t *str, const du_string_t *str_src);
+
+void du_string_prepend_raw(du_string_t *str, const char *c_str);
+
+void du_string_set_raw(du_string_t *str, const char *c_str);
+
+void du_string_slice(du_string_t *str, size_t offset, size_t n_codepoints);
+
+void du_string_trim(du_string_t *str);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t du_string_convert_coords_to_offset(const du_string_t *str, size_t row, size_t col);
 
 size_t du_string_convert_wrapped_offset(const du_string_t *str, const du_string_t *str_wrap, size_t offset);
 
@@ -96,23 +88,19 @@ size_t du_string_get_alloc_size(const du_string_t *str);
 
 const char *du_string_get_chars(const du_string_t *str);
 
-const char *du_string_get_chars_at_offset(const du_string_t *str, size_t offset, du_string_side_t side);
-
 const char *du_string_get_chars_at_coords(const du_string_t *str, size_t row, size_t col);
 
-const char *du_string_get_chars_at_row(const du_string_t *str, size_t row);
+const char *du_string_get_chars_at_offset(const du_string_t *str, size_t offset);
 
 size_t du_string_get_height(const du_string_t *str);
 
 size_t du_string_get_length(const du_string_t *str);
 
-size_t du_string_get_offset_at_coords(const du_string_t *str, size_t row, size_t col);
-
-size_t du_string_get_row_width(const du_string_t *str, size_t row);
-
 size_t du_string_get_width(const du_string_t *str);
 
 bool du_string_has_failed(const du_string_t *str);
+
+const char *du_string_seek_next_codepoint(const char *codepoint);
 
 size_t du_string_test_wrap(const du_string_t *str, size_t max_cols);
 
