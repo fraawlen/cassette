@@ -18,11 +18,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef DU_TRACKER_H
-#define DU_TRACKER_H
+#ifndef DU_COLOR_H
+#define DU_COLOR_H
 
 #include <stdbool.h>
-#include <stdlib.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,41 +32,40 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-typedef struct _tracker_t du_tracker_t;
+#define DU_COLOR_TRANSPARENT (du_color_t){0.000, 0.000, 0.000, 0.000}
+#define DU_COLOR_WHITE       (du_color_t){1.000, 1.000, 1.000, 1.000}
+#define DU_COLOR_BLACK       (du_color_t){0.000, 0.000, 0.000, 1.000}
+#define DU_COLOR_RED         (du_color_t){1.000, 0.000, 0.000, 1.000}
+#define DU_COLOR_GREEN       (du_color_t){0.000, 1.000, 0.000, 1.000}
+#define DU_COLOR_BLUE        (du_color_t){0.000, 0.000, 1.000, 1.000}
+#define DU_COLOR_YELLOW      (du_color_t){1.000, 1.000, 0.000, 1.000}
+#define DU_COLOR_MAGENTA     (du_color_t){1.000, 0.000, 1.000, 1.000}
+#define DU_COLOR_CYAN        (du_color_t){0.000, 1.000, 1.000, 1.000}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-du_tracker_t *du_tracker_create(size_t n_alloc);
-
-void du_tracker_destroy(du_tracker_t **tracker);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void du_tracker_clear(du_tracker_t *tracker);
-
-void du_tracker_pull_index(du_tracker_t *tracker, size_t index);
-
-void du_tracker_pull_pointer(du_tracker_t *tracker, const void *ptr, size_t index);
-
-void du_tracker_push(du_tracker_t *tracker, const void *ptr, size_t *index);
-
-void du_tracker_reset_iterator(du_tracker_t *tracker);
-
-void du_tracker_trim(du_tracker_t *tracker);
+typedef struct {
+	double r;
+	double g;
+	double b;
+	double a;
+} du_color_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-unsigned long du_tracker_find(const du_tracker_t *tracker, const void *ptr, size_t *index);
+du_color_t du_color_convert_argb_uint(uint32_t argb);
 
-size_t du_tracker_get_alloc_size(const du_tracker_t *tracker);
+du_color_t du_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
-const void *du_tracker_get_index(const du_tracker_t *tracker, size_t index, unsigned long *n_ref);
+du_color_t du_color_convert_hex_str(const char *str, bool *err);
 
-const void *du_tracker_get_next(du_tracker_t *tracker, unsigned long *n_ref);
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-size_t du_tracker_get_size(const du_tracker_t *tracker);
+du_color_t du_color_interpolate(du_color_t cl_1, du_color_t cl_2, double ratio);
 
-bool du_tracker_has_failed(const du_tracker_t *tracker);
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint32_t du_color_get_argb_uint(du_color_t cl);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -76,4 +75,5 @@ bool du_tracker_has_failed(const du_tracker_t *tracker);
 }
 #endif
 
-#endif /* DU_TRACKER_H */
+#endif /* DU_COLOR_H */
+
