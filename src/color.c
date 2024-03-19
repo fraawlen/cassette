@@ -51,12 +51,13 @@ du_color_convert_argb_uint(uint32_t argb)
 du_color_t
 du_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
-	du_color_t cl;
-
-	cl.a = a / 255.0;
-	cl.r = r / 255.0;
-	cl.g = g / 255.0;
-	cl.b = b / 255.0;
+	const du_color_t cl =
+	{
+		.a = a / 255.0;
+		.r = r / 255.0;
+		.g = g / 255.0;
+		.b = b / 255.0;
+	};
 
 	return cl;
 }

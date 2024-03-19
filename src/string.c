@@ -122,7 +122,6 @@ du_string_convert_coords_to_offset(const du_string_t *str, size_t row, size_t co
 
 	/* skip rows */
 
-
 	while (row > 0)
 	{
 		if (*codepoint == '\n')
@@ -198,6 +197,7 @@ du_string_t *
 du_string_create(void)
 {
 	du_string_t *str = malloc(sizeof(du_string_t));
+
 	if (!str)
 	{
 		return &_err_str;
@@ -487,8 +487,7 @@ du_string_pad(du_string_t *str, const char *pattern, size_t offset, size_t n_cod
 
 	size_t pad_n_bytes      = strlen(pattern);
 	size_t n_codepoint_diff = n_codepoints_target - str->n_codepoints;
-
-	char *tmp;
+	char  *tmp;
 
 	/* create padding string */
 
@@ -550,9 +549,8 @@ du_string_realloc(du_string_t *str)
 		return;
 	}
 
-	char *tmp;
+	char *tmp = realloc(str->chars, str->n_bytes);
 
-	tmp = realloc(str->chars, str->n_bytes);
 	if (!tmp)
 	{
 		str->failed = true;
@@ -607,9 +605,8 @@ du_string_set_raw(du_string_t *str, const char *c_str)
 		c_str = "";
 	}
 
-	char *tmp;
+	char *tmp = malloc(strlen(c_str) + 1);
 
-	tmp = malloc(strlen(c_str) + 1);
 	if (!tmp)
 	{
 		str->failed = true;
@@ -766,7 +763,7 @@ du_string_wrap(du_string_t *str, size_t max_cols)
 	size_t max_slots;
 	size_t max_rows;
 	size_t col;
-	char *tmp;
+	char  *tmp;
 
 	/* calculate (with overflow protection) max required memory to host wrapped string */
 

@@ -91,6 +91,7 @@ du_tracker_t *
 du_tracker_create(size_t n_alloc)
 {
 	du_tracker_t *tracker = malloc(sizeof(du_tracker_t));
+
 	if (!tracker)
 	{
 		return &_err_tracker;
