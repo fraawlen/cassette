@@ -30,12 +30,13 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-typedef struct _slot_t _slot_t;
 struct _slot_t
 {
 	const void *ptr;
 	unsigned long n_ref;
 };
+
+typedef struct _slot_t _slot_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -90,9 +91,9 @@ du_tracker_clear(du_tracker_t *tracker)
 du_tracker_t *
 du_tracker_create(size_t n_alloc)
 {
-	du_tracker_t *tracker = malloc(sizeof(du_tracker_t));
+	du_tracker_t *tracker;
 
-	if (!tracker)
+	if (!(tracker = malloc(sizeof(du_tracker_t))))
 	{
 		return &_err_tracker;
 	}
@@ -131,6 +132,9 @@ du_tracker_destroy(du_tracker_t **tracker)
 unsigned long
 du_tracker_find(const du_tracker_t *tracker, const void *ptr, size_t *index)
 {
+	size_t i0;
+	size_t i;
+
 	assert(tracker);
 
 	if (tracker->failed)
@@ -143,8 +147,7 @@ du_tracker_find(const du_tracker_t *tracker, const void *ptr, size_t *index)
 		return 0;
 	}
 
-	size_t i0 = index && *index < tracker->n ? *index : tracker->n - 1;
-	size_t i;
+	i0 = index && *index < tracker->n ? *index : tracker->n - 1;
 
 	/* first scan, from i0 to 0 */
 
@@ -324,6 +327,8 @@ du_tracker_pull_pointer(du_tracker_t *tracker, const void *ptr, size_t index)
 void
 du_tracker_push(du_tracker_t *tracker, const void *ptr, size_t *index)
 {
+	size_t i = 0;
+	
 	assert(tracker);
 
 	if (tracker->failed)
@@ -335,8 +340,6 @@ du_tracker_push(du_tracker_t *tracker, const void *ptr, size_t *index)
 	{
 		return;
 	}
-
-	size_t i = 0;
 
 	/* check if reference exist, increment the reference counter if it does */
 

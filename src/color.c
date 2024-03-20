@@ -51,13 +51,12 @@ du_color_convert_argb_uint(uint32_t argb)
 du_color_t
 du_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
-	const du_color_t cl =
-	{
-		.a = a / 255.0;
-		.r = r / 255.0;
-		.g = g / 255.0;
-		.b = b / 255.0;
-	};
+	du_color_t cl;
+
+	cl.a = a / 255.0;
+	cl.r = r / 255.0;
+	cl.g = g / 255.0;
+	cl.b = b / 255.0;
 
 	return cl;
 }
@@ -117,12 +116,17 @@ skip:
 uint32_t
 du_color_get_argb_uint(du_color_t cl)
 {
+	uint32_t a;
+	uint32_t r;
+	uint32_t g;
+	uint32_t b;
+
 	_bind_cl(&cl);
 
-	const uint32_t a = cl.a * 255;
-	const uint32_t r = cl.r * 255;
-	const uint32_t g = cl.g * 255;
-	const uint32_t b = cl.b * 255;
+	a = cl.a * 255;
+	r = cl.r * 255;
+	g = cl.g * 255;
+	b = cl.b * 255;
 
 	return (a << 24) + (r << 16) + (g << 8) + b;
 }
@@ -132,17 +136,16 @@ du_color_get_argb_uint(du_color_t cl)
 du_color_t
 du_color_interpolate(du_color_t cl_1, du_color_t cl_2, double ratio)
 {
+	du_color_t cl;
+
 	_bind_cl(&cl_1);
 	_bind_cl(&cl_2);
 	_bind_d(&ratio);
 
-	const du_color_t cl =
-	{
-		.r = cl_2.r * ratio + cl_1.r * (1.0 - ratio),
-		.g = cl_2.g * ratio + cl_1.g * (1.0 - ratio),
-		.b = cl_2.b * ratio + cl_1.b * (1.0 - ratio),
-		.a = cl_2.a * ratio + cl_1.a * (1.0 - ratio),
-	};
+	cl.r = cl_2.r * ratio + cl_1.r * (1.0 - ratio);
+	cl.g = cl_2.g * ratio + cl_1.g * (1.0 - ratio);
+	cl.b = cl_2.b * ratio + cl_1.b * (1.0 - ratio);
+	cl.a = cl_2.a * ratio + cl_1.a * (1.0 - ratio);
 
 	return cl;
 }

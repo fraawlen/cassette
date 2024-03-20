@@ -100,6 +100,9 @@ du_string_clear(du_string_t *str)
 size_t
 du_string_convert_coords_to_offset(const du_string_t *str, size_t row, size_t col)
 {
+	const char *codepoint;
+	size_t offset = 0;
+
 	assert(str);
 
 	if (str->failed)
@@ -117,8 +120,7 @@ du_string_convert_coords_to_offset(const du_string_t *str, size_t row, size_t co
 		col = str->n_cols;
 	}
 
-	const char *codepoint = str->chars;
-	size_t offset = 0;;
+	codepoint = str->chars;
 
 	/* skip rows */
 
@@ -158,6 +160,10 @@ du_string_convert_coords_to_offset(const du_string_t *str, size_t row, size_t co
 size_t
 du_string_convert_wrapped_offset(const du_string_t *str, const du_string_t *str_wrap, size_t offset)
 {
+	const char *codepoint_1;
+	const char *codepoint_2;
+	size_t diff = 0;
+
 	assert(str && str_wrap);
 
 	if (str->failed || str_wrap->failed)
@@ -170,9 +176,8 @@ du_string_convert_wrapped_offset(const du_string_t *str, const du_string_t *str_
 		return str->n_codepoints;
 	}
 
-	const char *codepoint_1 = str->chars;
-	const char *codepoint_2 = str_wrap->chars;
-	size_t diff = 0;
+	codepoint_1 = str->chars;
+	codepoint_2 = str_wrap->chars;
 
 	for (size_t i = 0; i < offset; i++)
 	{
@@ -196,9 +201,9 @@ du_string_convert_wrapped_offset(const du_string_t *str, const du_string_t *str_
 du_string_t *
 du_string_create(void)
 {
-	du_string_t *str = malloc(sizeof(du_string_t));
+	du_string_t *str;
 
-	if (!str)
+	if (!(str = malloc(sizeof(du_string_t))))
 	{
 		return &_err_str;
 	}
@@ -220,10 +225,13 @@ du_string_create(void)
 du_string_t *
 du_string_create_double(double d, int precision)
 {
-	du_string_t *str = du_string_create();
+	du_string_t *str;
+
 	char tmp[25];
 
 	snprintf(tmp, 25, "%.*f", precision, d);
+
+	str = du_string_create();
 	du_string_set_raw(str, tmp);
 
 	return str;
@@ -248,6 +256,8 @@ du_string_create_duplicate(const du_string_t *str)
 void
 du_string_cut(du_string_t *str, size_t offset, size_t n_codepoints)
 {
+	size_t offset_2;
+
 	assert(str);
 
 	if (str->failed)
@@ -265,13 +275,11 @@ du_string_cut(du_string_t *str, size_t offset, size_t n_codepoints)
 		n_codepoints = str->n_codepoints - offset;
 	}
 
-	size_t offset_2;
-
 	offset_2 = _convert_to_byte_offset(str, offset + n_codepoints);
 	offset   = _convert_to_byte_offset(str, offset);
 
-	strcpy(str->chars + offset, str->chars + offset_2);
-	
+	strcpy(str->chars + offset, str->chars + offset_2);	
+
 	_update_n_values(str);
 }
 
@@ -428,6 +436,9 @@ du_string_insert(du_string_t *str, const du_string_t *str_src, size_t offset)
 void
 du_string_insert_raw(du_string_t *str, const char *c_str, size_t offset)
 {
+	size_t n;
+	char *tmp;
+
 	assert(str);
 
 	if (str->failed)
@@ -440,18 +451,13 @@ du_string_insert_raw(du_string_t *str, const char *c_str, size_t offset)
 		return;
 	}
 
-	size_t n;
-	char *tmp;
-
-	n = strlen(c_str);
-	if (n > SIZE_MAX - str->n_bytes)
+	if ((n = strlen(c_str)) > SIZE_MAX - str->n_bytes)
 	{
 		str->failed = true;
 		return;
 	}
 
-	tmp = malloc(str->n_bytes + n);
-	if (!tmp)
+	if (!(tmp = malloc(str->n_bytes + n)))
 	{
 		str->failed = true;
 		return;
@@ -473,6 +479,10 @@ du_string_insert_raw(du_string_t *str, const char *c_str, size_t offset)
 void
 du_string_pad(du_string_t *str, const char *pattern, size_t offset, size_t n_codepoints_target)
 {
+	size_t pad_n_bytes;
+	size_t n_codepoint_diff;
+	char *tmp;
+
 	assert(str);
 
 	if (str->failed)
@@ -485,9 +495,8 @@ du_string_pad(du_string_t *str, const char *pattern, size_t offset, size_t n_cod
 		return;
 	}
 
-	size_t pad_n_bytes      = strlen(pattern);
-	size_t n_codepoint_diff = n_codepoints_target - str->n_codepoints;
-	char  *tmp;
+	pad_n_bytes      = strlen(pattern);
+	n_codepoint_diff = n_codepoints_target - str->n_codepoints;
 
 	/* create padding string */
 
@@ -497,8 +506,7 @@ du_string_pad(du_string_t *str, const char *pattern, size_t offset, size_t n_cod
 		return;
 	}
 
-	tmp = malloc(pad_n_bytes * n_codepoint_diff + 1);
-	if (!tmp)
+	if (!(tmp = malloc(pad_n_bytes * n_codepoint_diff + 1)))
 	{
 		str->failed = true;
 		return;
@@ -508,6 +516,7 @@ du_string_pad(du_string_t *str, const char *pattern, size_t offset, size_t n_cod
 	{
 		memcpy(tmp + i * pad_n_bytes, pattern, pad_n_bytes);
 	}
+
 	tmp[pad_n_bytes * n_codepoint_diff] = '\0';
 
 	/* insert it */
@@ -542,6 +551,8 @@ du_string_prepend_raw(du_string_t *str, const char *c_str)
 void
 du_string_realloc(du_string_t *str)
 {
+	char *tmp;
+
 	assert(str);
 
 	if (str->failed)
@@ -549,9 +560,7 @@ du_string_realloc(du_string_t *str)
 		return;
 	}
 
-	char *tmp = realloc(str->chars, str->n_bytes);
-
-	if (!tmp)
+	if (!(tmp = realloc(str->chars, str->n_bytes)))
 	{
 		str->failed = true;
 		return;
@@ -593,6 +602,8 @@ du_string_set(du_string_t *str, const du_string_t *str_src)
 void
 du_string_set_raw(du_string_t *str, const char *c_str)
 {
+	char *tmp;
+
 	assert(str);
 
 	if (str->failed)
@@ -605,9 +616,7 @@ du_string_set_raw(du_string_t *str, const char *c_str)
 		c_str = "";
 	}
 
-	char *tmp = malloc(strlen(c_str) + 1);
-
-	if (!tmp)
+	if (!(tmp = malloc(strlen(c_str) + 1)))
 	{
 		str->failed = true;
 		return;
@@ -650,6 +659,10 @@ du_string_slice(du_string_t *str, size_t offset, size_t n_codepoints)
 size_t
 du_string_test_wrap(const du_string_t *str, size_t max_cols)
 {
+	size_t row = 1;
+	size_t col = 0;
+	size_t n   = 0;
+
 	assert(str && max_cols > 0);
 
 	if (str->failed)
@@ -661,10 +674,6 @@ du_string_test_wrap(const du_string_t *str, size_t max_cols)
 	{
 		return str->n_rows;
 	}
-
-	size_t row = 1;
-	size_t col = 0;
-	size_t n   = 0;
 
 	for (const char *codepoint = str->chars; *codepoint != '\0'; n++)
 	{
@@ -748,6 +757,11 @@ exit_lead:
 void
 du_string_wrap(du_string_t *str, size_t max_cols)
 {
+	size_t max_slots;
+	size_t max_rows;
+	size_t col;
+	char  *tmp;
+
 	assert(str && max_cols > 0);
 
 	if (str->failed)
@@ -759,11 +773,6 @@ du_string_wrap(du_string_t *str, size_t max_cols)
 	{
 		return;
 	}
-
-	size_t max_slots;
-	size_t max_rows;
-	size_t col;
-	char  *tmp;
 
 	/* calculate (with overflow protection) max required memory to host wrapped string */
 
@@ -847,12 +856,12 @@ du_string_wrap(du_string_t *str, size_t max_cols)
 static size_t
 _convert_to_byte_offset(const du_string_t *str, size_t offset)
 {
+	size_t i = 0;
+
 	if (offset >= str->n_codepoints)
 	{
 		return str->n_bytes - 1;
 	}
-
-	size_t i = 0;
 
 	while (offset > 0)
 	{
