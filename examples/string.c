@@ -38,7 +38,9 @@ int
 main(void)
 {
 	du_string_t *str;
+
 	const char *codepoint;
+	size_t i = 0;
 
 	/* init */
 
@@ -78,8 +80,6 @@ main(void)
 
 	/* manual iteration */
 
-	size_t i = 0;
-
 	codepoint = du_string_get_chars(str);
 	while (*codepoint != '\0')
 	{
@@ -87,7 +87,7 @@ main(void)
 		codepoint = du_string_seek_next_codepoint(codepoint);
 	}
 
-	printf("\t-> counted %li codepoints manually\n", i);
+	printf("\t-> counted %zu codepoints manually\n", i);
 
 	/* end */
 
@@ -97,7 +97,7 @@ main(void)
 	}
 
 	du_string_destroy(&str);
-	du_string_destroy(&str); /* safe against double destructions/free */
+	du_string_destroy(&str); /* api is safe against double destructions */
 
 	return 0;
 }
@@ -110,7 +110,7 @@ static void
 _print_str(du_string_t *str, const char *comment)
 {
 	printf(
-		"%s\n\t-> %lix%li / %li / %li (%s)\n",
+		"%s\n\t-> %zux%zu / %zu / %zu (%s)\n",
 		du_string_get_chars(str),
 		du_string_get_height(str),
 		du_string_get_width(str),

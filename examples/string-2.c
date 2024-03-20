@@ -37,13 +37,16 @@ static void _print_str(du_string_t *str, const char *comment);
 int
 main(void)
 {
+	du_string_t *str_og;
+	du_string_t *str_wrap;
+
 	size_t offset_og;
 	size_t offset_wrap;
 
-	du_string_t *str_og   = du_string_create();
-	du_string_t *str_wrap = du_string_create();
-
 	/* setup */
+
+	str_og   = du_string_create();
+	str_wrap = du_string_create();
 
 	du_string_set_raw(str_og, "This is a loooooooooooong line of text !");
 	du_string_set(str_wrap, str_og);
@@ -69,6 +72,11 @@ main(void)
 	_print_str(str_og,   "original string with insertion based on wrapped string coords");
 	_print_str(str_wrap, "updated wrapped string");
 
+	/* end */
+
+	du_string_destroy(&str_og);
+	du_string_destroy(&str_wrap);
+
 	return 0;
 }
 
@@ -80,7 +88,7 @@ static void
 _print_str(du_string_t *str, const char *comment)
 {
 	printf(
-		"%s\n\t-> %lix%li / %li / %li (%s)\n\n",
+		"%s\n\t-> %zux%zu / %zu / %zu (%s)\n\n",
 		du_string_get_chars(str),
 		du_string_get_height(str),
 		du_string_get_width(str),

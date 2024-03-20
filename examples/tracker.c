@@ -36,6 +36,8 @@ static void _print_contents (du_tracker_t *tracker, const char *header);
 int
 main(void)
 {
+	du_tracker_t *tracker;
+
 	size_t i;
 
 	/* Variables to track, can be anything, including arrays or structures */
@@ -49,7 +51,7 @@ main(void)
 
 	/* Init */
 
-	du_tracker_t *tracker = du_tracker_create(0);
+	tracker = du_tracker_create(0);
 
 	du_tracker_push(tracker, &a, NULL);
 	du_tracker_push(tracker, &b, NULL);
@@ -72,14 +74,14 @@ main(void)
 	/* Print info & trim allocated memory */
 
 	printf(
-		"size / allocated slots : %li / %li\n",
+		"size / allocated slots : %zu / %zu\n",
 		du_tracker_get_size(tracker), 
 		du_tracker_get_alloc_size(tracker));
 
 	du_tracker_trim(tracker);
 
 	printf(
-		"size / allocated slots : %li / %li (after trimming)\n\n",
+		"size / allocated slots : %zu / %zu (after trimming)\n\n",
 		du_tracker_get_size(tracker), 
 		du_tracker_get_alloc_size(tracker));
 
@@ -99,7 +101,7 @@ main(void)
 
 	if (du_tracker_find(tracker, &a, &i))
 	{
-		printf("component with value %i was found at index %li\n\n", a, i);
+		printf("component with value %i was found at index %zu\n\n", a, i);
 	}
 	else
 	{
@@ -120,7 +122,7 @@ main(void)
 	}
 	
 	du_tracker_destroy(&tracker);
-	du_tracker_destroy(&tracker); /* useless to do, but safe */
+	du_tracker_destroy(&tracker); /* api is safe against double destructions */
 
 	return 0;
 }
@@ -132,8 +134,8 @@ main(void)
 static void
 _print_contents(du_tracker_t *tracker, const char *header)
 {
-	int *tmp;
 	unsigned long n;
+	int *tmp;
 
 	printf("%s :\n", header);
 
@@ -150,7 +152,7 @@ _print_contents(du_tracker_t *tracker, const char *header)
 	du_tracker_reset_iterator(tracker);
 	while ((tmp = (int*)du_tracker_get_next(tracker, &n)))
 	{
-		printf("\t%i(%lu)", *tmp, n);
+		printf("\t%i(%zu)", *tmp, n);
 	}
 
 	printf("\n\n");
