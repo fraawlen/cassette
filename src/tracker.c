@@ -26,6 +26,8 @@
 
 #include <derelict/du.h>
 
+#include "safe.h"
+
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -100,7 +102,7 @@ du_tracker_create(size_t n_alloc)
 
 	tracker->slots    = NULL;
 	tracker->n        = 0;
-	tracker->n_alloc  = n_alloc;
+	tracker->n_alloc  = 0;
 	tracker->iterator = 0;
 	tracker->failed   = false;
 
@@ -412,16 +414,21 @@ static bool
 _resize(du_tracker_t *tracker, size_t n, size_t a, size_t b)
 {
 	_slot_t *tmp;
+	
+	bool safe = true;
 
 	/* test for overflow */
 
-	if (n > SIZE_MAX / a || n * a > SIZE_MAX - b || n * a + b > (SIZE_MAX - 1) / sizeof(_slot_t))
+	safe &= du_safe_mult(&n,   n, a);
+	safe &= du_safe_add (&n,   n, b);
+	safe &= du_safe_add (NULL, n, 1);
+	safe &= du_safe_mult(NULL, n, sizeof(_slot_t));
+
+	if (!safe)
 	{
 		tracker->failed = true;
 		return false;
 	}
-
-	n = n * a + b;
 
 	/* resize array */
 
@@ -432,8 +439,7 @@ _resize(du_tracker_t *tracker, size_t n, size_t a, size_t b)
 	}
 	else
 	{
-		tmp = realloc(tracker->slots, n * sizeof(_slot_t));
-		if (!tmp)
+		if (!(tmp = realloc(tracker->slots, n * sizeof(_slot_t))))
 		{
 			tracker->failed = true;
 			return false;

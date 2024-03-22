@@ -27,6 +27,8 @@
 
 #include <derelict/du.h>
 
+#include "safe.h"
+
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -451,7 +453,7 @@ du_string_insert_raw(du_string_t *str, const char *c_str, size_t offset)
 		return;
 	}
 
-	if ((n = strlen(c_str)) > SIZE_MAX - str->n_bytes)
+	if (!du_safe_add(NULL, n = strlen(c_str), str->n_bytes))
 	{
 		str->failed = true;
 		return;
@@ -481,7 +483,9 @@ du_string_pad(du_string_t *str, const char *pattern, size_t offset, size_t n_cod
 {
 	size_t pad_n_bytes;
 	size_t n_codepoint_diff;
-	char *tmp;
+	size_t n;
+	char  *tmp;
+	bool   safe = true;
 
 	assert(str);
 
@@ -500,13 +504,16 @@ du_string_pad(du_string_t *str, const char *pattern, size_t offset, size_t n_cod
 
 	/* create padding string */
 
-	if (pad_n_bytes > (SIZE_MAX - 1) / n_codepoint_diff)
+	safe &= du_safe_mult(&n, pad_n_bytes, n_codepoint_diff);
+	safe &= du_safe_add (&n, n, 1);
+
+	if (!safe)
 	{
 		str->failed = true;
 		return;
 	}
 
-	if (!(tmp = malloc(pad_n_bytes * n_codepoint_diff + 1)))
+	if (!(tmp = malloc(n)))
 	{
 		str->failed = true;
 		return;
@@ -759,8 +766,10 @@ du_string_wrap(du_string_t *str, size_t max_cols)
 {
 	size_t max_slots;
 	size_t max_rows;
+	size_t max_bytes;
 	size_t col;
 	char  *tmp;
+	bool   safe = true;
 
 	assert(str && max_cols > 0);
 
@@ -776,23 +785,16 @@ du_string_wrap(du_string_t *str, size_t max_cols)
 
 	/* calculate (with overflow protection) max required memory to host wrapped string */
 
-	if (str->n_rows > SIZE_MAX / str->n_cols)
-	{
-		str->failed = true;
-		return;
-	}
+	safe &= du_safe_mult(&max_slots, str->n_cols, str->n_rows);
 
-	max_slots = str->n_cols * str->n_rows;
+	safe &= du_safe_div (&max_rows,  max_slots, max_cols);
+	safe &= du_safe_add (&max_rows,  max_rows,  max_slots % max_cols > 0 ? 1 : 0);
 
-	if (max_slots / max_cols > SIZE_MAX - 1)
-	{
-		str->failed = true;
-		return;
-	}
+	safe &= du_safe_mult(&max_bytes, max_cols,  4);
+	safe &= du_safe_add (&max_bytes, max_cols * 4,  1);
+	safe &= du_safe_mult(&max_bytes, max_cols * 4 + 1, max_rows);
 
-	max_rows = max_slots / max_cols + (max_slots % max_cols > 0 ? 1 : 0);
-
-	if (max_cols > (SIZE_MAX - 1) / 4 || max_rows > SIZE_MAX / (max_cols * 4 + 1))
+	if (!safe)
 	{
 		str->failed = true;
 		return;
@@ -800,8 +802,7 @@ du_string_wrap(du_string_t *str, size_t max_cols)
 
 	/* alloc memory */
 
-	tmp = malloc(max_rows * (max_cols * 4 + 1));
-	if (!tmp)
+	if (!(tmp = malloc(max_bytes)))
 	{
 		str->failed = true;
 		return;
