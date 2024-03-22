@@ -791,8 +791,8 @@ du_string_wrap(du_string_t *str, size_t max_cols)
 	safe &= du_safe_add (&max_rows,  max_rows,  max_slots % max_cols > 0 ? 1 : 0);
 
 	safe &= du_safe_mult(&max_bytes, max_cols,  4);
-	safe &= du_safe_add (&max_bytes, max_cols * 4,  1);
-	safe &= du_safe_mult(&max_bytes, max_cols * 4 + 1, max_rows);
+	safe &= du_safe_add (&max_bytes, max_bytes, 1);
+	safe &= du_safe_mult(&max_bytes, max_bytes, max_rows);
 
 	if (!safe)
 	{
