@@ -84,8 +84,7 @@ du_tracker_clear(du_tracker_t *tracker)
 		return;
 	}
 
-	tracker->n        = 0;
-	tracker->iterator = 0;
+	tracker->n = 0;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -206,7 +205,7 @@ du_tracker_get_alloc_size(const du_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const void *
-du_tracker_get_index(const du_tracker_t *tracker, size_t index, unsigned long *n_ref)
+du_tracker_get_index(const du_tracker_t *tracker, size_t index)
 {
 	assert(tracker);
 
@@ -220,18 +219,33 @@ du_tracker_get_index(const du_tracker_t *tracker, size_t index, unsigned long *n
 		return NULL;
 	}
 
-	if (n_ref)
-	{
-		*n_ref = tracker->slots[index].n_ref;
-	}
-
 	return tracker->slots[index].ptr;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+unsigned long
+du_tracker_get_index_n_ref(const du_tracker_t *tracker, size_t index)
+{
+	assert(tracker);
+
+	if (tracker->failed)
+	{
+		return 0;
+	}
+
+	if (index >= tracker->n)
+	{
+		return 0;
+	}
+
+	return tracker->slots[index].n_ref;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 const void *
-du_tracker_get_next(du_tracker_t *tracker, unsigned long *n_ref)
+du_tracker_get_iteration(const du_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -240,17 +254,32 @@ du_tracker_get_next(du_tracker_t *tracker, unsigned long *n_ref)
 		return NULL;
 	}
 
-	if (tracker->iterator >= tracker->n)
+	if (tracker->iterator == 0 || tracker->iterator > tracker->n)
 	{
 		return NULL;
 	}
 
-	if (n_ref)
+	return tracker->slots[tracker->iterator - 1].ptr;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+unsigned long
+du_tracker_get_iteration_n_ref(const du_tracker_t *tracker)
+{
+	assert(tracker);
+
+	if (tracker->failed)
 	{
-		*n_ref = tracker->slots[tracker->iterator].n_ref;
+		return 0;
 	}
 
-	return tracker->slots[tracker->iterator++].ptr;
+	if (tracker->iterator == 0 || tracker->iterator > tracker->n)
+	{
+		return 0;
+	}
+
+	return tracker->slots[tracker->iterator - 1].n_ref;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -276,6 +305,28 @@ du_tracker_has_failed(const du_tracker_t *tracker)
 	assert(tracker);
 
 	return tracker->failed;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+du_tracker_increment_iterator(du_tracker_t *tracker)
+{
+	assert(tracker);
+
+	if (tracker->failed)
+	{
+		return false;
+	}
+
+	if (tracker->iterator >= tracker->n)
+	{
+		return false;
+	}
+
+	tracker->iterator++;
+
+	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

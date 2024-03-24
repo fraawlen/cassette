@@ -44,6 +44,8 @@ void du_tracker_destroy(du_tracker_t **tracker);
 
 void du_tracker_clear(du_tracker_t *tracker);
 
+bool du_tracker_increment_iterator(du_tracker_t *tracker);
+
 void du_tracker_pull_index(du_tracker_t *tracker, size_t index);
 
 void du_tracker_pull_pointer(du_tracker_t *tracker, const void *ptr, size_t index);
@@ -60,9 +62,13 @@ unsigned long du_tracker_find(const du_tracker_t *tracker, const void *ptr, size
 
 size_t du_tracker_get_alloc_size(const du_tracker_t *tracker);
 
-const void *du_tracker_get_index(const du_tracker_t *tracker, size_t index, unsigned long *n_ref);
+const void *du_tracker_get_index(const du_tracker_t *tracker, size_t index);
 
-const void *du_tracker_get_next(du_tracker_t *tracker, unsigned long *n_ref);
+unsigned long du_tracker_get_index_n_ref(const du_tracker_t *tracker, size_t index);
+
+const void *du_tracker_get_iteration(const du_tracker_t *tracker);
+
+unsigned long du_tracker_get_iteration_n_ref(const du_tracker_t *tracker);
 
 size_t du_tracker_get_size(const du_tracker_t *tracker);
 

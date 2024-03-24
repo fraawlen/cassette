@@ -134,9 +134,6 @@ main(void)
 static void
 _print_contents(du_tracker_t *tracker, const char *header)
 {
-	unsigned long n;
-	int *tmp;
-
 	printf("%s :\n", header);
 
 	/* Check the number of tracked pointers. */
@@ -147,12 +144,16 @@ _print_contents(du_tracker_t *tracker, const char *header)
 	}
 
 	/* Get each pointer sequencially, cast them to int and print them. */
-	/* Always reset the iterator before using du_tracker_get_next().   */
+	/* Always reset the iterator beforehand.                           */
 
 	du_tracker_reset_iterator(tracker);
-	while ((tmp = (int*)du_tracker_get_next(tracker, &n)))
+
+	while(du_tracker_increment_iterator(tracker))
 	{
-		printf("\t%i(%zu)", *tmp, n);
+		printf(
+			"\t%i(%lu)",
+			*(int*)du_tracker_get_iteration(tracker),
+			du_tracker_get_iteration_n_ref(tracker));
 	}
 
 	printf("\n\n");
