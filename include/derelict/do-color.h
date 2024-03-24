@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Utilities (DU) library.
+ * This file is part of the Derelict Objects (DO) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -18,11 +18,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef DU_BOOK_H
-#define DU_BOOK_H
+#ifndef DO_COLOR_H
+#define DO_COLOR_H
 
 #include <stdbool.h>
-#include <stdlib.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,63 +32,43 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-typedef struct _book_t du_book_t;
+#define DO_COLOR_TRANSPARENT (do_color_t){0.000, 0.000, 0.000, 0.000}
+#define DO_COLOR_WHITE       (do_color_t){1.000, 1.000, 1.000, 1.000}
+#define DO_COLOR_BLACK       (do_color_t){0.000, 0.000, 0.000, 1.000}
+#define DO_COLOR_RED         (do_color_t){1.000, 0.000, 0.000, 1.000}
+#define DO_COLOR_GREEN       (do_color_t){0.000, 1.000, 0.000, 1.000}
+#define DO_COLOR_BLUE        (do_color_t){0.000, 0.000, 1.000, 1.000}
+#define DO_COLOR_YELLOW      (do_color_t){1.000, 1.000, 0.000, 1.000}
+#define DO_COLOR_MAGENTA     (do_color_t){1.000, 0.000, 1.000, 1.000}
+#define DO_COLOR_CYAN        (do_color_t){0.000, 1.000, 1.000, 1.000}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum du_book_group_mode_t
+struct do_color_t
 {
-	DU_BOOK_OLD_GROUP = false,
-	DU_BOOK_NEW_GROUP = true,
+	double r;
+	double g;
+	double b;
+	double a;
 };
 
-typedef enum du_book_group_mode_t du_book_group_mode_t;
+typedef struct do_color_t do_color_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-du_book_t *du_book_create(size_t n_alloc, size_t word_n);
+do_color_t do_color_convert_argb_uint(uint32_t argb);
 
-void du_book_destroy(du_book_t **book);
+do_color_t do_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void du_book_clear(du_book_t *book);
-
-void du_book_erase_last_group(du_book_t *book);
-
-void du_book_erase_last_word(du_book_t *book);
-
-bool du_book_increment_iterator(du_book_t *book);
-
-void du_book_reset_iterator(du_book_t *book, size_t group_index);
-
-void du_book_rewrite_word(du_book_t *book, const char *str, size_t group_index, size_t word_index);
-
-void du_book_trim(du_book_t *book);
-
-void du_book_write_new_word(du_book_t *book, const char *str, du_book_group_mode_t group_mode);
+do_color_t do_color_convert_hex_str(const char *str, bool *err);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-char *du_book_prepare_new_word(du_book_t *book, du_book_group_mode_t group_mode);
+do_color_t do_color_interpolate(do_color_t cl_1, do_color_t cl_2, double ratio);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-size_t du_book_get_alloc_words(const du_book_t *book);
-
-size_t du_book_get_group_size(const du_book_t *book, size_t group_index);
-
-const char *du_book_get_iteration(const du_book_t *book);
-
-size_t du_book_get_number_groups(const du_book_t *book);
-
-size_t du_book_get_number_words(const du_book_t *book);
-
-const char *du_book_get_word(const du_book_t *book, size_t group_index, size_t word_index);
-
-size_t du_book_get_word_max_size(const du_book_t *book);
-
-bool du_book_has_failed(const du_book_t *book);
+uint32_t do_color_get_argb_uint(do_color_t cl);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -98,5 +78,5 @@ bool du_book_has_failed(const du_book_t *book);
 }
 #endif
 
-#endif /* DU_BOOK_H */
+#endif /* DO_COLOR_H */
 

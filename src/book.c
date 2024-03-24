@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Utilities (DU) library.
+ * This file is part of the Derelict Objects (DO) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <derelict/du.h>
+#include <derelict/do.h>
 
 #include "safe.h"
 
@@ -49,14 +49,14 @@ struct _book_t
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static size_t _get_group_end (const du_book_t *book, size_t index);
-static bool   _resize        (du_book_t *book, size_t n, size_t a, size_t b);
+static size_t _get_group_end (const do_book_t *book, size_t index);
+static bool   _resize        (do_book_t *book, size_t n, size_t a, size_t b);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static du_book_t _err_book =
+static do_book_t _err_book =
 {
 	.words          = NULL,
 	.groups         = NULL,
@@ -74,7 +74,7 @@ static du_book_t _err_book =
 /************************************************************************************************************/
 
 void
-du_book_clear(du_book_t *book)
+do_book_clear(do_book_t *book)
 {
 	assert(book);
 
@@ -89,14 +89,14 @@ du_book_clear(du_book_t *book)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-du_book_t *
-du_book_create(size_t n_alloc, size_t word_n)
+do_book_t *
+do_book_create(size_t n_alloc, size_t word_n)
 {
 	assert(word_n > 0);
 
-	du_book_t *book;
+	do_book_t *book;
 
-	if (!(book = malloc(sizeof(du_book_t))))
+	if (!(book = malloc(sizeof(do_book_t))))
 	{
 		return &_err_book;
 	}
@@ -119,7 +119,7 @@ du_book_create(size_t n_alloc, size_t word_n)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_book_destroy(du_book_t **book)
+do_book_destroy(do_book_t **book)
 {
 	assert(book && *book);
 
@@ -138,7 +138,7 @@ du_book_destroy(du_book_t **book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_book_erase_last_group(du_book_t *book)
+do_book_erase_last_group(do_book_t *book)
 {
 	assert(book);
 
@@ -158,7 +158,7 @@ du_book_erase_last_group(du_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_book_erase_last_word(du_book_t *book)
+do_book_erase_last_word(do_book_t *book)
 {
 	assert(book);
 
@@ -181,7 +181,7 @@ du_book_erase_last_word(du_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_book_get_alloc_words(const du_book_t *book)
+do_book_get_alloc_words(const do_book_t *book)
 {
 	assert(book);
 
@@ -196,7 +196,7 @@ du_book_get_alloc_words(const du_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_book_get_group_size(const du_book_t *book, size_t group_index)
+do_book_get_group_size(const do_book_t *book, size_t group_index)
 {
 	assert(book);
 
@@ -216,7 +216,7 @@ du_book_get_group_size(const du_book_t *book, size_t group_index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-du_book_get_iteration(const du_book_t *book)
+do_book_get_iteration(const do_book_t *book)
 {
 	assert(book);
 
@@ -242,7 +242,7 @@ du_book_get_iteration(const du_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_book_get_number_groups(const du_book_t *book)
+do_book_get_number_groups(const do_book_t *book)
 {
 	assert(book);
 
@@ -257,7 +257,7 @@ du_book_get_number_groups(const du_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_book_get_number_words(const du_book_t *book)
+do_book_get_number_words(const do_book_t *book)
 {
 	assert(book);
 
@@ -272,7 +272,7 @@ du_book_get_number_words(const du_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-du_book_get_word(const du_book_t *book, size_t group_index, size_t word_index)
+do_book_get_word(const do_book_t *book, size_t group_index, size_t word_index)
 {
 	assert(book);
 
@@ -297,7 +297,7 @@ du_book_get_word(const du_book_t *book, size_t group_index, size_t word_index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_book_get_word_max_size(const du_book_t *book)
+do_book_get_word_max_size(const do_book_t *book)
 {
 	assert(book);
 
@@ -312,7 +312,7 @@ du_book_get_word_max_size(const du_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-du_book_has_failed(const du_book_t *book)
+do_book_has_failed(const do_book_t *book)
 {
 	assert(book);
 
@@ -322,7 +322,7 @@ du_book_has_failed(const du_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-du_book_increment_iterator(du_book_t *book)
+do_book_increment_iterator(do_book_t *book)
 {
 	assert(book);
 
@@ -349,7 +349,7 @@ du_book_increment_iterator(du_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 char *
-du_book_prepare_new_word(du_book_t *book, du_book_group_mode_t group_mode)
+do_book_prepare_new_word(do_book_t *book, do_book_group_mode_t group_mode)
 {
 	assert(book);
 
@@ -363,7 +363,7 @@ du_book_prepare_new_word(du_book_t *book, du_book_group_mode_t group_mode)
 		return NULL;
 	}
 
-	if (book->n_words == 0 || group_mode == DU_BOOK_NEW_GROUP)
+	if (book->n_words == 0 || group_mode == DO_BOOK_NEW_GROUP)
 	{
 		book->groups[book->n_groups++] = book->n_words;
 	}
@@ -374,7 +374,7 @@ du_book_prepare_new_word(du_book_t *book, du_book_group_mode_t group_mode)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_book_reset_iterator(du_book_t *book, size_t group_index)
+do_book_reset_iterator(do_book_t *book, size_t group_index)
 {
 	assert(book);
 
@@ -395,7 +395,7 @@ du_book_reset_iterator(du_book_t *book, size_t group_index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_book_rewrite_word(du_book_t *book, const char *str, size_t group_index, size_t word_index)
+do_book_rewrite_word(do_book_t *book, const char *str, size_t group_index, size_t word_index)
 {
 	char *word;
 
@@ -425,7 +425,7 @@ du_book_rewrite_word(du_book_t *book, const char *str, size_t group_index, size_
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_book_trim(du_book_t *book)
+do_book_trim(do_book_t *book)
 {
 	assert(book);
 
@@ -440,13 +440,13 @@ du_book_trim(du_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_book_write_new_word(du_book_t *book, const char *str, du_book_group_mode_t group_mode)
+do_book_write_new_word(do_book_t *book, const char *str, do_book_group_mode_t group_mode)
 {
 	char *word;
 
 	assert(book);
 	
-	if ((word = du_book_prepare_new_word(book, group_mode)))
+	if ((word = do_book_prepare_new_word(book, group_mode)))
 	{
 		strncpy(word, str, book->word_n - 1);
 		word[book->word_n - 1] = '\0';
@@ -458,7 +458,7 @@ du_book_write_new_word(du_book_t *book, const char *str, du_book_group_mode_t gr
 /************************************************************************************************************/
 
 static size_t
-_get_group_end(const du_book_t *book, size_t index)
+_get_group_end(const do_book_t *book, size_t index)
 {
 	if (book->n_groups == 0)
 	{
@@ -477,7 +477,7 @@ _get_group_end(const du_book_t *book, size_t index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-_resize(du_book_t *book, size_t n, size_t a, size_t b)
+_resize(do_book_t *book, size_t n, size_t a, size_t b)
 {
 	bool    safe = true;
 	char   *tmp_1;
@@ -485,10 +485,10 @@ _resize(du_book_t *book, size_t n, size_t a, size_t b)
 
 	/* test for overflow */
 
-	safe &= du_safe_mul(&n,   n, a);
-	safe &= du_safe_add(&n,   n, b);
-	safe &= du_safe_mul(NULL, n, book->word_n);
-	safe &= du_safe_mul(NULL, n, sizeof(size_t));
+	safe &= do_safe_mul(&n,   n, a);
+	safe &= do_safe_add(&n,   n, b);
+	safe &= do_safe_mul(NULL, n, book->word_n);
+	safe &= do_safe_mul(NULL, n, sizeof(size_t));
 
 	if (!safe)
 	{

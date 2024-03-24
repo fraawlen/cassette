@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Utilities (DU) library.
+ * This file is part of the Derelict Objects (DO) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -18,11 +18,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef DU_COLOR_H
-#define DU_COLOR_H
+#ifndef DO_TRACKER_H
+#define DO_TRACKER_H
 
 #include <stdbool.h>
-#include <stdint.h>
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,43 +32,47 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DU_COLOR_TRANSPARENT (du_color_t){0.000, 0.000, 0.000, 0.000}
-#define DU_COLOR_WHITE       (du_color_t){1.000, 1.000, 1.000, 1.000}
-#define DU_COLOR_BLACK       (du_color_t){0.000, 0.000, 0.000, 1.000}
-#define DU_COLOR_RED         (du_color_t){1.000, 0.000, 0.000, 1.000}
-#define DU_COLOR_GREEN       (du_color_t){0.000, 1.000, 0.000, 1.000}
-#define DU_COLOR_BLUE        (du_color_t){0.000, 0.000, 1.000, 1.000}
-#define DU_COLOR_YELLOW      (du_color_t){1.000, 1.000, 0.000, 1.000}
-#define DU_COLOR_MAGENTA     (du_color_t){1.000, 0.000, 1.000, 1.000}
-#define DU_COLOR_CYAN        (du_color_t){0.000, 1.000, 1.000, 1.000}
+typedef struct _tracker_t do_tracker_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-struct du_color_t
-{
-	double r;
-	double g;
-	double b;
-	double a;
-};
+do_tracker_t *do_tracker_create(size_t n_alloc);
 
-typedef struct du_color_t du_color_t;
+void do_tracker_destroy(do_tracker_t **tracker);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-du_color_t du_color_convert_argb_uint(uint32_t argb);
+void do_tracker_clear(do_tracker_t *tracker);
 
-du_color_t du_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+bool do_tracker_increment_iterator(do_tracker_t *tracker);
 
-du_color_t du_color_convert_hex_str(const char *str, bool *err);
+void do_tracker_pull_index(do_tracker_t *tracker, size_t index);
+
+void do_tracker_pull_pointer(do_tracker_t *tracker, const void *ptr, size_t index);
+
+void do_tracker_push(do_tracker_t *tracker, const void *ptr, size_t *index);
+
+void do_tracker_reset_iterator(do_tracker_t *tracker);
+
+void do_tracker_trim(do_tracker_t *tracker);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-du_color_t du_color_interpolate(du_color_t cl_1, du_color_t cl_2, double ratio);
+unsigned long do_tracker_find(const do_tracker_t *tracker, const void *ptr, size_t *index);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+size_t do_tracker_get_alloc_size(const do_tracker_t *tracker);
 
-uint32_t du_color_get_argb_uint(du_color_t cl);
+const void *do_tracker_get_index(const do_tracker_t *tracker, size_t index);
+
+unsigned long do_tracker_get_index_n_ref(const do_tracker_t *tracker, size_t index);
+
+const void *do_tracker_get_iteration(const do_tracker_t *tracker);
+
+unsigned long do_tracker_get_iteration_n_ref(const do_tracker_t *tracker);
+
+size_t do_tracker_get_size(const do_tracker_t *tracker);
+
+bool do_tracker_has_failed(const do_tracker_t *tracker);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -78,5 +82,4 @@ uint32_t du_color_get_argb_uint(du_color_t cl);
 }
 #endif
 
-#endif /* DU_COLOR_H */
-
+#endif /* DO_TRACKER_H */

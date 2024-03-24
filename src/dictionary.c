@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Utilities (DU) library.
+ * This file is part of the Derelict Objects (DO) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <derelict/du.h>
+#include <derelict/do.h>
 
 #include "safe.h"
 
@@ -67,15 +67,15 @@ struct _dictionary_t
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static _slot_t *_find_slot (const du_dictionary_t *dict, uint64_t hash, _state_t state_cut_off);
+static _slot_t *_find_slot (const do_dictionary_t *dict, uint64_t hash, _state_t state_cut_off);
 static uint64_t _hash      (const char *str, unsigned int group);
-static bool     _resize    (du_dictionary_t *dict, size_t n, size_t a, size_t b);
+static bool     _resize    (do_dictionary_t *dict, size_t n, size_t a, size_t b);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static du_dictionary_t _err_dict = 
+static do_dictionary_t _err_dict = 
 {
 	.slots    = NULL,
 	.n        = 0,
@@ -89,7 +89,7 @@ static du_dictionary_t _err_dict =
 /************************************************************************************************************/
 
 void
-du_dictionary_clear(du_dictionary_t *dict)
+do_dictionary_clear(do_dictionary_t *dict)
 {
 	assert(dict);
 
@@ -105,7 +105,7 @@ du_dictionary_clear(du_dictionary_t *dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_dictionary_clear_group(du_dictionary_t *dict, unsigned int group)
+do_dictionary_clear_group(do_dictionary_t *dict, unsigned int group)
 {
 	assert(dict);
 
@@ -131,10 +131,10 @@ du_dictionary_clear_group(du_dictionary_t *dict, unsigned int group)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-du_dictionary_t *
-du_dictionary_create(size_t n_alloc, double max_load)
+do_dictionary_t *
+do_dictionary_create(size_t n_alloc, double max_load)
 {
-	du_dictionary_t *dict;
+	do_dictionary_t *dict;
 
 	assert(max_load > 0.0 && max_load <= 1.0);
 
@@ -143,7 +143,7 @@ du_dictionary_create(size_t n_alloc, double max_load)
 		return &_err_dict;
 	}
 
-	if (!(dict = malloc(sizeof(du_dictionary_t))))
+	if (!(dict = malloc(sizeof(do_dictionary_t))))
 	{
 		return &_err_dict;
 	}
@@ -162,7 +162,7 @@ du_dictionary_create(size_t n_alloc, double max_load)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_dictionary_destroy(du_dictionary_t **dict)
+do_dictionary_destroy(do_dictionary_t **dict)
 {
 	assert(dict && *dict);
 
@@ -180,7 +180,7 @@ du_dictionary_destroy(du_dictionary_t **dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_dictionary_erase(du_dictionary_t *dict, const char *key, unsigned int group)
+do_dictionary_erase(do_dictionary_t *dict, const char *key, unsigned int group)
 {
 	_slot_t *slot;
 
@@ -206,7 +206,7 @@ du_dictionary_erase(du_dictionary_t *dict, const char *key, unsigned int group)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-du_dictionary_find(const du_dictionary_t *dict, const char *key, unsigned int group, size_t *value)
+do_dictionary_find(const do_dictionary_t *dict, const char *key, unsigned int group, size_t *value)
 {
 	_slot_t *slot;
 
@@ -238,7 +238,7 @@ du_dictionary_find(const du_dictionary_t *dict, const char *key, unsigned int gr
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_dictionary_get_alloc_size(const du_dictionary_t *dict)
+do_dictionary_get_alloc_size(const do_dictionary_t *dict)
 {
 	assert(dict);
 
@@ -253,7 +253,7 @@ du_dictionary_get_alloc_size(const du_dictionary_t *dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_dictionary_get_load(const du_dictionary_t *dict)
+do_dictionary_get_load(const do_dictionary_t *dict)
 {
 	assert(dict);
 
@@ -268,7 +268,7 @@ du_dictionary_get_load(const du_dictionary_t *dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
-du_dictionary_get_load_factor(const du_dictionary_t *dict)
+do_dictionary_get_load_factor(const do_dictionary_t *dict)
 {
 	assert(dict);
 
@@ -283,7 +283,7 @@ du_dictionary_get_load_factor(const du_dictionary_t *dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-du_dictionary_has_failed(const du_dictionary_t *dict)
+do_dictionary_has_failed(const do_dictionary_t *dict)
 {
 	assert(dict);
 
@@ -293,7 +293,7 @@ du_dictionary_has_failed(const du_dictionary_t *dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_dictionary_write(du_dictionary_t *dict, const char *key, unsigned int group, size_t value)
+do_dictionary_write(do_dictionary_t *dict, const char *key, unsigned int group, size_t value)
 {
 	_slot_t *slot;
 	_slot_t *slot_2;
@@ -346,7 +346,7 @@ du_dictionary_write(du_dictionary_t *dict, const char *key, unsigned int group, 
 
 
 static _slot_t *
-_find_slot(const du_dictionary_t *dict, uint64_t hash, _state_t state_cut_off)
+_find_slot(const do_dictionary_t *dict, uint64_t hash, _state_t state_cut_off)
 {
 	_slot_t *slot;
 
@@ -402,7 +402,7 @@ _hash(const char *str, unsigned int group)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-_resize(du_dictionary_t *dict, size_t n, size_t a, size_t b)
+_resize(do_dictionary_t *dict, size_t n, size_t a, size_t b)
 {
 	_slot_t *tmp;
 	_slot_t *tmp_2;
@@ -412,9 +412,9 @@ _resize(du_dictionary_t *dict, size_t n, size_t a, size_t b)
 
 	/* test for overflow */
 
-	safe &= du_safe_mul(&n,   n, a);
-	safe &= du_safe_add(&n,   n, b);
-	safe &= du_safe_mul(NULL, n, sizeof(_slot_t));
+	safe &= do_safe_mul(&n,   n, a);
+	safe &= do_safe_add(&n,   n, b);
+	safe &= do_safe_mul(NULL, n, sizeof(_slot_t));
 
 	if (!safe)
 	{

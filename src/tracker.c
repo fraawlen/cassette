@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Utilities (DU) library.
+ * This file is part of the Derelict Objects (DO) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <derelict/du.h>
+#include <derelict/do.h>
 
 #include "safe.h"
 
@@ -55,13 +55,13 @@ struct _tracker_t
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _resize(du_tracker_t *tracker, size_t n, size_t a, size_t b);
+static bool _resize(do_tracker_t *tracker, size_t n, size_t a, size_t b);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static du_tracker_t _err_tracker = 
+static do_tracker_t _err_tracker = 
 {
 	.slots    = NULL,
 	.n        = 0,
@@ -75,7 +75,7 @@ static du_tracker_t _err_tracker =
 /************************************************************************************************************/
 
 void
-du_tracker_clear(du_tracker_t *tracker)
+do_tracker_clear(do_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -89,12 +89,12 @@ du_tracker_clear(du_tracker_t *tracker)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-du_tracker_t *
-du_tracker_create(size_t n_alloc)
+do_tracker_t *
+do_tracker_create(size_t n_alloc)
 {
-	du_tracker_t *tracker;
+	do_tracker_t *tracker;
 
-	if (!(tracker = malloc(sizeof(du_tracker_t))))
+	if (!(tracker = malloc(sizeof(do_tracker_t))))
 	{
 		return &_err_tracker;
 	}
@@ -113,7 +113,7 @@ du_tracker_create(size_t n_alloc)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_tracker_destroy(du_tracker_t **tracker)
+do_tracker_destroy(do_tracker_t **tracker)
 {
 	assert(tracker && *tracker);
 
@@ -131,7 +131,7 @@ du_tracker_destroy(du_tracker_t **tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 unsigned long
-du_tracker_find(const du_tracker_t *tracker, const void *ptr, size_t *index)
+do_tracker_find(const do_tracker_t *tracker, const void *ptr, size_t *index)
 {
 	size_t i0;
 	size_t i;
@@ -190,7 +190,7 @@ found:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_tracker_get_alloc_size(const du_tracker_t *tracker)
+do_tracker_get_alloc_size(const do_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -205,7 +205,7 @@ du_tracker_get_alloc_size(const du_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const void *
-du_tracker_get_index(const du_tracker_t *tracker, size_t index)
+do_tracker_get_index(const do_tracker_t *tracker, size_t index)
 {
 	assert(tracker);
 
@@ -225,7 +225,7 @@ du_tracker_get_index(const du_tracker_t *tracker, size_t index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 unsigned long
-du_tracker_get_index_n_ref(const du_tracker_t *tracker, size_t index)
+do_tracker_get_index_n_ref(const do_tracker_t *tracker, size_t index)
 {
 	assert(tracker);
 
@@ -245,7 +245,7 @@ du_tracker_get_index_n_ref(const du_tracker_t *tracker, size_t index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const void *
-du_tracker_get_iteration(const du_tracker_t *tracker)
+do_tracker_get_iteration(const do_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -265,7 +265,7 @@ du_tracker_get_iteration(const du_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 unsigned long
-du_tracker_get_iteration_n_ref(const du_tracker_t *tracker)
+do_tracker_get_iteration_n_ref(const do_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -285,7 +285,7 @@ du_tracker_get_iteration_n_ref(const du_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_tracker_get_size(const du_tracker_t *tracker)
+do_tracker_get_size(const do_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -300,7 +300,7 @@ du_tracker_get_size(const du_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-du_tracker_has_failed(const du_tracker_t *tracker)
+do_tracker_has_failed(const do_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -310,7 +310,7 @@ du_tracker_has_failed(const du_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-du_tracker_increment_iterator(du_tracker_t *tracker)
+do_tracker_increment_iterator(do_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -332,7 +332,7 @@ du_tracker_increment_iterator(du_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_tracker_pull_index(du_tracker_t *tracker, size_t index)
+do_tracker_pull_index(do_tracker_t *tracker, size_t index)
 {
 	assert(tracker);
 
@@ -365,20 +365,20 @@ du_tracker_pull_index(du_tracker_t *tracker, size_t index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_tracker_pull_pointer(du_tracker_t *tracker, const void *ptr, size_t index)
+do_tracker_pull_pointer(do_tracker_t *tracker, const void *ptr, size_t index)
 {
 	assert(tracker);
 
-	if (du_tracker_find(tracker, ptr, &index) > 0)
+	if (do_tracker_find(tracker, ptr, &index) > 0)
 	{
-		du_tracker_pull_index(tracker, index);
+		do_tracker_pull_index(tracker, index);
 	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_tracker_push(du_tracker_t *tracker, const void *ptr, size_t *index)
+do_tracker_push(do_tracker_t *tracker, const void *ptr, size_t *index)
 {
 	size_t i = 0;
 	
@@ -401,7 +401,7 @@ du_tracker_push(du_tracker_t *tracker, const void *ptr, size_t *index)
 		index = &i;
 	}
 
-	if (du_tracker_find(tracker, ptr, index) > 0)
+	if (do_tracker_find(tracker, ptr, index) > 0)
 	{
 		if (tracker->slots[*index].n_ref < ULONG_MAX)
 		{
@@ -430,7 +430,7 @@ du_tracker_push(du_tracker_t *tracker, const void *ptr, size_t *index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_tracker_reset_iterator(du_tracker_t *tracker)
+do_tracker_reset_iterator(do_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -445,7 +445,7 @@ du_tracker_reset_iterator(du_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_tracker_trim(du_tracker_t *tracker)
+do_tracker_trim(do_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -462,7 +462,7 @@ du_tracker_trim(du_tracker_t *tracker)
 /************************************************************************************************************/
 
 static bool
-_resize(du_tracker_t *tracker, size_t n, size_t a, size_t b)
+_resize(do_tracker_t *tracker, size_t n, size_t a, size_t b)
 {
 	_slot_t *tmp;
 	
@@ -470,9 +470,9 @@ _resize(du_tracker_t *tracker, size_t n, size_t a, size_t b)
 
 	/* test for overflow */
 
-	safe &= du_safe_mul(&n,   n, a);
-	safe &= du_safe_add(&n,   n, b);
-	safe &= du_safe_mul(NULL, n, sizeof(_slot_t));
+	safe &= do_safe_mul(&n,   n, a);
+	safe &= do_safe_add(&n,   n, b);
+	safe &= do_safe_mul(NULL, n, sizeof(_slot_t));
 
 	if (!safe)
 	{

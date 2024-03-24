@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Utilities (DU) library.
+ * This file is part of the Derelict Objects (DO) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -18,8 +18,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef DU_STRING_H
-#define DU_STRING_H
+#ifndef DO_BOOK_H
+#define DO_BOOK_H
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -32,77 +32,63 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-typedef struct _string_t du_string_t;
+typedef struct _book_t do_book_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-du_string_t *du_string_create(void);
+enum do_book_group_mode_t
+{
+	DO_BOOK_OLD_GROUP = false,
+	DO_BOOK_NEW_GROUP = true,
+};
 
-du_string_t *du_string_create_double(double d, int precision);
-
-du_string_t *du_string_create_duplicate(const du_string_t *str);
-
-void du_string_destroy(du_string_t **str);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void du_string_cut(du_string_t *str, size_t offset, size_t n_codepoints);
-
-void du_string_insert(du_string_t *str, const du_string_t *str_src, size_t offset);
-
-void du_string_set(du_string_t *str, const du_string_t *str_src);
-
-void du_string_wrap(du_string_t *str, size_t max_cols);
-
-void du_string_realloc(du_string_t *str);
+typedef enum do_book_group_mode_t do_book_group_mode_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void du_string_append(du_string_t *str, const du_string_t *str_src);
+do_book_t *do_book_create(size_t n_alloc, size_t word_n);
 
-void du_string_append_raw(du_string_t *str, const char *c_str);
-
-void du_string_clear(du_string_t *str);
-
-void du_string_insert_raw(du_string_t *str, const char *c_str, size_t offset);
-
-void du_string_pad(du_string_t *str, const char *pattern, size_t offset, size_t n_codepoints_target);
-
-void du_string_prepend(du_string_t *str, const du_string_t *str_src);
-
-void du_string_prepend_raw(du_string_t *str, const char *c_str);
-
-void du_string_set_raw(du_string_t *str, const char *c_str);
-
-void du_string_slice(du_string_t *str, size_t offset, size_t n_codepoints);
-
-void du_string_trim(du_string_t *str);
+void do_book_destroy(do_book_t **book);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-size_t du_string_convert_coords_to_offset(const du_string_t *str, size_t row, size_t col);
+void do_book_clear(do_book_t *book);
 
-size_t du_string_convert_wrapped_offset(const du_string_t *str, const du_string_t *str_wrap, size_t offset);
+void do_book_erase_last_group(do_book_t *book);
 
-size_t du_string_get_alloc_size(const du_string_t *str);
+void do_book_erase_last_word(do_book_t *book);
 
-const char *du_string_get_chars(const du_string_t *str);
+bool do_book_increment_iterator(do_book_t *book);
 
-const char *du_string_get_chars_at_coords(const du_string_t *str, size_t row, size_t col);
+void do_book_reset_iterator(do_book_t *book, size_t group_index);
 
-const char *du_string_get_chars_at_offset(const du_string_t *str, size_t offset);
+void do_book_rewrite_word(do_book_t *book, const char *str, size_t group_index, size_t word_index);
 
-size_t du_string_get_height(const du_string_t *str);
+void do_book_trim(do_book_t *book);
 
-size_t du_string_get_length(const du_string_t *str);
+void do_book_write_new_word(do_book_t *book, const char *str, do_book_group_mode_t group_mode);
 
-size_t du_string_get_width(const du_string_t *str);
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool du_string_has_failed(const du_string_t *str);
+char *do_book_prepare_new_word(do_book_t *book, do_book_group_mode_t group_mode);
 
-const char *du_string_seek_next_codepoint(const char *codepoint);
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-size_t du_string_test_wrap(const du_string_t *str, size_t max_cols);
+size_t do_book_get_alloc_words(const do_book_t *book);
+
+size_t do_book_get_group_size(const do_book_t *book, size_t group_index);
+
+const char *do_book_get_iteration(const do_book_t *book);
+
+size_t do_book_get_number_groups(const do_book_t *book);
+
+size_t do_book_get_number_words(const do_book_t *book);
+
+const char *do_book_get_word(const do_book_t *book, size_t group_index, size_t word_index);
+
+size_t do_book_get_word_max_size(const do_book_t *book);
+
+bool do_book_has_failed(const do_book_t *book);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -112,4 +98,5 @@ size_t du_string_test_wrap(const du_string_t *str, size_t max_cols);
 }
 #endif
 
-#endif /* DU_STRING_H */
+#endif /* DO_BOOK_H */
+

@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Utilities (DU) library.
+ * This file is part of the Derelict Objects (DO) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <derelict/du.h>
+#include <derelict/do.h>
 
 #include "safe.h"
 
@@ -47,16 +47,16 @@ struct _string_t
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static size_t       _convert_to_byte_offset (const du_string_t *str, size_t offset);
+static size_t       _convert_to_byte_offset (const do_string_t *str, size_t offset);
 static const char * _get_next_codepoint     (const char *codepoint);
 static bool         _is_end_byte            (char c);
-static void         _update_n_values        (du_string_t *str);
+static void         _update_n_values        (do_string_t *str);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static du_string_t _err_str =
+static do_string_t _err_str =
 {
 	.chars        = NULL,
 	.n_rows       = 0,
@@ -71,36 +71,36 @@ static du_string_t _err_str =
 /************************************************************************************************************/
 
 void
-du_string_append(du_string_t *str, const du_string_t *str_src)
+do_string_append(do_string_t *str, const do_string_t *str_src)
 {
 	assert(str && str_src);
 
-	du_string_insert(str, str_src, SIZE_MAX);
+	do_string_insert(str, str_src, SIZE_MAX);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_append_raw(du_string_t *str, const char *c_str)
+do_string_append_raw(do_string_t *str, const char *c_str)
 {
 	assert(str);
 
-	du_string_insert_raw(str, c_str, SIZE_MAX);
+	do_string_insert_raw(str, c_str, SIZE_MAX);
 }
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_clear(du_string_t *str)
+do_string_clear(do_string_t *str)
 {
 	assert(str);
 
-	du_string_set_raw(str, "");
+	do_string_set_raw(str, "");
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_string_convert_coords_to_offset(const du_string_t *str, size_t row, size_t col)
+do_string_convert_coords_to_offset(const do_string_t *str, size_t row, size_t col)
 {
 	const char *codepoint;
 	size_t offset = 0;
@@ -160,7 +160,7 @@ du_string_convert_coords_to_offset(const du_string_t *str, size_t row, size_t co
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_string_convert_wrapped_offset(const du_string_t *str, const du_string_t *str_wrap, size_t offset)
+do_string_convert_wrapped_offset(const do_string_t *str, const do_string_t *str_wrap, size_t offset)
 {
 	const char *codepoint_1;
 	const char *codepoint_2;
@@ -200,12 +200,12 @@ du_string_convert_wrapped_offset(const du_string_t *str, const du_string_t *str_
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-du_string_t *
-du_string_create(void)
+do_string_t *
+do_string_create(void)
 {
-	du_string_t *str;
+	do_string_t *str;
 
-	if (!(str = malloc(sizeof(du_string_t))))
+	if (!(str = malloc(sizeof(do_string_t))))
 	{
 		return &_err_str;
 	}
@@ -217,38 +217,38 @@ du_string_create(void)
 	str->n_codepoints = 0;
 	str->failed       = false;
 
-	du_string_clear(str);
+	do_string_clear(str);
 
 	return str;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-du_string_t *
-du_string_create_double(double d, int precision)
+do_string_t *
+do_string_create_double(double d, int precision)
 {
-	du_string_t *str;
+	do_string_t *str;
 
 	char tmp[25];
 
 	snprintf(tmp, 25, "%.*f", precision, d);
 
-	str = du_string_create();
-	du_string_set_raw(str, tmp);
+	str = do_string_create();
+	do_string_set_raw(str, tmp);
 
 	return str;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-du_string_t *
-du_string_create_duplicate(const du_string_t *str)
+do_string_t *
+do_string_create_duplicate(const do_string_t *str)
 {
 	assert(str);
 
-	du_string_t *str_dup = du_string_create();
+	do_string_t *str_dup = do_string_create();
 
-	du_string_set(str_dup, str);
+	do_string_set(str_dup, str);
 
 	return str_dup;
 }
@@ -256,7 +256,7 @@ du_string_create_duplicate(const du_string_t *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_cut(du_string_t *str, size_t offset, size_t n_codepoints)
+do_string_cut(do_string_t *str, size_t offset, size_t n_codepoints)
 {
 	size_t offset_2;
 
@@ -288,7 +288,7 @@ du_string_cut(du_string_t *str, size_t offset, size_t n_codepoints)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_destroy(du_string_t **str)
+do_string_destroy(do_string_t **str)
 {
 	assert(str && *str);
 
@@ -306,7 +306,7 @@ du_string_destroy(du_string_t **str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_string_get_alloc_size(const du_string_t *str)
+do_string_get_alloc_size(const do_string_t *str)
 {
 	assert(str);
 
@@ -321,7 +321,7 @@ du_string_get_alloc_size(const du_string_t *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-du_string_get_chars(const du_string_t *str)
+do_string_get_chars(const do_string_t *str)
 {
 	assert(str);
 
@@ -336,7 +336,7 @@ du_string_get_chars(const du_string_t *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-du_string_get_chars_at_coords(const du_string_t *str, size_t row, size_t col)
+do_string_get_chars_at_coords(const do_string_t *str, size_t row, size_t col)
 {
 	assert(str);
 
@@ -345,13 +345,13 @@ du_string_get_chars_at_coords(const du_string_t *str, size_t row, size_t col)
 		return "";
 	}
 
-	return str->chars + _convert_to_byte_offset(str, du_string_convert_coords_to_offset(str, row, col));
+	return str->chars + _convert_to_byte_offset(str, do_string_convert_coords_to_offset(str, row, col));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-du_string_get_chars_at_offset(const du_string_t *str, size_t offset)
+do_string_get_chars_at_offset(const do_string_t *str, size_t offset)
 {
 	assert(str);
 
@@ -366,7 +366,7 @@ du_string_get_chars_at_offset(const du_string_t *str, size_t offset)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_string_get_height(const du_string_t *str)
+do_string_get_height(const do_string_t *str)
 {
 	assert(str);
 
@@ -381,7 +381,7 @@ du_string_get_height(const du_string_t *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_string_get_length(const du_string_t *str)
+do_string_get_length(const do_string_t *str)
 {
 	assert(str);
 
@@ -396,7 +396,7 @@ du_string_get_length(const du_string_t *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_string_get_width(const du_string_t *str)
+do_string_get_width(const do_string_t *str)
 {
 	assert(str);
 
@@ -411,7 +411,7 @@ du_string_get_width(const du_string_t *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-du_string_has_failed(const du_string_t *str)
+do_string_has_failed(const do_string_t *str)
 {
 	assert(str);
 
@@ -421,7 +421,7 @@ du_string_has_failed(const du_string_t *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_insert(du_string_t *str, const du_string_t *str_src, size_t offset)
+do_string_insert(do_string_t *str, const do_string_t *str_src, size_t offset)
 {
 	assert(str && str_src);
 
@@ -430,13 +430,13 @@ du_string_insert(du_string_t *str, const du_string_t *str_src, size_t offset)
 		return;
 	}
 
-	du_string_insert_raw(str, str_src->chars, offset);
+	do_string_insert_raw(str, str_src->chars, offset);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_insert_raw(du_string_t *str, const char *c_str, size_t offset)
+do_string_insert_raw(do_string_t *str, const char *c_str, size_t offset)
 {
 	size_t n;
 	char *tmp;
@@ -453,7 +453,7 @@ du_string_insert_raw(du_string_t *str, const char *c_str, size_t offset)
 		return;
 	}
 
-	if (!du_safe_add(NULL, n = strlen(c_str), str->n_bytes))
+	if (!do_safe_add(NULL, n = strlen(c_str), str->n_bytes))
 	{
 		str->failed = true;
 		return;
@@ -479,7 +479,7 @@ du_string_insert_raw(du_string_t *str, const char *c_str, size_t offset)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_pad(du_string_t *str, const char *pattern, size_t offset, size_t n_codepoints_target)
+do_string_pad(do_string_t *str, const char *pattern, size_t offset, size_t n_codepoints_target)
 {
 	size_t pad_n_bytes;
 	size_t n_codepoint_diff;
@@ -504,8 +504,8 @@ du_string_pad(du_string_t *str, const char *pattern, size_t offset, size_t n_cod
 
 	/* create padding string */
 
-	safe &= du_safe_mul(&n, pad_n_bytes, n_codepoint_diff);
-	safe &= du_safe_add (&n, n, 1);
+	safe &= do_safe_mul(&n, pad_n_bytes, n_codepoint_diff);
+	safe &= do_safe_add (&n, n, 1);
 
 	if (!safe)
 	{
@@ -528,7 +528,7 @@ du_string_pad(du_string_t *str, const char *pattern, size_t offset, size_t n_cod
 
 	/* insert it */
 
-	du_string_insert_raw(str, tmp, offset);
+	do_string_insert_raw(str, tmp, offset);
 
 	free(tmp);
 }
@@ -536,27 +536,27 @@ du_string_pad(du_string_t *str, const char *pattern, size_t offset, size_t n_cod
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_prepend(du_string_t *str, const du_string_t *str_src)
+do_string_prepend(do_string_t *str, const do_string_t *str_src)
 {
 	assert(str && str_src);
 
-	du_string_insert(str, str_src, 0);
+	do_string_insert(str, str_src, 0);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_prepend_raw(du_string_t *str, const char *c_str)
+do_string_prepend_raw(do_string_t *str, const char *c_str)
 {
 	assert(str);
 
-	du_string_insert_raw(str, c_str, 0);
+	do_string_insert_raw(str, c_str, 0);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_realloc(du_string_t *str)
+do_string_realloc(do_string_t *str)
 {
 	char *tmp;
 
@@ -579,7 +579,7 @@ du_string_realloc(du_string_t *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-du_string_seek_next_codepoint(const char *codepoint)
+do_string_seek_next_codepoint(const char *codepoint)
 {
 	if (!codepoint)
 	{
@@ -592,7 +592,7 @@ du_string_seek_next_codepoint(const char *codepoint)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_set(du_string_t *str, const du_string_t *str_src)
+do_string_set(do_string_t *str, const do_string_t *str_src)
 {
 	assert(str && str_src);
 
@@ -601,13 +601,13 @@ du_string_set(du_string_t *str, const du_string_t *str_src)
 		return;
 	}
 
-	du_string_set_raw(str, str_src->chars);
+	do_string_set_raw(str, str_src->chars);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_set_raw(du_string_t *str, const char *c_str)
+do_string_set_raw(do_string_t *str, const char *c_str)
 {
 	char *tmp;
 
@@ -639,7 +639,7 @@ du_string_set_raw(du_string_t *str, const char *c_str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_slice(du_string_t *str, size_t offset, size_t n_codepoints)
+do_string_slice(do_string_t *str, size_t offset, size_t n_codepoints)
 {
 	assert(str);
 
@@ -650,21 +650,21 @@ du_string_slice(du_string_t *str, size_t offset, size_t n_codepoints)
 
 	if (offset >= str->n_codepoints || n_codepoints == 0)
 	{
-		du_string_clear(str);
+		do_string_clear(str);
 	}
 
 	if (n_codepoints < str->n_codepoints - offset)
 	{
-		du_string_cut(str, offset + n_codepoints, SIZE_MAX);
+		do_string_cut(str, offset + n_codepoints, SIZE_MAX);
 	}
 	
-	du_string_cut(str, 0, offset);
+	do_string_cut(str, 0, offset);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_string_test_wrap(const du_string_t *str, size_t max_cols)
+do_string_test_wrap(const do_string_t *str, size_t max_cols)
 {
 	size_t row = 1;
 	size_t col = 0;
@@ -708,7 +708,7 @@ du_string_test_wrap(const du_string_t *str, size_t max_cols)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_trim(du_string_t *str)
+do_string_trim(do_string_t *str)
 {
 	assert(str);
 
@@ -729,7 +729,7 @@ du_string_trim(du_string_t *str)
 				break;
 
 			default:
-				du_string_cut(str, 0, i);
+				do_string_cut(str, 0, i);
 				goto exit_lead;
 		}
 	}
@@ -753,7 +753,7 @@ exit_lead:
 				break;
 
 			default:
-				du_string_cut(str, i + 1, SIZE_MAX);
+				do_string_cut(str, i + 1, SIZE_MAX);
 				return;
 		}
 	}
@@ -762,7 +762,7 @@ exit_lead:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_string_wrap(du_string_t *str, size_t max_cols)
+do_string_wrap(do_string_t *str, size_t max_cols)
 {
 	size_t max_slots;
 	size_t max_rows;
@@ -785,14 +785,14 @@ du_string_wrap(du_string_t *str, size_t max_cols)
 
 	/* calculate (with overflow protection) max required memory to host wrapped string */
 
-	safe &= du_safe_mul(&max_slots, str->n_cols, str->n_rows);
+	safe &= do_safe_mul(&max_slots, str->n_cols, str->n_rows);
 
-	safe &= du_safe_div(&max_rows,  max_slots, max_cols);
-	safe &= du_safe_add(&max_rows,  max_rows,  max_slots % max_cols > 0 ? 1 : 0);
+	safe &= do_safe_div(&max_rows,  max_slots, max_cols);
+	safe &= do_safe_add(&max_rows,  max_rows,  max_slots % max_cols > 0 ? 1 : 0);
 
-	safe &= du_safe_mul(&max_bytes, max_cols,  4);
-	safe &= du_safe_add(&max_bytes, max_bytes, 1);
-	safe &= du_safe_mul(&max_bytes, max_bytes, max_rows);
+	safe &= do_safe_mul(&max_bytes, max_cols,  4);
+	safe &= do_safe_add(&max_bytes, max_bytes, 1);
+	safe &= do_safe_mul(&max_bytes, max_bytes, max_rows);
 
 	if (!safe)
 	{
@@ -855,7 +855,7 @@ du_string_wrap(du_string_t *str, size_t max_cols)
 /************************************************************************************************************/
 
 static size_t
-_convert_to_byte_offset(const du_string_t *str, size_t offset)
+_convert_to_byte_offset(const do_string_t *str, size_t offset)
 {
 	size_t i = 0;
 
@@ -904,7 +904,7 @@ _is_end_byte(char c)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_update_n_values(du_string_t *str)
+_update_n_values(do_string_t *str)
 {
 	size_t col = 0;
 
@@ -943,7 +943,7 @@ _update_n_values(du_string_t *str)
 
 /*
 static const char *
-_get_prev_codepoint(const char *codepoint, const du_string_t *str)
+_get_prev_codepoint(const char *codepoint, const do_string_t *str)
 {
 	if (codepoint == str->chars)
 	{

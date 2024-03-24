@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Utilities (DU) library.
+ * This file is part of the Derelict Objects (DO) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -22,13 +22,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <derelict/du.h>
+#include <derelict/do.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
  
-static void    _bind_cl    (du_color_t *cl);
+static void    _bind_cl    (do_color_t *cl);
 static void    _bind_d     (double *d);
 static uint8_t _hex_to_int (char c);
 
@@ -36,10 +36,10 @@ static uint8_t _hex_to_int (char c);
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-du_color_t
-du_color_convert_argb_uint(uint32_t argb)
+do_color_t
+do_color_convert_argb_uint(uint32_t argb)
 {
-	return du_color_convert_rgba(
+	return do_color_convert_rgba(
 		(argb >> 16) & 0xFF,
 		(argb >>  8) & 0xFF,
 		(argb >>  0) & 0xFF,
@@ -48,10 +48,10 @@ du_color_convert_argb_uint(uint32_t argb)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-du_color_t
-du_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+do_color_t
+do_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
-	du_color_t cl;
+	do_color_t cl;
 
 	cl.a = a / 255.0;
 	cl.r = r / 255.0;
@@ -63,8 +63,8 @@ du_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-du_color_t
-du_color_convert_hex_str(const char *str, bool *err)
+do_color_t
+do_color_convert_hex_str(const char *str, bool *err)
 {
 	uint8_t v[8] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xF, 0xF};
 	bool    fail = false;
@@ -104,7 +104,7 @@ skip:
 		*err = fail;
 	}
 
-	return du_color_convert_rgba(
+	return do_color_convert_rgba(
 		(v[0] << 4) + v[1],
 		(v[2] << 4) + v[3],
 		(v[4] << 4) + v[5],
@@ -114,7 +114,7 @@ skip:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 uint32_t
-du_color_get_argb_uint(du_color_t cl)
+do_color_get_argb_uint(do_color_t cl)
 {
 	uint32_t a;
 	uint32_t r;
@@ -133,10 +133,10 @@ du_color_get_argb_uint(du_color_t cl)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-du_color_t
-du_color_interpolate(du_color_t cl_1, du_color_t cl_2, double ratio)
+do_color_t
+do_color_interpolate(do_color_t cl_1, do_color_t cl_2, double ratio)
 {
-	du_color_t cl;
+	do_color_t cl;
 
 	_bind_cl(&cl_1);
 	_bind_cl(&cl_2);
@@ -155,7 +155,7 @@ du_color_interpolate(du_color_t cl_1, du_color_t cl_2, double ratio)
 /************************************************************************************************************/
 
 static void
-_bind_cl(du_color_t *cl)
+_bind_cl(do_color_t *cl)
 {
 	_bind_d(&cl->r);
 	_bind_d(&cl->g);

@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Utilities (DU) library.
+ * This file is part of the Derelict Objects (DO) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -22,13 +22,13 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <derelict/du.h>
+#include <derelict/do.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _print_str(du_string_t *str, const char *comment);
+static void _print_str(do_string_t *str, const char *comment);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -37,45 +37,45 @@ static void _print_str(du_string_t *str, const char *comment);
 int
 main(void)
 {
-	du_string_t *str_og;
-	du_string_t *str_wrap;
+	do_string_t *str_og;
+	do_string_t *str_wrap;
 
 	size_t offset_og;
 	size_t offset_wrap;
 
 	/* init */
 
-	str_og   = du_string_create();
-	str_wrap = du_string_create();
+	str_og   = do_string_create();
+	str_wrap = do_string_create();
 
-	du_string_set_raw(str_og, "This is a loooooooooooong line of text !");
-	du_string_set(str_wrap, str_og);
-	du_string_wrap(str_wrap, 10);
+	do_string_set_raw(str_og, "This is a loooooooooooong line of text !");
+	do_string_set(str_wrap, str_og);
+	do_string_wrap(str_wrap, 10);
 
 	_print_str(str_og,   "original string");
 	_print_str(str_wrap, "wrapped string");
 
 	/* get insersion offset for wrapped string */
 
-	offset_wrap = du_string_convert_coords_to_offset(str_wrap, 2, 5);
+	offset_wrap = do_string_convert_coords_to_offset(str_wrap, 2, 5);
 
 	/* convert that offset to match the original string */
 
-	offset_og = du_string_convert_wrapped_offset(str_og, str_wrap, offset_wrap);
+	offset_og = do_string_convert_wrapped_offset(str_og, str_wrap, offset_wrap);
 
 	/* insert new text in the original string and update the wrapped one */
 
-	du_string_insert_raw(str_og, "ER", offset_og);
-	du_string_set(str_wrap, str_og);
-	du_string_wrap(str_wrap, 10);
+	do_string_insert_raw(str_og, "ER", offset_og);
+	do_string_set(str_wrap, str_og);
+	do_string_wrap(str_wrap, 10);
 
 	_print_str(str_og,   "original string with insertion based on wrapped string coords");
 	_print_str(str_wrap, "updated wrapped string");
 
 	/* end */
 
-	du_string_destroy(&str_og);
-	du_string_destroy(&str_wrap);
+	do_string_destroy(&str_og);
+	do_string_destroy(&str_wrap);
 
 	return 0;
 }
@@ -85,14 +85,14 @@ main(void)
 /************************************************************************************************************/
 
 static void
-_print_str(du_string_t *str, const char *comment)
+_print_str(do_string_t *str, const char *comment)
 {
 	printf(
 		"%s\n\t-> %zux%zu / %zu / %zu (%s)\n\n",
-		du_string_get_chars(str),
-		du_string_get_height(str),
-		du_string_get_width(str),
-		du_string_get_length(str),
-		du_string_get_alloc_size(str),
+		do_string_get_chars(str),
+		do_string_get_height(str),
+		do_string_get_width(str),
+		do_string_get_length(str),
+		do_string_get_alloc_size(str),
 		comment);
 }

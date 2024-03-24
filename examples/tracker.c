@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Utilities (DU) library.
+ * This file is part of the Derelict Objects (DO) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -21,13 +21,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <derelict/du.h>
+#include <derelict/do.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _print_contents (du_tracker_t *tracker, const char *header);
+static void _print_contents (do_tracker_t *tracker, const char *header);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -36,7 +36,7 @@ static void _print_contents (du_tracker_t *tracker, const char *header);
 int
 main(void)
 {
-	du_tracker_t *tracker;
+	do_tracker_t *tracker;
 
 	size_t i;
 
@@ -51,23 +51,23 @@ main(void)
 
 	/* Init */
 
-	tracker = du_tracker_create(0);
+	tracker = do_tracker_create(0);
 
-	du_tracker_push(tracker, &a, NULL);
-	du_tracker_push(tracker, &b, NULL);
-	du_tracker_push(tracker, &c, NULL);
-	du_tracker_push(tracker, &d, NULL);
-	du_tracker_push(tracker, &e, NULL);
-	du_tracker_push(tracker, &e, NULL); /* duplicate, increments reference counter */
+	do_tracker_push(tracker, &a, NULL);
+	do_tracker_push(tracker, &b, NULL);
+	do_tracker_push(tracker, &c, NULL);
+	do_tracker_push(tracker, &d, NULL);
+	do_tracker_push(tracker, &e, NULL);
+	do_tracker_push(tracker, &e, NULL); /* duplicate, increments reference counter */
 
 	_print_contents(tracker, "tracker initialised with");
 
 	/* Remove some components */
 
-	du_tracker_pull_index(tracker, 0);
-	du_tracker_pull_pointer(tracker, &e, 0);
-	du_tracker_pull_pointer(tracker, &d, 0);
-	du_tracker_pull_pointer(tracker, &d, 0); /* no effect because the pointer has already been removed */
+	do_tracker_pull_index(tracker, 0);
+	do_tracker_pull_pointer(tracker, &e, 0);
+	do_tracker_pull_pointer(tracker, &d, 0);
+	do_tracker_pull_pointer(tracker, &d, 0); /* no effect because the pointer has already been removed */
 
 	_print_contents(tracker, "a few components have been removed");
 
@@ -75,19 +75,19 @@ main(void)
 
 	printf(
 		"size / allocated slots : %zu / %zu\n",
-		du_tracker_get_size(tracker), 
-		du_tracker_get_alloc_size(tracker));
+		do_tracker_get_size(tracker), 
+		do_tracker_get_alloc_size(tracker));
 
-	du_tracker_trim(tracker);
+	do_tracker_trim(tracker);
 
 	printf(
 		"size / allocated slots : %zu / %zu (after trimming)\n\n",
-		du_tracker_get_size(tracker), 
-		du_tracker_get_alloc_size(tracker));
+		do_tracker_get_size(tracker), 
+		do_tracker_get_alloc_size(tracker));
 
 	/* Re-add previously removed element */
 	
-	du_tracker_push(tracker, &d, NULL);
+	do_tracker_push(tracker, &d, NULL);
 	
 	_print_contents(tracker, "previously removed component has been re-added");
 
@@ -99,7 +99,7 @@ main(void)
 
 	i = 0;
 
-	if (du_tracker_find(tracker, &a, &i))
+	if (do_tracker_find(tracker, &a, &i))
 	{
 		printf("component with value %i was found at index %zu\n\n", a, i);
 	}
@@ -110,19 +110,19 @@ main(void)
 
 	/* Untrack all values */
 
-	du_tracker_clear(tracker);
+	do_tracker_clear(tracker);
 
 	_print_contents(tracker, "tracker has been cleared");
 
 	/* end */
 	
-	if (du_tracker_has_failed(tracker))
+	if (do_tracker_has_failed(tracker))
 	{
 		printf("Tracker has failed during operation.\n");
 	}
 	
-	du_tracker_destroy(&tracker);
-	du_tracker_destroy(&tracker); /* api is safe against double destructions */
+	do_tracker_destroy(&tracker);
+	do_tracker_destroy(&tracker); /* api is safe against double destructions */
 
 	return 0;
 }
@@ -132,13 +132,13 @@ main(void)
 /************************************************************************************************************/
 
 static void
-_print_contents(du_tracker_t *tracker, const char *header)
+_print_contents(do_tracker_t *tracker, const char *header)
 {
 	printf("%s :\n", header);
 
 	/* Check the number of tracked pointers. */
 
-	if (du_tracker_get_size(tracker) == 0)
+	if (do_tracker_get_size(tracker) == 0)
 	{
 		printf("\tempty");
 	}
@@ -146,15 +146,15 @@ _print_contents(du_tracker_t *tracker, const char *header)
 	/* Get each pointer sequencially, cast them to int and print them. */
 	/* Always reset the iterator beforehand.                           */
 
-	du_tracker_reset_iterator(tracker);
+	do_tracker_reset_iterator(tracker);
 
-	while(du_tracker_increment_iterator(tracker))
+	while(do_tracker_increment_iterator(tracker))
 	{
 		/* safe from NULL values inside this loop */
 		printf(
 			"\t%i(%lu)",
-			*(int*)du_tracker_get_iteration(tracker),
-			du_tracker_get_iteration_n_ref(tracker));
+			*(int*)do_tracker_get_iteration(tracker),
+			do_tracker_get_iteration_n_ref(tracker));
 	}
 
 	printf("\n\n");

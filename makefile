@@ -23,7 +23,7 @@ LIST_HEAD  := $(wildcard $(DIR_SRC)/*.h) $(wildcard $(DIR_INC)/*.h)
 LIST_OBJ   := $(patsubst $(DIR_SRC)/%.c,   $(DIR_OBJ)/%.o, $(LIST_SRC))
 LIST_BIN   := $(patsubst $(DIR_DEMOS)/%.c, $(DIR_BIN)/%,   $(LIST_DEMOS))
 
-OUTPUT := du
+OUTPUT := do
 FLAGS  := -std=c99 -pedantic -Wall -Wextra -O3
 LIBS   :=
 
