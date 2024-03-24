@@ -412,9 +412,9 @@ _resize(du_dictionary_t *dict, size_t n, size_t a, size_t b)
 
 	/* test for overflow */
 
-	safe &= du_safe_mult(&n,   n, a);
-	safe &= du_safe_add (&n,   n, b);
-	safe &= du_safe_mult(NULL, n, sizeof(_slot_t));
+	safe &= du_safe_mul(&n,   n, a);
+	safe &= du_safe_add(&n,   n, b);
+	safe &= du_safe_mul(NULL, n, sizeof(_slot_t));
 
 	if (!safe)
 	{

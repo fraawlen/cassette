@@ -63,7 +63,7 @@ du_safe_div(size_t *result, size_t a, size_t b)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-du_safe_mult(size_t *result, size_t a, size_t b)
+du_safe_mul(size_t *result, size_t a, size_t b)
 {
 	bool safe;
 
@@ -80,7 +80,7 @@ du_safe_mult(size_t *result, size_t a, size_t b)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-du_safe_subs(size_t *result, size_t a, size_t b)
+du_safe_sub(size_t *result, size_t a, size_t b)
 {
 	bool safe;
 

@@ -125,11 +125,10 @@ _resize(du_book_t *book, size_t n, size_t a, size_t b)
 
 	/* test for overflow */
 
-	safe &= du_safe_mult(&n,   n, a);
-	safe &= du_safe_add (&n,   n, b);
-	safe &= du_safe_add (NULL, n, 1);
-	safe &= du_safe_mult(NULL, n, book->word_n);
-	safe &= du_safe_mult(NULL, n, sizeof(size_t));
+	safe &= du_safe_mul(&n,   n, a);
+	safe &= du_safe_add(&n,   n, b);
+	safe &= du_safe_mul(NULL, n, book->word_n);
+	safe &= du_safe_mul(NULL, n, sizeof(size_t));
 
 	if (!safe)
 	{

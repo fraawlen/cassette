@@ -504,7 +504,7 @@ du_string_pad(du_string_t *str, const char *pattern, size_t offset, size_t n_cod
 
 	/* create padding string */
 
-	safe &= du_safe_mult(&n, pad_n_bytes, n_codepoint_diff);
+	safe &= du_safe_mul(&n, pad_n_bytes, n_codepoint_diff);
 	safe &= du_safe_add (&n, n, 1);
 
 	if (!safe)
@@ -785,14 +785,14 @@ du_string_wrap(du_string_t *str, size_t max_cols)
 
 	/* calculate (with overflow protection) max required memory to host wrapped string */
 
-	safe &= du_safe_mult(&max_slots, str->n_cols, str->n_rows);
+	safe &= du_safe_mul(&max_slots, str->n_cols, str->n_rows);
 
-	safe &= du_safe_div (&max_rows,  max_slots, max_cols);
-	safe &= du_safe_add (&max_rows,  max_rows,  max_slots % max_cols > 0 ? 1 : 0);
+	safe &= du_safe_div(&max_rows,  max_slots, max_cols);
+	safe &= du_safe_add(&max_rows,  max_rows,  max_slots % max_cols > 0 ? 1 : 0);
 
-	safe &= du_safe_mult(&max_bytes, max_cols,  4);
-	safe &= du_safe_add (&max_bytes, max_bytes, 1);
-	safe &= du_safe_mult(&max_bytes, max_bytes, max_rows);
+	safe &= du_safe_mul(&max_bytes, max_cols,  4);
+	safe &= du_safe_add(&max_bytes, max_bytes, 1);
+	safe &= du_safe_mul(&max_bytes, max_bytes, max_rows);
 
 	if (!safe)
 	{
