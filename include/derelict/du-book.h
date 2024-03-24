@@ -36,9 +36,19 @@ typedef struct _book_t du_book_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+enum du_book_group_mode_t
+{
+	DU_BOOK_OLD_GROUP = false,
+	DU_BOOK_NEW_GROUP = true,
+};
+
+typedef enum du_book_group_mode_t du_book_group_mode_t;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 du_book_t *du_book_create(size_t n_alloc, size_t word_n);
 
-void du_book_reset(du_book_t **book);
+void du_book_destroy(du_book_t **book);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -48,25 +58,37 @@ void du_book_erase_last_group(du_book_t *book);
 
 void du_book_erase_last_word(du_book_t *book);
 
-void du_book_write_new_word(du_book_t *book, bool new_group, const char *str);
+bool du_book_increment_iterator(du_book_t *book);
+
+void du_book_reset_iterator(du_book_t *book, size_t group_index);
+
+void du_book_rewrite_word(du_book_t *book, const char *str, size_t group_index, size_t word_index);
+
+void du_book_trim(du_book_t *book);
+
+void du_book_write_new_word(du_book_t *book, const char *str, du_book_group_mode_t group_mode);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-char *du_book_get_group(const du_book_t *book, size_t index);
+char *du_book_prepare_new_word(du_book_t *book, du_book_group_mode_t group_mode);
 
-size_t du_book_get_group_length(const du_book_t *book, size_t index);
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-char *du_book_get_last_group(const du_book_t *book);
+size_t du_book_get_alloc_words(const du_book_t *book);
 
-char *du_book_get_last_word(const du_book_t *book);
+size_t du_book_get_group_size(const du_book_t *book, size_t group_index);
 
-char *du_book_get_next_word(const du_book_t *book, char **word);
+const char *du_book_get_iteration(const du_book_t *book);
 
-char *du_book_get_new_word(du_book_t *book, bool new_group);
+size_t du_book_get_number_groups(const du_book_t *book);
 
-char *du_book_get_word(const du_book_t *book, size_t index);
+size_t du_book_get_number_words(const du_book_t *book);
 
-char *du_book_get_word_in_group(const du_book_t *book, size_t index_group, size_t index_word);
+const char *du_book_get_word(const du_book_t *book, size_t group_index, size_t word_index);
+
+size_t du_book_get_word_max_size(const du_book_t *book);
+
+bool du_book_has_failed(const du_book_t *book);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

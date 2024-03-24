@@ -150,6 +150,7 @@ _print_contents(du_tracker_t *tracker, const char *header)
 
 	while(du_tracker_increment_iterator(tracker))
 	{
+		/* safe from NULL values inside this loop */
 		printf(
 			"\t%i(%lu)",
 			*(int*)du_tracker_get_iteration(tracker),

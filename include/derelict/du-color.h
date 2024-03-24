@@ -44,12 +44,15 @@ extern "C" {
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-typedef struct {
+struct du_color_t
+{
 	double r;
 	double g;
 	double b;
 	double a;
-} du_color_t;
+};
+
+typedef struct du_color_t du_color_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

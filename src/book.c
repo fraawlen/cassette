@@ -40,6 +40,8 @@ struct _book_t
 	size_t n_groups;
 	size_t n_words;
 	size_t n_alloc;
+	size_t iterator_word;
+	size_t iterator_group;
 	bool failed;
 };
 
@@ -47,7 +49,8 @@ struct _book_t
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _resize(du_book_t *book, size_t n, size_t a, size_t b);
+static size_t _get_group_end (const du_book_t *book, size_t index);
+static bool   _resize        (du_book_t *book, size_t n, size_t a, size_t b);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -55,18 +58,36 @@ static bool _resize(du_book_t *book, size_t n, size_t a, size_t b);
 
 static du_book_t _err_book =
 {
-	.words    = NULL,
-	.groups   = NULL,
-	.word_n   = 0,
-	.n_groups = 0,
-	.n_words  = 0,
-	.n_alloc  = 0,
-	.failed   = true,
+	.words          = NULL,
+	.groups         = NULL,
+	.word_n         = 0,
+	.n_groups       = 0,
+	.n_words        = 0,
+	.n_alloc        = 0,
+	.iterator_word  = 0,
+	.iterator_group = 0,
+	.failed         = true,
 };
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
+
+void
+du_book_clear(du_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return;
+	}
+
+	book->n_words  = 0;
+	book->n_groups = 0;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 du_book_t *
 du_book_create(size_t n_alloc, size_t word_n)
@@ -80,13 +101,15 @@ du_book_create(size_t n_alloc, size_t word_n)
 		return &_err_book;
 	}
 
-	book->words    = NULL;
-	book->groups   = NULL;
-	book->word_n   = word_n;
-	book->n_groups = 0;
-	book->n_words  = 0;
-	book->n_alloc  = 0;
-	book->failed   = false;
+	book->words          = NULL;
+	book->groups         = NULL;
+	book->word_n         = word_n;
+	book->n_groups       = 0;
+	book->n_words        = 0;
+	book->n_alloc        = 0;
+	book->iterator_word  = 0;
+	book->iterator_group = 0;
+	book->failed         = false;
 
 	_resize(book, n_alloc, 1, 0);
 
@@ -96,7 +119,7 @@ du_book_create(size_t n_alloc, size_t word_n)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_book_reset(du_book_t **book)
+du_book_destroy(du_book_t **book)
 {
 	assert(book && *book);
 
@@ -112,9 +135,346 @@ du_book_reset(du_book_t **book)
 	*book = &_err_book;
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+du_book_erase_last_group(du_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return;
+	}
+
+	if (book->n_groups == 0)
+	{
+		return;
+	}
+
+	book->n_words = book->groups[--book->n_groups];
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+du_book_erase_last_word(du_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return;
+	}
+
+	if (book->n_words == 0)
+	{
+		return;
+	}
+
+	if (book->groups[book->n_groups - 1] == --book->n_words)
+	{
+		book->n_groups--;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+du_book_get_alloc_words(const du_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return 0;
+	}
+
+	return book->n_alloc;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+du_book_get_group_size(const du_book_t *book, size_t group_index)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return 0;
+	}
+
+	if (group_index >= book->n_groups)
+	{
+		return 0;
+	}
+
+	return _get_group_end(book, group_index) - book->groups[group_index];
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+const char *
+du_book_get_iteration(const du_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return "";
+	}
+
+	if (book->iterator_group > book->n_groups)
+	{
+		return "";
+	}
+
+	if (book->iterator_word == book->groups[book->iterator_group] ||
+	    book->iterator_word > _get_group_end(book, book->iterator_group))
+	{
+		return "";
+	}
+
+	return book->words + (book->iterator_word - 1) * book->word_n;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+du_book_get_number_groups(const du_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return 0;
+	}
+
+	return book->n_groups;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+du_book_get_number_words(const du_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return 0;
+	}
+
+	return book->n_words;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+const char *
+du_book_get_word(const du_book_t *book, size_t group_index, size_t word_index)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return "";
+	}
+
+	if (group_index >= book->n_groups)
+	{
+		return "";
+	}
+
+	if (word_index >= _get_group_end(book, group_index))
+	{
+		return "";
+	}
+
+	return book->words + (book->groups[group_index] + word_index) * book->word_n;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+du_book_get_word_max_size(const du_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return 0;
+	}
+
+	return book->word_n;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+du_book_has_failed(const du_book_t *book)
+{
+	assert(book);
+
+	return book->failed;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+du_book_increment_iterator(du_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return false;
+	}
+
+	if (book->iterator_group >= book->n_groups)
+	{
+		return false;
+	}
+
+	if (book->iterator_word >= _get_group_end(book, book->iterator_group))
+	{
+		return false;
+	}
+
+	book->iterator_word++;
+	
+	return true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+char *
+du_book_prepare_new_word(du_book_t *book, du_book_group_mode_t group_mode)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return NULL;
+	}
+
+	if (book->n_words >= book->n_alloc && !_resize(book, book->n_alloc, 2, 1))
+	{
+		return NULL;
+	}
+
+	if (book->n_words == 0 || group_mode == DU_BOOK_NEW_GROUP)
+	{
+		book->groups[book->n_groups++] = book->n_words;
+	}
+
+	return book->words + book->n_words++ * book->word_n;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+du_book_reset_iterator(du_book_t *book, size_t group_index)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return;
+	}
+
+	if (group_index >= book->n_groups)
+	{
+		return;
+	}
+
+	book->iterator_word  = book->groups[group_index];
+	book->iterator_group = group_index;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+du_book_rewrite_word(du_book_t *book, const char *str, size_t group_index, size_t word_index)
+{
+	char *word;
+
+	assert(book);
+
+	if (book->failed)
+	{
+		return;
+	}
+
+	if (group_index >= book->n_groups)
+	{
+		return;
+	}
+
+	if (word_index >= _get_group_end(book, group_index) - book->groups[group_index])
+	{
+		return;
+	}
+
+	word = book->words + (book->groups[group_index] + word_index) * book->word_n;
+
+	strncpy(word, str, book->word_n - 1);
+	word[book->word_n - 1] = '\0';
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+du_book_trim(du_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return;
+	}
+
+	_resize(book, book->n_words, 1, 0);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+du_book_write_new_word(du_book_t *book, const char *str, du_book_group_mode_t group_mode)
+{
+	char *word;
+
+	assert(book);
+	
+	if ((word = du_book_prepare_new_word(book, group_mode)))
+	{
+		strncpy(word, str, book->word_n - 1);
+		word[book->word_n - 1] = '\0';
+	}
+}
+
 /************************************************************************************************************/
 /* _ ********************************************************************************************************/
 /************************************************************************************************************/
+
+static size_t
+_get_group_end(const du_book_t *book, size_t index)
+{
+	if (book->n_groups == 0)
+	{
+		return 0;
+	}
+	else if (index >= book->n_groups - 1)
+	{
+		return book->n_words;
+	}
+	else
+	{
+		return book->groups[index + 1];
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
 _resize(du_book_t *book, size_t n, size_t a, size_t b)

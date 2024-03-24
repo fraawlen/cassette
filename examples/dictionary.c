@@ -43,6 +43,8 @@ main(void)
 	/* init */
 
 	dict = du_dictionary_create(0, 0.6);
+	
+	/* operations */
 
 	du_dictionary_write(dict, "key_A", 0, 10);
 	du_dictionary_write(dict, "key_B", 0, 34);

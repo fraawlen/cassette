@@ -43,7 +43,7 @@ main(void)
 	size_t offset_og;
 	size_t offset_wrap;
 
-	/* setup */
+	/* init */
 
 	str_og   = du_string_create();
 	str_wrap = du_string_create();
