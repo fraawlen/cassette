@@ -200,7 +200,6 @@ du_dictionary_erase(du_dictionary_t *dict, const char *key, unsigned int group)
 	{
 		slot->state = _DELETED;
 		dict->n--;
-
 	}
 }
 
@@ -321,9 +320,7 @@ du_dictionary_write(du_dictionary_t *dict, const char *key, unsigned int group, 
 	switch (slot->state) {
 
 		case _DELETED:
-			if (slot->hash != hash
-			    && (slot_2 = _find_slot(dict, hash, _UNUSED))
-			    && slot_2->state == _OCCUPIED)
+			if ((slot_2 = _find_slot(dict, hash, _UNUSED)) && slot_2->state == _OCCUPIED)
 			{
 				slot_2->state = _DELETED;
 				dict->n--;
@@ -384,9 +381,7 @@ _hash(const char *str, unsigned int group)
 	const uint64_t offset = 14695981039346656037ULL;
 	const uint64_t prime  = 1099511628211ULL;
 
-	uint64_t h;
-
-	h = offset;
+	uint64_t h = offset;
 
 	for (size_t i = 0; i < sizeof(group); i++)
 	{
