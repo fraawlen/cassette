@@ -58,7 +58,7 @@ main(void)
 	du_tracker_push(tracker, &c, NULL);
 	du_tracker_push(tracker, &d, NULL);
 	du_tracker_push(tracker, &e, NULL);
-	du_tracker_push(tracker, &e, NULL); /* duplicate, has no effect */
+	du_tracker_push(tracker, &e, NULL); /* duplicate, increments reference counter */
 
 	_print_contents(tracker, "tracker initialised with");
 

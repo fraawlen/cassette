@@ -421,7 +421,6 @@ _resize(du_tracker_t *tracker, size_t n, size_t a, size_t b)
 
 	safe &= du_safe_mult(&n,   n, a);
 	safe &= du_safe_add (&n,   n, b);
-	safe &= du_safe_add (NULL, n, 1);
 	safe &= du_safe_mult(NULL, n, sizeof(_slot_t));
 
 	if (!safe)
