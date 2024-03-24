@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Objects (DO) library.
+ * This file is part of the Derelict Utilities (DU) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -18,28 +18,26 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <derelict/do.h>
+#include "du.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
- 
-static void    _bind_cl    (do_color_t *cl);
-static void    _bind_d     (double *d);
+
+static void    _bind_cl    (du_color_t *cl);
 static uint8_t _hex_to_int (char c);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-do_color_t
-do_color_convert_argb_uint(uint32_t argb)
+du_color_t
+du_color_from_argb_uint(uint32_t argb)
 {
-	return do_color_convert_rgba(
+	return du_color_from_rgba(
 		(argb >> 16) & 0xFF,
 		(argb >>  8) & 0xFF,
 		(argb >>  0) & 0xFF,
@@ -48,10 +46,10 @@ do_color_convert_argb_uint(uint32_t argb)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_color_t
-do_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+du_color_t
+du_color_from_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
-	do_color_t cl;
+	du_color_t cl;
 
 	cl.a = a / 255.0;
 	cl.r = r / 255.0;
@@ -63,35 +61,29 @@ do_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_color_t
-do_color_convert_hex_str(const char *str, bool *err)
+du_color_t
+du_color_from_str(const char *str, bool *err)
 {
 	uint8_t v[8] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xF, 0xF};
-	bool    fail = false;
-	size_t  i;
+	bool fail = false;
+	size_t i;
 
-	if (!str)
-	{
+	if (!str) {
 		fail = true;
 		goto skip;
 	}
 
-	if (str[0] == '#')
-	{
+	if (str[0] == '#') {
 		str++;
 	}
 
-	for (i = 0; i < 8 && str[i] != '\0'; i++)
-	{
-		v[i] = _hex_to_int(str[i]);
-		if (v[i] == UINT8_MAX)
-		{
+	for (i = 0; i < 8 && str[i] != '\0'; i++) {
+		if ((v[i] =_hex_to_int(str[i])) == UINT8_MAX) {
 			fail = true;
 		}
 	}
 
-	if ((i != 6 && i != 8) || str[i] != '\0')
-	{
+	if (i != 6 && i != 8) {
 		fail = true;
 	}
 
@@ -99,12 +91,11 @@ skip:
 
 	/* apply conversion */
 
-	if (err)
-	{
+	if (err) {
 		*err = fail;
 	}
 
-	return do_color_convert_rgba(
+	return du_color_from_rgba(
 		(v[0] << 4) + v[1],
 		(v[2] << 4) + v[3],
 		(v[4] << 4) + v[5],
@@ -113,41 +104,36 @@ skip:
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-uint32_t
-do_color_get_argb_uint(do_color_t cl)
+du_color_t
+du_color_interpolate(du_color_t cl_1, du_color_t cl_2, double ratio)
 {
-	uint32_t a;
-	uint32_t r;
-	uint32_t g;
-	uint32_t b;
+	_bind_cl(&cl_1);
+	_bind_cl(&cl_2);
+	du_ratio_bind(&ratio);
 
-	_bind_cl(&cl);
+	const du_color_t cl = {
+		.r = cl_2.r * ratio + cl_1.r * (1.0 - ratio),
+		.g = cl_2.g * ratio + cl_1.g * (1.0 - ratio),
+		.b = cl_2.b * ratio + cl_1.b * (1.0 - ratio),
+		.a = cl_2.a * ratio + cl_1.a * (1.0 - ratio),
+	};
 
-	a = cl.a * 255;
-	r = cl.r * 255;
-	g = cl.g * 255;
-	b = cl.b * 255;
-
-	return (a << 24) + (r << 16) + (g << 8) + b;
+	return cl;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_color_t
-do_color_interpolate(do_color_t cl_1, do_color_t cl_2, double ratio)
+uint32_t
+du_color_to_argb_uint(du_color_t cl)
 {
-	do_color_t cl;
+	_bind_cl(&cl);
 
-	_bind_cl(&cl_1);
-	_bind_cl(&cl_2);
-	_bind_d(&ratio);
+	const uint32_t a = cl.a * 255;
+	const uint32_t r = cl.r * 255;
+	const uint32_t g = cl.g * 255;
+	const uint32_t b = cl.b * 255;
 
-	cl.r = cl_2.r * ratio + cl_1.r * (1.0 - ratio);
-	cl.g = cl_2.g * ratio + cl_1.g * (1.0 - ratio);
-	cl.b = cl_2.b * ratio + cl_1.b * (1.0 - ratio);
-	cl.a = cl_2.a * ratio + cl_1.a * (1.0 - ratio);
-
-	return cl;
+	return (a << 24) + (r << 16) + (g << 8) + b;
 }
 
 /************************************************************************************************************/
@@ -155,27 +141,12 @@ do_color_interpolate(do_color_t cl_1, do_color_t cl_2, double ratio)
 /************************************************************************************************************/
 
 static void
-_bind_cl(do_color_t *cl)
+_bind_cl(du_color_t *cl)
 {
-	_bind_d(&cl->r);
-	_bind_d(&cl->g);
-	_bind_d(&cl->b);
-	_bind_d(&cl->a);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-_bind_d(double *d)
-{
-	if (*d > 1.0)
-	{
-		*d = 1.0;
-	}
-	else if (*d < 0.0)
-	{
-		*d = 0.0;
-	}
+	du_ratio_bind(&cl->r);
+	du_ratio_bind(&cl->g);
+	du_ratio_bind(&cl->b);
+	du_ratio_bind(&cl->a);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -183,8 +154,8 @@ _bind_d(double *d)
 static uint8_t
 _hex_to_int(char c)
 {
-	switch (c)
-	{
+	switch (c) {
+		
 		case '0':
 			return 0x0;
 
@@ -243,4 +214,3 @@ _hex_to_int(char c)
 			return UINT8_MAX;
 	}
 }
-

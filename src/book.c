@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Utilities (DU) library.
+ * This file is part of the Derelict Objects (DO) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -24,132 +24,347 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "du.h"
+#include <derelict/do.h>
+
+#include "safe.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _extend (du_book_t *book);
+struct _book_t
+{
+	char *words;
+	size_t *groups;
+	size_t word_n;
+	size_t n_groups;
+	size_t n_words;
+	size_t n_alloc;
+	size_t iterator_word;
+	size_t iterator_group;
+	bool failed;
+};
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+static size_t _get_group_end (const do_book_t *book, size_t index);
+static bool   _resize        (do_book_t *book, size_t n, size_t a, size_t b);
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+static do_book_t _err_book =
+{
+	.words          = NULL,
+	.groups         = NULL,
+	.word_n         = 0,
+	.n_groups       = 0,
+	.n_words        = 0,
+	.n_alloc        = 0,
+	.iterator_word  = 0,
+	.iterator_group = 0,
+	.failed         = true,
+};
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 void
-du_book_clear(du_book_t *book)
+do_book_clear(do_book_t *book)
 {
 	assert(book);
-	du_status_test(book->status, return);
+
+	if (book->failed)
+	{
+		return;
+	}
 
 	book->n_words  = 0;
 	book->n_groups = 0;
 }
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-du_book_erase_last_group(du_book_t *book)
+do_book_t *
+do_book_create(size_t n_alloc, size_t word_n)
 {
-	assert(book);
-	du_status_test(book->status, return);
+	assert(word_n > 0);
 
-	if (book->n_words > 0) {
-		book->n_words = book->groups[--book->n_groups];
+	do_book_t *book;
+
+	if (!(book = malloc(sizeof(do_book_t))))
+	{
+		return &_err_book;
 	}
+
+	book->words          = NULL;
+	book->groups         = NULL;
+	book->word_n         = word_n;
+	book->n_groups       = 0;
+	book->n_words        = 0;
+	book->n_alloc        = 0;
+	book->iterator_word  = 0;
+	book->iterator_group = 0;
+	book->failed         = false;
+
+	_resize(book, n_alloc, 1, 0);
+
+	return book;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_book_erase_last_word(du_book_t *book)
+do_book_destroy(do_book_t **book)
+{
+	assert(book && *book);
+
+	if (*book == &_err_book)
+	{
+		return;
+	}
+
+	free((*book)->words);
+	free((*book)->groups);
+	free(*book);
+
+	*book = &_err_book;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+do_book_erase_last_group(do_book_t *book)
 {
 	assert(book);
-	du_status_test(book->status, return);
 
-	if (book->n_words > 0 && book->groups[book->n_groups - 1] == --book->n_words) {
+	if (book->failed)
+	{
+		return;
+	}
+
+	if (book->n_groups == 0)
+	{
+		return;
+	}
+
+	book->n_words = book->groups[--book->n_groups];
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+do_book_erase_last_word(do_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return;
+	}
+
+	if (book->n_words == 0)
+	{
+		return;
+	}
+
+	if (book->groups[book->n_groups - 1] == --book->n_words)
+	{
 		book->n_groups--;
 	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-char *
-du_book_get_group(const du_book_t *book, size_t index)
+size_t
+do_book_get_alloc_words(const do_book_t *book)
 {
 	assert(book);
-	du_status_test(book->status, return NULL);
 
-	return index < book->n_groups ? book->words + book->groups[index] * book->word_n : NULL;
+	if (book->failed)
+	{
+		return 0;
+	}
+
+	return book->n_alloc;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-du_book_get_group_length(const du_book_t *book, size_t index)
+do_book_get_group_size(const do_book_t *book, size_t group_index)
 {
 	assert(book);
-	du_status_test(book->status, return 0);
 
-	if (index >= book->n_groups) {
+	if (book->failed)
+	{
 		return 0;
 	}
 
-	return (index < book->n_groups - 1 ? book->groups[index + 1] : book->n_words) - book->groups[index];
+	if (group_index >= book->n_groups)
+	{
+		return 0;
+	}
+
+	return _get_group_end(book, group_index) - book->groups[group_index];
 }
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-char *
-du_book_get_last_group(const du_book_t *book)
+const char *
+do_book_get_iteration(const do_book_t *book)
 {
 	assert(book);
-	du_status_test(book->status, return NULL);
 
-	return book->n_words > 0 ? book->words + book->groups[book->n_groups - 1] * book->word_n : NULL;
+	if (book->failed)
+	{
+		return "";
+	}
+
+	if (book->iterator_group > book->n_groups)
+	{
+		return "";
+	}
+
+	if (book->iterator_word == book->groups[book->iterator_group] ||
+	    book->iterator_word > _get_group_end(book, book->iterator_group))
+	{
+		return "";
+	}
+
+	return book->words + (book->iterator_word - 1) * book->word_n;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-char *
-du_book_get_last_word(const du_book_t *book)
+size_t
+do_book_get_number_groups(const do_book_t *book)
 {
 	assert(book);
-	du_status_test(book->status, return NULL);
 
-	return book->n_words > 0 ? book->words + (book->n_words - 1) * book->word_n : NULL;
+	if (book->failed)
+	{
+		return 0;
+	}
+
+	return book->n_groups;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+do_book_get_number_words(const do_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return 0;
+	}
+
+	return book->n_words;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+const char *
+do_book_get_word(const do_book_t *book, size_t group_index, size_t word_index)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return "";
+	}
+
+	if (group_index >= book->n_groups)
+	{
+		return "";
+	}
+
+	if (word_index >= _get_group_end(book, group_index))
+	{
+		return "";
+	}
+
+	return book->words + (book->groups[group_index] + word_index) * book->word_n;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+do_book_get_word_max_size(const do_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return 0;
+	}
+
+	return book->word_n;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+do_book_has_failed(const do_book_t *book)
+{
+	assert(book);
+
+	return book->failed;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+do_book_increment_iterator(do_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return false;
+	}
+
+	if (book->iterator_group >= book->n_groups)
+	{
+		return false;
+	}
+
+	if (book->iterator_word >= _get_group_end(book, book->iterator_group))
+	{
+		return false;
+	}
+
+	book->iterator_word++;
+	
+	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 char *
-du_book_get_next_word(const du_book_t *book, char **word)
+do_book_prepare_new_word(do_book_t *book, do_book_group_mode_t group_mode)
 {
-	assert(book && word);
-	du_status_test(book->status, return NULL);
+	assert(book);
 
-	if (!*word) {
-		return *word = book->words;
-	}	
-
-	if (*word < book->words || *word >= book->words + (book->n_words - 1) * book->word_n) {
+	if (book->failed)
+	{
 		return NULL;
 	}
 
-	return *word = book->words + ((*word - book->words) / book->word_n + 1) * book->word_n;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-char *
-du_book_get_new_word(du_book_t *book, bool new_group)
-{
-	assert(book);
-	du_status_test(book->status, return NULL);
-
-	if (book->n_words >= book->n_alloc && !_extend(book)) {
+	if (book->n_words >= book->n_alloc && !_resize(book, book->n_alloc, 2, 1))
+	{
 		return NULL;
 	}
 
-	if (new_group || book->n_words == 0) {
+	if (book->n_words == 0 || group_mode == DO_BOOK_NEW_GROUP)
+	{
 		book->groups[book->n_groups++] = book->n_words;
 	}
 
@@ -158,68 +373,81 @@ du_book_get_new_word(du_book_t *book, bool new_group)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-char *
-du_book_get_word(const du_book_t *book, size_t index)
+void
+do_book_reset_iterator(do_book_t *book, size_t group_index)
 {
 	assert(book);
-	du_status_test(book->status, return NULL);
 
-	return index < book->n_words ? book->words + index * book->word_n : NULL;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-char *
-du_book_get_word_in_group(const du_book_t *book, size_t index_group, size_t index_word)
-{
-	assert(book);
-	du_status_test(book->status, return NULL);
-
-	if (index_word >= du_book_get_group_length(book, index_group)) {
-		return NULL;
+	if (book->failed)
+	{
+		return;
 	}
 
-	return book->words + (book->groups[index_group] + index_word) * book->word_n;
+	if (group_index >= book->n_groups)
+	{
+		return;
+	}
+
+	book->iterator_word  = book->groups[group_index];
+	book->iterator_group = group_index;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_book_init(du_book_t *book, size_t n_alloc, size_t word_n)
+do_book_rewrite_word(do_book_t *book, const char *str, size_t group_index, size_t word_index)
 {
-	assert(book && word_n > 0);
+	char *word;
 
-	book->word_n = word_n;
-	book->n_words = 0;
-	book->n_groups = 0;
-	book->n_alloc = n_alloc;
-	book->words  = n_alloc > 0 ? malloc(n_alloc * word_n) : NULL;
-	book->groups = n_alloc > 0 ? malloc(n_alloc * sizeof(size_t)) : NULL;
-	book->status = n_alloc == 0 || (book->groups && book->words) ? DU_STATUS_SUCCESS : DU_STATUS_FAILURE;
+	assert(book);
+
+	if (book->failed)
+	{
+		return;
+	}
+
+	if (group_index >= book->n_groups)
+	{
+		return;
+	}
+
+	if (word_index >= _get_group_end(book, group_index) - book->groups[group_index])
+	{
+		return;
+	}
+
+	word = book->words + (book->groups[group_index] + word_index) * book->word_n;
+
+	strncpy(word, str, book->word_n - 1);
+	word[book->word_n - 1] = '\0';
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_book_reset(du_book_t *book)
+do_book_trim(do_book_t *book)
 {
 	assert(book);
 
-	free(book->words);
-	free(book->groups);
-	book->status = DU_STATUS_NOT_INIT;
+	if (book->failed)
+	{
+		return;
+	}
+
+	_resize(book, book->n_words, 1, 0);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-du_book_write_new_word(du_book_t *book, bool new_group, const char *str)
+do_book_write_new_word(do_book_t *book, const char *str, do_book_group_mode_t group_mode)
 {
-	assert(book);
-	du_status_test(book->status, return);
+	char *word;
 
-	char *word = du_book_get_new_word(book, new_group);
-	if (word) {
+	assert(book);
+	
+	if ((word = do_book_prepare_new_word(book, group_mode)))
+	{
 		strncpy(word, str, book->word_n - 1);
 		word[book->word_n - 1] = '\0';
 	}
@@ -229,18 +457,72 @@ du_book_write_new_word(du_book_t *book, bool new_group, const char *str)
 /* _ ********************************************************************************************************/
 /************************************************************************************************************/
 
-static bool
-_extend(du_book_t *book)
+static size_t
+_get_group_end(const do_book_t *book, size_t index)
 {
-	book->n_alloc = book->n_alloc > 0 ? book->n_alloc * 2 : 1;
+	if (book->n_groups == 0)
+	{
+		return 0;
+	}
+	else if (index >= book->n_groups - 1)
+	{
+		return book->n_words;
+	}
+	else
+	{
+		return book->groups[index + 1];
+	}
+}
 
-	void *tmp1 = realloc(book->words, book->n_alloc * book->word_n);
-	du_status_assert(book->status, tmp1, return false);
-	book->words = tmp1;
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-	void *tmp2 = realloc(book->groups, book->n_alloc * sizeof(size_t));
-	du_status_assert(book->status, tmp2, return false);
-	book->groups = tmp2;
+static bool
+_resize(do_book_t *book, size_t n, size_t a, size_t b)
+{
+	bool    safe = true;
+	char   *tmp_1;
+	size_t *tmp_2;	
+
+	/* test for overflow */
+
+	safe &= do_safe_mul(&n,   n, a);
+	safe &= do_safe_add(&n,   n, b);
+	safe &= do_safe_mul(NULL, n, book->word_n);
+	safe &= do_safe_mul(NULL, n, sizeof(size_t));
+
+	if (!safe)
+	{
+		book->failed = true;
+		return false;
+	}
+
+	/* resize array */
+
+	if (n == 0)
+	{
+		free(book->words);
+		free(book->groups);
+		book->words  = NULL;
+		book->groups = NULL;
+	}
+	else
+	{	
+		if (!(tmp_1 = realloc(book->words, n * book->word_n)))
+		{
+			book->failed = true;
+			return false;
+		}
+		book->words = tmp_1;
+	
+		if (!(tmp_2 = realloc(book->groups, n * sizeof(size_t))))
+		{
+			book->failed = true;
+			return false;
+		}	
+		book->groups = tmp_2;
+	}
+
+	book->n_alloc = n;
 
 	return true;
 }
