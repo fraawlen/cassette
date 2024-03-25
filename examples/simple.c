@@ -32,7 +32,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _build_source_filename(do_string_t *str);
+static void _build_source_filename (do_string_t *str);
+static void _callback              (dr_config_t *cfg);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -52,6 +53,7 @@ main(void)
 	_build_source_filename(str);
 
 	dr_config_push_source(cfg, do_string_get_chars(str));
+	dr_config_push_callback_load(cfg, _callback);
 
 	/* load */
 
@@ -89,4 +91,19 @@ _build_source_filename(do_string_t *str)
 
 	do_string_set_raw(str, home);
 	do_string_append_raw(str, "/A");
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_callback(dr_config_t *cfg)
+{
+	if (!dr_config_has_failed(cfg))
+	{
+		printf("configuration loaded successfully\n");
+	}
+	else
+	{
+		printf("configuration failed to load\n");
+	}
 }
