@@ -18,10 +18,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef TOKEN_H
-#define TOKEN_H
+#ifndef DR_TOKEN_PRIVATE_H
+#define DR_TOKEN_PRIVATE_H
 
-#include <derelict/do.h>
+#include <derelict/du.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,15 +33,14 @@ extern "C" {
 
 #define DR_TOKEN_N 32
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-enum dr_token_kind_t
-{
+/**
+ *
+ */
+typedef enum {
 	/* special tokens */
 	DR_TOKEN_INVALID = 0,
 	DR_TOKEN_STRING,
 	DR_TOKEN_NUMBER,
-
 	/* universal tokens */
 	DR_TOKEN_EOF,
 	DR_TOKEN_COMMENT,
@@ -90,7 +89,6 @@ enum dr_token_kind_t
 	DR_TOKEN_CL_INTERPOLATE,
 	DR_TOKEN_CL_RGB,
 	DR_TOKEN_CL_RGBA,
-
 	/* lead tokens */
 	DR_TOKEN_VAR_DECLARATION,
 	DR_TOKEN_SECTION_BEGIN,
@@ -99,13 +97,14 @@ enum dr_token_kind_t
 	DR_TOKEN_INCLUDE,
 	DR_TOKEN_ITERATOR,
 	DR_TOKEN_RAND_SEED,
-};
-
-typedef enum dr_token_kind_t dr_token_kind_t;
+} dr_token_kind_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_dictionary_t *dr_token_dictionary_create(void);
+/**
+ *
+ */
+void dr_token_init_dictionary(du_dictionary_t *dict);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -115,5 +114,4 @@ do_dictionary_t *dr_token_dictionary_create(void);
 }
 #endif
 
-#endif /* TOKEN_H */
-
+#endif /* DR_TOKEN_PRIVATE_H */

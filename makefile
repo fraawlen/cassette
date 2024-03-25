@@ -25,7 +25,7 @@ LIST_BIN   := $(patsubst $(DIR_DEMOS)/%.c, $(DIR_BIN)/%, $(LIST_DEMOS))
 
 OUTPUT := dr
 FLAGS  := -std=c99 -pedantic -Wall -Wextra -O3 -D_POSIX_C_SOURCE=200809L
-LIBS   := -ldu -lm
+LIBS   := -ldo -lm
 
 #############################################################################################################
 # PUBLIC TARGETS ############################################################################################

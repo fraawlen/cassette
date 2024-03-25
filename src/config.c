@@ -25,179 +25,74 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <derelict/du.h>
+#include <derelict/do.h>
+#include <derelict/dr.h>
 
-#include "dr.h"
-#include "parse.h"
+#include "token.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-typedef struct {
-	void (*fn)(dr_config_t *cfg);	
-} _callback_t;
+#define _TOKEN_MAX_N 32
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-struct _config_t {
-	du_book_t data;
-	du_tracker_t sources;
-	du_tracker_t callbacks;
-	du_dictionary_t sequences;
-	du_dictionary_t tokens;
-	du_status_t status;
+struct _callback_t
+{
+	void (*fn)(dr_config_t *cfg);	
+};
+
+typedef struct _callback_t _callback_t;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct _config_t
+{
+	do_book_t *sequences;        /* parsed sequences of values                        */
+	do_tracker_t *sources;       /* source files to read from                         */
+	do_tracker_t *callbacks;     /* callback list to call after load                  */
+	do_dictionary_t *references; /* reference sequences matching resources            */
+	do_dictionary_t *tokens;     /* token references kept here to reuse between loads */
+	bool failed;
 };
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static char *_source_select (const dr_config_t *cfg);
-static void  _update_status (dr_config_t *cfg);
+static void        _clear_tracker (do_tracker_t *tracker);
+static const char *_source_select (const dr_config_t *cfg);
+static void        _update_status (dr_config_t *cfg);
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+static dr_config_t _err_cfg =
+{
+	.sequences  = NULL,
+	.sources    = NULL,
+	.callbacks  = NULL,
+	.references = NULL,
+	.failed     = true,
+};
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-dr_config_t *
-dr_config_create(size_t n)
-{
-	dr_config_t *cfg = malloc(sizeof(dr_config_t));
-	if (!cfg) {
-		goto fail_alloc;
-	}
-
-	cfg->status = DU_STATUS_SUCCESS;
-
-	du_book_init(&cfg->data, n * 1.5, DR_TOKEN_N);
-	du_tracker_init(&cfg->sources, 4);
-	du_tracker_init(&cfg->callbacks, 2);
-	du_dictionary_init(&cfg->sequences, n * 2, 0.6);
-	dr_token_init_dictionary(&cfg->tokens);
-
-	_update_status(cfg);
-	du_status_test(cfg->status, goto fail_init);
-
-	return cfg;
-
-fail_init:
-	dr_config_destroy(cfg);
-fail_alloc:
-	return NULL;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void 
-dr_config_destroy(dr_config_t *cfg)
-{
-	assert(cfg);
-
-	dr_config_clear_sources(cfg);
-	dr_config_clear_callbacks_load(cfg);
-
-	du_book_reset(&cfg->data);
-	du_tracker_reset(&cfg->sources);
-	du_tracker_reset(&cfg->callbacks);
-	du_dictionary_reset(&cfg->sequences);
-	du_dictionary_reset(&cfg->tokens);
-
-	free(cfg);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-du_status_t
-dr_config_get_status(const dr_config_t *cfg)
-{
-	assert(cfg);
-
-	return cfg->status;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
- 
-size_t
-dr_config_find_resource(const dr_config_t *cfg, const char *namespace, const char *property, char *values_buf,
-                        size_t n_values, size_t value_n)
-{
-	assert(cfg && property);
-	du_status_test(cfg->status, return 0);
-
-	int64_t i_namespace;
-	int64_t i_property;
-
-	/* find target sequence location */
-
-	if (!namespace) {
-		namespace = "_";
-	}
-
-	if (!du_dictionary_find_value(&cfg->sequences, namespace, DR_CONFIG_NAMESPACES,               &i_namespace) ||
-	    !du_dictionary_find_value(&cfg->sequences, property,  DR_CONFIG_NAMESPACES + i_namespace, &i_property)) {
-		return 0;
-	}
-
-	/* write sequence tokens into target value array */
-
-	const size_t n = du_book_get_group_length(&cfg->data, i_property);
-	const size_t val_n = value_n > DR_TOKEN_N ? DR_TOKEN_N : value_n;
-	const size_t n_vals = n_values > n ? n : n_values;
-
-	for (size_t i = 0; i < n_vals; i++) {
-		strncpy(values_buf + i * value_n, du_book_get_word_in_group(&cfg->data, i_property, i), val_n);
-	}
-
-	return n_vals;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-dr_config_load(dr_config_t *cfg)
-{
-	assert(cfg);
-	du_status_test(cfg->status, return false);
-
-	/* get rid of old data */
-
-	du_book_clear(&cfg->data);
-	du_dictionary_clear(&cfg->sequences);
-
-	/* load new config */
-
-	if (!dr_parse_file(NULL, _source_select(cfg), &cfg->data, &cfg->sequences, &cfg->tokens)) {
-		return false;
-	}
-
-	_update_status(cfg);
-	du_status_test(cfg->status, return false);
-
-	/* run added callbacks */
-
-	for (size_t i = 0; i < cfg->callbacks.n; i++) {
-		((_callback_t*)cfg->callbacks.ptr[i])->fn(cfg);
-	}
-
-	/* end & errors */
-
-	return true;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 void
 dr_config_clear_callbacks_load(dr_config_t *cfg)
 {
 	assert(cfg);
-	du_status_test(cfg->status, return);
 
-	for (size_t i = 0; i < cfg->callbacks.n; i++) {
-		free((void*)cfg->callbacks.ptr[i]);
+	if (cfg->failed)
+	{
+		return;
 	}
 
-	du_tracker_clear(&cfg->callbacks);
+	_clear_tracker(cfg->callbacks);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -206,13 +101,97 @@ void
 dr_config_clear_sources(dr_config_t *cfg)
 {
 	assert(cfg);
-	du_status_test(cfg->status, return);
 
-	for (size_t i = 0; i < cfg->sources.n; i++) {
-		free((void*)cfg->sources.ptr[i]);
+	if (cfg->failed)
+	{
+		return;
 	}
 
-	du_tracker_clear(&cfg->sources);
+	_clear_tracker(cfg->sources);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+dr_config_t *
+dr_config_create(size_t n)
+{
+	dr_config_t *cfg;
+
+	if (!(cfg = malloc(sizeof(dr_config_t))))
+	{
+		return &_err_cfg;
+	}
+
+	cfg->sequences  = do_book_create(n, _TOKEN_MAX_N);
+	cfg->sources    = do_tracker_create(4);
+	cfg->callbacks  = do_tracker_create(2);
+	cfg->references = do_dictionary_create(n, 0.6);
+	cfg->tokens     = dr_token_dictionary_create();
+	cfg->failed     = false;
+
+	_update_status(cfg);
+
+	return cfg;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+dr_config_destroy(dr_config_t **cfg)
+{
+	assert(cfg && *cfg);
+
+	if (*cfg == &_err_cfg)
+	{
+		return;
+	}
+
+	_clear_tracker((*cfg)->sources);
+	_clear_tracker((*cfg)->callbacks);
+
+	do_book_destroy(&(*cfg)->sequences);
+	do_tracker_destroy(&(*cfg)->sources);
+	do_tracker_destroy(&(*cfg)->callbacks);
+	do_dictionary_destroy(&(*cfg)->references);
+	do_dictionary_destroy(&(*cfg)->tokens);
+
+	free(*cfg);
+
+	*cfg = &_err_cfg;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+dr_config_has_failed(const dr_config_t *cfg)
+{
+	assert(cfg);
+
+	return cfg->failed;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+dr_config_load(dr_config_t *cfg)
+{
+	assert(cfg);
+
+	if (cfg->failed)
+	{
+		return;
+	}
+
+	do_book_clear(cfg->sequences);
+	do_dictionary_clear(cfg->references);
+
+	// TODO
+
+	do_tracker_reset_iterator(cfg->callbacks);
+	while (do_tracker_increment_iterator(cfg->callbacks))
+	{
+		((_callback_t*)do_tracker_get_iteration(cfg->callbacks))->fn(cfg);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -220,16 +199,31 @@ dr_config_clear_sources(dr_config_t *cfg)
 void
 dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *dr))
 {
-	assert(cfg && fn);
-	du_status_test(cfg->status, return);
+	_callback_t *tmp;
 
-	_callback_t *tmp = malloc(sizeof(_callback_t));
-	du_status_assert(cfg->status, tmp, return);
+	assert(cfg);
+
+	if (cfg->failed)
+	{
+		return;
+	}
+
+	if (!fn)
+	{
+		return;
+	}
+
+	if (!(tmp = malloc(sizeof(_callback_t))))
+	{
+		cfg->failed = true;
+		return;
+	}
 
 	tmp->fn = fn;
+	
+	do_tracker_push(cfg->callbacks, tmp, NULL);
 
-	du_tracker_push(&cfg->callbacks, tmp, NULL);
-	du_status_assert(cfg->status, (cfg->callbacks.status == DU_STATUS_SUCCESS), return);
+	_update_status(cfg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -237,29 +231,61 @@ dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *dr))
 void
 dr_config_push_source(dr_config_t *cfg, const char *filename)
 {
-	assert(cfg && filename);
-	du_status_test(cfg->status, return);
+	char *tmp;
 
-	const char *tmp = strdup(filename);
-	du_status_assert(cfg->status, tmp, return);
+	assert(cfg);
 
-	du_tracker_push(&cfg->sources, tmp, NULL);
-	du_status_assert(cfg->status, (cfg->sources.status == DU_STATUS_SUCCESS), return);
+	if (cfg->failed)
+	{
+		return;
+	}
+
+	if (!filename)
+	{
+		return;
+	}
+
+	if (!(tmp = strdup(filename)))
+	{
+		cfg->failed = true;
+		return;
+	}
+
+	do_tracker_push(cfg->sources, tmp, NULL);
+
+	_update_status(cfg);
 }
 
 /************************************************************************************************************/
 /* _ ********************************************************************************************************/
 /************************************************************************************************************/
 
-static char *
+static void
+_clear_tracker(do_tracker_t *tracker)
+{
+	do_tracker_reset_iterator(tracker);
+	while (do_tracker_increment_iterator(tracker))
+	{
+		free((void*)do_tracker_get_iteration(tracker));
+	}
+
+	do_tracker_clear(tracker);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static const char *
 _source_select(const dr_config_t *cfg)
 {
 	FILE *f;
 	char *s;
 
-	for (size_t i = cfg->sources.n; i > 0; i--) {
-		s = (char*)cfg->sources.ptr[i - 1];
-		if ((f = fopen(s, "r"))) {
+	do_tracker_reset_iterator(cfg->sources);
+	while (do_tracker_increment_iterator(cfg->sources))
+	{
+		s = (char*)do_tracker_get_iteration(cfg->sources);
+		if ((f = fopen(s, "r")))
+		{
 			fclose(f);
 			return s;
 		}
@@ -271,11 +297,11 @@ _source_select(const dr_config_t *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_update_status (dr_config_t *cfg)
+_update_status(dr_config_t *cfg)
 {
-	du_status_test(cfg->data.status,      cfg->status = DU_STATUS_FAILURE);
-	du_status_test(cfg->sources.status,   cfg->status = DU_STATUS_FAILURE);
-	du_status_test(cfg->callbacks.status, cfg->status = DU_STATUS_FAILURE);
-	du_status_test(cfg->sequences.status, cfg->status = DU_STATUS_FAILURE);
-	du_status_test(cfg->tokens.status,    cfg->status = DU_STATUS_FAILURE);
+	cfg->failed |= do_book_has_failed(cfg->sequences);
+	cfg->failed |= do_tracker_has_failed(cfg->sources);
+	cfg->failed |= do_tracker_has_failed(cfg->callbacks);
+	cfg->failed |= do_dictionary_has_failed(cfg->references);
+	cfg->failed |= do_dictionary_has_failed(cfg->tokens);
 }

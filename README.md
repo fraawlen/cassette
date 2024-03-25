@@ -29,7 +29,7 @@ Tools :
 
 First-party libraries :
 
-- [Derelict-Utilities (DU)](https://codeberg.org/fraawlen/derelict-utilities)
+- [Derelict-Objects (DO)](https://codeberg.org/fraawlen/derelict-objects)
 
 Installation
 ------------

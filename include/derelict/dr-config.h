@@ -18,10 +18,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef TOKEN_H
-#define TOKEN_H
+#ifndef DR_CONFIG_H
+#define DR_CONFIG_H
 
-#include <derelict/do.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,81 +31,29 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DR_TOKEN_N 32
+typedef struct _config_t dr_config_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum dr_token_kind_t
-{
-	/* special tokens */
-	DR_TOKEN_INVALID = 0,
-	DR_TOKEN_STRING,
-	DR_TOKEN_NUMBER,
+dr_config_t *dr_config_create(size_t n);
 
-	/* universal tokens */
-	DR_TOKEN_EOF,
-	DR_TOKEN_COMMENT,
-	DR_TOKEN_FILLER,
-	DR_TOKEN_JOIN,
-	DR_TOKEN_ESCAPE,
-	DR_TOKEN_VAR_INJECTION,
-	DR_TOKEN_ITER_INJECTION,
-	DR_TOKEN_IF_LESS,
-	DR_TOKEN_IF_LESS_EQ,
-	DR_TOKEN_IF_MORE,
-	DR_TOKEN_IF_MORE_EQ,
-	DR_TOKEN_IF_EQ,
-	DR_TOKEN_IF_EQ_NOT,
-	DR_TOKEN_TIMESTAMP,
-	DR_TOKEN_CONST_PI,
-	DR_TOKEN_CONST_EULER,
-	DR_TOKEN_CONST_TRUE,
-	DR_TOKEN_CONST_FALSE,
-	DR_TOKEN_OP_SQRT,
-	DR_TOKEN_OP_CBRT,
-	DR_TOKEN_OP_ABS,
-	DR_TOKEN_OP_CEILING,
-	DR_TOKEN_OP_FLOOR,
-	DR_TOKEN_OP_COS,
-	DR_TOKEN_OP_SIN,
-	DR_TOKEN_OP_TAN,
-	DR_TOKEN_OP_ACOS,
-	DR_TOKEN_OP_ASIN,
-	DR_TOKEN_OP_ATAN,
-	DR_TOKEN_OP_COSH,
-	DR_TOKEN_OP_SINH,
-	DR_TOKEN_OP_LN,
-	DR_TOKEN_OP_LOG,
-	DR_TOKEN_OP_ADD,
-	DR_TOKEN_OP_SUBSTRACT,
-	DR_TOKEN_OP_MULTIPLY,
-	DR_TOKEN_OP_DIVIDE,
-	DR_TOKEN_OP_MOD,
-	DR_TOKEN_OP_POW,
-	DR_TOKEN_OP_BIGGEST,
-	DR_TOKEN_OP_SMALLEST,
-	DR_TOKEN_OP_RANDOM,
-	DR_TOKEN_OP_LIMIT,
-	DR_TOKEN_OP_INTERPOLATE,
-	DR_TOKEN_CL_INTERPOLATE,
-	DR_TOKEN_CL_RGB,
-	DR_TOKEN_CL_RGBA,
-
-	/* lead tokens */
-	DR_TOKEN_VAR_DECLARATION,
-	DR_TOKEN_SECTION_BEGIN,
-	DR_TOKEN_SECTION_ADD,
-	DR_TOKEN_SECTION_DEL,
-	DR_TOKEN_INCLUDE,
-	DR_TOKEN_ITERATOR,
-	DR_TOKEN_RAND_SEED,
-};
-
-typedef enum dr_token_kind_t dr_token_kind_t;
+void dr_config_destroy(dr_config_t **cfg);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_dictionary_t *dr_token_dictionary_create(void);
+void dr_config_clear_callbacks_load(dr_config_t *cfg);
+
+void dr_config_clear_sources(dr_config_t *cfg);
+
+void dr_config_load(dr_config_t *cfg);
+
+void dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *dr));
+
+void dr_config_push_source(dr_config_t *cfg, const char *filename);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool dr_config_has_failed(const dr_config_t *cfg);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -115,5 +63,5 @@ do_dictionary_t *dr_token_dictionary_create(void);
 }
 #endif
 
-#endif /* TOKEN_H */
+#endif /* DR_CONFIG_H */
 

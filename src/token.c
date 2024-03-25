@@ -18,92 +18,90 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <assert.h>
-#include <stdlib.h>
+#include <derelict/do.h>
 
-#include <derelict/du.h>
-
-#include "dr.h"
 #include "token.h"
 
 /************************************************************************************************************/
-/* PUBLIC ***************************************************************************************************/
+/* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
-void
-dr_token_init_dictionary(du_dictionary_t *dict)
+do_dictionary_t *
+dr_token_dictionary_create(void)
 {
-	assert(dict);
+	do_dictionary_t *dict;
 
-	du_dictionary_init(dict, 50, 0.6);
+	dict = do_dictionary_create(50, 0.6);
 
 	/* universal tokens */
 
-	du_dictionary_set_value(dict, "EOF",    0, DR_TOKEN_EOF);
-	du_dictionary_set_value(dict, "",       0, DR_TOKEN_INVALID);
-	du_dictionary_set_value(dict, "//",     0, DR_TOKEN_COMMENT);
-	du_dictionary_set_value(dict, "(",      0, DR_TOKEN_FILLER);
-	du_dictionary_set_value(dict, ")",      0, DR_TOKEN_FILLER);
-	du_dictionary_set_value(dict, "=",      0, DR_TOKEN_FILLER);
-	du_dictionary_set_value(dict, ":=",     0, DR_TOKEN_FILLER);
-	du_dictionary_set_value(dict, "JOIN",   0, DR_TOKEN_JOIN);
-	du_dictionary_set_value(dict, "\\",     0, DR_TOKEN_ESCAPE);
-	du_dictionary_set_value(dict, "$",      0, DR_TOKEN_VAR_INJECTION);
-	du_dictionary_set_value(dict, "%",      0, DR_TOKEN_ITER_INJECTION);
+	do_dictionary_write(dict, "EOF",    0, DR_TOKEN_EOF);
+	do_dictionary_write(dict, "",       0, DR_TOKEN_INVALID);
+	do_dictionary_write(dict, "//",     0, DR_TOKEN_COMMENT);
+	do_dictionary_write(dict, "(",      0, DR_TOKEN_FILLER);
+	do_dictionary_write(dict, ")",      0, DR_TOKEN_FILLER);
+	do_dictionary_write(dict, "=",      0, DR_TOKEN_FILLER);
+	do_dictionary_write(dict, ":=",     0, DR_TOKEN_FILLER);
+	do_dictionary_write(dict, "JOIN",   0, DR_TOKEN_JOIN);
+	do_dictionary_write(dict, "\\",     0, DR_TOKEN_ESCAPE);
+	do_dictionary_write(dict, "$",      0, DR_TOKEN_VAR_INJECTION);
+	do_dictionary_write(dict, "%",      0, DR_TOKEN_ITER_INJECTION);
 
-	du_dictionary_set_value(dict, "<",      0, DR_TOKEN_IF_LESS);
-	du_dictionary_set_value(dict, "<=",     0, DR_TOKEN_IF_LESS_EQ);
-	du_dictionary_set_value(dict, ">",      0, DR_TOKEN_IF_MORE);
-	du_dictionary_set_value(dict, ">=",     0, DR_TOKEN_IF_MORE_EQ);
-	du_dictionary_set_value(dict, "==",     0, DR_TOKEN_IF_EQ);
-	du_dictionary_set_value(dict, "!=",     0, DR_TOKEN_IF_EQ_NOT);
+	do_dictionary_write(dict, "<",      0, DR_TOKEN_IF_LESS);
+	do_dictionary_write(dict, "<=",     0, DR_TOKEN_IF_LESS_EQ);
+	do_dictionary_write(dict, ">",      0, DR_TOKEN_IF_MORE);
+	do_dictionary_write(dict, ">=",     0, DR_TOKEN_IF_MORE_EQ);
+	do_dictionary_write(dict, "==",     0, DR_TOKEN_IF_EQ);
+	do_dictionary_write(dict, "!=",     0, DR_TOKEN_IF_EQ_NOT);
 	
-	du_dictionary_set_value(dict, "TIME",   0, DR_TOKEN_TIMESTAMP);
-	du_dictionary_set_value(dict, "PI",     0, DR_TOKEN_CONST_PI);
-	du_dictionary_set_value(dict, "E",      0, DR_TOKEN_CONST_EULER);
-	du_dictionary_set_value(dict, "TRUE",   0, DR_TOKEN_CONST_TRUE);
-	du_dictionary_set_value(dict, "FALSE",  0, DR_TOKEN_CONST_FALSE);
+	do_dictionary_write(dict, "TIME",   0, DR_TOKEN_TIMESTAMP);
+	do_dictionary_write(dict, "PI",     0, DR_TOKEN_CONST_PI);
+	do_dictionary_write(dict, "E",      0, DR_TOKEN_CONST_EULER);
+	do_dictionary_write(dict, "TRUE",   0, DR_TOKEN_CONST_TRUE);
+	do_dictionary_write(dict, "FALSE",  0, DR_TOKEN_CONST_FALSE);
 
-	du_dictionary_set_value(dict, "SQRT",   0, DR_TOKEN_OP_SQRT);
-	du_dictionary_set_value(dict, "CBRT",   0, DR_TOKEN_OP_CBRT);
-	du_dictionary_set_value(dict, "ABS",    0, DR_TOKEN_OP_ABS);
-	du_dictionary_set_value(dict, "CEIL",   0, DR_TOKEN_OP_CEILING);
-	du_dictionary_set_value(dict, "FLOOR",  0, DR_TOKEN_OP_FLOOR);
-	du_dictionary_set_value(dict, "COS",    0, DR_TOKEN_OP_COS);
-	du_dictionary_set_value(dict, "SIN",    0, DR_TOKEN_OP_SIN);
-	du_dictionary_set_value(dict, "TAN",    0, DR_TOKEN_OP_TAN);
-	du_dictionary_set_value(dict, "ACOS",   0, DR_TOKEN_OP_ACOS);
-	du_dictionary_set_value(dict, "ASIN",   0, DR_TOKEN_OP_ASIN);
-	du_dictionary_set_value(dict, "ATAN",   0, DR_TOKEN_OP_ATAN);
-	du_dictionary_set_value(dict, "COSH",   0, DR_TOKEN_OP_COSH);
-	du_dictionary_set_value(dict, "SINH",   0, DR_TOKEN_OP_SINH);
-	du_dictionary_set_value(dict, "LN",     0, DR_TOKEN_OP_LN);
-	du_dictionary_set_value(dict, "LOG",    0, DR_TOKEN_OP_LOG);
+	do_dictionary_write(dict, "SQRT",   0, DR_TOKEN_OP_SQRT);
+	do_dictionary_write(dict, "CBRT",   0, DR_TOKEN_OP_CBRT);
+	do_dictionary_write(dict, "ABS",    0, DR_TOKEN_OP_ABS);
+	do_dictionary_write(dict, "CEIL",   0, DR_TOKEN_OP_CEILING);
+	do_dictionary_write(dict, "FLOOR",  0, DR_TOKEN_OP_FLOOR);
+	do_dictionary_write(dict, "COS",    0, DR_TOKEN_OP_COS);
+	do_dictionary_write(dict, "SIN",    0, DR_TOKEN_OP_SIN);
+	do_dictionary_write(dict, "TAN",    0, DR_TOKEN_OP_TAN);
+	do_dictionary_write(dict, "ACOS",   0, DR_TOKEN_OP_ACOS);
+	do_dictionary_write(dict, "ASIN",   0, DR_TOKEN_OP_ASIN);
+	do_dictionary_write(dict, "ATAN",   0, DR_TOKEN_OP_ATAN);
+	do_dictionary_write(dict, "COSH",   0, DR_TOKEN_OP_COSH);
+	do_dictionary_write(dict, "SINH",   0, DR_TOKEN_OP_SINH);
+	do_dictionary_write(dict, "LN",     0, DR_TOKEN_OP_LN);
+	do_dictionary_write(dict, "LOG",    0, DR_TOKEN_OP_LOG);
 
-	du_dictionary_set_value(dict, "+",      0, DR_TOKEN_OP_ADD);
-	du_dictionary_set_value(dict, "-",      0, DR_TOKEN_OP_SUBSTRACT);
-	du_dictionary_set_value(dict, "*",      0, DR_TOKEN_OP_MULTIPLY);
-	du_dictionary_set_value(dict, "/",      0, DR_TOKEN_OP_DIVIDE);
-	du_dictionary_set_value(dict, "MOD",    0, DR_TOKEN_OP_MOD);
-	du_dictionary_set_value(dict, "POW",    0, DR_TOKEN_OP_POW);
-	du_dictionary_set_value(dict, "BIG",    0, DR_TOKEN_OP_BIGGEST);
-	du_dictionary_set_value(dict, "SMALL",  0, DR_TOKEN_OP_SMALLEST);
-	du_dictionary_set_value(dict, "RAND",   0, DR_TOKEN_OP_RANDOM);
+	do_dictionary_write(dict, "+",      0, DR_TOKEN_OP_ADD);
+	do_dictionary_write(dict, "-",      0, DR_TOKEN_OP_SUBSTRACT);
+	do_dictionary_write(dict, "*",      0, DR_TOKEN_OP_MULTIPLY);
+	do_dictionary_write(dict, "/",      0, DR_TOKEN_OP_DIVIDE);
+	do_dictionary_write(dict, "MOD",    0, DR_TOKEN_OP_MOD);
+	do_dictionary_write(dict, "POW",    0, DR_TOKEN_OP_POW);
+	do_dictionary_write(dict, "BIG",    0, DR_TOKEN_OP_BIGGEST);
+	do_dictionary_write(dict, "SMALL",  0, DR_TOKEN_OP_SMALLEST);
+	do_dictionary_write(dict, "RAND",   0, DR_TOKEN_OP_RANDOM);
 	
-	du_dictionary_set_value(dict, "ITRPL",  0, DR_TOKEN_OP_INTERPOLATE);
-	du_dictionary_set_value(dict, "LIMIT",  0, DR_TOKEN_OP_LIMIT);
+	do_dictionary_write(dict, "ITRPL",  0, DR_TOKEN_OP_INTERPOLATE);
+	do_dictionary_write(dict, "LIMIT",  0, DR_TOKEN_OP_LIMIT);
 	
-	du_dictionary_set_value(dict, "CITRPL", 0, DR_TOKEN_CL_INTERPOLATE);
-	du_dictionary_set_value(dict, "RGB",    0, DR_TOKEN_CL_RGB);
-	du_dictionary_set_value(dict, "RGBA",   0, DR_TOKEN_CL_RGBA);
+	do_dictionary_write(dict, "CITRPL", 0, DR_TOKEN_CL_INTERPOLATE);
+	do_dictionary_write(dict, "RGB",    0, DR_TOKEN_CL_RGB);
+	do_dictionary_write(dict, "RGBA",   0, DR_TOKEN_CL_RGBA);
 
 	/* lead tokens */
 
-	du_dictionary_set_value(dict, "LET",         0, DR_TOKEN_VAR_DECLARATION);
-	du_dictionary_set_value(dict, "SECTION",     0, DR_TOKEN_SECTION_BEGIN);
-	du_dictionary_set_value(dict, "SECTION_ADD", 0, DR_TOKEN_SECTION_ADD);
-	du_dictionary_set_value(dict, "SECTION_DEL", 0, DR_TOKEN_SECTION_DEL);
-	du_dictionary_set_value(dict, "INCLUDE",     0, DR_TOKEN_INCLUDE);
-	du_dictionary_set_value(dict, "ITERATE",     0, DR_TOKEN_ITERATOR);
-	du_dictionary_set_value(dict, "RAND_SEED",   0, DR_TOKEN_RAND_SEED);
+	do_dictionary_write(dict, "LET",         0, DR_TOKEN_VAR_DECLARATION);
+	do_dictionary_write(dict, "SECTION",     0, DR_TOKEN_SECTION_BEGIN);
+	do_dictionary_write(dict, "SECTION_ADD", 0, DR_TOKEN_SECTION_ADD);
+	do_dictionary_write(dict, "SECTION_DEL", 0, DR_TOKEN_SECTION_DEL);
+	do_dictionary_write(dict, "INCLUDE",     0, DR_TOKEN_INCLUDE);
+	do_dictionary_write(dict, "ITERATE",     0, DR_TOKEN_ITERATOR);
+	do_dictionary_write(dict, "RAND_SEED",   0, DR_TOKEN_RAND_SEED);
+
+	return dict;
 }
