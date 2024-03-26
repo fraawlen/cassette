@@ -315,7 +315,7 @@ _math(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_k
 			break;
 
 		case DR_TOKEN_OP_RANDOM:
-			result = dr_rand_get(ctx->rand, d[0], d[1]);
+			result = do_rand_get(ctx->rand, d[0], d[1]);
 			break;
 
 		/* 3 parameters */

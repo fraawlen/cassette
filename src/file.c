@@ -33,7 +33,6 @@
 
 #include "config.h"
 #include "context.h"
-#include "rand.h"
 #include "sequence.h"
 #include "token.h"
 
@@ -87,7 +86,7 @@ bool
 dr_file_parse_root(dr_config_t *cfg, const char *filename)
 {
 	dr_context_t ctx;
-	dr_rand_t r;
+	do_rand_t r;
 
 	bool fail = false;
 
@@ -98,7 +97,7 @@ dr_file_parse_root(dr_config_t *cfg, const char *filename)
 		return false;
 	}
 
-	dr_rand_seed(&r, cfg->seed);
+	do_rand_seed(&r, cfg->seed);
 
 	ctx.eol_reached    = false;
 	ctx.eof_reached    = false;

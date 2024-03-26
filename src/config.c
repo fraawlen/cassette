@@ -251,7 +251,7 @@ dr_config_push_source(dr_config_t *cfg, const char *filename)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dr_config_seed(dr_config_t *cfg, unsigned int seed)
+dr_config_seed(dr_config_t *cfg, unsigned long long seed)
 {
 	assert(cfg);
 

@@ -51,7 +51,7 @@ void dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *dr))
 
 void dr_config_push_source(dr_config_t *cfg, const char *filename);
 
-void dr_config_seed(dr_config_t *cfg, unsigned int seed);
+void dr_config_seed(dr_config_t *cfg, unsigned long long seed);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
