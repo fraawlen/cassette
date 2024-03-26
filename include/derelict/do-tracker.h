@@ -46,6 +46,8 @@ void do_tracker_clear(do_tracker_t *tracker);
 
 bool do_tracker_increment_iterator(do_tracker_t *tracker);
 
+void do_tracker_lock_iterator(do_tracker_t *tracker);
+
 void do_tracker_pull_index(do_tracker_t *tracker, size_t index);
 
 void do_tracker_pull_pointer(do_tracker_t *tracker, const void *ptr, size_t index);

@@ -64,8 +64,8 @@ static do_book_t _err_book =
 	.n_groups       = 0,
 	.n_words        = 0,
 	.n_alloc        = 0,
-	.iterator_word  = 0,
-	.iterator_group = 0,
+	.iterator_word  = SIZE_MAX,
+	.iterator_group = SIZE_MAX,
 	.failed         = true,
 };
 
@@ -107,8 +107,8 @@ do_book_create(size_t n_alloc, size_t word_n)
 	book->n_groups       = 0;
 	book->n_words        = 0;
 	book->n_alloc        = 0;
-	book->iterator_word  = 0;
-	book->iterator_group = 0;
+	book->iterator_word  = SIZE_MAX;
+	book->iterator_group = SIZE_MAX;
 	book->failed         = false;
 
 	_resize(book, n_alloc, 1, 0);
@@ -344,6 +344,22 @@ do_book_increment_iterator(do_book_t *book)
 	book->iterator_word++;
 	
 	return true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+do_book_lock_iterator(do_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return;
+	}
+
+	book->iterator_group = SIZE_MAX;
+	book->iterator_word  = SIZE_MAX;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

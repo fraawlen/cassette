@@ -60,6 +60,8 @@ void do_book_erase_last_word(do_book_t *book);
 
 bool do_book_increment_iterator(do_book_t *book);
 
+void do_book_lock_iterator(do_book_t *book);
+
 void do_book_reset_iterator(do_book_t *book, size_t group_index);
 
 void do_book_rewrite_word(do_book_t *book, const char *str, size_t group_index, size_t word_index);

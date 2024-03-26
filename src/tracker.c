@@ -66,7 +66,7 @@ static do_tracker_t _err_tracker =
 	.slots    = NULL,
 	.n        = 0,
 	.n_alloc  = 0,
-	.iterator = 0,
+	.iterator = SIZE_MAX,
 	.failed   = false,
 };
 
@@ -102,7 +102,7 @@ do_tracker_create(size_t n_alloc)
 	tracker->slots    = NULL;
 	tracker->n        = 0;
 	tracker->n_alloc  = 0;
-	tracker->iterator = 0;
+	tracker->iterator = SIZE_MAX;
 	tracker->failed   = false;
 
 	_resize(tracker, n_alloc, 1, 0);
@@ -327,6 +327,20 @@ do_tracker_increment_iterator(do_tracker_t *tracker)
 	tracker->iterator++;
 
 	return true;
+}
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+do_tracker_lock_iterator(do_tracker_t *tracker)
+{
+	assert(tracker);
+
+	if (tracker->failed)
+	{
+		return;
+	}
+
+	tracker->iterator = SIZE_MAX;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
