@@ -39,8 +39,10 @@ static dr_token_kind_t _comment (void);
 static dr_token_kind_t _eof     (dr_context_t *ctx);
 static dr_token_kind_t _escape  (dr_context_t *ctx, char token[DR_TOKEN_N]);
 static dr_token_kind_t _filler  (dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result);
+static dr_token_kind_t _if      (dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_kind_t type);
 static dr_token_kind_t _join    (dr_context_t *ctx, char token[DR_TOKEN_N]);
 static dr_token_kind_t _math    (dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_kind_t type, size_t n);
+static dr_token_kind_t _math_cl (dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_kind_t type, size_t n);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -55,8 +57,6 @@ dr_subtitution_apply(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_res
 	
 	switch (type = dr_token_match(ctx->tokens, token))
 	{
-		// TODO substitution handlers
-
 		case DR_TOKEN_COMMENT:
 			return _comment();
 
@@ -71,6 +71,14 @@ dr_subtitution_apply(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_res
 
 		case DR_TOKEN_JOIN:
 			return _join(ctx, token);
+
+		case DR_TOKEN_IF_LESS:
+		case DR_TOKEN_IF_LESS_EQ:
+		case DR_TOKEN_IF_MORE:
+		case DR_TOKEN_IF_MORE_EQ:
+		case DR_TOKEN_IF_EQ:
+		case DR_TOKEN_IF_EQ_NOT:
+			return _if(ctx, token, math_result, type);
 
 		case DR_TOKEN_TIMESTAMP:
 		case DR_TOKEN_CONST_PI:
@@ -110,6 +118,13 @@ dr_subtitution_apply(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_res
 		case DR_TOKEN_OP_LIMIT:
 		case DR_TOKEN_OP_INTERPOLATE:
 			return _math(ctx, token, math_result, type, 3);
+
+		case DR_TOKEN_CL_RGB:
+		case DR_TOKEN_CL_INTERPOLATE:
+			return _math_cl(ctx, token, math_result, type, 3);
+
+		case DR_TOKEN_CL_RGBA:
+			return _math_cl(ctx, token, math_result, type, 4);
 
 		default:
 			return type;
@@ -153,6 +168,71 @@ static dr_token_kind_t
 _filler(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result)
 {
 	return dr_context_get_token(ctx, token, math_result);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static dr_token_kind_t
+_if(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_kind_t type)
+{
+	char token_2[DR_TOKEN_N];
+	bool result;
+	double a;
+	double b;
+
+	/* get values to compare */
+
+	if (dr_context_get_token_numeral(ctx, token, &a) == DR_TOKEN_INVALID ||
+	    dr_context_get_token_numeral(ctx, token, &b) == DR_TOKEN_INVALID)
+	{
+		return DR_TOKEN_INVALID;	
+	}
+	
+	/* execute comparison */
+
+	switch (type)
+	{
+		case DR_TOKEN_IF_LESS:
+			result = a < b;
+			break;
+
+		case DR_TOKEN_IF_LESS_EQ:
+			result = a <= b;
+			break;
+
+		case DR_TOKEN_IF_MORE:
+			result = a > b;
+			break;
+
+		case DR_TOKEN_IF_MORE_EQ:
+			result = a >= b;
+			break;
+
+		case DR_TOKEN_IF_EQ:
+			result = a == b;
+			break;
+
+		case DR_TOKEN_IF_EQ_NOT:
+			result = a != b;
+			break;
+
+		default:
+			return DR_TOKEN_INVALID;	
+	}
+
+	/* get resulting token */
+
+	type = dr_context_get_token(ctx, token, math_result);
+
+	if (result)
+	{
+		dr_context_get_token(ctx, token_2, NULL);
+		return type;
+	}
+	else
+	{
+		return dr_context_get_token(ctx, token, math_result);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -342,7 +422,68 @@ _math(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_k
 	}
 	else
 	{
-		snprintf(token, DR_TOKEN_N, "%.16f", result);
+		snprintf(token, DR_TOKEN_N, "%.8f", result);
+	}
+
+	return DR_TOKEN_NUMBER;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static dr_token_kind_t
+_math_cl(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_kind_t type, size_t n)
+{
+	do_color_t result;
+	do_color_t cl[4] = {0};
+
+	double d[4] = {0};
+
+	/* get next few numeral tokens as math functions arguments and convert them into colors */
+
+	for (size_t i = 0; i < n; i++)
+	{
+		if (dr_context_get_token_numeral(ctx, token, d + i) == DR_TOKEN_INVALID)
+		{
+			return DR_TOKEN_INVALID;
+		}
+		cl[i] = do_color_convert_argb_uint(d[i]);
+	}
+
+	/* apply math operation */
+
+	switch (type)
+	{
+		/* 3 parameters */
+
+		case DR_TOKEN_CL_RGB:
+			result = do_color_convert_rgba(d[0], d[1], d[2], 255);
+			break;
+
+		case DR_TOKEN_CL_INTERPOLATE:
+			result = do_color_interpolate(cl[0], cl[1], d[2]);
+			break;
+		
+		/* 4 parameters */
+
+		case DR_TOKEN_CL_RGBA:
+			result = do_color_convert_rgba(d[0], d[1], d[2], d[3]);
+			break;
+
+		/* other */
+
+		default:
+			return DR_TOKEN_INVALID;
+	}
+
+	/* if needed convert back the result into a string */
+
+	if (math_result)
+	{
+		*math_result = do_color_get_argb_uint(result);
+	}
+	else
+	{
+		snprintf(token, DR_TOKEN_N, "%u", do_color_get_argb_uint(result));
 	}
 
 	return DR_TOKEN_NUMBER;
