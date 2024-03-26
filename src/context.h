@@ -18,101 +18,78 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef TOKEN_H
-#define TOKEN_H
+#ifndef CONTEXT_H
+#define CONTEXT_H
+
+#include <limits.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
 
 #include <derelict/do.h>
 
+#include "token.h"
+
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DR_TOKEN_N 32
+#define DR_CONTEXT_DICT_VARIABLE 0
+#define DR_CONTEXT_DICT_SECTION  1
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum dr_token_kind_t
+typedef struct dr_context_t dr_context_t;
+
+struct dr_context_t
 {
-	/* special tokens */
+	/* file stream data */
 
-	DR_TOKEN_INVALID = 0,
-	DR_TOKEN_STRING,
-	DR_TOKEN_NUMBER,
+	dr_context_t *parent;
+	ino_t file_inode;
+	char  file_dir[PATH_MAX];
+	FILE *file;
 
-	/* substitution tokens */
+	/* context states */
 
-	DR_TOKEN_EOF,
-	DR_TOKEN_COMMENT,
-	DR_TOKEN_FILLER,
-	DR_TOKEN_JOIN,
-	DR_TOKEN_ESCAPE,
-	DR_TOKEN_VAR_INJECTION,
-	DR_TOKEN_ITER_INJECTION,
-	DR_TOKEN_IF_LESS,
-	DR_TOKEN_IF_LESS_EQ,
-	DR_TOKEN_IF_MORE,
-	DR_TOKEN_IF_MORE_EQ,
-	DR_TOKEN_IF_EQ,
-	DR_TOKEN_IF_EQ_NOT,
-	DR_TOKEN_TIMESTAMP,
-	DR_TOKEN_CONST_PI,
-	DR_TOKEN_CONST_EULER,
-	DR_TOKEN_CONST_TRUE,
-	DR_TOKEN_CONST_FALSE,
-	DR_TOKEN_OP_SQRT,
-	DR_TOKEN_OP_CBRT,
-	DR_TOKEN_OP_ABS,
-	DR_TOKEN_OP_CEILING,
-	DR_TOKEN_OP_FLOOR,
-	DR_TOKEN_OP_COS,
-	DR_TOKEN_OP_SIN,
-	DR_TOKEN_OP_TAN,
-	DR_TOKEN_OP_ACOS,
-	DR_TOKEN_OP_ASIN,
-	DR_TOKEN_OP_ATAN,
-	DR_TOKEN_OP_COSH,
-	DR_TOKEN_OP_SINH,
-	DR_TOKEN_OP_LN,
-	DR_TOKEN_OP_LOG,
-	DR_TOKEN_OP_ADD,
-	DR_TOKEN_OP_SUBSTRACT,
-	DR_TOKEN_OP_MULTIPLY,
-	DR_TOKEN_OP_DIVIDE,
-	DR_TOKEN_OP_MOD,
-	DR_TOKEN_OP_POW,
-	DR_TOKEN_OP_BIGGEST,
-	DR_TOKEN_OP_SMALLEST,
-	DR_TOKEN_OP_RANDOM,
-	DR_TOKEN_OP_LIMIT,
-	DR_TOKEN_OP_INTERPOLATE,
-	DR_TOKEN_CL_INTERPOLATE,
-	DR_TOKEN_CL_RGB,
-	DR_TOKEN_CL_RGBA,
+	bool eol_reached;
+	bool eof_reached;
+	bool skip_sequences;
 
-	/* lead tokens */
+	/* variable injection */
 
-	DR_TOKEN_VAR_DECLARATION,
-	DR_TOKEN_SECTION_BEGIN,
-	DR_TOKEN_SECTION_ADD,
-	DR_TOKEN_SECTION_DEL,
-	DR_TOKEN_INCLUDE,
-	DR_TOKEN_ITERATOR,
-	DR_TOKEN_RAND_SEED,
+	size_t var_group;
+	size_t var_token;
+
+	/* iteraton injection */
+
+	size_t iter_token;
+	do_book_t *iteration;
+
+	/* data storage */
+
+	size_t n_namespaces;
+	do_book_t *sequences;
+	do_book_t *variables;
+	do_dictionary_t *ref_sequences;
+	do_dictionary_t *ref_variables;
+	do_dictionary_t *tokens;
 };
 
-typedef enum dr_token_kind_t dr_token_kind_t;
-
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_dictionary_t *dr_token_dictionary_create(void);
+dr_token_kind_t dr_context_get_token(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+dr_token_kind_t dr_context_get_token_numeral(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result);
 
-dr_token_kind_t dr_token_match(do_dictionary_t *token_dict, const char *token);
+dr_token_kind_t dr_context_get_token_raw(dr_context_t *ctx, char token[DR_TOKEN_N]);
+
+void dr_context_goto_eol(dr_context_t *ctx);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#endif /* TOKEN_H */
+#endif /* CONTEXT_H */
 

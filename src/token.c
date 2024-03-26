@@ -18,6 +18,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <assert.h>
+#include <stdlib.h>
+
 #include <derelict/do.h>
 
 #include "token.h"
@@ -33,7 +36,7 @@ dr_token_dictionary_create(void)
 
 	dict = do_dictionary_create(50, 0.6);
 
-	/* universal tokens */
+	/* substitution tokens */
 
 	do_dictionary_write(dict, "EOF",    0, DR_TOKEN_EOF);
 	do_dictionary_write(dict, "",       0, DR_TOKEN_INVALID);
@@ -104,4 +107,21 @@ dr_token_dictionary_create(void)
 	do_dictionary_write(dict, "RAND_SEED",   0, DR_TOKEN_RAND_SEED);
 
 	return dict;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+dr_token_kind_t
+dr_token_match(do_dictionary_t *token_dict, const char *token)
+{
+	size_t id;
+
+	assert(token_dict && token);
+
+	if (!do_dictionary_find(token_dict, token, 0, &id))
+	{
+		return DR_TOKEN_STRING;
+	}
+
+	return id;
 }

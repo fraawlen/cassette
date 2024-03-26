@@ -20,7 +20,6 @@
 
 #include <assert.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,15 +27,13 @@
 #include <derelict/do.h>
 #include <derelict/dr.h>
 
+#include "config.h"
+#include "file.h"
 #include "token.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
-
-#define _TOKEN_MAX_N 32
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct _callback_t
 {
@@ -44,18 +41,6 @@ struct _callback_t
 };
 
 typedef struct _callback_t _callback_t;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-struct _config_t
-{
-	do_book_t *sequences;        /* parsed sequences of values                        */
-	do_tracker_t *sources;       /* source files to read from                         */
-	do_tracker_t *callbacks;     /* callback list to call after load                  */
-	do_dictionary_t *references; /* reference sequences matching resources            */
-	do_dictionary_t *tokens;     /* token references kept here to reuse between loads */
-	bool failed;
-};
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -122,7 +107,7 @@ dr_config_create(size_t n)
 		return &_err_cfg;
 	}
 
-	cfg->sequences  = do_book_create(n, _TOKEN_MAX_N);
+	cfg->sequences  = do_book_create(n, DR_TOKEN_N);
 	cfg->sources    = do_tracker_create(4);
 	cfg->callbacks  = do_tracker_create(2);
 	cfg->references = do_dictionary_create(n, 0.6);
@@ -182,10 +167,18 @@ dr_config_load(dr_config_t *cfg)
 		return;
 	}
 
+	/* clear old data */
+
 	do_book_clear(cfg->sequences);
 	do_dictionary_clear(cfg->references);
 
-	// TODO
+	/* parse source file */
+
+	dr_file_parse_root(cfg, _source_select(cfg));
+
+	_update_status(cfg);
+
+	/* run callbacks */
 
 	do_tracker_reset_iterator(cfg->callbacks);
 	while (do_tracker_increment_iterator(cfg->callbacks))

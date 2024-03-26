@@ -18,90 +18,19 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <limits.h>
-#include <pwd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#ifndef SEQUENCE_H
+#define SEQUENCE_H
 
-#include <derelict/do.h>
-#include <derelict/dr.h>
+#include "context.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _build_source_filename (do_string_t *str);
-static void _callback              (dr_config_t *cfg);
+void dr_sequence_parse(dr_context_t *ctx);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-int
-main(void)
-{
-	dr_config_t *cfg;
-	do_string_t *str;
-
-	/* init */
-
-	cfg = dr_config_create(0);
-	str = do_string_create();
-
-	_build_source_filename(str);
-
-	dr_config_push_source(cfg, do_string_get_chars(str));
-	dr_config_push_callback_load(cfg, _callback);
-
-	/* operations */
-
-	dr_config_load(cfg);
-
-	/* end */
-
-	if (dr_config_has_failed(cfg))
-	{
-		printf("Configuration has failed during operation.\n");
-	}
-
-	do_string_destroy(&str);
-	dr_config_destroy(&cfg);
-
-	return 0;
-}
-
-/************************************************************************************************************/
-/* _ ********************************************************************************************************/
-/************************************************************************************************************/
-
-static void
-_build_source_filename(do_string_t *str)
-{
-	char  home[PATH_MAX];
-	char *env;
-
-	env = getenv("HOME");
-	
-	strncpy(home, env ? env : getpwuid(getuid())->pw_dir, PATH_MAX - 1);
-	home[PATH_MAX - 1] = '\0';
-
-	do_string_set_raw(str, home);
-	do_string_append_raw(str, "/A");
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-_callback(dr_config_t *cfg)
-{
-	if (!dr_config_has_failed(cfg))
-	{
-		printf("\nconfiguration loaded successfully\n");
-	}
-	else
-	{
-		printf("\nconfiguration failed to load\n");
-	}
-}
+#endif /* SEQUENCE_H */
