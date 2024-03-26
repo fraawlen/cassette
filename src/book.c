@@ -230,13 +230,44 @@ do_book_get_iteration(const do_book_t *book)
 		return "";
 	}
 
-	if (book->iterator_word == book->groups[book->iterator_group] ||
+	if (book->iterator_word <= book->groups[book->iterator_group] ||
 	    book->iterator_word > _get_group_end(book, book->iterator_group))
 	{
 		return "";
 	}
 
 	return book->words + (book->iterator_word - 1) * book->word_n;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+do_book_get_iterator_offset(const do_book_t *book, size_t *group_index)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return 0;
+	}
+
+	if (book->iterator_group > book->n_groups)
+	{
+		return 0;
+	}
+
+	if (book->iterator_word <= book->groups[book->iterator_group] ||
+	    book->iterator_word > _get_group_end(book, book->iterator_group))
+	{
+		return 0;
+	}
+
+	if (group_index)
+	{
+		*group_index = book->iterator_group;
+	}
+
+	return book->iterator_word - book->groups[book->iterator_group];
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

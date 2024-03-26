@@ -94,7 +94,6 @@ main(void)
 	do_book_destroy(&book); /* api is safe against double destructions */
 
 	return 0;
-
 }
 
 /************************************************************************************************************/

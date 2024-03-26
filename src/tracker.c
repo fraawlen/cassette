@@ -285,6 +285,26 @@ do_tracker_get_iteration_n_ref(const do_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
+do_tracker_get_iterator_offset(const do_tracker_t *tracker)
+{
+	assert(tracker);
+
+	if (tracker->failed)
+	{
+		return 0;
+	}
+
+	if (tracker->iterator == 0 || tracker->iterator > tracker->n)
+	{
+		return 0;
+	}
+
+	return tracker->iterator;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
 do_tracker_get_size(const do_tracker_t *tracker)
 {
 	assert(tracker);

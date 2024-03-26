@@ -70,6 +70,8 @@ unsigned long do_tracker_get_index_n_ref(const do_tracker_t *tracker, size_t ind
 
 const void *do_tracker_get_iteration(const do_tracker_t *tracker);
 
+size_t do_tracker_get_iterator_offset(const do_tracker_t *tracker);
+
 unsigned long do_tracker_get_iteration_n_ref(const do_tracker_t *tracker);
 
 size_t do_tracker_get_size(const do_tracker_t *tracker);
