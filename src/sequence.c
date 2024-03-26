@@ -28,11 +28,13 @@
 #include "context.h"
 #include "file.h"
 #include "sequence.h"
+#include "util.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static void _declare_enum     (dr_context_t *ctx);
 static void _declare_resource (dr_context_t *ctx, const char *namespace);
 static void _declare_variable (dr_context_t *ctx);
 static void _include          (dr_context_t *ctx);
@@ -64,6 +66,10 @@ dr_sequence_parse(dr_context_t *ctx)
 	{
 		case DR_TOKEN_VAR_DECLARATION:
 			_declare_variable(ctx);
+			break;
+
+		case DR_TOKEN_ENUM_DECLARATION:
+			_declare_enum(ctx);
 			break;
 		
 		case DR_TOKEN_SECTION_BEGIN:
@@ -108,6 +114,89 @@ dr_sequence_parse(dr_context_t *ctx)
 /************************************************************************************************************/
 
 static void
+_declare_enum(dr_context_t *ctx)
+{
+	do_book_group_mode_t mode = DO_BOOK_NEW_GROUP;
+
+	char name[DR_TOKEN_N];
+	char token[DR_TOKEN_N];
+	char *tmp;
+	double min;
+	double max;
+	double steps;
+	double precision;
+
+	/* get enum name and parameters */
+
+	if (dr_context_get_token(ctx, name, NULL) == DR_TOKEN_INVALID)
+	{
+		return;
+	}
+
+	if (dr_context_get_token_numeral(ctx, token, &min) == DR_TOKEN_INVALID)
+	{
+		return;
+	}
+
+	if (dr_context_get_token_numeral(ctx, token, &max) == DR_TOKEN_INVALID)
+	{
+		max = min;
+		min = 0.0;
+	}
+
+	dr_util_sort_pair(&min, &max);
+
+	if (dr_context_get_token_numeral(ctx, token, &steps) == DR_TOKEN_INVALID)
+	{
+		steps = max - min;
+	}
+
+	if (dr_context_get_token_numeral(ctx, token, &precision) == DR_TOKEN_INVALID)
+	{
+		precision = 0.0;
+	}
+
+	if (steps < 1.0 || steps >= SIZE_MAX || precision < 0.0)
+	{
+		return;
+	}
+
+	if (precision > 16.0)
+	{
+		precision = 16;
+	}
+	
+	steps -= 1.0;
+
+	/* generate enum values and write them into the variable book */
+
+	for (size_t i = 0; i <= steps; i++)
+	{
+		if (!(tmp = do_book_prepare_new_word(ctx->variables, mode)))
+		{
+			return;
+		}
+		snprintf(tmp, DR_TOKEN_N - 1, "%.*f", (int)precision, dr_util_interpolate(min, max, i / steps));
+		mode = DO_BOOK_OLD_GROUP;
+	}
+
+	if (do_book_has_failed(ctx->variables))
+	{
+		return;
+	}
+
+	/* update variable's reference in the variable dictionary */
+
+	do_dictionary_write(
+		ctx->ref_variables,
+		name,
+		DR_CONTEXT_DICT_VARIABLE,
+		do_book_get_number_groups(ctx->variables) - 1);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 _declare_resource(dr_context_t *ctx, const char *namespace)
 {
 	do_book_group_mode_t mode = DO_BOOK_NEW_GROUP;
@@ -119,7 +208,7 @@ _declare_resource(dr_context_t *ctx, const char *namespace)
 
 	/* get resource's name */
 
-	if (!dr_context_get_token(ctx, name, NULL) != DR_TOKEN_INVALID)
+	if (dr_context_get_token(ctx, name, NULL) == DR_TOKEN_INVALID)
 	{
 		return;
 	}
@@ -181,7 +270,7 @@ _declare_variable(dr_context_t *ctx)
 
 	/* get variable's name */
 
-	if (!dr_context_get_token(ctx, name, NULL) != DR_TOKEN_INVALID)
+	if (dr_context_get_token(ctx, name, NULL) == DR_TOKEN_INVALID)
 	{
 		return;
 	}
