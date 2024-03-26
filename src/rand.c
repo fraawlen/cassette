@@ -18,52 +18,46 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef DR_CONFIG_H
-#define DR_CONFIG_H
+#include <assert.h>
+#include <stdio.h>
+#include <math.h>
 
-#include <stdbool.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "rand.h"
+#include "util.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-typedef struct _config_t dr_config_t;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-dr_config_t *dr_config_create(size_t n);
-
-void dr_config_destroy(dr_config_t **cfg);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void dr_config_clear_callbacks_load(dr_config_t *cfg);
-
-void dr_config_clear_sources(dr_config_t *cfg);
-
-void dr_config_load(dr_config_t *cfg);
-
-void dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *dr));
-
-void dr_config_push_source(dr_config_t *cfg, const char *filename);
-
-void dr_config_seed(dr_config_t *cfg, unsigned int seed);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool dr_config_has_failed(const dr_config_t *cfg);
+#define _MAX 140737488355327.0
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
-#ifdef __cplusplus
+double
+dr_rand_get(dr_rand_t *r, double lim_1, double lim_2)
+{
+	const unsigned long long m = 140737488355328ULL;
+	const unsigned long long a = 25214903917ULL;
+	const unsigned long long c = 11ULL;
+
+	assert(r);
+
+	dr_util_sort_pair(&lim_1, &lim_2);
+
+	*r = (a * (*r) + c) % m;
+
+	return lim_1 + (*r) / _MAX * (lim_2 - lim_1);
 }
-#endif
 
-#endif /* DR_CONFIG_H */
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+dr_rand_seed(dr_rand_t *r, unsigned long long seed)
+{
+	assert(r);
+
+	*r = dr_rand_get(&seed, 0, _MAX);
+}
 

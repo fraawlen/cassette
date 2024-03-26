@@ -27,6 +27,7 @@
 
 #include "context.h"
 #include "file.h"
+#include "rand.h"
 #include "sequence.h"
 
 /************************************************************************************************************/
@@ -298,6 +299,6 @@ _seed(dr_context_t *ctx)
 	
 	if (dr_context_get_token_numeral(ctx, token, &d) != DR_TOKEN_INVALID)
 	{
-		srand(d);
+		dr_rand_seed(ctx->rand, d);
 	}
 }

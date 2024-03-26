@@ -92,6 +92,7 @@ dr_token_kind_t
 dr_context_get_token_raw(dr_context_t *ctx, char token[DR_TOKEN_N])
 {
 	assert(ctx && token);
+
 	// TODO
 
 	return _read_word(ctx, token) ? DR_TOKEN_STRING : DR_TOKEN_INVALID;

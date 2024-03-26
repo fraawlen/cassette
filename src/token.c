@@ -104,7 +104,7 @@ dr_token_dictionary_create(void)
 	do_dictionary_write(dict, "SECTION_DEL", 0, DR_TOKEN_SECTION_DEL);
 	do_dictionary_write(dict, "INCLUDE",     0, DR_TOKEN_INCLUDE);
 	do_dictionary_write(dict, "ITERATE",     0, DR_TOKEN_ITERATOR);
-	do_dictionary_write(dict, "RAND_SEED",   0, DR_TOKEN_RAND_SEED);
+	do_dictionary_write(dict, "SEED",        0, DR_TOKEN_RAND_SEED);
 
 	return dict;
 }

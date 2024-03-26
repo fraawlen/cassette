@@ -18,52 +18,26 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef DR_CONFIG_H
-#define DR_CONFIG_H
-
-#include <stdbool.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef RAND_H
+#define RAND_H
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-typedef struct _config_t dr_config_t;
+typedef unsigned long long dr_rand_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-dr_config_t *dr_config_create(size_t n);
-
-void dr_config_destroy(dr_config_t **cfg);
+void dr_rand_seed(dr_rand_t *r, unsigned long long seed);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void dr_config_clear_callbacks_load(dr_config_t *cfg);
-
-void dr_config_clear_sources(dr_config_t *cfg);
-
-void dr_config_load(dr_config_t *cfg);
-
-void dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *dr));
-
-void dr_config_push_source(dr_config_t *cfg, const char *filename);
-
-void dr_config_seed(dr_config_t *cfg, unsigned int seed);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool dr_config_has_failed(const dr_config_t *cfg);
+double dr_rand_get(dr_rand_t *r, double lim_1, double lim_2);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* DR_CONFIG_H */
+#endif /* RAND_H */
 

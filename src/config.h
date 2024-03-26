@@ -36,6 +36,7 @@ struct _config_t
 	do_tracker_t *callbacks;     /* callback list to call after load                  */
 	do_dictionary_t *references; /* reference sequences matching resources            */
 	do_dictionary_t *tokens;     /* token references kept here to reuse between loads */
+	unsigned int seed;
 	bool failed;
 };
 

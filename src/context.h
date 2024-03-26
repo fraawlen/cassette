@@ -30,6 +30,7 @@
 #include <derelict/do.h>
 
 #include "token.h"
+#include "rand.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -46,7 +47,6 @@ struct dr_context_t
 {
 	/* file stream data */
 
-	dr_context_t *parent;
 	ino_t file_inode;
 	char  file_dir[PATH_MAX];
 	FILE *file;
@@ -75,6 +75,11 @@ struct dr_context_t
 	do_dictionary_t *ref_sequences;
 	do_dictionary_t *ref_variables;
 	do_dictionary_t *tokens;
+
+	/* misc */
+	
+	dr_context_t *parent;
+	dr_rand_t *rand;
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

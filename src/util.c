@@ -18,52 +18,45 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef DR_CONFIG_H
-#define DR_CONFIG_H
+#include <assert.h>
 
-#include <stdbool.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "util.h"
 
 /************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-typedef struct _config_t dr_config_t;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-dr_config_t *dr_config_create(size_t n);
-
-void dr_config_destroy(dr_config_t **cfg);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void dr_config_clear_callbacks_load(dr_config_t *cfg);
-
-void dr_config_clear_sources(dr_config_t *cfg);
-
-void dr_config_load(dr_config_t *cfg);
-
-void dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *dr));
-
-void dr_config_push_source(dr_config_t *cfg, const char *filename);
-
-void dr_config_seed(dr_config_t *cfg, unsigned int seed);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool dr_config_has_failed(const dr_config_t *cfg);
-
-/************************************************************************************************************/
-/************************************************************************************************************/
+/* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
-#ifdef __cplusplus
+double
+dr_util_limit(double d, double lim_1, double lim_2)
+{
+	dr_util_sort_pair(&lim_1, &lim_2);
+
+	return d < lim_1 ? lim_1 : (d > lim_2 ? lim_2 : d);
 }
-#endif
 
-#endif /* DR_CONFIG_H */
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+double
+dr_util_interpolate(double d_1, double d_2, double ratio)
+{
+	ratio = dr_util_limit(ratio, 0.0, 1.0);
+
+	return d_2 * ratio + d_1 * (1.0 - ratio);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+dr_util_sort_pair(double *d_1, double *d_2)
+{
+	assert(d_1 && d_2);
+
+	double tmp;
+
+	if (*d_1 > *d_2)
+	{
+		tmp  = *d_1;
+		*d_1 = *d_2;
+		*d_2 = tmp;
+	}
+}

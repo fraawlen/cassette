@@ -33,6 +33,7 @@
 
 #include "config.h"
 #include "context.h"
+#include "rand.h"
 #include "sequence.h"
 #include "token.h"
 
@@ -59,7 +60,6 @@ dr_file_parse_child(dr_context_t *ctx_parent, const char *filename)
 		return;
 	}
 
-	ctx.parent         = ctx_parent;
 	ctx.eol_reached    = false;
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
@@ -73,6 +73,8 @@ dr_file_parse_child(dr_context_t *ctx_parent, const char *filename)
 	ctx.ref_sequences  = ctx_parent->ref_sequences;
 	ctx.ref_variables  = ctx_parent->ref_variables;
 	ctx.tokens         = ctx_parent->tokens;
+	ctx.parent         = ctx_parent;
+	ctx.rand           = ctx_parent->rand;
 
 	_parse_file(&ctx);
 
@@ -85,6 +87,7 @@ bool
 dr_file_parse_root(dr_config_t *cfg, const char *filename)
 {
 	dr_context_t ctx;
+	dr_rand_t r;
 
 	bool fail = false;
 
@@ -95,7 +98,8 @@ dr_file_parse_root(dr_config_t *cfg, const char *filename)
 		return false;
 	}
 
-	ctx.parent         = NULL;
+	dr_rand_seed(&r, cfg->seed);
+
 	ctx.eol_reached    = false;
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
@@ -109,6 +113,8 @@ dr_file_parse_root(dr_config_t *cfg, const char *filename)
 	ctx.ref_sequences  = cfg->references;
 	ctx.ref_variables  = do_dictionary_create(10, 0.6);
 	ctx.tokens         = cfg->tokens;
+	ctx.parent         = NULL;
+	ctx.rand           = &r;
 
 	_parse_file(&ctx);
 
