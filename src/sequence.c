@@ -262,7 +262,7 @@ _iterate(dr_context_t *ctx)
 	do_book_clear(ctx->iteration);
 	while ((tmp = do_book_prepare_new_word(ctx->iteration, DO_BOOK_OLD_GROUP)))
 	{
-		if (dr_context_get_token(ctx, tmp, NULL) == DR_TOKEN_INVALID)
+		if (dr_context_get_token_raw(ctx, tmp) == DR_TOKEN_INVALID)
 		{
 			do_book_erase_last_word(ctx->iteration);
 			break;

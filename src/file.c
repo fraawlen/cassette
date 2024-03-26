@@ -51,6 +51,9 @@ void
 dr_file_parse_child(dr_context_t *ctx_parent, const char *filename)
 {
 	dr_context_t ctx;
+
+	size_t var_iter;
+	size_t var_group;
 	
 	assert(ctx_parent);
 
@@ -75,7 +78,21 @@ dr_file_parse_child(dr_context_t *ctx_parent, const char *filename)
 	ctx.parent         = ctx_parent;
 	ctx.rand           = ctx_parent->rand;
 
+	var_iter  = do_book_get_iterator_offset(ctx.variables);
+	var_group = do_book_get_iterator_group(ctx.variables);
+
+	do_book_lock_iterator(ctx.variables);
+
 	_parse_file(&ctx);
+
+	if (var_iter > 0)
+	{
+		do_book_reset_iterator(ctx.variables, var_group);
+		for (size_t i = 0; i < var_iter; i++)
+		{
+			do_book_increment_iterator(ctx.variables);
+		}
+	}
 
 	do_book_destroy(&ctx.iteration);
 }
