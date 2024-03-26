@@ -18,10 +18,14 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef TOKEN_H
-#define TOKEN_H
+#ifndef DR_TOKEN_PRIVATE_H
+#define DR_TOKEN_PRIVATE_H
 
-#include <derelict/do.h>
+#include <derelict/du.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -29,18 +33,15 @@
 
 #define DR_TOKEN_N 32
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-enum dr_token_kind_t
-{
+/**
+ *
+ */
+typedef enum {
 	/* special tokens */
-
 	DR_TOKEN_INVALID = 0,
 	DR_TOKEN_STRING,
 	DR_TOKEN_NUMBER,
-
-	/* substitution tokens */
-
+	/* universal tokens */
 	DR_TOKEN_EOF,
 	DR_TOKEN_COMMENT,
 	DR_TOKEN_FILLER,
@@ -88,9 +89,7 @@ enum dr_token_kind_t
 	DR_TOKEN_CL_INTERPOLATE,
 	DR_TOKEN_CL_RGB,
 	DR_TOKEN_CL_RGBA,
-
 	/* lead tokens */
-
 	DR_TOKEN_VAR_DECLARATION,
 	DR_TOKEN_SECTION_BEGIN,
 	DR_TOKEN_SECTION_ADD,
@@ -98,21 +97,21 @@ enum dr_token_kind_t
 	DR_TOKEN_INCLUDE,
 	DR_TOKEN_ITERATOR,
 	DR_TOKEN_RAND_SEED,
-};
-
-typedef enum dr_token_kind_t dr_token_kind_t;
+} dr_token_kind_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_dictionary_t *dr_token_dictionary_create(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-dr_token_kind_t dr_token_match(do_dictionary_t *token_dict, const char *token);
+/**
+ *
+ */
+void dr_token_init_dictionary(du_dictionary_t *dict);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#endif /* TOKEN_H */
+#ifdef __cplusplus
+}
+#endif
 
+#endif /* DR_TOKEN_PRIVATE_H */
