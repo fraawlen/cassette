@@ -248,6 +248,7 @@ dr_config_push_source(dr_config_t *cfg, const char *filename)
 
 	_update_status(cfg);
 }
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
@@ -261,6 +262,21 @@ dr_config_seed(dr_config_t *cfg, unsigned long long seed)
 	}
 
 	cfg->seed = seed;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+const char *
+dr_config_test_sources(const dr_config_t *cfg)
+{
+	assert(cfg);
+
+	if (cfg->failed)
+	{
+		return NULL;
+	}
+
+	return _source_select(cfg);
 }
 
 /************************************************************************************************************/
