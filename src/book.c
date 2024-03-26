@@ -49,8 +49,9 @@ struct _book_t
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static size_t _get_group_end (const do_book_t *book, size_t index);
-static bool   _resize        (do_book_t *book, size_t n, size_t a, size_t b);
+static size_t _get_group_end     (const do_book_t *book, size_t index);
+static bool   _is_iterator_valid (const do_book_t *book);
+static bool   _resize            (do_book_t *book, size_t n, size_t a, size_t b);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -225,13 +226,7 @@ do_book_get_iteration(const do_book_t *book)
 		return "";
 	}
 
-	if (book->iterator_group > book->n_groups)
-	{
-		return "";
-	}
-
-	if (book->iterator_word <= book->groups[book->iterator_group] ||
-	    book->iterator_word > _get_group_end(book, book->iterator_group))
+	if (!_is_iterator_valid(book))
 	{
 		return "";
 	}
@@ -242,7 +237,27 @@ do_book_get_iteration(const do_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-do_book_get_iterator_offset(const do_book_t *book, size_t *group_index)
+do_book_get_iterator_group(const do_book_t *book)
+{
+	assert(book);
+
+	if (book->failed)
+	{
+		return SIZE_MAX;
+	}
+
+	if (!_is_iterator_valid(book))
+	{
+		return SIZE_MAX;
+	}
+
+	return book->iterator_group;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+do_book_get_iterator_offset(const do_book_t *book)
 {
 	assert(book);
 
@@ -251,24 +266,14 @@ do_book_get_iterator_offset(const do_book_t *book, size_t *group_index)
 		return 0;
 	}
 
-	if (book->iterator_group > book->n_groups)
+	if (!_is_iterator_valid(book))
 	{
 		return 0;
-	}
-
-	if (book->iterator_word <= book->groups[book->iterator_group] ||
-	    book->iterator_word > _get_group_end(book, book->iterator_group))
-	{
-		return 0;
-	}
-
-	if (group_index)
-	{
-		*group_index = book->iterator_group;
 	}
 
 	return book->iterator_word - book->groups[book->iterator_group];
 }
+
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -367,7 +372,8 @@ do_book_increment_iterator(do_book_t *book)
 		return false;
 	}
 
-	if (book->iterator_word >= _get_group_end(book, book->iterator_group))
+	if (book->iterator_word <  book->groups[book->iterator_group] ||
+	    book->iterator_word >= _get_group_end(book, book->iterator_group))
 	{
 		return false;
 	}
@@ -519,6 +525,25 @@ _get_group_end(const do_book_t *book, size_t index)
 	{
 		return book->groups[index + 1];
 	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static bool
+_is_iterator_valid(const do_book_t *book)
+{
+	if (book->iterator_group > book->n_groups)
+	{
+		return false;
+	}
+
+	if (book->iterator_word <= book->groups[book->iterator_group] ||
+	    book->iterator_word > _get_group_end(book, book->iterator_group))
+	{
+		return false;
+	}
+
+	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

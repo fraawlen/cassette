@@ -82,7 +82,9 @@ size_t do_book_get_group_size(const do_book_t *book, size_t group_index);
 
 const char *do_book_get_iteration(const do_book_t *book);
 
-size_t do_book_get_iterator_offset(const do_book_t *book, size_t *group_index);
+size_t do_book_get_iterator_group(const do_book_t *book);
+
+size_t do_book_get_iterator_offset(const do_book_t *book);
 
 size_t do_book_get_number_groups(const do_book_t *book);
 
