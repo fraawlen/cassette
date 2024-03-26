@@ -240,7 +240,64 @@ _include(dr_context_t *ctx)
 static void
 _iterate(dr_context_t *ctx)
 {
-	// TODO
+	size_t i_var = 0;
+	size_t i_inj = 0;
+	char token[DR_TOKEN_N];
+	char *tmp;
+
+	/* grab variable to iterate through */
+
+	if (dr_context_get_token(ctx, token, NULL) == DR_TOKEN_INVALID)
+	{
+		return;
+	}
+
+	if (!do_dictionary_find(ctx->ref_variables, token, DR_CONTEXT_DICT_VARIABLE, &i_var))
+	{
+		return;
+	}
+
+	/* fill the book with the sequence to iterate */
+
+	do_book_clear(ctx->iteration);
+	while ((tmp = do_book_prepare_new_word(ctx->iteration, DO_BOOK_OLD_GROUP)))
+	{
+		if (dr_context_get_token(ctx, tmp, NULL) == DR_TOKEN_INVALID)
+		{
+			do_book_erase_last_word(ctx->iteration);
+			break;
+		}
+	}
+
+	if (do_book_get_number_words(ctx->iteration) == 0)
+	{
+		return;
+	}
+	
+	/* locate first iteration variable within the raw sequence */
+
+	do_book_reset_iterator(ctx->iteration, 0);
+	while (do_book_increment_iterator(ctx->iteration))
+	{
+		if (dr_token_match(ctx->tokens, do_book_get_iteration(ctx->iteration)) == DR_TOKEN_ITER_INJECTION)
+		{
+			break;
+		}
+		i_inj++;
+	}
+
+	/* process each iteration */
+
+	for (size_t i = 0; i < do_book_get_group_size(ctx->variables, i_var); i++)
+	{
+		do_book_rewrite_word(ctx->iteration, do_book_get_word(ctx->variables, i_var, i), 0, i_inj);
+		do_book_reset_iterator(ctx->iteration, 0);
+		dr_sequence_parse(ctx);
+	}
+
+	/* end */
+	
+	do_book_lock_iterator(ctx->iteration);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

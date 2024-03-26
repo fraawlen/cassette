@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <derelict/do.h>
 
@@ -93,9 +94,20 @@ dr_context_get_token_raw(dr_context_t *ctx, char token[DR_TOKEN_N])
 {
 	assert(ctx && token);
 
-	// TODO
-
-	return _read_word(ctx, token) ? DR_TOKEN_STRING : DR_TOKEN_INVALID;
+	if (do_book_increment_iterator(ctx->variables))
+	{
+		strncpy(token, do_book_get_iteration(ctx->variables), DR_TOKEN_N);
+	}
+	else if (do_book_increment_iterator(ctx->iteration))
+	{
+		strncpy(token, do_book_get_iteration(ctx->iteration), DR_TOKEN_N);	
+	}
+	else if (!_read_word(ctx, token))
+	{
+		return DR_TOKEN_INVALID;
+	}
+	
+	return DR_TOKEN_STRING;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -121,6 +133,9 @@ dr_context_goto_eol(dr_context_t *ctx)
 				break;
 		}
 	}
+
+	do_book_lock_iterator(ctx->variables);
+	do_book_lock_iterator(ctx->iteration);
 }
 
 /************************************************************************************************************/
