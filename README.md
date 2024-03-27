@@ -89,7 +89,7 @@ main(void)
 	{
 		for (size_i = 0; i < n; i++)
 		{
-			printf("%s\t", values[i]);
+			printf("%s\n", values[i]);
 		}
 	}
 	else
@@ -108,7 +108,8 @@ namespace property value_A value_B
 Output when run:
 
 ```
-value_A	value_B
+value_A
+value_B
 ```
 
 Check out the `examples` directory for more in depth demonstrations.
