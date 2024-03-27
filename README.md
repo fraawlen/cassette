@@ -42,7 +42,7 @@ make
 make install
 ```
 
-After these steps, both a shared binary and static archive will be generated and installed on your system.
+After these steps, both a shared binary and static archive will be generated and installed on your system. Examples will also be built and placed under `./build/bin`. The examples are statically compiled and can be run from anywhere on your system.
 
 Usage
 -----
@@ -62,50 +62,38 @@ As well as this compilation flag :
 Minimal Example
 -------
 
-The following code snippet shows a minimal example of the library usage. When compiled and run, it will look for the file `/tmp/dr-example` and load its data. It then attempts to fetch a resource named `property` under the namespace `namespace` and load 2 string values into a buffer to be printed out.
+The following code snippet shows a minimal example of the library usage. When compiled and run, it will look for the file `/tmp/dr-example` and load its data. It then attempts to fetch a resource named `property` under the namespace `namespace`, and if found, prints its values.
 
 ```c
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <derelict/dr.h>
-
-#define MAX_VALUES 2
-#define VALUE_LEN  32
 
 int
 main(void)
 {
-	dr_config_t *cfg;
-	char values[MAX_VALUES][VALUE_LEN];
-	size_t n;
+	dr_config_t *cfg = dr_config_create(0);
 
-	cfg = dr_config_create(0);
 	dr_config_push_source(cfg, "/tmp/dr-example");
 	dr_config_load(cfg);
 
-	n = dr_config_find(cfg, "namespace", "property", *values, MAX_VALUES, VALUE_LEN);
-	if (n > 0)
+	dr_config_fetch(cfg, "example_namespace", "example_property");
+	while (dr_config_move_to_next(cfg))
 	{
-		for (size_i = 0; i < n; i++)
-		{
-			printf("%s\n", values[i]);
-		}
+		printf("%s\n", dr_config_get_resource(cfg);
 	}
-	else
-	{
-		/* resource not found */
-	}
+
+	return 0;
 }
 ```
 
 A matching minimal DR configuration in `/tmp/dr-example` will then look like this :
 
 ```
-namespace property value_A value_B
+example_namespace example_property value_A value_B
 ```
 
-Output when run:
+Output :
 
 ```
 value_A

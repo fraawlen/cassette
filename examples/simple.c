@@ -60,9 +60,9 @@ main(void)
 
 	dr_config_load(cfg);
 
-	_print_resource(cfg, "node-0", "depth");
-	_print_resource(cfg, "node-1", "depth");
-	_print_resource(cfg, "node-2", "depth");
+	_print_resource(cfg, "node-0", "coords");
+	_print_resource(cfg, "node-1", "coords");
+	_print_resource(cfg, "node-2", "coords");
 
 	/* end */
 
@@ -116,20 +116,20 @@ _callback(dr_config_t *cfg)
 static void
 _print_resource(dr_config_t *cfg, const char *namespace, const char *property)
 {
-	char values[3][32];
 	size_t n;
 
-	if ((n = dr_config_find(cfg, namespace, property, *values, 3, 32)) > 0)
+	dr_config_fetch(cfg, namespace, property);
+
+	if ((n = dr_config_get_resource_size(cfg)) > 0)
 	{
-		printf("resource %s::%s has the following values (%zu):\n", namespace, property, n);
-		for (size_t i = 0; i < n; i++)
+		printf("\nresource %s::%s values (%zu) :\n", namespace, property, n);
+		while (dr_config_move_to_next(cfg))
 		{
-			printf("\t%s.", values[i]);
+			printf("\t%s\n", dr_config_get_resource(cfg));
 		}
-		printf("\n");
 	}
 	else
 	{
-		printf("resource \"%s\"-\"%s\" was not found\n", namespace, property);
+		printf("\nresource %s::%s was not found\n", namespace, property);
 	}
 }

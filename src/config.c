@@ -147,53 +147,52 @@ dr_config_destroy(dr_config_t **cfg)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-size_t
-dr_config_find(const dr_config_t *cfg, const char *namespace, const char *property, char *values,
-               size_t n_values, size_t values_n)
+void
+dr_config_fetch(dr_config_t *cfg, const char *namespace, const char *property)
 {
 	size_t i_namespace;
 	size_t i_prop;
-	size_t i = 0;
 
-	assert(cfg && property && values && values_n > 0);
+	assert(cfg);
 
-	if (cfg->failed)
+	do_book_lock_iterator(cfg->sequences);
+
+	if (!property)
 	{
-		return 0;
+		return;
 	}
 
-	if (n_values > SIZE_MAX / values_n)
+	if (!do_dictionary_find(cfg->references, namespace ? namespace : "_", 0, &i_namespace))
 	{
-		return 0;
-	}
-
-	/* find target sequence location */
-
-	if (!namespace)
-	{
-		namespace = "_";
-	}
-
-	if (!do_dictionary_find(cfg->references, namespace, 0, &i_namespace))
-	{
-		return 0;
+		return;
 	}
 
 	if (!do_dictionary_find(cfg->references, property, i_namespace, &i_prop))
 	{
-		return 0;
+		return;
 	}
-
-	/* copy found sequence into the value buffer */
 
 	do_book_reset_iterator(cfg->sequences, i_prop);
-	while (do_book_increment_iterator(cfg->sequences) && i < n_values)
-	{
-		strncpy(values + i * values_n, do_book_get_iteration(cfg->sequences), values_n);
-		values[++i * values_n - 1] = '\0';
-	}
+}
 
-	return i;
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+const char *
+dr_config_get_resource(const dr_config_t *cfg)
+{
+	assert(cfg);
+	
+	return do_book_get_iteration(cfg->sequences);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+dr_config_get_resource_size(const dr_config_t *cfg)
+{
+	assert(cfg);
+
+	return do_book_get_group_size(cfg->sequences, do_book_get_iterator_group(cfg->sequences));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -236,6 +235,16 @@ dr_config_load(dr_config_t *cfg)
 	{
 		((_callback_t*)do_tracker_get_iteration(cfg->callbacks))->fn(cfg);
 	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+dr_config_move_to_next(dr_config_t *cfg)
+{
+	assert(cfg);
+
+	return do_book_increment_iterator(cfg->sequences);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
