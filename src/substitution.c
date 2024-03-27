@@ -96,6 +96,7 @@ dr_subtitution_apply(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_res
 		case DR_TOKEN_OP_ABS:
 		case DR_TOKEN_OP_CEILING:
 		case DR_TOKEN_OP_FLOOR:
+		case DR_TOKEN_OP_ROUND:
 		case DR_TOKEN_OP_COS:
 		case DR_TOKEN_OP_SIN:
 		case DR_TOKEN_OP_TAN:
@@ -322,6 +323,10 @@ _math(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_k
 
 		case DR_TOKEN_OP_FLOOR:
 			result = floor(d[0]);
+			break;
+
+		case DR_TOKEN_OP_ROUND:
+			result = round(d[0]);
 			break;
 
 		case DR_TOKEN_OP_COS:

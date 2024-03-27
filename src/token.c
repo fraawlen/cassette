@@ -68,6 +68,7 @@ dr_token_dictionary_create(void)
 	do_dictionary_write(dict, "ABS",    0, DR_TOKEN_OP_ABS);
 	do_dictionary_write(dict, "CEIL",   0, DR_TOKEN_OP_CEILING);
 	do_dictionary_write(dict, "FLOOR",  0, DR_TOKEN_OP_FLOOR);
+	do_dictionary_write(dict, "ROUND",  0, DR_TOKEN_OP_ROUND);
 	do_dictionary_write(dict, "COS",    0, DR_TOKEN_OP_COS);
 	do_dictionary_write(dict, "SIN",    0, DR_TOKEN_OP_SIN);
 	do_dictionary_write(dict, "TAN",    0, DR_TOKEN_OP_TAN);
