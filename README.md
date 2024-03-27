@@ -62,7 +62,7 @@ As well as this compilation flag :
 Minimal Example
 -------
 
-The following code snippet shows a minimal example of the library usage. When compiled and run, it will look for the file `/tmp/dr-example` and load its data. It then attempts to fetch a resource named `property` under the namespace `namespace` and load a 2 string values into a buffer.
+The following code snippet shows a minimal example of the library usage. When compiled and run, it will look for the file `/tmp/dr-example` and load its data. It then attempts to fetch a resource named `property` under the namespace `namespace` and load 2 string values into a buffer to be printed out.
 
 ```c
 
