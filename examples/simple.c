@@ -34,6 +34,7 @@
 
 static void _build_source_filename (do_string_t *str);
 static void _callback              (dr_config_t *cfg);
+static void _print_resource        (dr_config_t *cfg, const char *namespace, const char *property);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -58,6 +59,10 @@ main(void)
 	/* operations */
 
 	dr_config_load(cfg);
+
+	_print_resource(cfg, "node-0", "depth");
+	_print_resource(cfg, "node-1", "depth");
+	_print_resource(cfg, "node-2", "depth");
 
 	/* end */
 
@@ -103,5 +108,28 @@ _callback(dr_config_t *cfg)
 	else
 	{
 		printf("\nconfiguration failed to load\n");
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_print_resource(dr_config_t *cfg, const char *namespace, const char *property)
+{
+	char values[3][32];
+	size_t n;
+
+	if ((n = dr_config_find(cfg, namespace, property, *values, 3, 32)) > 0)
+	{
+		printf("resource %s::%s has the following values (%zu):\n", namespace, property, n);
+		for (size_t i = 0; i < n; i++)
+		{
+			printf("\t%s.", values[i]);
+		}
+		printf("\n");
+	}
+	else
+	{
+		printf("resource \"%s\"-\"%s\" was not found\n", namespace, property);
 	}
 }

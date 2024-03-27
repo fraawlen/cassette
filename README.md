@@ -48,10 +48,13 @@ Usage
 -----
 
 Add the this include to get access to the library functions :
+
 ```
 #include <derelict/dr.h>
 ```
+
 As well as this compilation flag :
+
 ```
 -ldr
 ```
@@ -59,31 +62,53 @@ As well as this compilation flag :
 Minimal Example
 -------
 
-The following code snippet shows a minimal example of the library usage. When compiled and run, it will look for the file `/tmp/dr-example` and load its data if it can. It then attempts to fetch a resource named `example_property` under the namespace `example_namespace` and load a single string value into a buffer.
+The following code snippet shows a minimal example of the library usage. When compiled and run, it will look for the file `/tmp/dr-example` and load its data. It then attempts to fetch a resource named `property` under the namespace `namespace` and load a 2 string values into a buffer.
 
 ```c
+
+#include <stdio.h>
+#include <stdlib.h>
 #include <derelict/dr.h>
+
+#define MAX_VALUES 2
+#define VALUE_LEN  32
 
 int
 main(void)
 {
-    dr_config_t *cfg = dr_config_create(0);
-    dr_config_push_source(cfg, "/tmp/dr-example");
-    dr_config_load(cfg);
+	dr_config_t *cfg;
+	char values[MAX_VALUES][VALUE_LEN];
+	size_t n;
 
-    char value[32];
-    if (dr_config_find_resource(cfg, "example_namespace", "example_property", val, 1, 32)) {
-        /* resource successfully fetched, its value is stored as a c-string in 'val' */
-    } else {
-        /* resource not found */
-    }
+	cfg = dr_config_create(0);
+	dr_config_push_source(cfg, "/tmp/dr-example");
+	dr_config_load(cfg);
+
+	n = dr_config_find(cfg, "namespace", "property", *values, MAX_VALUES, VALUE_LEN);
+	if (n > 0)
+	{
+		for (size_i = 0; i < n; i++)
+		{
+			printf("%s\t", values[i]);
+		}
+	}
+	else
+	{
+		/* resource not found */
+	}
 }
 ```
 
 A matching minimal DR configuration in `/tmp/dr-example` will then look like this :
 
 ```
-example_namespace example_property value
+namespace property value_A value_B
+```
+
+Output when run:
+
+```
+value_A	value_B
 ```
 
 Check out the `examples` directory for more in depth demonstrations.

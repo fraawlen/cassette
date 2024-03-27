@@ -125,6 +125,7 @@ _declare_enum(dr_context_t *ctx)
 	double max;
 	double steps;
 	double precision;
+	double ratio;
 
 	/* get enum name and parameters */
 
@@ -172,12 +173,12 @@ _declare_enum(dr_context_t *ctx)
 
 	for (size_t i = 0; i <= steps; i++)
 	{
-		if (!(tmp = do_book_prepare_new_word(ctx->variables, mode)))
+		if ((tmp = do_book_prepare_new_word(ctx->variables, mode)))
 		{
-			return;
+			mode  = DO_BOOK_OLD_GROUP;
+			ratio = dr_util_interpolate(min, max, i / steps);
+			snprintf(tmp, DR_TOKEN_N - 1, "%.*f", (int)precision, ratio);
 		}
-		snprintf(tmp, DR_TOKEN_N - 1, "%.*f", (int)precision, dr_util_interpolate(min, max, i / steps));
-		mode = DO_BOOK_OLD_GROUP;
 	}
 
 	if (do_book_has_failed(ctx->variables))
@@ -246,7 +247,7 @@ _declare_resource(dr_context_t *ctx, const char *namespace)
 
 	/* debug */
 
-	printf("(%zu)\t%s.\t%s", m, namespace, name);
+	printf("%s.\t%s.", namespace, name);
 
 	do_book_reset_iterator(ctx->sequences, do_book_get_number_groups(ctx->sequences) - 1);
 	while (do_book_increment_iterator(ctx->sequences))

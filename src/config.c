@@ -147,6 +147,57 @@ dr_config_destroy(dr_config_t **cfg)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+size_t
+dr_config_find(const dr_config_t *cfg, const char *namespace, const char *property, char *values,
+               size_t n_values, size_t values_n)
+{
+	size_t i_namespace;
+	size_t i_prop;
+	size_t i = 0;
+
+	assert(cfg && property && values && values_n > 0);
+
+	if (cfg->failed)
+	{
+		return 0;
+	}
+
+	if (n_values > SIZE_MAX / values_n)
+	{
+		return 0;
+	}
+
+	/* find target sequence location */
+
+	if (!namespace)
+	{
+		namespace = "_";
+	}
+
+	if (!do_dictionary_find(cfg->references, namespace, 0, &i_namespace))
+	{
+		return 0;
+	}
+
+	if (!do_dictionary_find(cfg->references, property, i_namespace, &i_prop))
+	{
+		return 0;
+	}
+
+	/* copy found sequence into the value buffer */
+
+	do_book_reset_iterator(cfg->sequences, i_prop);
+	while (do_book_increment_iterator(cfg->sequences) && i < n_values)
+	{
+		strncpy(values + i * values_n, do_book_get_iteration(cfg->sequences), values_n);
+		values[++i * values_n - 1] = '\0';
+	}
+
+	return i;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 bool
 dr_config_has_failed(const dr_config_t *cfg)
 {

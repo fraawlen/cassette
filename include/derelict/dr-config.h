@@ -55,6 +55,9 @@ void dr_config_seed(dr_config_t *cfg, unsigned long long seed);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+size_t dr_config_find(const dr_config_t *cfg, const char *namespace, const char *property, char *values,
+                      size_t n_values, size_t values_n);
+
 bool dr_config_has_failed(const dr_config_t *cfg);
 
 const char *dr_config_test_sources(const dr_config_t *cfg);
