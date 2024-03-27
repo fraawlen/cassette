@@ -95,6 +95,16 @@ dr_convert_to_range(const dr_config_t *cfg, double min, double max)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+double
+dr_convert_to_ratio(const dr_config_t *cfg)
+{
+	assert(cfg);
+
+	return dr_util_limit(strtod(dr_config_get_resource(cfg), NULL), 0.0, 1.0);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 size_t
 dr_convert_to_reference(const dr_config_t *cfg, const do_dictionary_t *dict, size_t group, size_t fallback)
 {

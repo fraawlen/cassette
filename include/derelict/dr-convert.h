@@ -46,6 +46,8 @@ long dr_convert_to_long(const dr_config_t *cfg);
 
 double dr_convert_to_range(const dr_config_t *cfg, double min, double max);
 
+double dr_convert_to_ratio(const dr_config_t *cfg);
+
 size_t dr_convert_to_reference(const dr_config_t *cfg, const do_dictionary_t *dict, size_t group, 
                                size_t fallback);
 
