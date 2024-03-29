@@ -23,10 +23,11 @@ Table of contents
 	2. Section Additions
 	3. Section Deletions
 	4. Variable Declaration
-	5. Iterations
-	6. Child File Inclusion
-	7. Random Seeding
-5. Transformations
+	5. Enumeration Declaration
+	6. Iterations
+	7. Child File Inclusion
+	8. Seed Override
+5. Substitutions
 6. Tips & Tricks
 
 ## 1. Use-case & Scope
@@ -159,28 +160,28 @@ Function tokens are defined by an exact, case-sensitive ASCII sequence of non-wh
 
 By convention, and to minimize possible collision with user strings, all function tokens are defined in fully capitalized characters.
 
-Transformation tokens are inline function tokens that may optionally take the next few tokens as input parameters, and then return a different token as a function result. These functions feature an s-like expression syntax without parenthesis. Parenthesis in DR functions are unnecessary because the amount of input parameters for each function is known in advance. Multiple transformation tokens can be chained together, resulting in nested functions. Some functions may take string or numeral tokens as inputs, it is up to the parser to make the necessary implicit conversions. In the next few examples, the `JOIN` function tokens take the next 2 string tokens and return a concatenated string token.
+Substitution tokens are inline function tokens that may optionally take the next few tokens as input parameters, and then return a different token as a function result. These functions feature an s-like expression syntax without parenthesis. Parenthesis in DR functions are unnecessary because the amount of input parameters for each function is known in advance. Multiple substitutions tokens can be chained together, resulting in nested functions. Some functions may take string or numeral tokens as inputs, it is up to the parser to make the necessary implicit conversions. In the next few examples, the `JOIN` function tokens take the next 2 string tokens and return a concatenated string token.
 
 ```
 a b
 -> a b
 
 JOIN a b
--> (JOIN a b)
+-> ( JOIN a b )
 -> ab
 
 a JOIN b c d
--> a (JOIN b c) d
+-> a ( JOIN b c ) d
 -> a bc d
 
 a JOIN JOIN b c d
--> a (JOIN (JOIN b c) d)
--> a (JOIN bc d)
+-> a ( JOIN ( JOIN b c ) d )
+-> a ( JOIN bc d )
 -> a bcd
 
 a JOIN b JOIN c d
--> a (JOIN b (JOIN c d))
--> a (JOIN b cd)
+-> a ( JOIN b ( JOIN c d ) )
+-> a ( JOIN b cd )
 -> a bcd
 
 JOIN a
@@ -234,8 +235,99 @@ SECTION
 
 ### 4.4. Variable Declaration
 
-### 4.5. Iterations
+### 4.5. Enumerations Declaration
 
-### 4.6. Child File Inclusion
+### 4.6. Iterations
 
-### 4.7 Random Seeding
+### 4.7. Child File Inclusion
+
+### 4.8, Seed override
+
+## TMP - All Tokens Syntax
+
+### Section Leads
+
+LET <variable_name> <value> <value> ...
+
+LET_ENUM <variable_name> <min> <max> <steps> <precision>
+LET_ENUM <variable_name> <min> <max> <steps>
+LET_ENUM <variable_name> <min> <max>
+LET_ENUM <variable_name> <max>
+
+SECTION <section_name> <section_name> ...
+
+SECTION_ADD <section_name> <section_name> ...
+
+SECTION_DEL <section_name> <section_name> ...
+
+INCLUDE <filename> <filename> ...
+
+ITERATE <variable_name_to_iterate_through> sub-sequence ...
+
+SEED_OVERRIDE <value>
+
+### Substitutions
+
+EOF
+
+// <token> <token> ...
+
+JOIN <string> <string>
+
+\ <string>
+
+$ <variable_name_to_inject_in_sequence>
+
+%
+
+(
+)
+=
+:=
+
+<  <value_A> <value_B> <token_to_use_if_true> <token_to_use_if_false>
+<= <value_A> <value_B> <token_to_use_if_true> <token_to_use_if_false>
+>  <value_A> <value_B> <token_to_use_if_true> <token_to_use_if_false>
+>= <value_A> <value_B> <token_to_use_if_true> <token_to_use_if_false>
+== <value_A> <value_B> <token_to_use_if_true> <token_to_use_if_false>
+!= <value_A> <value_B> <token_to_use_if_true> <token_to_use_if_false>
+
+TIME
+PI
+E
+TRUE
+FALSE
+
+SQRT  <double>
+CBRT  <double>
+ABS   <double>
+CEIL  <double>
+FLOOR <double>
+ROUND <double>
+COS   <double>
+SIN   <double>
+TAN   <double>
+ACOS  <double>
+ASIN  <double>
+ATAN  <double>
+COSH  <double>
+SINH  <double>
+LN    <double>
+LOG   <double>
+
++     <double>     <double>
+-     <double>     <double>
+*     <double>     <double>
+/     <double>     <double>
+MOD   <double>     <double_mod>
+POW   <double>     <double_exp>
+BIG   <double>     <double>
+SMALL <double>     <double>
+RAND  <double_min> <double_max>
+
+ITPRL <double> <double>     <ratio>
+LIMIT <double> <double_min> <double_max>
+
+CITRPL <color>    <color>    <ratio>
+RGB    <double_R> <double_G> <double_B>
+RGBA   <double_R> <double_G> <double_B> <double_A>
