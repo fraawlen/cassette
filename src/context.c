@@ -34,14 +34,14 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _read_word (dr_context_t *ctx, char token[DR_TOKEN_N]);
+static bool _read_word (dr_context_t *ctx, char token[static DR_TOKEN_N]);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
 dr_token_kind_t
-dr_context_get_token(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result)
+dr_context_get_token(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result)
 {
 	assert(ctx && token);
 
@@ -56,7 +56,7 @@ dr_context_get_token(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_res
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 dr_token_kind_t
-dr_context_get_token_numeral(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result)
+dr_context_get_token_numeral(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result)
 {
 	bool err = false;
 
@@ -90,7 +90,7 @@ dr_context_get_token_numeral(dr_context_t *ctx, char token[DR_TOKEN_N], double *
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 dr_token_kind_t
-dr_context_get_token_raw(dr_context_t *ctx, char token[DR_TOKEN_N])
+dr_context_get_token_raw(dr_context_t *ctx, char token[static DR_TOKEN_N])
 {
 	assert(ctx && token);
 
@@ -143,7 +143,7 @@ dr_context_goto_eol(dr_context_t *ctx)
 /************************************************************************************************************/
 
 static bool
-_read_word(dr_context_t *ctx, char token[DR_TOKEN_N])
+_read_word(dr_context_t *ctx, char token[static DR_TOKEN_N])
 {
 	size_t i = 0;
 	bool quotes_1 = false;

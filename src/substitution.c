@@ -37,20 +37,20 @@
 
 static dr_token_kind_t _comment  (void);
 static dr_token_kind_t _eof      (dr_context_t *ctx);
-static dr_token_kind_t _escape   (dr_context_t *ctx, char token[DR_TOKEN_N]);
-static dr_token_kind_t _filler   (dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result);
-static dr_token_kind_t _if       (dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_kind_t type);
-static dr_token_kind_t _join     (dr_context_t *ctx, char token[DR_TOKEN_N]);
-static dr_token_kind_t _math     (dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_kind_t type, size_t n);
-static dr_token_kind_t _math_cl  (dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_kind_t type, size_t n);
-static dr_token_kind_t _variable (dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result);
+static dr_token_kind_t _escape   (dr_context_t *ctx, char token[static DR_TOKEN_N]);
+static dr_token_kind_t _filler   (dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result);
+static dr_token_kind_t _if       (dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result, dr_token_kind_t type);
+static dr_token_kind_t _join     (dr_context_t *ctx, char token[static DR_TOKEN_N]);
+static dr_token_kind_t _math     (dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result, dr_token_kind_t type, size_t n);
+static dr_token_kind_t _math_cl  (dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result, dr_token_kind_t type, size_t n);
+static dr_token_kind_t _variable (dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
 dr_token_kind_t
-dr_subtitution_apply(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result)
+dr_subtitution_apply(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result)
 {
 	dr_token_kind_t type;
 
@@ -170,7 +170,7 @@ _escape(dr_context_t *ctx, char token[DR_TOKEN_N])
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static dr_token_kind_t
-_filler(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result)
+_filler(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result)
 {
 	return dr_context_get_token(ctx, token, math_result);
 }
@@ -178,7 +178,7 @@ _filler(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static dr_token_kind_t
-_if(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_kind_t type)
+_if(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result, dr_token_kind_t type)
 {
 	char token_2[DR_TOKEN_N];
 	bool result;
@@ -243,7 +243,7 @@ _if(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_kin
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static dr_token_kind_t
-_join(dr_context_t *ctx, char token[DR_TOKEN_N])
+_join(dr_context_t *ctx, char token[static DR_TOKEN_N])
 {
 	char token_2[DR_TOKEN_N];
 
@@ -262,7 +262,7 @@ _join(dr_context_t *ctx, char token[DR_TOKEN_N])
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static dr_token_kind_t
-_math(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_kind_t type, size_t n)
+_math(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result, dr_token_kind_t type, size_t n)
 {
 	double result;
 	double d[3] = {0};
@@ -440,7 +440,7 @@ _math(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_k
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static dr_token_kind_t
-_math_cl(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_token_kind_t type, size_t n)
+_math_cl(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result, dr_token_kind_t type, size_t n)
 {
 	do_color_t result;
 	do_color_t cl[4] = {0};
@@ -501,7 +501,7 @@ _math_cl(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result, dr_toke
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static dr_token_kind_t
-_variable(dr_context_t *ctx, char token[DR_TOKEN_N], double *math_result)
+_variable(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result)
 {
 	size_t i;
 
