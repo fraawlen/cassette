@@ -53,9 +53,18 @@ dr_sequence_parse(dr_context_t *ctx)
 {
 	dr_token_kind_t type;
 
+	char token[DR_TOKEN_N];
+
 	assert(ctx);
 
-	char token[DR_TOKEN_N];
+	if (ctx->depth >= DR_CONTEXT_MAX_DEPTH)
+	{
+		return;
+	}
+	else
+	{
+		ctx->depth++;
+	}
 
 	if ((type = dr_context_get_token(ctx, token, NULL)) != DR_TOKEN_SECTION_BEGIN && ctx->skip_sequences)
 	{
@@ -107,6 +116,8 @@ dr_sequence_parse(dr_context_t *ctx)
 	}
 
 	dr_context_goto_eol(ctx);
+
+	ctx->depth--;
 }
 
 /************************************************************************************************************/

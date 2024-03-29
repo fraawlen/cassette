@@ -38,6 +38,8 @@
 #define DR_CONTEXT_DICT_VARIABLE 0
 #define DR_CONTEXT_DICT_SECTION  1
 
+#define DR_CONTEXT_MAX_DEPTH 128
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 typedef struct dr_context_t dr_context_t;
@@ -52,6 +54,7 @@ struct dr_context_t
 
 	/* context states */
 
+	size_t depth;
 	bool eol_reached;
 	bool eof_reached;
 	bool skip_sequences;

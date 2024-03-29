@@ -55,26 +55,41 @@ dr_subtitution_apply(dr_context_t *ctx, char token[static DR_TOKEN_N], double *m
 	dr_token_kind_t type;
 
 	assert(ctx && token);
+
+	if (ctx->depth >= DR_CONTEXT_MAX_DEPTH)
+	{
+		return DR_TOKEN_INVALID;
+	}
+	else
+	{
+		ctx->depth++;
+	}
 	
 	switch (type = dr_token_match(ctx->tokens, token))
 	{
 		case DR_TOKEN_COMMENT:
-			return _comment();
+			type = _comment();
+			break;
 
 		case DR_TOKEN_EOF:
-			return _eof(ctx);
+			type = _eof(ctx);
+			break;
 
 		case DR_TOKEN_ESCAPE:
-			return _escape(ctx, token);
+			type = _escape(ctx, token);
+			break;
 
 		case DR_TOKEN_FILLER:
-			return _filler(ctx, token, math_result);
+			type = _filler(ctx, token, math_result);
+			break;
 
 		case DR_TOKEN_JOIN:
-			return _join(ctx, token);
+			type = _join(ctx, token);
+			break;
 
 		case DR_TOKEN_VAR_INJECTION:
-			return _variable(ctx, token, math_result);
+			type = _variable(ctx, token, math_result);
+			break;
 
 		case DR_TOKEN_IF_LESS:
 		case DR_TOKEN_IF_LESS_EQ:
@@ -82,14 +97,16 @@ dr_subtitution_apply(dr_context_t *ctx, char token[static DR_TOKEN_N], double *m
 		case DR_TOKEN_IF_MORE_EQ:
 		case DR_TOKEN_IF_EQ:
 		case DR_TOKEN_IF_EQ_NOT:
-			return _if(ctx, token, math_result, type);
+			type = _if(ctx, token, math_result, type);
+			break;
 
 		case DR_TOKEN_TIMESTAMP:
 		case DR_TOKEN_CONST_PI:
 		case DR_TOKEN_CONST_EULER:
 		case DR_TOKEN_CONST_TRUE:
 		case DR_TOKEN_CONST_FALSE:
-			return _math(ctx, token, math_result, type, 0);
+			type = _math(ctx, token, math_result, type, 0);
+			break;
 
 		case DR_TOKEN_OP_SQRT:
 		case DR_TOKEN_OP_CBRT:
@@ -107,7 +124,8 @@ dr_subtitution_apply(dr_context_t *ctx, char token[static DR_TOKEN_N], double *m
 		case DR_TOKEN_OP_SINH:
 		case DR_TOKEN_OP_LN:
 		case DR_TOKEN_OP_LOG:
-			return _math(ctx, token, math_result, type, 1);
+			type = _math(ctx, token, math_result, type, 1);
+			break;
 
 		case DR_TOKEN_OP_ADD:
 		case DR_TOKEN_OP_SUBSTRACT:
@@ -118,22 +136,30 @@ dr_subtitution_apply(dr_context_t *ctx, char token[static DR_TOKEN_N], double *m
 		case DR_TOKEN_OP_BIGGEST:
 		case DR_TOKEN_OP_SMALLEST:
 		case DR_TOKEN_OP_RANDOM:
-			return _math(ctx, token, math_result, type, 2);
+			type = _math(ctx, token, math_result, type, 2);
+			break;
 
 		case DR_TOKEN_OP_LIMIT:
 		case DR_TOKEN_OP_INTERPOLATE:
-			return _math(ctx, token, math_result, type, 3);
+			type = _math(ctx, token, math_result, type, 3);
+			break;
 
 		case DR_TOKEN_CL_RGB:
 		case DR_TOKEN_CL_INTERPOLATE:
-			return _math_cl(ctx, token, math_result, type, 3);
+			type = _math_cl(ctx, token, math_result, type, 3);
+			break;
 
 		case DR_TOKEN_CL_RGBA:
-			return _math_cl(ctx, token, math_result, type, 4);
+			type = _math_cl(ctx, token, math_result, type, 4);
+			break;
 
 		default:
-			return type;
+			break;
 	}
+
+	ctx->depth--;
+
+	return type;
 }
 
 /************************************************************************************************************/

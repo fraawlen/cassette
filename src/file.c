@@ -57,6 +57,11 @@ dr_file_parse_child(dr_context_t *ctx_parent, const char *filename)
 	
 	assert(ctx_parent);
 
+	if (ctx_parent->depth >= DR_CONTEXT_MAX_DEPTH)
+	{
+		return;
+	}
+
 	if (!_open_file(&ctx, ctx_parent, filename))
 	{
 		return;
@@ -65,6 +70,7 @@ dr_file_parse_child(dr_context_t *ctx_parent, const char *filename)
 	ctx.eol_reached    = false;
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
+	ctx.depth          = ctx_parent->depth + 1;
 	ctx.var_group      = SIZE_MAX;
 	ctx.var_token      = SIZE_MAX;
 	ctx.iter_token     = SIZE_MAX;
@@ -119,6 +125,7 @@ dr_file_parse_root(dr_config_t *cfg, const char *filename)
 	ctx.eol_reached    = false;
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
+	ctx.depth          = 0;
 	ctx.var_group      = SIZE_MAX;
 	ctx.var_token      = SIZE_MAX;
 	ctx.iter_token     = SIZE_MAX;
