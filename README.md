@@ -47,7 +47,7 @@ After these steps, both a shared binary and static archive will be generated and
 Usage
 -----
 
-Add the this include to get access to the library functions :
+Add this include to get access to the library functions :
 
 ```
 #include <derelict/dr.h>
