@@ -114,11 +114,11 @@ clean:
 	cc -fPIC ${CFLAGS} ${INC_BASE} -c ${SRC_BASE}/cells/placeholder.c -o ${OBJ_BASE}/placeholder.o
 	cc -fPIC ${CFLAGS} ${INC_BASE} -c ${SRC_BASE}/cells/spinner.c     -o ${OBJ_BASE}/spinner.o
 	cc -fPIC ${CFLAGS} ${INC_BASE} -c ${SRC_BASE}/cells/switch.c      -o ${OBJ_BASE}/switch.o
-	cc -shared ${OBJ_BASE}/*.o -o ${DEST_BUILD}/lib/libdg-base.so ${LIBS} -ldg
+	cc -shared ${OBJ_BASE}/*.o -o ${DEST_BUILD}/lib/libdg-base.so -L${DEST_BUILD}/lib ${LIBS} -ldg
 
 --build_wm:
 	cc -fPIC ${CFLAGS} ${INC_WM} -c ${SRC_WM}/wm.c -o ${OBJ_WM}/wm.o
-	cc -shared ${OBJ_WM}/*.o -o ${DEST_BUILD}/lib/libdg-wm.so ${LIBS} -ldg
+	cc -shared ${OBJ_WM}/*.o -o ${DEST_BUILD}/lib/libdg-wm.so -L${DEST_BUILD}/lib ${LIBS} -ldg
 
 --build_demos:
 	mkdir -p ${DEST_BUILD}/bin
