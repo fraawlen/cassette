@@ -80,7 +80,7 @@ main(void)
 	dr_config_fetch(cfg, "example_namespace", "example_property");
 	while (dr_config_move_to_next(cfg))
 	{
-		printf("%s\n", dr_config_get_resource(cfg);
+		printf("%s\n", dr_config_get_resource(cfg));
 	}
 
 	return 0;
