@@ -240,11 +240,11 @@ _declare_resource(dr_context_t *ctx, const char *namespace)
 		return;
 	}
 
-	/* find namespace reference in sequence dictionary if not found, create it */
+	/* find namespace reference in sequence dictionary. if not found, create it */
 
 	if (!do_dictionary_find(ctx->ref_sequences, namespace, 0, &m))
 	{
-		m = ++ctx->n_namespaces;
+		m = do_book_get_number_groups(ctx->sequences);
 		do_dictionary_write(ctx->ref_sequences, namespace, 0, m);
 	}
 
@@ -256,7 +256,7 @@ _declare_resource(dr_context_t *ctx, const char *namespace)
 	/* debug */
 
 /*
-	printf("%s.\t%s.", namespace, name);
+	printf("(%zu)%s.\t%s.", m, namespace, name);
 
 	do_book_reset_iterator(ctx->sequences, do_book_get_number_groups(ctx->sequences) - 1);
 	while (do_book_increment_iterator(ctx->sequences))

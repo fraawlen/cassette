@@ -46,7 +46,7 @@ typedef struct dr_context_t dr_context_t;
 
 struct dr_context_t
 {
-	/* file stream data */
+	/* file data */
 
 	ino_t file_inode;
 	char  file_dir[PATH_MAX];
@@ -59,19 +59,9 @@ struct dr_context_t
 	bool eof_reached;
 	bool skip_sequences;
 
-	/* variable injection */
-
-	size_t var_group;
-	size_t var_token;
-
-	/* iteraton injection */
-
-	size_t iter_token;
-	do_book_t *iteration;
-
 	/* data storage */
 
-	size_t n_namespaces;
+	do_book_t *iteration;
 	do_book_t *sequences;
 	do_book_t *variables;
 	do_dictionary_t *ref_sequences;

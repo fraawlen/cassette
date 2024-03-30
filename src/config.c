@@ -167,18 +167,12 @@ dr_config_load(dr_config_t *cfg)
 		return;
 	}
 
-	/* clear old data */
-
 	do_book_clear(cfg->sequences);
 	do_dictionary_clear(cfg->references);
-
-	/* parse source file */
 
 	dr_file_parse_root(cfg, _source_select(cfg));
 
 	_update_status(cfg);
-
-	/* run callbacks */
 
 	do_tracker_reset_iterator(cfg->callbacks);
 	while (do_tracker_increment_iterator(cfg->callbacks))
