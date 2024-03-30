@@ -147,56 +147,6 @@ dr_config_destroy(dr_config_t **cfg)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-dr_config_fetch(dr_config_t *cfg, const char *namespace, const char *property)
-{
-	size_t i_namespace;
-	size_t i_prop;
-
-	assert(cfg);
-
-	do_book_lock_iterator(cfg->sequences);
-
-	if (!property)
-	{
-		return;
-	}
-
-	if (!do_dictionary_find(cfg->references, namespace ? namespace : "_", 0, &i_namespace))
-	{
-		return;
-	}
-
-	if (!do_dictionary_find(cfg->references, property, i_namespace, &i_prop))
-	{
-		return;
-	}
-
-	do_book_reset_iterator(cfg->sequences, i_prop);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-const char *
-dr_config_get_resource(const dr_config_t *cfg)
-{
-	assert(cfg);
-	
-	return do_book_get_iteration(cfg->sequences);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-size_t
-dr_config_get_resource_size(const dr_config_t *cfg)
-{
-	assert(cfg);
-
-	return do_book_get_group_size(cfg->sequences, do_book_get_iterator_group(cfg->sequences));
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 bool
 dr_config_has_failed(const dr_config_t *cfg)
 {
@@ -239,18 +189,8 @@ dr_config_load(dr_config_t *cfg)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
-dr_config_move_to_next(dr_config_t *cfg)
-{
-	assert(cfg);
-
-	return do_book_increment_iterator(cfg->sequences);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 void
-dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *dr))
+dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *cfg))
 {
 	_callback_t *tmp;
 
@@ -333,7 +273,7 @@ dr_config_test_sources(const dr_config_t *cfg)
 
 	if (cfg->failed)
 	{
-		return NULL;
+		return "";
 	}
 
 	return _source_select(cfg);
@@ -374,7 +314,7 @@ _source_select(const dr_config_t *cfg)
 		}
 	}
 
-	return NULL;
+	return "";
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

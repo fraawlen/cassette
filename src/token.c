@@ -18,7 +18,6 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <assert.h>
 #include <stdlib.h>
 
 #include <derelict/do.h>
@@ -117,8 +116,6 @@ dr_token_kind_t
 dr_token_match(do_dictionary_t *token_dict, const char *token)
 {
 	size_t id;
-
-	assert(token_dict && token);
 
 	if (!do_dictionary_find(token_dict, token, 0, &id))
 	{

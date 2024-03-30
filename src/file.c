@@ -18,7 +18,6 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <assert.h>
 #include <libgen.h>
 #include <limits.h>
 #include <stdbool.h>
@@ -55,8 +54,6 @@ dr_file_parse_child(dr_context_t *ctx_parent, const char *filename)
 	size_t var_iter;
 	size_t var_group;
 	
-	assert(ctx_parent);
-
 	if (ctx_parent->depth >= DR_CONTEXT_MAX_DEPTH)
 	{
 		return;
@@ -113,8 +110,6 @@ dr_file_parse_root(dr_config_t *cfg, const char *filename)
 
 	bool fail = false;
 
-	assert(cfg);
-
 	if (!_open_file(&ctx, NULL, filename))
 	{
 		return false;
@@ -161,7 +156,7 @@ _open_file(dr_context_t *ctx, const dr_context_t *ctx_parent, const char *filena
 {
 	struct stat fs;
 
-	if (!filename)
+	if (!filename || filename[0] == '\0')
 	{
 		return false;
 	}

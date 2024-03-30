@@ -31,40 +31,65 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+/**
+ *
+ */
 typedef struct _config_t dr_config_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+/**
+ *
+ */
 dr_config_t *dr_config_create(size_t n);
 
+/**
+ *
+ */
 void dr_config_destroy(dr_config_t **cfg);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+/**
+ *
+ */
 void dr_config_clear_callbacks_load(dr_config_t *cfg);
 
+/**
+ *
+ */
 void dr_config_clear_sources(dr_config_t *cfg);
 
-void dr_config_fetch(dr_config_t *cfg, const char *namespace, const char *property);
-
+/**
+ *
+ */
 void dr_config_load(dr_config_t *cfg);
 
-bool dr_config_move_to_next(dr_config_t *cfg);
+/**
+ *
+ */
+void dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *cfg));
 
-void dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *dr));
-
+/**
+ *
+ */
 void dr_config_push_source(dr_config_t *cfg, const char *filename);
 
+/**
+ *
+ */
 void dr_config_seed(dr_config_t *cfg, unsigned long long seed);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-const char *dr_config_get_resource(const dr_config_t *cfg);
-
-size_t dr_config_get_resource_size(const dr_config_t *cfg);
-
+/**
+ *
+ */
 bool dr_config_has_failed(const dr_config_t *cfg);
 
+/**
+ *
+ */
 const char *dr_config_test_sources(const dr_config_t *cfg);
 
 /************************************************************************************************************/

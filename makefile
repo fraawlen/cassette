@@ -41,7 +41,7 @@ examples: --prep lib $(LIST_BIN)
 
 install:
 	mkdir -p $(DEST_HEADERS)
-	cp $(DIR_INC)/* $(DEST_HEADERS)/
+	cp $(DIR_INC)/derelict/* $(DEST_HEADERS)/
 	cp $(DIR_LIB)/* $(DEST_LIBS)/
 
 clean:

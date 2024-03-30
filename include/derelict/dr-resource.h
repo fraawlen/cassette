@@ -18,8 +18,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef DR_CONVERT_H
-#define DR_CONVERT_H
+#ifndef DR_RESOURCE_H
+#define DR_RESOURCE_H
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -36,24 +36,74 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-bool dr_convert_to_bool(const dr_config_t *cfg);
+/**
+ *
+ */
+void dr_resource_fetch(dr_config_t *cfg, const char *namespace, const char *property);
 
-do_color_t dr_convert_to_color(const dr_config_t *cfg);
+/**
+ *
+ */
+bool dr_resource_pick_next_value(dr_config_t *cfg);
 
-double dr_convert_to_double(const dr_config_t *cfg);
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-long dr_convert_to_long(const dr_config_t *cfg);
+/**
+ *
+ */
+size_t dr_resource_get_size(const dr_config_t *cfg);
 
-double dr_convert_to_range(const dr_config_t *cfg, double min, double max);
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-double dr_convert_to_ratio(const dr_config_t *cfg);
+/**
+ *
+ */
+bool dr_resource_convert_to_bool(const dr_config_t *cfg);
 
-size_t dr_convert_to_reference(const dr_config_t *cfg, const do_dictionary_t *dict, size_t group, 
-                               size_t fallback);
+/**
+ *
+ */
+do_color_t dr_resource_convert_to_color(const dr_config_t *cfg);
 
-unsigned long dr_convert_to_ulong(const dr_config_t *cfg);
+/**
+ *
+ */
+double dr_resource_convert_to_double(const dr_config_t *cfg);
 
-double dr_convert_to_udouble(const dr_config_t *cfg);
+/**
+ *
+ */
+long dr_resource_convert_to_long(const dr_config_t *cfg);
+
+/**
+ *
+ */
+double dr_resource_convert_to_range(const dr_config_t *cfg, double min, double max);
+
+/**
+ *
+ */
+double dr_resource_convert_to_ratio(const dr_config_t *cfg);
+
+/**
+ *
+ */
+size_t dr_resource_convert_to_reference(const dr_config_t *cfg, const do_dictionary_t *dict, size_t group, size_t fallback);
+
+/**
+ *
+ */
+const char *dr_resource_convert_to_string(const dr_config_t *cfg);
+
+/**
+ *
+ */
+double dr_resource_convert_to_udouble(const dr_config_t *cfg);
+
+/**
+ *
+ */
+unsigned long dr_resource_convert_to_ulong(const dr_config_t *cfg);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -63,4 +113,4 @@ double dr_convert_to_udouble(const dr_config_t *cfg);
 }
 #endif
 
-#endif /* DR_CONVERT_H */
+#endif /* DR_RESOURCE_H */

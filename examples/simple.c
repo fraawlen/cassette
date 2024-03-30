@@ -118,14 +118,14 @@ _print_resource(dr_config_t *cfg, const char *namespace, const char *property)
 {
 	size_t n;
 
-	dr_config_fetch(cfg, namespace, property);
+	dr_resource_fetch(cfg, namespace, property);
 
-	if ((n = dr_config_get_resource_size(cfg)) > 0)
+	if ((n = dr_resource_get_size(cfg)) > 0)
 	{
 		printf("\nresource %s::%s values (%zu) :\n", namespace, property, n);
-		while (dr_config_move_to_next(cfg))
+		while (dr_resource_pick_next_value(cfg))
 		{
-			printf("\t%s\n", dr_config_get_resource(cfg));
+			printf("\t%s\n", dr_resource_convert_to_string(cfg));
 		}
 	}
 	else

@@ -18,7 +18,6 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -54,8 +53,6 @@ dr_sequence_parse(dr_context_t *ctx)
 	dr_token_kind_t type;
 
 	char token[DR_TOKEN_N];
-
-	assert(ctx);
 
 	if (ctx->depth >= DR_CONTEXT_MAX_DEPTH)
 	{
@@ -258,6 +255,7 @@ _declare_resource(dr_context_t *ctx, const char *namespace)
 
 	/* debug */
 
+/*
 	printf("%s.\t%s.", namespace, name);
 
 	do_book_reset_iterator(ctx->sequences, do_book_get_number_groups(ctx->sequences) - 1);
@@ -267,6 +265,7 @@ _declare_resource(dr_context_t *ctx, const char *namespace)
 	}
 
 	printf("\n");
+*/
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

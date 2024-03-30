@@ -18,7 +18,6 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <assert.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -53,8 +52,6 @@ dr_token_kind_t
 dr_subtitution_apply(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result)
 {
 	dr_token_kind_t type;
-
-	assert(ctx && token);
 
 	if (ctx->depth >= DR_CONTEXT_MAX_DEPTH)
 	{

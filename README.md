@@ -65,7 +65,6 @@ Minimal Example
 The following code snippet shows a minimal example of the library usage. When compiled and run, it will look for the file `/tmp/dr-example` and load its data. It then attempts to fetch a resource named `property` under the namespace `namespace`, and if found, prints its values.
 
 ```c
-
 #include <stdio.h>
 #include <derelict/dr.h>
 
@@ -77,10 +76,10 @@ main(void)
 	dr_config_push_source(cfg, "/tmp/dr-example");
 	dr_config_load(cfg);
 
-	dr_config_fetch(cfg, "example_namespace", "example_property");
-	while (dr_config_move_to_next(cfg))
+	dr_resource_fetch(cfg, "example_namespace", "example_property");
+	while (dr_resource_pick_next_value(cfg))
 	{
-		printf("%s\n", dr_config_get_resource(cfg));
+		printf("%s\n", dr_resource_convert_to_string(cfg));
 	}
 
 	return 0;

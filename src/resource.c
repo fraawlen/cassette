@@ -35,23 +35,23 @@
 /************************************************************************************************************/
 
 bool
-dr_convert_to_bool(const dr_config_t *cfg)
+dr_resource_convert_to_bool(const dr_config_t *cfg)
 {
 	assert(cfg);
 
-	return strtod(dr_config_get_resource(cfg), NULL) != 0;
+	return strtod(do_book_get_iteration(cfg->sequences), NULL) != 0;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 do_color_t
-dr_convert_to_color(const dr_config_t *cfg)
+dr_resource_convert_to_color(const dr_config_t *cfg)
 {
 	const char *raw_value;
 
 	assert(cfg);
 
-	raw_value = dr_config_get_resource(cfg);
+	raw_value = do_book_get_iteration(cfg->sequences);
 
 	if ((raw_value)[0] == '#')
 	{
@@ -66,47 +66,47 @@ dr_convert_to_color(const dr_config_t *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
-dr_convert_to_double(const dr_config_t *cfg)
+dr_resource_convert_to_double(const dr_config_t *cfg)
 {
 	assert(cfg);
 
-	return strtod(dr_config_get_resource(cfg), NULL);
+	return strtod(do_book_get_iteration(cfg->sequences), NULL);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 long
-dr_convert_to_long(const dr_config_t *cfg)
+dr_resource_convert_to_long(const dr_config_t *cfg)
 {
 	assert(cfg);
 
-	return strtol(dr_config_get_resource(cfg), NULL, 0);
+	return strtol(do_book_get_iteration(cfg->sequences), NULL, 0);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
-dr_convert_to_range(const dr_config_t *cfg, double min, double max)
+dr_resource_convert_to_range(const dr_config_t *cfg, double min, double max)
 {
 	assert(cfg);
 
-	return dr_util_limit(strtod(dr_config_get_resource(cfg), NULL), min, max);
+	return dr_util_limit(strtod(do_book_get_iteration(cfg->sequences), NULL), min, max);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
-dr_convert_to_ratio(const dr_config_t *cfg)
+dr_resource_convert_to_ratio(const dr_config_t *cfg)
 {
 	assert(cfg);
 
-	return dr_util_limit(strtod(dr_config_get_resource(cfg), NULL), 0.0, 1.0);
+	return dr_util_limit(strtod(do_book_get_iteration(cfg->sequences), NULL), 0.0, 1.0);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-dr_convert_to_reference(const dr_config_t *cfg, const do_dictionary_t *dict, size_t group, size_t fallback)
+dr_resource_convert_to_reference(const dr_config_t *cfg, const do_dictionary_t *dict, size_t group, size_t fallback)
 {
 	size_t value;
 
@@ -117,7 +117,7 @@ dr_convert_to_reference(const dr_config_t *cfg, const do_dictionary_t *dict, siz
 		return fallback;
 	}
 
-	if (!do_dictionary_find(dict, dr_config_get_resource(cfg), group, &value))
+	if (!do_dictionary_find(dict, do_book_get_iteration(cfg->sequences), group, &value))
 	{
 		return fallback;
 	}
@@ -127,21 +127,81 @@ dr_convert_to_reference(const dr_config_t *cfg, const do_dictionary_t *dict, siz
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-unsigned long
-dr_convert_to_ulong(const dr_config_t *cfg)
+const char *
+dr_resource_convert_to_string(const dr_config_t *cfg)
 {
 	assert(cfg);
-
-	return strtoul(dr_config_get_resource(cfg), NULL, 0);
+	
+	return do_book_get_iteration(cfg->sequences);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
-dr_convert_to_udouble(const dr_config_t *cfg)
+dr_resource_convert_to_udouble(const dr_config_t *cfg)
 {
 	assert(cfg);
 
-	return dr_util_limit(strtod(dr_config_get_resource(cfg), NULL), 0, DBL_MAX);
+	return dr_util_limit(strtod(do_book_get_iteration(cfg->sequences), NULL), 0, DBL_MAX);
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+unsigned long
+dr_resource_convert_to_ulong(const dr_config_t *cfg)
+{
+	assert(cfg);
+
+	return strtoul(do_book_get_iteration(cfg->sequences), NULL, 0);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+dr_resource_fetch(dr_config_t *cfg, const char *namespace, const char *property)
+{
+	size_t i_namespace;
+	size_t i_prop;
+
+	assert(cfg);
+
+	do_book_lock_iterator(cfg->sequences);
+
+	if (!property)
+	{
+		return;
+	}
+
+	if (!do_dictionary_find(cfg->references, namespace ? namespace : "_", 0, &i_namespace))
+	{
+		return;
+	}
+
+	if (!do_dictionary_find(cfg->references, property, i_namespace, &i_prop))
+	{
+		return;
+	}
+
+	do_book_reset_iterator(cfg->sequences, i_prop);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+dr_resource_get_size(const dr_config_t *cfg)
+{
+	assert(cfg);
+
+	return do_book_get_group_size(cfg->sequences, do_book_get_iterator_group(cfg->sequences));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+
+bool
+dr_resource_pick_next_value(dr_config_t *cfg)
+{
+	assert(cfg);
+
+	return do_book_increment_iterator(cfg->sequences);
+}
