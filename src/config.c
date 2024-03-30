@@ -48,7 +48,7 @@ typedef struct _callback_t _callback_t;
 
 static void        _clear_tracker (do_tracker_t *tracker);
 static const char *_source_select (const dr_config_t *cfg);
-static void        _update_status (dr_config_t *cfg);
+static bool        _update_status (dr_config_t *cfg);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -68,7 +68,7 @@ static dr_config_t _err_cfg =
 /************************************************************************************************************/
 
 void
-dr_config_clear_callbacks_load(dr_config_t *cfg)
+dr_config_clear_callbacks(dr_config_t *cfg)
 {
 	assert(cfg);
 
@@ -160,7 +160,7 @@ dr_config_has_failed(const dr_config_t *cfg)
 bool
 dr_config_load(dr_config_t *cfg)
 {
-	bool success;
+	bool success = true;
 
 	assert(cfg);
 
@@ -172,9 +172,8 @@ dr_config_load(dr_config_t *cfg)
 	do_book_clear(cfg->sequences);
 	do_dictionary_clear(cfg->references);
 
-	success = dr_file_parse_root(cfg, _source_select(cfg));
-
-	_update_status(cfg);
+	success &= dr_file_parse_root(cfg, _source_select(cfg));
+	success &= !_update_status(cfg);
 
 	do_tracker_reset_iterator(cfg->callbacks);
 	while (do_tracker_increment_iterator(cfg->callbacks))
@@ -188,7 +187,7 @@ dr_config_load(dr_config_t *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *cfg, bool load_success))
+dr_config_push_callback(dr_config_t *cfg, void (*fn)(dr_config_t *cfg, bool load_success))
 {
 	_callback_t *tmp;
 
@@ -317,7 +316,7 @@ _source_select(const dr_config_t *cfg)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void
+static bool
 _update_status(dr_config_t *cfg)
 {
 	cfg->failed |= do_book_has_failed(cfg->sequences);
@@ -325,4 +324,6 @@ _update_status(dr_config_t *cfg)
 	cfg->failed |= do_tracker_has_failed(cfg->callbacks);
 	cfg->failed |= do_dictionary_has_failed(cfg->references);
 	cfg->failed |= do_dictionary_has_failed(cfg->tokens);
+
+	return cfg->failed;
 }

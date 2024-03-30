@@ -54,7 +54,7 @@ main(void)
 	_build_source_filename(str);
 
 	dr_config_push_source(cfg, do_string_get_chars(str));
-	dr_config_push_callback_load(cfg, _callback);
+	dr_config_push_callback(cfg, _callback);
 
 	/* operations */
 

@@ -157,7 +157,7 @@ dr_resource_convert_to_ulong(const dr_config_t *cfg)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
+bool
 dr_resource_fetch(dr_config_t *cfg, const char *namespace, const char *property)
 {
 	size_t i_namespace;
@@ -167,22 +167,29 @@ dr_resource_fetch(dr_config_t *cfg, const char *namespace, const char *property)
 
 	do_book_lock_iterator(cfg->sequences);
 
-	if (!property)
+	if (!namespace || namespace[0] == '\0')
 	{
-		return;
+		return false;
 	}
 
-	if (!do_dictionary_find(cfg->references, namespace ? namespace : "_", 0, &i_namespace))
+	if (!property || property[0] == '\0')
 	{
-		return;
+		return false;
+	}
+
+	if (!do_dictionary_find(cfg->references, namespace, 0, &i_namespace))
+	{
+		return false;
 	}
 
 	if (!do_dictionary_find(cfg->references, property, i_namespace, &i_prop))
 	{
-		return;
+		return false;
 	}
 
 	do_book_reset_iterator(cfg->sequences, i_prop);
+
+	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

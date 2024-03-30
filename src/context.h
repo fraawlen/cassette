@@ -78,8 +78,7 @@ struct dr_context_t
 
 dr_token_kind_t dr_context_get_token(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result);
 
-dr_token_kind_t dr_context_get_token_numeral(dr_context_t *ctx, char token[static DR_TOKEN_N],
-                                             double *math_result);
+dr_token_kind_t dr_context_get_token_numeral(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result);
 
 dr_token_kind_t dr_context_get_token_raw(dr_context_t *ctx, char token[static DR_TOKEN_N]);
 
