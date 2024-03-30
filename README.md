@@ -34,7 +34,7 @@ First-party libraries :
 Installation
 ------------
 
-First, edit the makefile if you want to change the installation destinations. These are represented by the variables `DEST_HEADERS` and `DEST_LIBS` for the public API headers and library files respectively. By default, they are set to `/usr/derelict/` and `/usr/lib`.
+First, edit the makefile if you want to change the installation destinations. These are represented by the variables `DEST_HEADERS` and `DEST_LIBS` for the public API headers and library files respectively. By default, they are set to `/usr/include/derelict/` and `/usr/lib`.
 Then, build and install DR with the following commands :
 
 ```

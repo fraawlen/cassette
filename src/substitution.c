@@ -268,18 +268,20 @@ _if(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result, dr_to
 static dr_token_kind_t
 _join(dr_context_t *ctx, char token[static DR_TOKEN_N])
 {
-	char token_2[DR_TOKEN_N];
+	char token_a[DR_TOKEN_N];
+	char token_b[DR_TOKEN_N];
 
-	if (dr_context_get_token(ctx, token,   NULL) == DR_TOKEN_INVALID ||
-	    dr_context_get_token(ctx, token_2, NULL) == DR_TOKEN_INVALID) {
+	if (dr_context_get_token(ctx, token_a, NULL) == DR_TOKEN_INVALID ||
+	    dr_context_get_token(ctx, token_b, NULL) == DR_TOKEN_INVALID) {
 		return DR_TOKEN_INVALID;
 	}
 
-	strncat(token, token_2, DR_TOKEN_N - strlen(token) - 1);
-	token[DR_TOKEN_N - 1] = '\0';
+	if (snprintf(token, DR_TOKEN_N, "%s%s", token_a, token_b) < 0)
+	{
+		return DR_TOKEN_INVALID;
+	}
 
 	return DR_TOKEN_STRING;
-
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

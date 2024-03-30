@@ -60,6 +60,8 @@ static dr_config_t _err_cfg =
 	.sources    = NULL,
 	.callbacks  = NULL,
 	.references = NULL,
+	.tokens     = NULL,
+	.seed       = 0,
 	.failed     = true,
 };
 

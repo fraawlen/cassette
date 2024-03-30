@@ -179,9 +179,8 @@ _open_file(dr_context_t *ctx, const dr_context_t *ctx_parent, const char *filena
 	}
 
 	ctx->file_inode = fs.st_ino;
-	ctx->file_dir[PATH_MAX - 1] = '\0';
 
-	strncpy(ctx->file_dir, filename, PATH_MAX - 1);
+	snprintf(ctx->file_dir, PATH_MAX, "%s", filename);
 	dirname(ctx->file_dir);
 
 	return true;	

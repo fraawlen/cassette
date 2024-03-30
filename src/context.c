@@ -96,11 +96,11 @@ dr_context_get_token_raw(dr_context_t *ctx, char token[static DR_TOKEN_N])
 
 	if (do_book_increment_iterator(ctx->variables))
 	{
-		strncpy(token, do_book_get_iteration(ctx->variables), DR_TOKEN_N - 1);
+		snprintf(token, DR_TOKEN_N, "%s", do_book_get_iteration(ctx->variables));
 	}
 	else if (do_book_increment_iterator(ctx->iteration))
 	{
-		strncpy(token, do_book_get_iteration(ctx->iteration), DR_TOKEN_N - 1);	
+		snprintf(token, DR_TOKEN_N, "%s", do_book_get_iteration(ctx->iteration));
 	}
 	else if (!_read_word(ctx, token))
 	{
