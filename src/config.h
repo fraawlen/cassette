@@ -31,11 +31,11 @@
 
 struct _config_t
 {
-	do_book_t *sequences;        /* parsed sequences of values                        */
-	do_tracker_t *sources;       /* source files to read from                         */
-	do_tracker_t *callbacks;     /* callback list to call after load                  */
-	do_dictionary_t *references; /* reference sequences matching resources            */
-	do_dictionary_t *tokens;     /* token references kept here to reuse between loads */
+	do_book_t *sequences; 
+	do_tracker_t *sources;
+	do_tracker_t *callbacks;
+	do_dictionary_t *references;
+	do_dictionary_t *tokens;
 	unsigned long long seed;
 	bool failed;
 };
