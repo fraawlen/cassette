@@ -94,6 +94,8 @@ dr_file_parse_child(dr_context_t *ctx_parent, const char *filename)
 	}
 
 	do_book_destroy(&ctx.iteration);
+	
+	fclose(ctx.file);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -135,6 +137,8 @@ dr_file_parse_root(dr_config_t *cfg, const char *filename)
 	do_book_destroy(&ctx.iteration);
 	do_book_destroy(&ctx.variables);
 	do_dictionary_destroy(&ctx.ref_variables);
+
+	fclose(ctx.file);
 
 	return !fail;
 }
