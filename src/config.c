@@ -37,7 +37,7 @@
 
 struct _callback_t
 {
-	void (*fn)(dr_config_t *cfg);	
+	void (*fn)(dr_config_t *cfg, bool load_success);	
 };
 
 typedef struct _callback_t _callback_t;
@@ -157,34 +157,38 @@ dr_config_has_failed(const dr_config_t *cfg)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
+bool
 dr_config_load(dr_config_t *cfg)
 {
+	bool success;
+
 	assert(cfg);
 
 	if (cfg->failed)
 	{
-		return;
+		return false;
 	}
 
 	do_book_clear(cfg->sequences);
 	do_dictionary_clear(cfg->references);
 
-	dr_file_parse_root(cfg, _source_select(cfg));
+	success = dr_file_parse_root(cfg, _source_select(cfg));
 
 	_update_status(cfg);
 
 	do_tracker_reset_iterator(cfg->callbacks);
 	while (do_tracker_increment_iterator(cfg->callbacks))
 	{
-		((_callback_t*)do_tracker_get_iteration(cfg->callbacks))->fn(cfg);
+		((_callback_t*)do_tracker_get_iteration(cfg->callbacks))->fn(cfg, success);
 	}
+
+	return success;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *cfg))
+dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *cfg, bool load_success))
 {
 	_callback_t *tmp;
 

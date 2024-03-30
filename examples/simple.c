@@ -33,7 +33,7 @@
 /************************************************************************************************************/
 
 static void _build_source_filename (do_string_t *str);
-static void _callback              (dr_config_t *cfg);
+static void _callback              (dr_config_t *cfg, bool load_success);
 static void _print_resource        (dr_config_t *cfg, const char *namespace, const char *property);
 
 /************************************************************************************************************/
@@ -99,9 +99,11 @@ _build_source_filename(do_string_t *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_callback(dr_config_t *cfg)
+_callback(dr_config_t *cfg, bool load_success)
 {
-	if (!dr_config_has_failed(cfg))
+	(void)(cfg);
+
+	if (load_success)
 	{
 		printf("\nconfiguration loaded successfully\n");
 	}

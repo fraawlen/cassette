@@ -63,12 +63,12 @@ void dr_config_clear_sources(dr_config_t *cfg);
 /**
  *
  */
-void dr_config_load(dr_config_t *cfg);
+bool dr_config_load(dr_config_t *cfg);
 
 /**
  *
  */
-void dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *cfg));
+void dr_config_push_callback_load(dr_config_t *cfg, void (*fn)(dr_config_t *cfg, bool load_success));
 
 /**
  *
