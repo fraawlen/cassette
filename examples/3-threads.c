@@ -119,7 +119,6 @@ _simulation_thread(void *param)
 
 	dr_config_push_source(cfg, _SAMPLE_CONFIG_PATH);
 	dr_config_seed(cfg, id);
-	dr_config_load(cfg);
 
 	if (!dr_config_load(cfg))
 	{
