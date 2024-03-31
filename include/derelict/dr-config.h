@@ -95,12 +95,16 @@ bool dr_config_load(dr_config_t *cfg);
 
 /**
  * Adds a function to call every time the given configuration object is done loading a source file. The
- * callback parameter load_success is set to the value of the return of dr_config_load().
+ * callback parameter load_success is set to the value of the return of dr_config_load(). The ref parameter
+ * here is a pointer of arbitrary value. That same value will be passed down to the callback's ref parameter
+ * with no side effects. It is therefore the responsibility of the caller to ensure that the ref's value is
+ * valid when the callback is triggered.
  *
  * @param cfg Config to interact with
  * @param fn Callback function
+ * @param ref Abitrary pointer value to pass to callback
  */
-void dr_config_push_callback(dr_config_t *cfg, void (*fn)(dr_config_t *cfg, bool load_success));
+void dr_config_push_callback(dr_config_t *cfg, void (*fn)(dr_config_t *cfg, bool load_success, void *ref), void *ref);
 
 /**
  * Adds a source file to potentially parse. Only the first added source that can be opened will be parsed,
