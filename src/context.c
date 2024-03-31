@@ -162,6 +162,8 @@ _read_word(dr_context_t *ctx, char token[static DR_TOKEN_N])
 		switch ((c = fgetc(ctx->file)))
 		{
 			case ' ' :
+			case '(' :
+			case ')' :
 			case '\t':
 			case '\v':
 				break;
@@ -183,6 +185,8 @@ exit_lead:
 				goto exit_word;
 
 			case ' ' :
+			case '(' :
+			case ')' :
 			case '\t':
 			case '\v':
 			case '\n':
@@ -227,6 +231,8 @@ exit_word:
 		switch (c)
 		{
 			case ' ' :
+			case '(' :
+			case ')' :
 			case '\t':
 			case '\v':
 				break;

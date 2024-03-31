@@ -59,8 +59,7 @@ token token token token token
 token token token token
 ```
 
-
-In DR, there is no concept of priority based on the presence of parenthesis, brackets, or braces. Tokens are strictly parsed from left to right and any language function that gets triggered should happen as the tokens are read. Thanks to that, words read from a source configuration file only need to be parsed and processed once. The only exception to this rule is the [iteration-type sequences]().
+In DR, there is no concept of priority based on the presence of parenthesis, brackets, or braces. In fact, parentheses get interpreted as whitespace, so even if they can be used to visually group tokens together, they bear no effect. Instead, tokens are strictly parsed from left to right and any language function that gets triggered should happen as the tokens are read. Thanks to that, words read from a source configuration file only need to be parsed and processed once. The only exception to this rule is the [iteration-type sequences]().
 
 If white spaces need to be explicitly part of a token, said token can be wrapped in single or double quotes. Likewise, single quotes can be wrapped in double quotes and vice-versa. Additionally, within quote wraps, newlines are also conserved and do not terminate sequences. Non white space characters directly preceding or following quotes are considered to be part of the same word. The same applies to multiple groups of quoted word sections.
 
@@ -167,21 +166,21 @@ a b
 -> a b
 
 JOIN a b
--> ( JOIN a b )
+-> (JOIN a b)
 -> ab
 
 a JOIN b c d
--> a ( JOIN b c ) d
+-> a (JOIN b c) d
 -> a bc d
 
 a JOIN JOIN b c d
--> a ( JOIN ( JOIN b c ) d )
--> a ( JOIN bc d )
+-> a (JOIN (JOIN b c) d)
+-> a (JOIN bc d)
 -> a bcd
 
 a JOIN b JOIN c d
--> a ( JOIN b ( JOIN c d ) )
--> a ( JOIN b cd )
+-> a (JOIN b (JOIN c d))
+-> a (JOIN b cd)
 -> a bcd
 
 JOIN a

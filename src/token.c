@@ -40,8 +40,6 @@ dr_token_dictionary_create(void)
 	do_dictionary_write(dict, "EOF",    0, DR_TOKEN_EOF);
 	do_dictionary_write(dict, "",       0, DR_TOKEN_INVALID);
 	do_dictionary_write(dict, "//",     0, DR_TOKEN_COMMENT);
-	do_dictionary_write(dict, "(",      0, DR_TOKEN_FILLER);
-	do_dictionary_write(dict, ")",      0, DR_TOKEN_FILLER);
 	do_dictionary_write(dict, "=",      0, DR_TOKEN_FILLER);
 	do_dictionary_write(dict, ":=",     0, DR_TOKEN_FILLER);
 	do_dictionary_write(dict, "JOIN",   0, DR_TOKEN_JOIN);
