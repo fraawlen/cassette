@@ -175,8 +175,6 @@ _declare_enum(dr_context_t *ctx)
 		precision = 16;
 	}
 	
-	steps -= 1.0;
-
 	/* generate enum values and write them into the variable book */
 
 	for (size_t i = 0; i <= steps; i++)
