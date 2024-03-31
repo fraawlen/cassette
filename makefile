@@ -25,7 +25,7 @@ LIST_BIN   := $(patsubst $(DIR_DEMOS)/%.c, $(DIR_BIN)/%, $(LIST_DEMOS))
 
 OUTPUT := dr
 FLAGS  := -std=c99 -pedantic -Wall -Wextra -O3 -D_POSIX_C_SOURCE=200809L
-LIBS   := -ldo -lm
+LIBS   := -ldo -lm -lpthread
 
 #############################################################################################################
 # PUBLIC TARGETS ############################################################################################
@@ -33,11 +33,11 @@ LIBS   := -ldo -lm
 
 all: lib examples
 
-lib: --prep $(LIST_OBJ)
+lib: --prep_lib $(LIST_OBJ)
 	cc -shared $(DIR_OBJ)/*.o -o $(DIR_LIB)/lib$(OUTPUT).so $(DIR_LIBS)
 	ar rcs $(DIR_LIB)/lib$(OUTPUT).a $(DIR_OBJ)/*.o
 
-examples: --prep lib $(LIST_BIN)
+examples: --prep_lib --prep_examples lib $(LIST_BIN)
 
 install:
 	mkdir -p $(DEST_HEADERS)
@@ -46,6 +46,7 @@ install:
 
 clean:
 	rm -rf $(DEST_BUILD)
+	rm $(DIR_DEMOS)/config.h
 
 force: clean all
 
@@ -53,10 +54,13 @@ force: clean all
 # PRIVATE TARGETS ###########################################################################################
 #############################################################################################################
 
---prep:
+--prep_lib:
 	mkdir -p $(DIR_LIB)
 	mkdir -p $(DIR_OBJ)
+
+--prep_examples:
 	mkdir -p $(DIR_BIN)
+	xxd -n config -i $(DIR_DEMOS)/sample_config > $(DIR_DEMOS)/config.h
 
 $(DIR_OBJ)/%.o: $(DIR_SRC)/%.c $(LIST_HEAD)
 	$(CC) -c -fPIC $(FLAGS) -c $< -o $@ -I$(DIR_INC) $(LIBS)
