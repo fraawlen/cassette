@@ -1,60 +1,53 @@
-Derelict Objects
-================
 
-Gist
-----
+![Derelict Objects banner](./extras/banner.png)
 
-Derelict Objects (DO) is a collection of data structures and convenience functions for the [Derelict Graphics (DG)](https://codeberg.org/fraawlen/derelict-graphics) library as well as other projects part of the Derelict ecosystem. This library is far from being exhaustive but it is incrementally updated with new features when they are needed by DO dependent projects. If you wish to use this library but need a specific feature related to the existing data structures, feel free to create a feature request.
+Derelict Objects (DO) is a little collection self-contained data structures. Its API is written in a (somewhat) safe C style in which all structures that depend on dynamic memory allocation are opaque and their handler functions are designed to minimize the return of null pointer values. In other words, save for a few explicit exceptions, functions including constructors always return valid values or pointers, even in case of memory allocation failure. Moreover, destructor functions are also protected from double-free and dandling pointers.
 
-Currently provided components:
+The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems, and except for the compiler and build system, is not dependent on third-party software.
 
-- Book : a fancy dynamic array / vector for c-strings
-- Dictionary : a string-group-value hashmap
-- Tracker : a hybrid pointer vector / stack data structure to keep track of instanced components.
-- String : a 2D UTF-8 C-string wrapper with simple to use string manipulation methods
+Features
+--------------------
+
+- Book : a dynamic array/vector for c-strings with grouping features
+- Dictionary : an hashmap with string + group keys, FNV-1A hashing and linear probing
+- Tracker : a hybrid vector/stack or pointers used to keep track of instanced components.
+- String : UTF-8 strings with 2D (rows and columns) information and manipulation functions
 - Color : RGBA color representation, manipulation and conversion
+- Rand : a re-implementation of POSIX's rand48 functions with a slightly more convenient API
 
-Setup
------
+Dependencies
+------------
 
-### Requirements
-
-All that's needed to build DO are the following tools :
+Tools :
 
 - C99 compiler with a stdlib + POSIX 200809L
 - Make
 
-### Build & Installation
+Installation
+------------
 
-Once you have met all the necessary requirements, you can build and install DO by simply running  :
+First, edit the makefile if you want to change the installation destinations. These are represented by the variables `DEST_HEADERS` and `DEST_LIBS` for the public API headers and library files respectively. By default, they are set to `/usr/include/derelict/` and `/usr/lib`.
+Then, build and install DO with the following commands :
+
 ```
-make lib
+make
 make install
 ```
-After these steps, both a shared binary and static archive will be generated and installed on your system. By default, headers and library binaries will be respectively placed in `/usr/derelict/`  and `/usr/lib`. If you want to install them elsewhere modify the `DEST_HEADERS` and `DEST_LIBS` makefile variables.
 
-### Demos
-
-The DO project also include a few demos programs that showcase different use-cases and capabilities of the library.
-You can build them with the following command (you will need to build the library first, but installation is not necessary) :
-```
-make examples
-```
-The resulting executable binaries will be placed in `build/bin`.
+After these steps, both a shared binary and static archive will be generated and installed on your system. Examples will also be built and placed under `./build/bin`. The examples are statically compiled and can be run from anywhere on your system.
 
 Usage
 -----
 
-Simply add the following include to use all that the library has to offer :
+Add this include to get access to the library functions :
+
 ```
 #include <derelict/do.h>
 ```
-Then add this compilation flag to link your project to DO :
+
+As well as this compilation flag :
+
 ```
 -ldo
 ```
 
-License
--------
-
-[LGPL-2.1 License](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html)
