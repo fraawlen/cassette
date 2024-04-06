@@ -12,8 +12,8 @@ SECTION Sb
 
 	// resources for example program 1-simple
 
-	LET_ENUM    enum 6 
-	ITERATE_RAW enum example-1 (JOIN values- %) (RAND  0 100) (RAND 0 100) (RAND 0 100) 8
+	LET_ENUM enum 6 
+	ITERATE_RAW enum example-1 (JOIN values- %) (RAND 0 100) (RAND 0 100) (RAND 0 100)
 
 SECTION Sc
 
