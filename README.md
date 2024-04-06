@@ -26,6 +26,7 @@ Tools :
 
 - C99 compiler with a stdlib + POSIX 200809L
 - Make
+- xxd
 
 First-party libraries :
 
