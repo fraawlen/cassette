@@ -37,7 +37,7 @@ static void _declare_enum     (dr_context_t *ctx);
 static void _declare_resource (dr_context_t *ctx, const char *namespace);
 static void _declare_variable (dr_context_t *ctx);
 static void _include          (dr_context_t *ctx);
-static void _iterate          (dr_context_t *ctx);
+static void _iterate          (dr_context_t *ctx, dr_token_kind_t type);
 static void _section_add      (dr_context_t *ctx);
 static void _section_begin    (dr_context_t *ctx);
 static void _section_del      (dr_context_t *ctx);
@@ -94,8 +94,9 @@ dr_sequence_parse(dr_context_t *ctx)
 			_include(ctx);
 			break;
 
-		case DR_TOKEN_ITERATOR:
-			_iterate(ctx);
+		case DR_TOKEN_ITERATE:
+		case DR_TOKEN_ITERATE_RAW:
+			_iterate(ctx, type);
 			break;
 
 		case DR_TOKEN_RAND_SEED:
@@ -341,12 +342,16 @@ _include(dr_context_t *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_iterate(dr_context_t *ctx)
+_iterate(dr_context_t *ctx, dr_token_kind_t type)
 {
-	size_t i_var = 0;
-	size_t i_inj = 0;
 	char token[DR_TOKEN_N];
 	char *tmp;
+	bool raw;
+	bool *i_inj;
+	size_t i_var = 0;
+	size_t n     = 0;
+
+	raw = type == DR_TOKEN_ITERATE_RAW;
 
 	/* grab variable to iterate through */
 
@@ -365,35 +370,63 @@ _iterate(dr_context_t *ctx)
 	do_book_clear(ctx->iteration);
 	while ((tmp = do_book_prepare_new_word(ctx->iteration, DO_BOOK_OLD_GROUP)))
 	{
-		if (dr_context_get_token_raw(ctx, tmp) == DR_TOKEN_INVALID)
+		if (raw)
+		{
+			type = dr_context_get_token_raw(ctx, tmp);
+		}
+		else
+		{
+			type = dr_context_get_token(ctx, tmp, NULL);
+		}
+
+		if (type == DR_TOKEN_INVALID)
 		{
 			do_book_erase_last_word(ctx->iteration);
 			break;
 		}
+		n++;
 	}
 
-	if (do_book_get_number_words(ctx->iteration) == 0)
+	if (n == 0 || do_book_has_failed(ctx->iteration))
 	{
 		return;
 	}
 	
-	/* locate first iteration variable within the raw sequence */
+	/* locate iteration variables within the raw sequence */
 
-	do_book_reset_iterator(ctx->iteration, 0);
-	while (do_book_increment_iterator(ctx->iteration))
+	if (!(i_inj = calloc(n, sizeof(bool))))
 	{
-		if (dr_token_match(ctx->tokens, do_book_get_iteration(ctx->iteration)) == DR_TOKEN_ITER_INJECTION)
+		return;
+	}
+
+	for (size_t i = 0; i < n; i++)
+	{
+		type = dr_token_match(ctx->tokens, do_book_get_word(ctx->iteration, 0, i));
+		if (type == DR_TOKEN_ITER_INJECTION)
 		{
-			break;
+			i_inj[i] = true;
+			if (raw)
+			{
+				break;
+			}
 		}
-		i_inj++;
 	}
 
 	/* process each iteration */
 
 	for (size_t i = 0; i < do_book_get_group_size(ctx->variables, i_var); i++)
 	{
-		do_book_rewrite_word(ctx->iteration, do_book_get_word(ctx->variables, i_var, i), 0, i_inj);
+		for (size_t j = 0; j < n; j++)
+		{
+			if (i_inj[j])
+			{
+				do_book_rewrite_word(
+					ctx->iteration,
+					do_book_get_word(ctx->variables, i_var, i),
+					0,
+					j);
+			}
+		}
 		do_book_reset_iterator(ctx->iteration, 0);
 		dr_sequence_parse(ctx);
 	}
