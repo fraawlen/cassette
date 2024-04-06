@@ -439,6 +439,8 @@ _include(dr_context_t *ctx)
 static void
 _iterate(dr_context_t *ctx, dr_token_kind_t type)
 {
+	do_book_t *iteration;
+
 	char token[DR_TOKEN_N];
 	char *tmp;
 	bool raw;
@@ -450,6 +452,7 @@ _iterate(dr_context_t *ctx, dr_token_kind_t type)
 
 	raw          = type == DR_TOKEN_ITERATE_RAW;
 	n_inject_max = raw ? 1 : _MAX_ITER_INJECTIONS;
+	iteration    = do_book_create(10, DR_TOKEN_N);
 
 	/* grab variable to iterate through */
 
@@ -465,8 +468,7 @@ _iterate(dr_context_t *ctx, dr_token_kind_t type)
 
 	/* fill the book with the sequence to iterate and keep the location of iteration variable injections */
 
-	do_book_clear(ctx->iteration);
-	while ((tmp = do_book_prepare_new_word(ctx->iteration, DO_BOOK_OLD_GROUP)))
+	while ((tmp = do_book_prepare_new_word(iteration, DO_BOOK_OLD_GROUP)))
 	{
 		if (raw)
 		{
@@ -479,7 +481,7 @@ _iterate(dr_context_t *ctx, dr_token_kind_t type)
 
 		if (type == DR_TOKEN_INVALID)
 		{
-			do_book_erase_last_word(ctx->iteration);
+			do_book_erase_last_word(iteration);
 			break;
 		}
 		else if (n_inject < n_inject_max)
@@ -506,18 +508,22 @@ _iterate(dr_context_t *ctx, dr_token_kind_t type)
 		for (size_t j = 0; j < n_inject; j++)
 		{
 			do_book_rewrite_word(
-				ctx->iteration,
+				iteration,
 				do_book_get_word(ctx->variables, i_var, i),
 				0,
 				inject[j]);
 		}
-		do_book_reset_iterator(ctx->iteration, 0);
+
+		do_book_reset_iterator(iteration, 0);
+
+		ctx->iteration = iteration;
 		dr_sequence_parse(ctx);
 	}
 
 	/* end */
 	
-	do_book_lock_iterator(ctx->iteration);
+	do_book_destroy(&iteration);
+	ctx->iteration = do_book_get_placeholder();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

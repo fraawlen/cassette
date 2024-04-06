@@ -29,10 +29,3 @@ SECTION Sc
 	example-2 d TRUE
 	example-2 e new_value
 	example-2 f (CITRPL #000000 #ffff8000 ($ ratio))
-
-
-
-	LET var_10 a b c
-	LET var_20 1
-
-	LET_MERGE vava var_10 var_20
