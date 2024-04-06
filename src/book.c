@@ -49,8 +49,8 @@ struct _book_t
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static size_t _get_group_end (const do_book_t *book, size_t index);
-static bool   _resize        (do_book_t *book, size_t n, size_t a, size_t b);
+static size_t _get_group_size (const do_book_t *book, size_t index);
+static bool   _resize         (do_book_t *book, size_t n, size_t a, size_t b);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -205,12 +205,7 @@ do_book_get_group_size(const do_book_t *book, size_t group_index)
 		return 0;
 	}
 
-	if (group_index >= book->n_groups)
-	{
-		return 0;
-	}
-
-	return _get_group_end(book, group_index) - book->groups[group_index];
+	return _get_group_size(book, group_index);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -225,18 +220,12 @@ do_book_get_iteration(const do_book_t *book)
 		return "";
 	}
 
-	if (book->iterator_group >= book->n_groups)
+	if (book->iterator_word == 0 || book->iterator_word > _get_group_size(book, book->iterator_group))
 	{
 		return "";
 	}
 
-	if (book->iterator_word <= book->groups[book->iterator_group] ||
-	    book->iterator_word > _get_group_end(book, book->iterator_group))
-	{
-		return "";
-	}
-
-	return book->words + (book->iterator_word - 1) * book->word_n;
+	return book->words + (book->groups[book->iterator_group] + book->iterator_word - 1) * book->word_n;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -271,18 +260,12 @@ do_book_get_iterator_offset(const do_book_t *book)
 		return 0;
 	}
 
-	if (book->iterator_group >= book->n_groups)
+	if (book->iterator_word > _get_group_size(book, book->iterator_group))
 	{
 		return 0;
 	}
 
-	if (book->iterator_word <= book->groups[book->iterator_group] ||
-	    book->iterator_word > _get_group_end(book, book->iterator_group))
-	{
-		return 0;
-	}
-
-	return book->iterator_word - book->groups[book->iterator_group];
+	return book->iterator_word;
 }
 
 
@@ -328,12 +311,7 @@ do_book_get_word(const do_book_t *book, size_t group_index, size_t word_index)
 		return "";
 	}
 
-	if (group_index >= book->n_groups)
-	{
-		return "";
-	}
-
-	if (word_index >= _get_group_end(book, group_index))
+	if (word_index >= _get_group_size(book, group_index))
 	{
 		return "";
 	}
@@ -378,13 +356,7 @@ do_book_increment_iterator(do_book_t *book)
 		return false;
 	}
 
-	if (book->iterator_group >= book->n_groups)
-	{
-		return false;
-	}
-
-	if (book->iterator_word <  book->groups[book->iterator_group] ||
-	    book->iterator_word >= _get_group_end(book, book->iterator_group))
+	if (book->iterator_word >= _get_group_size(book, book->iterator_group))
 	{
 		return false;
 	}
@@ -452,7 +424,7 @@ do_book_reset_iterator(do_book_t *book, size_t group_index)
 		return;
 	}
 
-	book->iterator_word  = book->groups[group_index];
+	book->iterator_word  = 0;
 	book->iterator_group = group_index;
 }
 
@@ -470,12 +442,7 @@ do_book_rewrite_word(do_book_t *book, const char *str, size_t group_index, size_
 		return;
 	}
 
-	if (group_index >= book->n_groups)
-	{
-		return;
-	}
-
-	if (word_index >= _get_group_end(book, group_index) - book->groups[group_index])
+	if (word_index >= _get_group_size(book, group_index))
 	{
 		return;
 	}
@@ -522,19 +489,19 @@ do_book_write_new_word(do_book_t *book, const char *str, do_book_group_mode_t gr
 /************************************************************************************************************/
 
 static size_t
-_get_group_end(const do_book_t *book, size_t index)
+_get_group_size(const do_book_t *book, size_t index)
 {
-	if (book->n_groups == 0)
+	if (book->n_groups == 0 || index >= book->n_groups)
 	{
 		return 0;
 	}
-	else if (index >= book->n_groups - 1)
+	else if (index == book->n_groups - 1)
 	{
-		return book->n_words;
+		return book->n_words - book->groups[index];
 	}
 	else
 	{
-		return book->groups[index + 1];
+		return book->groups[index + 1] - book->groups[index];
 	}
 }
 
