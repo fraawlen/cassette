@@ -301,6 +301,14 @@ do_book_get_number_words(const do_book_t *book)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+do_book_t *
+do_book_get_placeholder(void)
+{
+	return &_err_book;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 const char *
 do_book_get_word(const do_book_t *book, size_t group_index, size_t word_index)
 {

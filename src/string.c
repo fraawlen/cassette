@@ -395,6 +395,14 @@ do_string_get_length(const do_string_t *str)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+do_string_t *
+do_string_get_placeholder(void)
+{
+	return &_err_str;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 size_t
 do_string_get_width(const do_string_t *str)
 {

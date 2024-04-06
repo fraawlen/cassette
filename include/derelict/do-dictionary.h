@@ -41,6 +41,8 @@ do_dictionary_t *do_dictionary_create(size_t n_alloc, double max_load);
 
 void do_dictionary_destroy(do_dictionary_t **dict);
 
+do_dictionary_t *do_dictionary_get_placeholder(void);
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void do_dictionary_clear(do_dictionary_t *dict);

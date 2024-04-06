@@ -279,6 +279,13 @@ do_dictionary_get_load_factor(const do_dictionary_t *dict)
 
 	return (double)dict->n / dict->n_alloc;
 }
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+do_dictionary_t *
+do_dictionary_get_placeholder(void)
+{
+	return &_err_dict;
+}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

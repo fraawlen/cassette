@@ -50,6 +50,8 @@ do_book_t *do_book_create(size_t n_alloc, size_t word_n);
 
 void do_book_destroy(do_book_t **book);
 
+do_book_t *do_book_get_placeholder(void);
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void do_book_clear(do_book_t *book);

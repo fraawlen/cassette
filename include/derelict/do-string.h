@@ -44,6 +44,8 @@ do_string_t *do_string_create_duplicate(const do_string_t *str);
 
 void do_string_destroy(do_string_t **str);
 
+do_string_t *do_string_get_placeholder(void);
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void do_string_cut(do_string_t *str, size_t offset, size_t n_codepoints);

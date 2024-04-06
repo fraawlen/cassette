@@ -40,6 +40,8 @@ do_tracker_t *do_tracker_create(size_t n_alloc);
 
 void do_tracker_destroy(do_tracker_t **tracker);
 
+do_tracker_t *do_tracker_get_placeholder(void);
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void do_tracker_clear(do_tracker_t *tracker);

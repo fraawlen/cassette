@@ -301,6 +301,13 @@ do_tracker_get_iterator_offset(const do_tracker_t *tracker)
 
 	return tracker->iterator;
 }
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+do_tracker_t *
+do_tracker_get_placeholder(void)
+{
+	return &_err_tracker;
+}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
