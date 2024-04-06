@@ -150,6 +150,14 @@ dr_config_destroy(dr_config_t **cfg)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+dr_config_t *
+dr_config_get_placeholder(void)
+{
+	return &_err_cfg;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 bool
 dr_config_has_failed(const dr_config_t *cfg)
 {

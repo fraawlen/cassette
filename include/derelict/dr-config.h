@@ -55,13 +55,21 @@ typedef struct _config_t dr_config_t;
 dr_config_t *dr_config_create(size_t n);
 
 /**
- * Destroy a given object and free allocated memory. The pointed value is then replaced by a value that
- * points to an internal static Configuration object set in a failed state. Hence, it is safe to call this
- * function multiple times.
+ * Destroy a given object and free allocated memory. The pointed value is then replaced by a placeholder
+ * value that points to an internal static configuration object set in a failed state. Hence, it is safe to
+ * call this function multiple times.
  *
  * @param cfg Config to interact with
  */
 void dr_config_destroy(dr_config_t **cfg);
+
+/**
+ * Gets a valid pointer to an internal configuration object set in a failed state. To be used to avoid leaving
+ * around uninitialised configuration pointers.
+ *
+ * @return Placeholder config object
+ */
+dr_config_t *dr_config_get_placeholder(void);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
