@@ -324,10 +324,15 @@ _include(dr_context_t *ctx)
 
 	while (dr_context_get_token(ctx, token, NULL) != DR_TOKEN_INVALID)
 	{
-		do_string_set_raw(filename, ctx->file_dir);
-		do_string_append_raw(filename, "/");
-		do_string_append_raw(filename, token);
-		dr_file_parse_child(ctx, do_string_get_chars(filename));
+		if (token[0] != '/')
+		{
+			do_string_set_raw(filename, ctx->file_dir);
+			do_string_append_raw(filename, "/");
+			do_string_append_raw(filename, token);
+			dr_file_parse_child(ctx, do_string_get_chars(filename));
+		} else {	
+			dr_file_parse_child(ctx, token);
+		}
 	}
 
 	do_string_destroy(&filename);
