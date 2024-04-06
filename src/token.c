@@ -97,6 +97,9 @@ dr_token_dictionary_create(void)
 	/* lead tokens */
 
 	do_dictionary_write(dict, "LET",           0, DR_TOKEN_VAR_DECLARATION);
+	do_dictionary_write(dict, "LET_APPEND",    0, DR_TOKEN_VAR_APPEND);
+	do_dictionary_write(dict, "LET_PREPEND",   0, DR_TOKEN_VAR_PREPEND);
+	do_dictionary_write(dict, "LET_MERGE",     0, DR_TOKEN_VAR_MERGE);
 	do_dictionary_write(dict, "LET_ENUM",      0, DR_TOKEN_ENUM_DECLARATION);
 	do_dictionary_write(dict, "SECTION",       0, DR_TOKEN_SECTION_BEGIN);
 	do_dictionary_write(dict, "SECTION_ADD",   0, DR_TOKEN_SECTION_ADD);

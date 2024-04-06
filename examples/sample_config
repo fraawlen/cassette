@@ -12,8 +12,10 @@ SECTION Sb
 
 	// resources for example program 1-simple
 
-	LET_ENUM enum 6 
-	ITERATE_RAW enum example-1 (JOIN values- %) (RAND 0 100) (RAND 0 100) (RAND 0 100)
+	LET_ENUM    enum 6 
+	LET_PREPEND names enum values-
+
+	ITERATE_RAW names example-1 % (RAND 0 100) (RAND 0 100) (RAND 0 100)
 
 SECTION Sc
 
@@ -29,3 +31,8 @@ SECTION Sc
 	example-2 f (CITRPL #000000 #ffff8000 ($ ratio))
 
 
+
+	LET var_10 a b c
+	LET var_20 1
+
+	LET_MERGE vava var_10 var_20

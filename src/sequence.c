@@ -39,6 +39,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static void _combine_var      (dr_context_t *ctx, dr_token_kind_t);
 static void _declare_enum     (dr_context_t *ctx);
 static void _declare_resource (dr_context_t *ctx, const char *namespace);
 static void _declare_variable (dr_context_t *ctx);
@@ -76,6 +77,12 @@ dr_sequence_parse(dr_context_t *ctx)
 
 	switch (type)
 	{
+		case DR_TOKEN_VAR_APPEND:
+		case DR_TOKEN_VAR_PREPEND:
+		case DR_TOKEN_VAR_MERGE:
+			_combine_var(ctx, type);
+			break;
+
 		case DR_TOKEN_VAR_DECLARATION:
 			_declare_variable(ctx);
 			break;
@@ -127,6 +134,88 @@ dr_sequence_parse(dr_context_t *ctx)
 /************************************************************************************************************/
 /* _ ********************************************************************************************************/
 /************************************************************************************************************/
+
+static void
+_combine_var(dr_context_t *ctx, dr_token_kind_t type)
+{
+	do_book_group_mode_t mode = DO_BOOK_NEW_GROUP;
+	do_string_t *val;
+
+	char name[DR_TOKEN_N];
+	char token_1[DR_TOKEN_N];
+	char token_2[DR_TOKEN_N];
+	size_t i_var_1;
+	size_t i_var_2;
+
+	val = do_string_create();
+
+	/* get variables */
+
+	if (dr_context_get_token(ctx, name,    NULL) == DR_TOKEN_INVALID ||
+	    dr_context_get_token(ctx, token_1, NULL) == DR_TOKEN_INVALID ||
+	    dr_context_get_token(ctx, token_2, NULL) == DR_TOKEN_INVALID)
+	{
+		return;
+	}
+
+	if (!do_dictionary_find(ctx->ref_variables, token_1, DR_CONTEXT_DICT_VARIABLE, &i_var_1))
+	{
+		return;
+	}
+
+	if (type == DR_TOKEN_VAR_MERGE)
+	{
+		if (!do_dictionary_find(ctx->ref_variables, token_2, DR_CONTEXT_DICT_VARIABLE, &i_var_2))
+		{
+			return;
+		}
+	}
+
+	/* generate new values and write them into the variable book */
+
+	for (size_t i = 0; i < do_book_get_group_size(ctx->variables, i_var_1); i++)
+	{
+		do_string_set_raw(val, do_book_get_word(ctx->variables, i_var_1, i));
+		switch (type)
+		{
+			case DR_TOKEN_VAR_APPEND:
+				do_string_append_raw(val, token_2);
+				break;
+
+			case DR_TOKEN_VAR_PREPEND:
+				do_string_prepend_raw(val, token_2);
+				break;
+
+			case DR_TOKEN_VAR_MERGE:
+				do_string_append_raw(val, do_book_get_word(ctx->variables, i_var_2, i));
+				break;
+
+			default:
+				break;
+		}
+
+		do_book_write_new_word(ctx->variables, do_string_get_chars(val), mode);
+		mode = DO_BOOK_OLD_GROUP;
+	}
+
+	if (do_book_has_failed(ctx->variables) || do_string_has_failed(val))
+	{
+		do_string_destroy(&val);
+		return;
+	}
+
+	/* update variable's reference in the variable dictionary */
+
+	do_dictionary_write(
+		ctx->ref_variables,
+		name,
+		DR_CONTEXT_DICT_VARIABLE,
+		do_book_get_number_groups(ctx->variables) - 1);
+
+	do_string_destroy(&val);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
 _declare_enum(dr_context_t *ctx)
