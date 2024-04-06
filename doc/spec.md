@@ -25,11 +25,27 @@ Table of contents
 	3. Section Deletions
 	4. Variable Declaration
 	5. Enumeration Declaration
-	6. Iterations
-	7. Child File Inclusion
-	8. Seed Override
+	6. Combination of Variables
+	7. Iterations
+	8. Child File Inclusion
+	9. Seed Override
 5. Substitutions
-6. Tips & Tricks
+	1. Comments
+	2. Fillers
+	3. End-of-File
+	4. Escape
+	5. Variable Injection
+	6. Iteration Injection
+	7. Join
+	8. Conditions
+	9. Math Operations
+	10. Color Operations
+	11. Constants
+	12. Timestamp
+	13. Random value
+6. Full examples
+	1. GUI Configuration
+	2. Network Simulator
 
 ## 1. Use-case & Scope
 
@@ -211,7 +227,7 @@ a INCLUDE path1 path2
 ### 4.1. Sections
 
 ```
-SECTION <section_name> <section_name> ...
+SECTION [section_name] [section_name] ...
 ```
 
 Sequences can be grouped into user-defined sections. Sections can be then selectively parsed. When a section is not enabled, all other sequences will be skipped until a new section starts.
@@ -244,7 +260,7 @@ SECTION
 ### 4.2. Section Additions
 
 ```
-SECTION_ADD <section_name> <section_name> ...
+SECTION_ADD [section_name] [section_name] ...
 ```
 
 Sequences belonging to a section will only be parsed and processed if said section has been enabled. This can be done with a sequence starting with `SECTION_ADD` followed by any number of tokens. These tokens represent the names of sections to enable.
@@ -252,7 +268,7 @@ Sequences belonging to a section will only be parsed and processed if said secti
 ### 4.3. Section Deletions
 
 ```
-SECTION_DEL <section_name> <section_name> ...
+SECTION_DEL [section_name] [section_name] ...
 ```
 
 Sequences belonging to a section will only be parsed and processed if said section has been enabled. But after having been enabled, sections can be disabled again with a sequence starting with `SECTION_DEL` followed by any number of tokens.  These tokens represent the names of sections to disable. The effects of this sequence are only applicable after the present section ends.
@@ -260,7 +276,7 @@ Sequences belonging to a section will only be parsed and processed if said secti
 ### 4.4. Variable Declaration
 
 ```
-LET <variable_name> <value> <value> ...
+LET [new_variable_name] [value] [value] ...
 ```
 
 The DR configuration language offers support for user-defined variables. Similarly to resources, variables are arrays of values. They can be declared with a section starting with the token `LET` followed by the name of the variable (that will be used to reference it in other parts of the file), then by any number of tokens. After that, when a variable is invoked in another sequence (see [Variable Injection]()) the variable values will be injected into that sequence.
@@ -300,10 +316,10 @@ $ var
 ### 4.5. Enumerations Declaration
 
 ```
-LET_ENUM <variable_name> <min> <max> <steps> <precision>
-LET_ENUM <variable_name> <min> <max> <steps>
-LET_ENUM <variable_name> <min> <max>
-LET_ENUM <variable_name> <max>
+LET_ENUM [new_variable_name] [min] [max] [steps] [precision]
+LET_ENUM [new_variable_name] [min] [max] [steps]
+LET_ENUM [new_variable_name] [min] [max]
+LET_ENUM [new_variable_name] [max]
 ```
 
 Enumerations are variables whose values are not written down strings but instead are a sequence of numbers generated according to 4 parameters:
@@ -313,26 +329,38 @@ Enumerations are variables whose values are not written down strings but instead
 - steps : 
 - precision : the amount of decimals, because numbers are stored as doubles
 
-There are 4 possible enumeration syntax
+TODO
 
-### 4.6. Iterations
-
-```
-ITERATE_RAW <variable_name> <token> <token> ...
-ITERATE     <variable_name> <token> <token> ...
-```
-
-### 4.7. Child File Inclusion
+### 4.6. Combination of variables
 
 ```
-INCLUDE <filename> <filename> ...
+LET_APPEND  [new_variable_name] [variable_name] [string]
+LET_PREPEND [new_variable_name] [variable_name] [string]
+LET_MERGE   [new_variable_name] [variable_name] [variable_name]
 ```
 
-Alongside sections, resources can also be put in separate files that can be opened and parsed with an inclusion sequence that starts with an `INCLUDE`token followed by filenames of files to include. The filenames are relative to the location of the file the sequence is read from. Unless they start with '/' in which case the given paths are absolute.
+TODO
+
+### 4.7. Iterations
+
+```
+ITERATE_RAW [variable_name] [token] [token] ...
+ITERATE     [variable_name] [token] [token] ...
+```
+
+TODO
+
+### 4.8. Child File Inclusion
+
+```
+INCLUDE [filename] [filename] ...
+```
+
+Alongside sections, resources can also be put in separate files that can be opened and parsed with an inclusion sequence that starts with an `INCLUDE`token followed by filenames of files to include. The filenames are relative to the location of the file the sequence is read from. Unless they start with '/' in which case the given filename are absolute.
 
 The contents of the included files are treated as if they've been copy-pasted into the parent file at the position of the inclusion sequence. In other words, declared variables, enumerations, and section states are carried over to the included child file. And any modifications that happen in inclusions are also brought back to the parent file.
 
-For example :
+For example, these 3 files :
 
 ```
 // ~/.config/parent
@@ -349,7 +377,7 @@ SECTION Sa
 LET var a b c
 ```
 
-Is equivalent to a single file like this :
+Are equivalent to a single file like this :
 
 ```
 SECTION_ADD Sa
@@ -363,10 +391,243 @@ That gets resolved into :
 1 2 3 a b c
 ```
 
-### 4.8. Seed override
+### 4.9. Seed override
 
 ```
-SEED_OVERRIDE <seed_value>
+SEED_OVERRIDE [seed_value]
 ```
 
 Resets and sets the seed of the parser's random number LCG. Can be used to shuffle the values returned by [random substitutions](). However, this sequence is an override. It can conflict with software that sets its own parser seed. Check the software's documentation before using it.
+
+## 5. Substitutions
+	
+### 5.1. Comments
+
+```
+//
+```
+
+Any tokens written after this token will be ignored until the next newline.
+
+### 5.2. Fillers
+
+```
+=
+:=
+```
+
+Eye-candy that will be skipped during parsing.
+
+In this example, all three definitions are identical :
+```
+namespace property    value
+namespace property  = value
+namespace property := value
+```
+
+### 5.3. End-of-File
+
+```
+EOF
+```
+
+Ends a sequence and file early. If the file this token is read from happens to be an [included file](), only that file gets closed, and parsing resumes in the parent file.
+
+### 5.4. Escape
+
+```
+\ [token]
+\ [newline]
+```
+
+The next token is forcefully interpreted as a string and no substitutions will be performed on it. But if there is no token following the escape, then the newline is ignored instead. Thanks to that, it's possible to define sequences that span multiple lines.
+
+### 5.5. Variable Injection
+
+```
+$ [variable_name]
+```
+
+TODO
+
+### 5.6. Iteration Injection
+
+```
+%
+```
+
+TODO
+
+### 5.7. Join
+
+```
+JOIN [string] [string]
+```
+
+Concatenates the next 2 tokens and returns the resulting string.
+
+### 5.8. Conditions
+
+```
+<  [double] [double] [token_if_true] [token_if_false]
+<= [doudle] [double] [token_if_true] [token_if_false]
+>  [double] [double] [token_if_true] [token_if_false]
+>= [double] [double] [token_if_true] [token_if_false]
+== [double] [double] [token_if_true] [token_if_false]
+!= [double] [double] [token_if_true] [token_if_false]
+```
+
+Compares two doubles. Depending on the result, either the 3rd or 4th token is returned.
+
+Only one token is returned at a time. However it can be combined with variables is whole sequences need to be returned instead :
+
+```
+LET var_a a b c
+LET var_b 1 2 3
+$ == 0.0 1.0 var_a var_b
+-> ($ (== 0.0 1.0 var_a var_b))
+-> ($ var_b)
+-> 1 2 3
+```
+
+### 5.9. Math Operations
+
+```
+SQRT  [double]
+CBRT  [double]
+ABS   [double]
+CEIL  [double]
+FLOOR [double]
+ROUND [double]
+COS   [double]
+SIN   [double]
+TAN   [double]
+ACOS  [double]
+ASIN  [double]
+ATAN  [double]
+COSH  [double]
+SINH  [double]
+LN    [double]
+LOG   [double]
++     [double] [double]
+-     [double] [double]
+*     [double] [double]
+/     [double] [double]
+MOD   [double] [mod]
+POW   [double] [exponent]
+BIG   [double] [double]
+SMALL [double] [double]
+ITPRL [double] [double] [0.0-1.0] // Interpolation
+LIMIT [double] [min] [max]
+```
+
+Performs a mathematical operation and returns the resulting double value.
+
+### 5.10. Color Operations
+
+```
+CITPRL [color] [color] [0.0-1.0]       // Color interpolation
+RGB    [0-255] [0-255] [0-255]         // Composes a color
+RGBA   [0-255] [0-255] [0-255] [0-255] // Composes a color
+```
+
+Performs color specific operations and returns a double value representing a color. Color being internally represented as number, normal [mathematical operations]() can also be used. However this set of substitutions perform operations channel by channel.
+
+### 5.11. Constants
+
+```
+PI    // 3.1415926535897932
+E     // 0.5772156649015328
+TRUE  // 1.0
+FALSE // 0.0
+```
+
+Returns a constant value in double format.
+
+### 5.12. Timestamp
+
+```
+TIME
+```
+
+Returns a UNIX timestamp in seconds.
+
+### 5.13 Random value
+
+```
+RAND [min] [max]
+```
+
+Returns a random double ranging from `min` to `max`.
+
+## 6. Full Examples
+
+### 6.1. GUI Configuration
+
+In this first example, we consider a hypothetical GUI tooklit or application that lets its end-users customize the appearance of its widgets. Thanks to DR's sections, different themes can co-exist in the same source file. Moreover, the themes are selected automatically depending on the value of a brightness variable. Said variable could be then set by an external program that tracks the values of a light sensor. Hence, with this kind of configuration, an application or toolkit can switch between a light and dark theme depending on the amount of light hitting the device they're running from.
+
+```
+	LET brightness 0.3 // [0.0-1.0]
+	LET widgets \
+		button \
+		switch \
+		label 
+	
+	SECTION_ADD (> ($ brighness 0.5) Theme_light Theme_dark)
+
+SECTION Theme_light
+
+	LET bg_color (CITPRL #808080ff #ffffff ($ brightness))
+
+SECTION Theme_dark
+
+	LET bg_color RGB 0 0 0
+
+SECTION
+
+	ITERATE_RAW widgets % background_color ($ bg_color)
+```
+
+Result :
+
+```
+button background_color #a6a6a6
+switch background_color #a6a6a6
+label  background_color #a6a6a6
+```
+
+### 6.2. Network Simulator
+
+This second example shows off a possible simulation description / input file for some sort of wireless network simulator. 
+
+```
+LET         number_of_nodes 5
+LET_ENUM    nodes_ids 1 ($ number_of_nodes)
+LET_PREPEND nodes_names nodes_ids "n-"
+
+sim length (* 3 3600) // seconds
+sim nodes  ($ nodes_names)
+
+ITERATE_RAW nodes_names % x 0
+ITERATE     nodes_names % y (\ - (\ * % 10) 10)
+```
+
+Result :
+
+```
+sim length 10800
+sim nodes n-1 n-2 n-3 n-4 n-5
+
+n-1 x 0
+n-2 x 0
+n-3 x 0
+n-4 x 0
+n-5 x 0
+
+n-1 y 0
+n-2 y 10
+n-3 y 20
+n-4 y 30
+n-5 y 40
+```
+
