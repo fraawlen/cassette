@@ -1,4 +1,3 @@
-
 DR - Specification & Syntax (WIP)
 ===========================
 
@@ -60,15 +59,9 @@ token token token token token
 token token token token
 ```
 
-In DR, there is no concept of priority based on the presence of parentheses, brackets, or braces. In fact, parentheses get interpreted as white space, so even if they can be used to visually group tokens together, they bear no effect. Instead, tokens are strictly parsed from left to right and any language function that gets triggered should happen as the tokens are read. Thanks to that, words read from a source configuration file only need to be parsed and processed once. The only exception to this rule is the [iteration-type sequences]().
+In DR, there is no concept of priority based on the presence of parenthesis, brackets, or braces. In fact, parentheses get interpreted as whitespace, so even if they can be used to visually group tokens together, they bear no effect. Instead, tokens are strictly parsed from left to right and any language function that gets triggered should happen as the tokens are read. Thanks to that, words read from a source configuration file only need to be parsed and processed once. The only exception to this rule is the [iteration-type sequences]().
 
-```
-These 3 sequences are parsed the same way
-These 3 (sequences are) parsed ((the same ) way )
-These 3 sequences )()()( are parsed )))))the same way))))))
-```
-
-If white spaces or parentheses need to be explicitly part of a token, said token can be wrapped in single or double quotes. Likewise, single quotes can be wrapped in double quotes and vice-versa. Additionally, within quote wraps, newlines are also conserved and do not terminate sequences. Non white space characters directly preceding or following quotes are considered to be part of the same word. The same applies to multiple groups of quoted word sections.
+If white spaces need to be explicitly part of a token, said token can be wrapped in single or double quotes. Likewise, single quotes can be wrapped in double quotes and vice-versa. Additionally, within quote wraps, newlines are also conserved and do not terminate sequences. Non white space characters directly preceding or following quotes are considered to be part of the same word. The same applies to multiple groups of quoted word sections.
 
 ```
 "  token "
@@ -91,20 +84,18 @@ namespace name value_1 value_2 value_3 ...
 
 If a program requires a resource with N values and the matching resource in the configuration file has less than N values defined, the interpretation of missing values is up to the program.
 
-By convention, and to minimize possible collision with function tokens, resources tokens (namespaces, names and values) should be written in full lowercase.
+By convention, and to minimize possible collision with function tokens, resources namespaces, resources names and (if possible) resource values should be written in full lowercase.
 
-At its simplest, a DR configuration file can just be a series of resources. In this example, for a hypothetical GUI library, we define 8 resources spread across 2 widgets, `button` and `label`. The resources namespaces borrow their widget name. The resources named `corner-radius` and `corner-style` get assigned 4 values, one for each widget corner. 
+At its simplest, a DR configuration file can just be a series of resources. In this example, for a hypothetical GUI library, we define 6 resources spread across 2 widgets, `button` and `label`. The resources namespaces borrow their widget name. The resources named `corner-radius` get assigned 4 values, one for each widget corner.
 
 ```
 button background_color #808080
 button border_width 3
 button corner-radius 0 0 3 0
-button corner-style straight straight radii straight
 
 label background_color #555555
 label border_width 0
-label corner-radius 4 4 4 4
-button corner-style radii radii radii radii
+label corner-radius 0 0 0 0
 ```
 
 ## 3. Tokens Types
@@ -210,13 +201,9 @@ a INCLUDE path1 path2
 
 ### 4.1. Sections
 
-```
-SECTION <section_name> <section_name> ...
-```
-
 Sequences can be grouped into user-defined sections. Sections can be then selectively parsed. When a section is not enabled, all other sequences will be skipped until a new section starts.
 
-A section sequence is defined with a `SECTION` lead token, followed by section names. All section names need to be enabled (they are disabled by default, see [Section Additions]() and [Section Deletions]()) for the given section to be allowed to be parsed. Sections can be repeated. By convention, to differentiate section names from function tokens and generic strings or values, section names should capitalize their first character.
+A section sequence is defined with a `SECTION` lead token, followed by section names. All section names need to be enabled (see [Section Additions]() and [Section Deletions]()) for the given section to be allowed to be parsed. Sections can be repeated. By convention, to differentiate section names from function tokens and generic strings or values, section names should capitalize their first character.
 
 Before a section is defined, all sequences are part of the 'always' section, and will always be read and processed. Likewise, if a section definition does not have any section name following it, the following sequences will also belong to the 'always' section and will always be processed.
 
@@ -243,130 +230,14 @@ SECTION
 
 ### 4.2. Section Additions
 
-```
-SECTION_ADD <section_name> <section_name> ...
-```
-
-Sequences belonging to a section will only be parsed and processed if said section has been enabled. This can be done with a sequence starting with `SECTION_ADD` followed by any number of tokens. These tokens represent the names of sections to enable.
-
 ### 4.3. Section Deletions
-
-```
-SECTION_DEL <section_name> <section_name> ...
-```
-
-Sequences belonging to a section will only be parsed and processed if said section has been enabled. But after having been enabled, sections can be disabled again with a sequence starting with `SECTION_DEL` followed by any number of tokens.  These tokens represent the names of sections to disable. The effects of this sequence are only applicable after the present section ends.
 
 ### 4.4. Variable Declaration
 
-```
-LET <variable_name> <value> <value> ...
-```
-
-The DR configuration language offers support for user-defined variables. Similarly to resources, variables are arrays of values. They can be declared with a section starting with the token `LET` followed by the name of the variable (that will be used to reference it in other parts of the file), then by any number of tokens. After that, when a variable is invoked in another sequence (see [Variable Injection]()) the variable values will be injected into that sequence.
-
-```
-LET var a b c
-1 2 $ var 3
--> 1 2 a b c 3
-
-LET var a b
-JOIN $ var
--> (JOIN a b)
--> ab
-```
-
-And like any other sequences, variable declarations are subject to token substitutions, meaning function tokens, including variable injections, will be resolved when the variable declaration is parsed.
-
-```
-LET var_a a b
-LET var_b JOIN $ var_a c
--> LET var_b (JOIN a b) c
--> LET var_b ab c
-
-$ var_b 1 2 3 $ var_a
--> ab c 1 2 3 a b
-```
-
-Finally,  if the same variable is declared more than once, the latest declaration overwrites the previous ones.
-
-```
-LET var a b c d
-LET var h i j
-$ var
--> h i j
-```
-
 ### 4.5. Enumerations Declaration
-
-```
-LET_ENUM <variable_name> <min> <max> <steps> <precision>
-LET_ENUM <variable_name> <min> <max> <steps>
-LET_ENUM <variable_name> <min> <max>
-LET_ENUM <variable_name> <max>
-```
-
-Enumerations are variables whose values are not written down strings but instead are a sequence of numbers generated according to 4 parameters:
-
-- min : value to start from
-- max : value to end at
-- steps : 
-- precision : the amount of decimals, because numbers are stored as doubles
-
-There are 4 possible enumeration syntax
 
 ### 4.6. Iterations
 
-```
-ITERATE_RAW <variable_name> <token> <token> ...
-ITERATE     <variable_name> <token> <token> ...
-```
-
 ### 4.7. Child File Inclusion
 
-```
-INCLUDE <filename> <filename> ...
-```
-
-Alongside sections, resources can also be put in separate files that can be opened and parsed with an inclusion sequence that starts with an `INCLUDE`token followed by filenames of files to include. The filenames are relative to the location of the file the sequence is read from. Unless they start with '/' in which case the given paths are absolute.
-
-The contents of the included files are treated as if they've been copy-pasted into the parent file at the position of the inclusion sequence. In other words, declared variables, enumerations, and section states are carried over to the included child file. And any modifications that happen in inclusions are also brought back to the parent file.
-
-For example :
-
-```
-// ~/.config/parent
-SECTION_ADD Sa
-INCLUDE ../child_1 /child_2
-1 2 3 $ var
-```
-```
-// ~/child_1
-SECTION Sa
-```
-```
-// /child_2
-LET var a b c
-```
-
-Is equivalent to a single file like this :
-
-```
-SECTION_ADD Sa
-SECTION Sa
-	LET var a b c
-	1 2 3 % var
-```
-
-That gets resolved into :
-```
-1 2 3 a b c
-```
-
-### 4.8. Seed override
-
-```
-SEED_OVERRIDE <seed_value>
-```
-
-Resets and sets the seed of the parser's random number LCG. Can be used to shuffle the values returned by [random substitutions](). However, this sequence is an override. It can conflict with software that sets its own parser seed. Check the software's documentation before using it.
+### 4.8, Seed override
