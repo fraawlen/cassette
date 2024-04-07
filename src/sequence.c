@@ -351,20 +351,6 @@ _declare_resource(dr_context_t *ctx, const char *namespace)
 	/* use the namespace's dict value as sequence group (m > 0) */
 
 	do_dictionary_write(ctx->ref_sequences, name, m, do_book_get_number_groups(ctx->sequences) - 1);
-
-	/* debug print */
-
-/*
-	printf("%zu,\t%s,\t%s", m, namespace, name);
-
-	do_book_reset_iterator(ctx->sequences, do_book_get_number_groups(ctx->sequences) - 1);
-	while (do_book_increment_iterator(ctx->sequences))
-	{
-		printf(",\t%s", do_book_get_iteration(ctx->sequences));
-	}
-
-	printf("\n");
-*/
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
