@@ -108,6 +108,7 @@ dr_token_dictionary_create(void)
 	do_dictionary_write(dict, "ITERATE",       0, DR_TOKEN_ITERATE);
 	do_dictionary_write(dict, "ITERATE_RAW",   0, DR_TOKEN_ITERATE_RAW);
 	do_dictionary_write(dict, "SEED_OVERRIDE", 0, DR_TOKEN_RAND_SEED);
+	do_dictionary_write(dict, "DEBUG_PRINT",   0, DR_TOKEN_PRINT);
 
 	return dict;
 }

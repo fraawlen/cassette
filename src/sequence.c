@@ -45,6 +45,7 @@ static void _declare_resource (dr_context_t *ctx, const char *namespace);
 static void _declare_variable (dr_context_t *ctx);
 static void _include          (dr_context_t *ctx);
 static void _iterate          (dr_context_t *ctx, dr_token_kind_t type);
+static void _print            (dr_context_t *ctx);
 static void _section_add      (dr_context_t *ctx);
 static void _section_begin    (dr_context_t *ctx);
 static void _section_del      (dr_context_t *ctx);
@@ -114,6 +115,10 @@ dr_sequence_parse(dr_context_t *ctx)
 
 		case DR_TOKEN_RAND_SEED:
 			_seed(ctx);
+			break;
+
+		case DR_TOKEN_PRINT:
+			_print(ctx);
 			break;
 
 		case DR_TOKEN_INVALID:
@@ -347,15 +352,15 @@ _declare_resource(dr_context_t *ctx, const char *namespace)
 
 	do_dictionary_write(ctx->ref_sequences, name, m, do_book_get_number_groups(ctx->sequences) - 1);
 
-	/* debug */
+	/* debug print */
 
 /*
-	printf("(%zu)%s.\t%s.", m, namespace, name);
+	printf("%zu,\t%s,\t%s", m, namespace, name);
 
 	do_book_reset_iterator(ctx->sequences, do_book_get_number_groups(ctx->sequences) - 1);
 	while (do_book_increment_iterator(ctx->sequences))
 	{
-		printf("\t%s.", do_book_get_iteration(ctx->sequences));
+		printf(",\t%s", do_book_get_iteration(ctx->sequences));
 	}
 
 	printf("\n");
@@ -524,6 +529,21 @@ _iterate(dr_context_t *ctx, dr_token_kind_t type)
 	
 	do_book_destroy(&iteration);
 	ctx->iteration = do_book_get_placeholder();
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_print(dr_context_t *ctx)
+{
+	char token[DR_TOKEN_N];
+	
+	while (dr_context_get_token(ctx, token, NULL) != DR_TOKEN_INVALID)
+	{
+		fprintf(stderr, "%s,\t", token);
+	}
+
+	fprintf(stderr, "\n");
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

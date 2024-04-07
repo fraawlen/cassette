@@ -104,6 +104,7 @@ enum dr_token_kind_t
 	DR_TOKEN_ITERATE_RAW,
 	DR_TOKEN_ITERATE,
 	DR_TOKEN_RAND_SEED,
+	DR_TOKEN_PRINT,
 };
 
 typedef enum dr_token_kind_t dr_token_kind_t;
