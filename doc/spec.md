@@ -1,4 +1,3 @@
-
 DR - Specification & Syntax (WIP)
 ===========================
 
@@ -29,6 +28,7 @@ Table of contents
 	7. Iterations
 	8. Child File Inclusion
 	9. Seed Override
+	10. Debug Print
 5. Substitutions
 	1. Comments
 	2. Fillers
@@ -391,13 +391,21 @@ That gets resolved into :
 1 2 3 a b c
 ```
 
-### 4.9. Seed override
+### 4.9. Seed Override
 
 ```
 SEED_OVERRIDE [seed_value]
 ```
 
 Resets and sets the seed of the parser's random number LCG. Can be used to shuffle the values returned by [random substitutions](). However, this sequence is an override. It can conflict with software that sets its own parser seed. Check the software's documentation before using it.
+
+### 4.10. Debug Print
+
+```
+DEBUG_PRINT [token] [token] ...
+```
+
+Prints to `stderr` the resolved sequence that follows the lead token.
 
 ## 5. Substitutions
 	
@@ -408,6 +416,13 @@ Resets and sets the seed of the parser's random number LCG. Can be used to shuff
 ```
 
 Any tokens written after this token will be ignored until the next newline.
+
+It should be noted that this is a token, therefore there should be some white space before the start of the comment text.
+
+```
+a b // proper comment
+a b //not a comment
+```
 
 ### 5.2. Fillers
 
@@ -442,13 +457,34 @@ Ends a sequence and file early. If the file this token is read from happens to b
 
 The next token is forcefully interpreted as a string and no substitutions will be performed on it. But if there is no token following the escape, then the newline is ignored instead. Thanks to that, it's possible to define sequences that span multiple lines.
 
+```
+JOIN a b
+-> ab
+
+\ JOIN a b
+-> JOIN a b
+
+this \
+is \
+a \
+multiline \
+sequence
+-> this is a multiline sequence
+```
+
 ### 5.5. Variable Injection
 
 ```
 $ [variable_name]
 ```
 
-TODO
+Injects a variable's sequence of values into the current sequence. The variable being called needs to be declared first with a sequence starting with `LET`, `LET_ENUM`, `LET_APPEND`, `LET_PREPEND`, or `LET_MERGE`. If the variable was not declared beforehand, an invalid token will be returned instead.
+
+```
+LET var a b c
+1 2 $ var 2
+-> 1 2 a b c 3
+```
 
 ### 5.6. Iteration Injection
 
@@ -456,7 +492,7 @@ TODO
 %
 ```
 
-TODO
+Within an iterated sequence, this token returns a value of the iteration's variable. Outside iterations this token is treated as a string. See [Iterations]() for more details.
 
 ### 5.7. Join
 
@@ -465,6 +501,11 @@ JOIN [string] [string]
 ```
 
 Concatenates the next 2 tokens and returns the resulting string.
+
+```
+JOIN a b
+-> ab
+```
 
 ### 5.8. Conditions
 
@@ -478,6 +519,11 @@ Concatenates the next 2 tokens and returns the resulting string.
 ```
 
 Compares two doubles. Depending on the result, either the 3rd or 4th token is returned.
+
+```
+!= 0.3 0.5 a b
+-> a
+```
 
 Only one token is returned at a time. However it can be combined with variables is whole sequences need to be returned instead :
 
@@ -558,7 +604,8 @@ Returns a UNIX timestamp in seconds.
 RAND [min] [max]
 ```
 
-Returns a random double ranging from `min` to `max`.
+Returns a pseudo-random double ranging from `min` to `max`.
+Because the internal RNG is an LCG, as long as the initial seed is not modified, the same value will be returned between different reloads.
 
 ## 6. Full Examples
 
@@ -567,21 +614,21 @@ Returns a random double ranging from `min` to `max`.
 In this first example, we consider a hypothetical GUI tooklit or application that lets its end-users customize the appearance of its widgets. Thanks to DR's sections, different themes can co-exist in the same source file. Moreover, the themes are selected automatically depending on the value of a brightness variable. Said variable could be then set by an external program that tracks the values of a light sensor. Hence, with this kind of configuration, an application or toolkit can switch between a light and dark theme depending on the amount of light hitting the device they're running from.
 
 ```
-	LET brightness 0.3 // [0.0-1.0]
+	LET brightness 0.6 // [0.0-1.0]
 	LET widgets \
 		button \
 		switch \
 		label 
 	
-	SECTION_ADD (> ($ brighness 0.5) Theme_light Theme_dark)
+	SECTION_ADD (> ($ brightness) 0.5 Theme_light Theme_dark)
 
 SECTION Theme_light
 
-	LET bg_color (CITPRL #808080ff #ffffff ($ brightness))
+	LET bg_color (CITRPL #808080ff (RGB 255 255 255) ($ brightness))
 
 SECTION Theme_dark
 
-	LET bg_color RGB 0 0 0
+	LET bg_color #00000000
 
 SECTION
 
@@ -591,43 +638,54 @@ SECTION
 Result :
 
 ```
-button background_color #a6a6a6
-switch background_color #a6a6a6
-label  background_color #a6a6a6
+button background_color #ccccccff
+switch background_color #ccccccff
+label  background_color #ccccccff
 ```
 
 ### 6.2. Network Simulator
 
-This second example shows off a possible simulation description / input file for some sort of wireless network simulator. 
+This second example shows off a possible simulation description/input file for some sort of wireless network simulator. Said simulation requires a list of communication nodes to be declared and set up. Here, a linear wireless network consisting of 5 nodes is created. Each node is then attributed a (simplified) mac address, an x-y position, and a random communication range. Thanks to the usage of variables and iterations, that same simulation can be scaled up to hundreds of nodes by just changing the `number_of_nodes` value.
 
 ```
 LET         number_of_nodes 5
 LET_ENUM    nodes_ids 1 ($ number_of_nodes)
-LET_PREPEND nodes_names nodes_ids "n-"
+LET_PREPEND nodes_names nodes_ids "n_"
 
-sim length (* 3 3600) // seconds
-sim nodes  ($ nodes_names)
+node list ($ nodes_names)
 
-ITERATE_RAW nodes_names % x 0
-ITERATE     nodes_names % y (\ - (\ * % 10) 10)
+ITERATE     nodes_ids (\ JOIN "n_" %) address %
+ITERATE     nodes_ids (\ JOIN "n_" %) x (\ - (\ * % 10) 10)
+ITERATE     nodes_names % y 0
+ITERATE_RAW nodes_names % range (ROUND (RAND 15 35))
 ```
 
 Result :
 
 ```
-sim length 10800
-sim nodes n-1 n-2 n-3 n-4 n-5
+node list n_1 n_2 n_3 n_4 n_5
 
-n-1 x 0
-n-2 x 0
-n-3 x 0
-n-4 x 0
-n-5 x 0
+n_1 address 1
+n_2 address 2
+n_3 address 3
+n_4 address 4
+n_5 address 5
 
-n-1 y 0
-n-2 y 10
-n-3 y 20
-n-4 y 30
-n-5 y 40
+n_1 x 0
+n_2 x 10
+n_3 x 20
+n_4 x 30
+n_5 x 40
+
+n_1 y 0
+n_2 y 0
+n_3 y 0
+n_4 y 0
+n_5 y 0
+
+n_1 range 23
+n_2 range 30
+n_3 range 18
+n_4 range 18
+n_5 range 28
 ```
-
