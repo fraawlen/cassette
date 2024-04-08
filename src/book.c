@@ -484,6 +484,11 @@ do_book_write_new_word(do_book_t *book, const char *str, do_book_group_mode_t gr
 	char *word;
 
 	assert(book);
+
+	if (!str)
+	{
+		return;
+	}
 	
 	if ((word = do_book_prepare_new_word(book, group_mode)))
 	{
