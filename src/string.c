@@ -280,7 +280,7 @@ do_string_cut(do_string_t *str, size_t offset, size_t n_codepoints)
 	offset_2 = _convert_to_byte_offset(str, offset + n_codepoints);
 	offset   = _convert_to_byte_offset(str, offset);
 
-	strcpy(str->chars + offset, str->chars + offset_2);	
+	memmove(str->chars + offset, str->chars + offset_2, str->n_bytes - offset_2);
 
 	_update_n_values(str);
 }
