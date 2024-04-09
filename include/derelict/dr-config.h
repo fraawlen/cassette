@@ -81,6 +81,13 @@ dr_config_t *dr_config_get_placeholder(void);
 void dr_config_clear_callbacks(dr_config_t *cfg);
 
 /**
+ * Clears the list of added parameters that were added with dr_config_push_parameter_*().
+ *
+ * @param cfg Config to interact with
+ */
+void dr_config_clear_parameters(dr_config_t *cfg);
+
+/**
  * Clears the list of source files that were added with dr_config_push_source().
  *
  * @param cfg Config to interact with
@@ -113,6 +120,26 @@ bool dr_config_load(dr_config_t *cfg);
  * @param ref Abitrary pointer value to pass to callback
  */
 void dr_config_push_callback(dr_config_t *cfg, void (*fn)(dr_config_t *cfg, bool load_success, void *ref), void *ref);
+
+/**
+ * Adds a configuration parameter in double format whose value can be accessed and used from a configuration
+ * source file. Unlike user-defined variables, only one value per parameter can be defined.
+ *
+ * @param cfg Config to interact with
+ * @param name Name of the parameter to use in the source configuration
+ * @param value Parameter's value
+ */
+void dr_config_push_parameter_double(dr_config_t *cfg, const char *name, double value);
+
+/**
+ * Adds a configuration parameter in string format whose value can be accessed and used from a configuration
+ * source file. Unlike user-defined variables, only one value per parameter can be defined.
+ *
+ * @param cfg Config to interact with
+ * @param name Name of the parameter to use in the source configuration
+ * @param value Parameter's value
+ */
+void dr_config_push_parameter_string(dr_config_t *cfg, const char *name, const char *value);
 
 /**
  * Adds a source file to potentially parse. Only the first added source that can be opened will be parsed,

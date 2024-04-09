@@ -51,8 +51,9 @@ static double _b     = 0.0;
 static double _c[3]  = {0.0, 0.0, 0.0};
 static bool   _d     = false;
 static char   _e[40] = "";
+static long   _f     = 0;
 
-static do_color_t _f = {0};
+static do_color_t _g = {0};
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -85,6 +86,7 @@ main(void)
 
 	dr_config_push_source(cfg, _SAMPLE_CONFIG_PATH);
 	dr_config_push_callback(cfg, _callback, NULL);
+	dr_config_push_parameter_double(cfg, "internal_param", 1337);
 
 	dr_config_load(cfg); /* load success check is done in callback */
 
@@ -95,12 +97,13 @@ main(void)
 	printf("c -> %f, %f, %f\n", _c[0], _c[1], _c[2]);
 	printf("d -> %s\n",         _d ? "true" : "false");
 	printf("e -> %s\n",         _e);
+	printf("f -> %li\n",        _f);
 	printf(
-		"f -> r = %u, g = %u, b = %u, a = %u\n",
-		(unsigned int)(_f.r * 256),
-		(unsigned int)(_f.g * 256),
-		(unsigned int)(_f.b * 256),
-		(unsigned int)(_f.a * 256));
+		"g -> r = %u, g = %u, b = %u, a = %u\n",
+		(unsigned int)(_g.r * 256),
+		(unsigned int)(_g.g * 256),
+		(unsigned int)(_g.b * 256),
+		(unsigned int)(_g.a * 256));
 
 	/* end */
 
@@ -137,7 +140,8 @@ _callback(dr_config_t *cfg, bool load_success, void *ref)
 	_c[1] = 0.0;
 	_c[2] = 0.0;
 	_d    = false;
-	_f    = DO_COLOR_BLACK;
+	_f    = 0.0;
+	_g    = DO_COLOR_BLACK;
 	
 	snprintf(_e, sizeof(_e), "some-stuff");
 
@@ -176,7 +180,13 @@ _callback(dr_config_t *cfg, bool load_success, void *ref)
 	dr_resource_fetch(cfg, "example-2", "f");
 	if (dr_resource_pick_next_value(cfg))
 	{
-		_f = dr_resource_convert_to_color(cfg);
+		_f = dr_resource_convert_to_long(cfg);
+	}
+
+	dr_resource_fetch(cfg, "example-2", "g");
+	if (dr_resource_pick_next_value(cfg))
+	{
+		_g = dr_resource_convert_to_color(cfg);
 	}
 }
 

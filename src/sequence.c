@@ -284,7 +284,7 @@ _declare_enum(dr_context_t *ctx)
 		{
 			mode  = DO_BOOK_OLD_GROUP;
 			ratio = dr_util_interpolate(min, max, i / steps);
-			snprintf(tmp, DR_TOKEN_N - 1, "%.*f", (int)precision, ratio);
+			snprintf(tmp, DR_TOKEN_N, "%.*f", (int)precision, ratio);
 		}
 	}
 

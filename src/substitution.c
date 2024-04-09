@@ -42,6 +42,7 @@ static dr_token_kind_t _if       (dr_context_t *ctx, char token[static DR_TOKEN_
 static dr_token_kind_t _join     (dr_context_t *ctx, char token[static DR_TOKEN_N]);
 static dr_token_kind_t _math     (dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result, dr_token_kind_t type, size_t n);
 static dr_token_kind_t _math_cl  (dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result, dr_token_kind_t type, size_t n);
+static dr_token_kind_t _param    (dr_context_t *ctx, char token[static DR_TOKEN_N]);
 static dr_token_kind_t _variable (dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result);
 
 /************************************************************************************************************/
@@ -86,6 +87,10 @@ dr_subtitution_apply(dr_context_t *ctx, char token[static DR_TOKEN_N], double *m
 
 		case DR_TOKEN_VAR_INJECTION:
 			type = _variable(ctx, token, math_result);
+			break;
+
+		case DR_TOKEN_PARAM_INJECTION:
+			type = _param(ctx, token);
 			break;
 
 		case DR_TOKEN_IF_LESS:
@@ -524,6 +529,29 @@ _math_cl(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result, 
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static dr_token_kind_t
+_param(dr_context_t *ctx, char token[static DR_TOKEN_N])
+{
+	size_t i; 
+
+	if (dr_context_get_token(ctx, token, NULL) == DR_TOKEN_INVALID)
+	{
+		return DR_TOKEN_INVALID;
+	}
+
+	if (!do_dictionary_find(ctx->ref_params, token, 0, &i))
+	{
+		return DR_TOKEN_INVALID;
+	}
+
+
+	snprintf(token, DR_TOKEN_N, "%s", do_book_get_word(ctx->params, 0, i));
+	
+	return DR_TOKEN_STRING;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static dr_token_kind_t
 _variable(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result)

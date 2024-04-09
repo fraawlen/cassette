@@ -1,4 +1,4 @@
-DR - Specification & Syntax (WIP)
+DR - Specification & Syntax (WIP 80%)
 ===========================
 
 Derelict Resources (DR) is a configuration language and parser library featuring array based values and short s-like expressions based functions. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
@@ -35,14 +35,15 @@ Table of contents
 	3. End-of-File
 	4. Escape
 	5. Variable Injection
-	6. Iteration Injection
-	7. Join
-	8. Conditions
-	9. Math Operations
-	10. Color Operations
-	11. Constants
-	12. Timestamp
-	13. Random value
+	6. Parameter Injection
+	7. Iteration Injection
+	8. Join
+	9. Conditions
+	10. Math Operations
+	11. Color Operations
+	12. Constants
+	13. Timestamp
+	14. Random value
 6. Full examples
 	1. GUI Configuration
 	2. Network Simulator
@@ -475,7 +476,8 @@ sequence
 ### 5.5. Variable Injection
 
 ```
-$ [variable_name]
+$   [variable_name]
+VAR [variable_name]
 ```
 
 Injects a variable's sequence of values into the current sequence. The variable being called needs to be declared first with a sequence starting with `LET`, `LET_ENUM`, `LET_APPEND`, `LET_PREPEND`, or `LET_MERGE`. If the variable was not declared beforehand, an invalid token will be returned instead.
@@ -486,7 +488,31 @@ LET var a b c
 -> 1 2 a b c 3
 ```
 
-### 5.6. Iteration Injection
+### 5.6. Parameter Injection
+
+```
+$$    [parameter_name]
+PARAM [parameter_name]
+```
+
+Returns the value of a parameter defined within the calling program. If the parameter is not declared within the calling program, an invalid token will be returned instead.
+
+```c
+/* inside caller program */
+dr_config_push_parameter_string(cfg, "param_a", 23);
+dr_config_push_parameter_double(cfg, "param_b", "abc");
+```
+
+```
+$$ param_a
+-> 23
+
+$$ param_b
+-> abc
+
+```
+
+### 5.7. Iteration Injection
 
 ```
 %
@@ -494,7 +520,7 @@ LET var a b c
 
 Within an iterated sequence, this token returns a value of the iteration's variable. Outside iterations this token is treated as a string. See [Iterations]() for more details.
 
-### 5.7. Join
+### 5.8. Join
 
 ```
 JOIN [string] [string]
@@ -507,7 +533,7 @@ JOIN a b
 -> ab
 ```
 
-### 5.8. Conditions
+### 5.9. Conditions
 
 ```
 <  [double] [double] [token_if_true] [token_if_false]
@@ -536,7 +562,7 @@ $ == 0.0 1.0 var_a var_b
 -> 1 2 3
 ```
 
-### 5.9. Math Operations
+### 5.10. Math Operations
 
 ```
 SQRT  [double]
@@ -569,7 +595,7 @@ LIMIT [double] [min] [max]
 
 Performs a mathematical operation and returns the resulting double value.
 
-### 5.10. Color Operations
+### 5.11. Color Operations
 
 ```
 CITPRL [color] [color] [0.0-1.0]       // Color interpolation
@@ -579,7 +605,7 @@ RGBA   [0-255] [0-255] [0-255] [0-255] // Composes a color
 
 Performs color specific operations and returns a double value representing a color. Color being internally represented as number, normal [mathematical operations]() can also be used. However this set of substitutions perform operations channel by channel.
 
-### 5.11. Constants
+### 5.12. Constants
 
 ```
 PI    // 3.1415926535897932
@@ -590,7 +616,7 @@ FALSE // 0.0
 
 Returns a constant value in double format.
 
-### 5.12. Timestamp
+### 5.13. Timestamp
 
 ```
 TIME
@@ -598,7 +624,7 @@ TIME
 
 Returns a UNIX timestamp in seconds.
 
-### 5.13 Random value
+### 5.14. Random value
 
 ```
 RAND [min] [max]

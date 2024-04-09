@@ -8,8 +8,9 @@ Language Features
 -----------------
 
 - comments
-- variables
 - user-defined sections
+- user-defined variables
+- program-defined parameters
 - arithmetic operations
 - string operations
 - color operations

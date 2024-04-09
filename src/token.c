@@ -33,7 +33,7 @@ dr_token_dictionary_create(void)
 {
 	do_dictionary_t *dict;
 
-	dict = do_dictionary_create(50, 0.6);
+	dict = do_dictionary_create(70, 0.4);
 
 	/* substitution tokens */
 
@@ -46,6 +46,10 @@ dr_token_dictionary_create(void)
 	do_dictionary_write(dict, "\\",     0, DR_TOKEN_ESCAPE);
 	do_dictionary_write(dict, "$",      0, DR_TOKEN_VAR_INJECTION);
 	do_dictionary_write(dict, "%",      0, DR_TOKEN_ITER_INJECTION);
+	do_dictionary_write(dict, "$$",     0, DR_TOKEN_PARAM_INJECTION);
+	do_dictionary_write(dict, "VAR",    0, DR_TOKEN_VAR_INJECTION);
+	do_dictionary_write(dict, "ITER",   0, DR_TOKEN_ITER_INJECTION);
+	do_dictionary_write(dict, "PARAM",  0, DR_TOKEN_PARAM_INJECTION);
 
 	do_dictionary_write(dict, "<",      0, DR_TOKEN_IF_LESS);
 	do_dictionary_write(dict, "<=",     0, DR_TOKEN_IF_LESS_EQ);

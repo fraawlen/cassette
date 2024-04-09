@@ -30,4 +30,5 @@ SECTION Sc
 	example-2 c 50 60 70
 	example-2 d TRUE
 	example-2 e new_value
-	example-2 f (CITRPL #000000 #ffff8000 ($ ratio))
+	example-2 f ($$ internal_param)
+	example-2 g (CITRPL #000000 #ffff8000 ($ ratio))

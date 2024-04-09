@@ -68,9 +68,11 @@ dr_file_parse_child(dr_context_t *ctx_parent, const char *filename)
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
 	ctx.depth          = ctx_parent->depth + 1;
-	ctx.iteration      = do_book_get_placeholder();
+	ctx.params         = ctx_parent->params;
 	ctx.sequences      = ctx_parent->sequences;
 	ctx.variables      = ctx_parent->variables;
+	ctx.iteration      = do_book_get_placeholder();
+	ctx.ref_params     = ctx_parent->ref_params;
 	ctx.ref_sequences  = ctx_parent->ref_sequences;
 	ctx.ref_variables  = ctx_parent->ref_variables;
 	ctx.tokens         = ctx_parent->tokens;
@@ -117,9 +119,11 @@ dr_file_parse_root(dr_config_t *cfg, const char *filename)
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
 	ctx.depth          = 0;
-	ctx.iteration      = do_book_get_placeholder();
+	ctx.params         = cfg->params;
 	ctx.sequences      = cfg->sequences;
 	ctx.variables      = do_book_create(10, DR_TOKEN_N);
+	ctx.iteration      = do_book_get_placeholder();
+	ctx.ref_params     = cfg->ref_params;
 	ctx.ref_sequences  = cfg->ref_sequences;
 	ctx.ref_variables  = do_dictionary_create(10, 0.6);
 	ctx.tokens         = cfg->tokens;

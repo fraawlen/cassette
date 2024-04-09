@@ -57,9 +57,11 @@ static bool        _update_status   (dr_config_t *cfg);
 
 static dr_config_t _err_cfg =
 {
+	.params        = NULL,
 	.sequences     = NULL,
 	.sources       = NULL,
 	.callbacks     = NULL,
+	.ref_params    = NULL,
 	.ref_sequences = NULL,
 	.tokens        = NULL,
 	.seed          = 0,
@@ -81,6 +83,22 @@ dr_config_clear_callbacks(dr_config_t *cfg)
 	}
 
 	_clear_callbacks(cfg);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+dr_config_clear_parameters(dr_config_t *cfg)
+{
+	assert(cfg);
+
+	if (cfg->failed)
+	{
+		return;
+	}
+	
+	do_dictionary_clear(cfg->ref_params);
+	do_book_clear(cfg->params);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -111,8 +129,10 @@ dr_config_create(size_t n)
 	}
 
 	cfg->sequences     = do_book_create(n, DR_TOKEN_N);
+	cfg->params        = do_book_create(4, DR_TOKEN_N);
 	cfg->sources       = do_book_create(4, PATH_MAX);
 	cfg->callbacks     = do_tracker_create(2);
+	cfg->ref_params    = do_dictionary_create(4, 0.6);
 	cfg->ref_sequences = do_dictionary_create(n, 0.6);
 	cfg->tokens        = dr_token_dictionary_create();
 	cfg->seed          = 0;
@@ -137,9 +157,11 @@ dr_config_destroy(dr_config_t **cfg)
 
 	_clear_callbacks(*cfg);
 
+	do_book_destroy(&(*cfg)->params);
 	do_book_destroy(&(*cfg)->sequences);
 	do_book_destroy(&(*cfg)->sources);
 	do_tracker_destroy(&(*cfg)->callbacks);
+	do_dictionary_destroy(&(*cfg)->ref_params);
 	do_dictionary_destroy(&(*cfg)->ref_sequences);
 	do_dictionary_destroy(&(*cfg)->tokens);
 
@@ -234,6 +256,55 @@ dr_config_push_callback(dr_config_t *cfg, void (*fn)(dr_config_t *cfg, bool load
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+dr_config_push_parameter_double(dr_config_t *cfg, const char *name, double value)
+{
+	char str[25];
+
+	assert(cfg);
+
+	if (cfg->failed)
+	{
+		return;
+	}
+
+	snprintf(str, 25, "%f", value);
+
+	dr_config_push_parameter_string(cfg, name, str);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+dr_config_push_parameter_string(dr_config_t *cfg, const char *name, const char *value)
+{
+	size_t i;
+
+	assert(cfg);
+
+	if (cfg->failed)
+	{
+		return;
+	}
+
+	if (!name || !value)
+	{
+		return;
+	}
+
+	if (do_dictionary_find(cfg->ref_params, name, 0, &i))
+	{
+		do_book_rewrite_word(cfg->params, value, 0, i);
+	}
+	else
+	{
+		do_dictionary_write(cfg->ref_params, name, 0, do_book_get_group_size(cfg->params, 0));
+		do_book_write_new_word(cfg->params, value, DO_BOOK_OLD_GROUP);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 dr_config_push_source(dr_config_t *cfg, const char *filename)
 {
 	assert(cfg);
@@ -321,9 +392,11 @@ _source_select(const dr_config_t *cfg)
 static bool
 _update_status(dr_config_t *cfg)
 {
+	cfg->failed |= do_book_has_failed(cfg->params);
 	cfg->failed |= do_book_has_failed(cfg->sequences);
 	cfg->failed |= do_book_has_failed(cfg->sources);
 	cfg->failed |= do_tracker_has_failed(cfg->callbacks);
+	cfg->failed |= do_dictionary_has_failed(cfg->ref_params);
 	cfg->failed |= do_dictionary_has_failed(cfg->ref_sequences);
 	cfg->failed |= do_dictionary_has_failed(cfg->tokens);
 

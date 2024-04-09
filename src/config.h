@@ -31,9 +31,11 @@
 
 struct _config_t
 {
+	do_book_t *params;
 	do_book_t *sequences; 
 	do_book_t *sources;
 	do_tracker_t *callbacks;
+	do_dictionary_t *ref_params;
 	do_dictionary_t *ref_sequences;
 	do_dictionary_t *tokens;
 	unsigned long long seed;
