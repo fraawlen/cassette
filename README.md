@@ -1,9 +1,11 @@
-
 ![Derelict Objects banner](./extras/banner.png)
 
 Derelict Objects (DO) is a little collection self-contained data structures. Its API is written in a (somewhat) safe C style in which all structures that depend on dynamic memory allocation are opaque and their handler functions are designed to minimize the return of null pointer values. In other words, save for a few explicit exceptions, functions including constructors always return valid values or pointers, even in case of memory allocation failure. Moreover, destructor functions are also protected from double-free and dandling pointers.
 
 The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems, and except for the compiler and build system, is not dependent on third-party software.
+
+- Main repo : https://codeberg.org/fraawlen/derelict-objects
+- Mirror repo : https://github.com/fraawlen/derelict-objects
 
 Features
 --------------------
