@@ -177,12 +177,12 @@ dr_resource_fetch(dr_config_t *cfg, const char *namespace, const char *property)
 		return false;
 	}
 
-	if (!do_dictionary_find(cfg->references, namespace, 0, &i_namespace))
+	if (!do_dictionary_find(cfg->ref_sequences, namespace, 0, &i_namespace))
 	{
 		return false;
 	}
 
-	if (!do_dictionary_find(cfg->references, property, i_namespace, &i_prop))
+	if (!do_dictionary_find(cfg->ref_sequences, property, i_namespace, &i_prop))
 	{
 		return false;
 	}

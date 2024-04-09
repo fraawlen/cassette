@@ -19,10 +19,10 @@
 /************************************************************************************************************/
 
 #include <assert.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include <derelict/do.h>
 #include <derelict/dr.h>
@@ -47,9 +47,9 @@ typedef struct _callback_t _callback_t;
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void        _clear_tracker (do_tracker_t *tracker);
-static const char *_source_select (const dr_config_t *cfg);
-static bool        _update_status (dr_config_t *cfg);
+static void        _clear_callbacks (dr_config_t *cfg);
+static const char *_source_select   (const dr_config_t *cfg);
+static bool        _update_status   (dr_config_t *cfg);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -57,13 +57,13 @@ static bool        _update_status (dr_config_t *cfg);
 
 static dr_config_t _err_cfg =
 {
-	.sequences  = NULL,
-	.sources    = NULL,
-	.callbacks  = NULL,
-	.references = NULL,
-	.tokens     = NULL,
-	.seed       = 0,
-	.failed     = true,
+	.sequences     = NULL,
+	.sources       = NULL,
+	.callbacks     = NULL,
+	.ref_sequences = NULL,
+	.tokens        = NULL,
+	.seed          = 0,
+	.failed        = true,
 };
 
 /************************************************************************************************************/
@@ -80,7 +80,7 @@ dr_config_clear_callbacks(dr_config_t *cfg)
 		return;
 	}
 
-	_clear_tracker(cfg->callbacks);
+	_clear_callbacks(cfg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -95,7 +95,7 @@ dr_config_clear_sources(dr_config_t *cfg)
 		return;
 	}
 
-	_clear_tracker(cfg->sources);
+	do_book_clear(cfg->sources);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -110,12 +110,12 @@ dr_config_create(size_t n)
 		return &_err_cfg;
 	}
 
-	cfg->sequences  = do_book_create(n, DR_TOKEN_N);
-	cfg->sources    = do_tracker_create(4);
-	cfg->callbacks  = do_tracker_create(2);
-	cfg->references = do_dictionary_create(n, 0.6);
-	cfg->tokens     = dr_token_dictionary_create();
-	cfg->failed     = false;
+	cfg->sequences     = do_book_create(n, DR_TOKEN_N);
+	cfg->sources       = do_book_create(4, PATH_MAX);
+	cfg->callbacks     = do_tracker_create(2);
+	cfg->ref_sequences = do_dictionary_create(n, 0.6);
+	cfg->tokens        = dr_token_dictionary_create();
+	cfg->failed        = false;
 
 	_update_status(cfg);
 
@@ -134,13 +134,12 @@ dr_config_destroy(dr_config_t **cfg)
 		return;
 	}
 
-	_clear_tracker((*cfg)->sources);
-	_clear_tracker((*cfg)->callbacks);
+	_clear_callbacks(*cfg);
 
 	do_book_destroy(&(*cfg)->sequences);
-	do_tracker_destroy(&(*cfg)->sources);
+	do_book_destroy(&(*cfg)->sources);
 	do_tracker_destroy(&(*cfg)->callbacks);
-	do_dictionary_destroy(&(*cfg)->references);
+	do_dictionary_destroy(&(*cfg)->ref_sequences);
 	do_dictionary_destroy(&(*cfg)->tokens);
 
 	free(*cfg);
@@ -183,7 +182,7 @@ dr_config_load(dr_config_t *cfg)
 	}
 
 	do_book_clear(cfg->sequences);
-	do_dictionary_clear(cfg->references);
+	do_dictionary_clear(cfg->ref_sequences);
 
 	success &= dr_file_parse_root(cfg, _source_select(cfg));
 	success &= !_update_status(cfg);
@@ -236,8 +235,6 @@ dr_config_push_callback(dr_config_t *cfg, void (*fn)(dr_config_t *cfg, bool load
 void
 dr_config_push_source(dr_config_t *cfg, const char *filename)
 {
-	char *tmp;
-
 	assert(cfg);
 
 	if (cfg->failed)
@@ -245,18 +242,7 @@ dr_config_push_source(dr_config_t *cfg, const char *filename)
 		return;
 	}
 
-	if (!filename)
-	{
-		return;
-	}
-
-	if (!(tmp = strdup(filename)))
-	{
-		cfg->failed = true;
-		return;
-	}
-
-	do_tracker_push(cfg->sources, tmp, NULL);
+	do_book_write_new_word(cfg->sources, filename, DO_BOOK_OLD_GROUP);
 
 	_update_status(cfg);
 }
@@ -296,15 +282,15 @@ dr_config_test_sources(const dr_config_t *cfg)
 /************************************************************************************************************/
 
 static void
-_clear_tracker(do_tracker_t *tracker)
+_clear_callbacks(dr_config_t *cfg)
 {
-	do_tracker_reset_iterator(tracker);
-	while (do_tracker_increment_iterator(tracker))
+	do_tracker_reset_iterator(cfg->callbacks);
+	while (do_tracker_increment_iterator(cfg->callbacks))
 	{
-		free((void*)do_tracker_get_iteration(tracker));
+		free((void*)do_tracker_get_iteration(cfg->callbacks));
 	}
 
-	do_tracker_clear(tracker);
+	do_tracker_clear(cfg->callbacks);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -313,13 +299,13 @@ static const char *
 _source_select(const dr_config_t *cfg)
 {
 	FILE *f;
-	char *s;
+	const char *s;
 
-	do_tracker_reset_iterator(cfg->sources);
-	while (do_tracker_increment_iterator(cfg->sources))
+	do_book_reset_iterator(cfg->sources, 0);
+	while (do_book_increment_iterator(cfg->sources))
 	{
-		s = (char*)do_tracker_get_iteration(cfg->sources);
-		if ((f = fopen(s, "r")))
+		s = do_book_get_iteration(cfg->sources);
+		if ((f = fopen(do_book_get_iteration(cfg->sources), "r")))
 		{
 			fclose(f);
 			return s;
@@ -335,9 +321,9 @@ static bool
 _update_status(dr_config_t *cfg)
 {
 	cfg->failed |= do_book_has_failed(cfg->sequences);
-	cfg->failed |= do_tracker_has_failed(cfg->sources);
+	cfg->failed |= do_book_has_failed(cfg->sources);
 	cfg->failed |= do_tracker_has_failed(cfg->callbacks);
-	cfg->failed |= do_dictionary_has_failed(cfg->references);
+	cfg->failed |= do_dictionary_has_failed(cfg->ref_sequences);
 	cfg->failed |= do_dictionary_has_failed(cfg->tokens);
 
 	return cfg->failed;

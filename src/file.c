@@ -120,7 +120,7 @@ dr_file_parse_root(dr_config_t *cfg, const char *filename)
 	ctx.iteration      = do_book_get_placeholder();
 	ctx.sequences      = cfg->sequences;
 	ctx.variables      = do_book_create(10, DR_TOKEN_N);
-	ctx.ref_sequences  = cfg->references;
+	ctx.ref_sequences  = cfg->ref_sequences;
 	ctx.ref_variables  = do_dictionary_create(10, 0.6);
 	ctx.tokens         = cfg->tokens;
 	ctx.parent         = NULL;
