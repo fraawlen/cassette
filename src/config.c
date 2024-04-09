@@ -115,6 +115,7 @@ dr_config_create(size_t n)
 	cfg->callbacks     = do_tracker_create(2);
 	cfg->ref_sequences = do_dictionary_create(n, 0.6);
 	cfg->tokens        = dr_token_dictionary_create();
+	cfg->seed          = 0;
 	cfg->failed        = false;
 
 	_update_status(cfg);
