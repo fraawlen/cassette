@@ -101,7 +101,7 @@ _generate_source(void)
 		return;
 	}
 
-	fprintf(f, "%.*s", config_len, config);
+	fprintf(f, "%.*s", examples_config_len, examples_config);
 
 	fclose(f);
 }

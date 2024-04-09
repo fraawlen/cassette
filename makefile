@@ -60,7 +60,7 @@ force: clean all
 
 --prep_examples:
 	mkdir -p $(DIR_BIN)
-	xxd -n config -i $(DIR_DEMOS)/sample_config > $(DIR_DEMOS)/config.h
+	xxd -i $(DIR_DEMOS)/config > $(DIR_DEMOS)/config.h
 
 $(DIR_OBJ)/%.o: $(DIR_SRC)/%.c $(LIST_HEAD)
 	$(CC) -c -fPIC $(FLAGS) -c $< -o $@ -I$(DIR_INC) $(LIBS)

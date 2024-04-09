@@ -170,7 +170,7 @@ _callback(dr_config_t *cfg, bool load_success, void *ref)
 	dr_resource_fetch(cfg, "example-2", "e");
 	if (dr_resource_pick_next_value(cfg))
 	{
-		snprintf(_e, sizeof(_e), dr_resource_convert_to_string(cfg));
+		snprintf(_e, sizeof(_e), "%s", dr_resource_convert_to_string(cfg));
 	}
 
 	dr_resource_fetch(cfg, "example-2", "f");
@@ -193,7 +193,7 @@ _generate_source(void)
 		return;
 	}
 
-	fprintf(f, "%.*s", config_len, config);
+	fprintf(f, "%.*s", examples_config_len, examples_config);
 
 	fclose(f);
 }
