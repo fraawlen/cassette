@@ -4,6 +4,9 @@ Derelict Resources (DR) is a configuration language and parser library featuring
 
 The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems, and except for the compiler and build system, is not dependent on third-party software.
 
+- Main repo : https://codeberg.org/fraawlen/derelict-resources
+- Mirror repo : https://github.com/fraawlen/derelict-resources
+
 Language Features
 -----------------
 
