@@ -38,6 +38,11 @@ bool
 dr_resource_convert_to_bool(const dr_config_t *cfg)
 {
 	assert(cfg);
+	
+	if (cfg->failed)
+	{
+		return false;
+	}
 
 	return strtod(do_book_get_iteration(cfg->sequences), NULL) != 0;
 }
@@ -50,6 +55,11 @@ dr_resource_convert_to_color(const dr_config_t *cfg)
 	const char *raw_value;
 
 	assert(cfg);
+
+	if (cfg->failed)
+	{
+		return DO_COLOR_TRANSPARENT;
+	}
 
 	raw_value = do_book_get_iteration(cfg->sequences);
 
@@ -70,6 +80,11 @@ dr_resource_convert_to_double(const dr_config_t *cfg)
 {
 	assert(cfg);
 
+	if (cfg->failed)
+	{
+		return 0.0;
+	}
+
 	return strtod(do_book_get_iteration(cfg->sequences), NULL);
 }
 
@@ -79,6 +94,11 @@ long
 dr_resource_convert_to_long(const dr_config_t *cfg)
 {
 	assert(cfg);
+
+	if (cfg->failed)
+	{
+		return 0;
+	}
 
 	return strtol(do_book_get_iteration(cfg->sequences), NULL, 0);
 }
@@ -90,6 +110,11 @@ dr_resource_convert_to_range(const dr_config_t *cfg, double min, double max)
 {
 	assert(cfg);
 
+	if (cfg->failed)
+	{
+		return min;
+	}
+
 	return dr_util_limit(strtod(do_book_get_iteration(cfg->sequences), NULL), min, max);
 }
 
@@ -99,6 +124,11 @@ double
 dr_resource_convert_to_ratio(const dr_config_t *cfg)
 {
 	assert(cfg);
+
+	if (cfg->failed)
+	{
+		return 0.0;
+	}
 
 	return dr_util_limit(strtod(do_book_get_iteration(cfg->sequences), NULL), 0.0, 1.0);
 }
@@ -132,6 +162,11 @@ dr_resource_convert_to_string(const dr_config_t *cfg)
 {
 	assert(cfg);
 	
+	if (cfg->failed)
+	{
+		return "";
+	}
+
 	return do_book_get_iteration(cfg->sequences);
 }
 
@@ -142,6 +177,11 @@ dr_resource_convert_to_udouble(const dr_config_t *cfg)
 {
 	assert(cfg);
 
+	if (cfg->failed)
+	{
+		return 0.0;
+	}
+
 	return dr_util_limit(strtod(do_book_get_iteration(cfg->sequences), NULL), 0, DBL_MAX);
 }
 
@@ -151,6 +191,11 @@ unsigned long
 dr_resource_convert_to_ulong(const dr_config_t *cfg)
 {
 	assert(cfg);
+
+	if (cfg->failed)
+	{
+		return 0;
+	}
 
 	return strtoul(do_book_get_iteration(cfg->sequences), NULL, 0);
 }
@@ -164,6 +209,11 @@ dr_resource_fetch(dr_config_t *cfg, const char *namespace, const char *property)
 	size_t i_prop;
 
 	assert(cfg);
+
+	if (cfg->failed)
+	{
+		return false;
+	}
 
 	do_book_lock_iterator(cfg->sequences);
 
@@ -199,6 +249,11 @@ dr_resource_get_size(const dr_config_t *cfg)
 {
 	assert(cfg);
 
+	if (cfg->failed)
+	{
+		return 0;
+	}
+
 	return do_book_get_group_size(cfg->sequences, do_book_get_iterator_group(cfg->sequences));
 }
 
@@ -209,6 +264,11 @@ bool
 dr_resource_pick_next_value(dr_config_t *cfg)
 {
 	assert(cfg);
+	
+	if (cfg->failed)
+	{
+		return false;
+	}
 
 	return do_book_increment_iterator(cfg->sequences);
 }
