@@ -457,7 +457,7 @@ do_book_rewrite_word(do_book_t *book, const char *str, size_t group_index, size_
 
 	word = book->words + (book->groups[group_index] + word_index) * book->word_n;
 
-	snprintf(word, book->word_n - 1, "%s", str);
+	snprintf(word, book->word_n, "%s", str);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -491,7 +491,7 @@ do_book_write_new_word(do_book_t *book, const char *str, do_book_group_mode_t gr
 	
 	if ((word = do_book_prepare_new_word(book, group_mode)))
 	{
-		snprintf(word, book->word_n - 1, "%s", str);
+		snprintf(word, book->word_n, "%s", str);
 	}
 }
 
