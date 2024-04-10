@@ -509,13 +509,13 @@ $$ param_a
 
 $$ param_b
 -> abc
-
 ```
 
 ### 5.7. Iteration Injection
 
 ```
 %
+ITER
 ```
 
 Within an iterated sequence, this token returns a value of the iteration's variable. Outside iterations this token is treated as a string. See [Iterations]() for more details.
@@ -589,7 +589,7 @@ MOD   [double] [mod]
 POW   [double] [exponent]
 BIG   [double] [double]
 SMALL [double] [double]
-ITPRL [double] [double] [0.0-1.0] // Interpolation
+ITRPL [double] [double] [0.0-1.0] // Interpolation
 LIMIT [double] [min] [max]
 ```
 
@@ -598,7 +598,7 @@ Performs a mathematical operation and returns the resulting double value.
 ### 5.11. Color Operations
 
 ```
-CITPRL [color] [color] [0.0-1.0]       // Color interpolation
+CITRPL [color] [color] [0.0-1.0]       // Color interpolation
 RGB    [0-255] [0-255] [0-255]         // Composes a color
 RGBA   [0-255] [0-255] [0-255] [0-255] // Composes a color
 ```
