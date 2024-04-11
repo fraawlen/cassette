@@ -13,7 +13,7 @@ DEST_BUILD   = "build"
 SRC_CORE = "modules/core"
 SRC_BASE = "modules/base"
 SRC_WM   = "modules/wm"
-SRC_DEMO = "demos"
+SRC_DEMO = "examples"
 
 INC_CORE = -I${SRC_CORE}
 INC_BASE = -I${DEST_BUILD}/include -I${SRC_BASE}
@@ -56,9 +56,11 @@ LIBS_DG = \
 # PUBLIC TARGETS ############################################################################################
 #############################################################################################################
 
-build: --build_prep --build_core --build_base --build_wm
+all: lib examples
 
-demos: --build_demos
+lib: --build_prep --build_core --build_base --build_wm
+
+examples: lib --build_demos
 
 install:
 	mkdir -p ${DEST_HEADERS}
