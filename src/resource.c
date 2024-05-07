@@ -52,8 +52,6 @@ dr_resource_convert_to_bool(const dr_config_t *cfg)
 do_color_t
 dr_resource_convert_to_color(const dr_config_t *cfg)
 {
-	const char *raw_value;
-
 	assert(cfg);
 
 	if (cfg->failed)
@@ -61,16 +59,7 @@ dr_resource_convert_to_color(const dr_config_t *cfg)
 		return DO_COLOR_TRANSPARENT;
 	}
 
-	raw_value = do_book_get_iteration(cfg->sequences);
-
-	if ((raw_value)[0] == '#')
-	{
-		return do_color_convert_hex_str(raw_value, NULL);
-	}
-	else
-	{
-		return do_color_convert_argb_uint(strtoul(raw_value, NULL, 0));
-	}
+	return do_color_convert_str(do_book_get_iteration(cfg->sequences), NULL);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

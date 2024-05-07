@@ -545,7 +545,6 @@ _param(dr_context_t *ctx, char token[static DR_TOKEN_N])
 		return DR_TOKEN_INVALID;
 	}
 
-
 	snprintf(token, DR_TOKEN_N, "%s", do_book_get_word(ctx->params, 0, i));
 	
 	return DR_TOKEN_STRING;

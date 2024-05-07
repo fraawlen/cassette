@@ -70,7 +70,7 @@ dr_context_get_token_numeral(dr_context_t *ctx, char token[static DR_TOKEN_N], d
 		case DR_TOKEN_STRING:
 			if (token[0] == '#')
 			{
-				*math_result = do_color_get_argb_uint(do_color_convert_hex_str(token, &err));
+				*math_result = do_color_get_argb_uint(do_color_convert_str(token, &err));
 			}
 			else
 			{
