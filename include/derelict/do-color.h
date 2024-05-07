@@ -60,7 +60,7 @@ do_color_t do_color_convert_argb_uint(uint32_t argb);
 
 do_color_t do_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
-do_color_t do_color_convert_hex_str(const char *str, bool *err);
+do_color_t do_color_convert_str(const char *str, bool *err);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

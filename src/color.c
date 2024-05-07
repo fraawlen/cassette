@@ -28,9 +28,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
  
-static void    _bind_cl    (do_color_t *cl);
-static void    _bind_d     (double *d);
-static uint8_t _hex_to_int (char c);
+static void       _bind_cl       (do_color_t *cl);
+static void       _bind_d        (double *d);
+static uint8_t    _hex_to_int    (char c);
+static do_color_t _convert_hex   (const char *str, bool *err);
+static do_color_t _convert_ulong (const char *str, bool *err);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -64,51 +66,32 @@ do_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 do_color_t
-do_color_convert_hex_str(const char *str, bool *err)
+do_color_convert_str(const char *str, bool *err)
 {
-	uint8_t v[8] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xF, 0xF};
-	bool    fail = false;
-	size_t  i;
+	do_color_t cl;
+
+	bool fail = false;
 
 	if (!str)
 	{
 		fail = true;
-		goto skip;
+		cl = DO_COLOR_TRANSPARENT;
 	}
-
-	if (str[0] == '#')
+	else if (str[0] == '#')
 	{
-		str++;
+		cl = _convert_hex(str + 1, &fail);
 	}
-
-	for (i = 0; i < 8 && str[i] != '\0'; i++)
+	else
 	{
-		v[i] = _hex_to_int(str[i]);
-		if (v[i] == UINT8_MAX)
-		{
-			fail = true;
-		}
+		cl = _convert_ulong(str, &fail);
 	}
-
-	if ((i != 6 && i != 8) || str[i] != '\0')
-	{
-		fail = true;
-	}
-
-skip:
-
-	/* apply conversion */
-
+	
 	if (err)
 	{
 		*err = fail;
 	}
 
-	return do_color_convert_rgba(
-		(v[0] << 4) + v[1],
-		(v[2] << 4) + v[3],
-		(v[4] << 4) + v[5],
-		(v[6] << 4) + v[7]);
+	return cl;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -176,6 +159,54 @@ _bind_d(double *d)
 	{
 		*d = 0.0;
 	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+do_color_t
+_convert_hex(const char *str, bool *err)
+{
+	uint8_t v[8] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xF, 0xF};
+	size_t  i;
+
+	for (i = 0; i < 8 && str[i] != '\0'; i++)
+	{
+		v[i] = _hex_to_int(str[i]);
+		if (v[i] == UINT8_MAX)
+		{
+			*err = true;
+		}
+	}
+
+	if ((i != 6 && i != 8) || str[i] != '\0')
+	{
+		*err = true;
+	}
+
+	/* apply conversion */
+
+	return do_color_convert_rgba(
+		(v[0] << 4) + v[1],
+		(v[2] << 4) + v[3],
+		(v[4] << 4) + v[5],
+		(v[6] << 4) + v[7]);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+do_color_t
+_convert_ulong(const char *str, bool *err)
+{
+	char *endptr = NULL;
+	uint32_t u = 0;
+
+	u = strtoul(str, &endptr, 0);
+	if (endptr == str)
+	{
+		*err = true;
+	}
+
+	return do_color_convert_argb_uint(u);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
