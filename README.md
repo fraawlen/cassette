@@ -76,15 +76,15 @@ The following code snippet shows a minimal example of the library usage. When co
 int
 main(void)
 {
-	dr_config_t *cfg = dr_config_create(0);
+	dr_data_t *cfg = dr_create();
 
-	dr_config_push_source(cfg, "/tmp/dr-example");
-	dr_config_load(cfg);
+	dr_push_source(cfg, "/tmp/dr-example");
+	dr_load(cfg);
 
-	dr_resource_fetch(cfg, "example_namespace", "example_property");
-	while (dr_resource_pick_next_value(cfg))
+	dr_fetch_resource(cfg, "example_namespace", "example_property");
+	while (dr_pick_next_resource_value(cfg))
 	{
-		printf("%s\n", dr_resource_convert_to_string(cfg));
+		printf("%s\n", dr_get_resource_value(cfg));
 	}
 
 	return 0;

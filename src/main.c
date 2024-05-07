@@ -27,8 +27,8 @@
 #include <derelict/do.h>
 #include <derelict/dr.h>
 
-#include "config.h"
 #include "file.h"
+#include "main.h"
 #include "token.h"
 
 /************************************************************************************************************/
@@ -37,7 +37,7 @@
 
 struct _callback_t
 {
-	void (*fn)(dr_config_t *cfg, bool load_success, void *ref);
+	void (*fn)(dr_data_t *cfg, bool load_success, void *ref);
 	void *ref;
 };
 
@@ -47,15 +47,15 @@ typedef struct _callback_t _callback_t;
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void        _clear_callbacks (dr_config_t *cfg);
-static const char *_source_select   (const dr_config_t *cfg);
-static bool        _update_status   (dr_config_t *cfg);
+static void        _clear_callbacks (dr_data_t *cfg);
+static const char *_source_select   (const dr_data_t *cfg);
+static bool        _update_status   (dr_data_t *cfg);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static dr_config_t _err_cfg =
+static dr_data_t _err_cfg =
 {
 	.params        = NULL,
 	.sequences     = NULL,
@@ -73,7 +73,7 @@ static dr_config_t _err_cfg =
 /************************************************************************************************************/
 
 void
-dr_config_clear_callbacks(dr_config_t *cfg)
+dr_clear_callbacks(dr_data_t *cfg)
 {
 	assert(cfg);
 
@@ -88,7 +88,7 @@ dr_config_clear_callbacks(dr_config_t *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dr_config_clear_parameters(dr_config_t *cfg)
+dr_clear_parameters(dr_data_t *cfg)
 {
 	assert(cfg);
 
@@ -104,7 +104,7 @@ dr_config_clear_parameters(dr_config_t *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dr_config_clear_sources(dr_config_t *cfg)
+dr_clear_sources(dr_data_t *cfg)
 {
 	assert(cfg);
 
@@ -118,22 +118,22 @@ dr_config_clear_sources(dr_config_t *cfg)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-dr_config_t *
-dr_config_create(size_t n)
+dr_data_t *
+dr_create(void)
 {
-	dr_config_t *cfg;
+	dr_data_t *cfg;
 
-	if (!(cfg = malloc(sizeof(dr_config_t))))
+	if (!(cfg = malloc(sizeof(dr_data_t))))
 	{
 		return &_err_cfg;
 	}
 
-	cfg->sequences     = do_book_create(n, DR_TOKEN_N);
+	cfg->sequences     = do_book_create(0, DR_TOKEN_N);
 	cfg->params        = do_book_create(4, DR_TOKEN_N);
 	cfg->sources       = do_book_create(4, PATH_MAX);
 	cfg->callbacks     = do_tracker_create(2);
 	cfg->ref_params    = do_dictionary_create(4, 0.6);
-	cfg->ref_sequences = do_dictionary_create(n, 0.6);
+	cfg->ref_sequences = do_dictionary_create(0, 0.6);
 	cfg->tokens        = dr_token_dictionary_create();
 	cfg->seed          = 0;
 	cfg->failed        = false;
@@ -146,7 +146,7 @@ dr_config_create(size_t n)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dr_config_destroy(dr_config_t **cfg)
+dr_destroy(dr_data_t **cfg)
 {
 	assert(cfg && *cfg);
 
@@ -172,16 +172,88 @@ dr_config_destroy(dr_config_t **cfg)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-dr_config_t *
-dr_config_get_placeholder(void)
+bool
+dr_fetch_resource(dr_data_t *cfg, const char *namespace, const char *property)
+{
+	size_t i_namespace;
+	size_t i_prop;
+
+	assert(cfg);
+
+	if (cfg->failed)
+	{
+		return false;
+	}
+
+	do_book_lock_iterator(cfg->sequences);
+
+	if (!namespace || namespace[0] == '\0')
+	{
+		return false;
+	}
+
+	if (!property || property[0] == '\0')
+	{
+		return false;
+	}
+
+	if (!do_dictionary_find(cfg->ref_sequences, namespace, 0, &i_namespace))
+	{
+		return false;
+	}
+
+	if (!do_dictionary_find(cfg->ref_sequences, property, i_namespace, &i_prop))
+	{
+		return false;
+	}
+
+	do_book_reset_iterator(cfg->sequences, i_prop);
+
+	return true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+dr_data_t *
+dr_get_placeholder(void)
 {
 	return &_err_cfg;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+size_t
+dr_get_resource_size(const dr_data_t *cfg)
+{
+	assert(cfg);
+
+	if (cfg->failed)
+	{
+		return 0;
+	}
+
+	return do_book_get_group_size(cfg->sequences, do_book_get_iterator_group(cfg->sequences));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+const char *
+dr_get_resource_value(const dr_data_t *cfg)
+{
+	assert(cfg);
+	
+	if (cfg->failed)
+	{
+		return "";
+	}
+
+	return do_book_get_iteration(cfg->sequences);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 bool
-dr_config_has_failed(const dr_config_t *cfg)
+dr_has_failed(const dr_data_t *cfg)
 {
 	assert(cfg);
 
@@ -191,7 +263,7 @@ dr_config_has_failed(const dr_config_t *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-dr_config_load(dr_config_t *cfg)
+dr_load(dr_data_t *cfg)
 {
 	const _callback_t *call;
 
@@ -222,8 +294,23 @@ dr_config_load(dr_config_t *cfg)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+bool
+dr_pick_next_resource_value(dr_data_t *cfg)
+{
+	assert(cfg);
+	
+	if (cfg->failed)
+	{
+		return false;
+	}
+
+	return do_book_increment_iterator(cfg->sequences);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
-dr_config_push_callback(dr_config_t *cfg, void (*fn)(dr_config_t *cfg, bool load_success, void *ref), void *ref)
+dr_push_callback(dr_data_t *cfg, void (*fn)(dr_data_t *cfg, bool load_success, void *ref), void *ref)
 {
 	_callback_t *tmp;
 
@@ -256,7 +343,7 @@ dr_config_push_callback(dr_config_t *cfg, void (*fn)(dr_config_t *cfg, bool load
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dr_config_push_parameter_double(dr_config_t *cfg, const char *name, double value)
+dr_push_parameter_double(dr_data_t *cfg, const char *name, double value)
 {
 	char str[25];
 
@@ -269,13 +356,13 @@ dr_config_push_parameter_double(dr_config_t *cfg, const char *name, double value
 
 	snprintf(str, 25, "%f", value);
 
-	dr_config_push_parameter_string(cfg, name, str);
+	dr_push_parameter_string(cfg, name, str);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dr_config_push_parameter_string(dr_config_t *cfg, const char *name, const char *value)
+dr_push_parameter_string(dr_data_t *cfg, const char *name, const char *value)
 {
 	size_t i;
 
@@ -305,7 +392,7 @@ dr_config_push_parameter_string(dr_config_t *cfg, const char *name, const char *
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dr_config_push_source(dr_config_t *cfg, const char *filename)
+dr_push_source(dr_data_t *cfg, const char *filename)
 {
 	assert(cfg);
 
@@ -322,7 +409,7 @@ dr_config_push_source(dr_config_t *cfg, const char *filename)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dr_config_seed(dr_config_t *cfg, unsigned long long seed)
+dr_seed(dr_data_t *cfg, unsigned long long seed)
 {
 	assert(cfg);
 
@@ -337,7 +424,7 @@ dr_config_seed(dr_config_t *cfg, unsigned long long seed)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-dr_config_test_sources(const dr_config_t *cfg)
+dr_data_test_sources(const dr_data_t *cfg)
 {
 	assert(cfg);
 
@@ -354,7 +441,7 @@ dr_config_test_sources(const dr_config_t *cfg)
 /************************************************************************************************************/
 
 static void
-_clear_callbacks(dr_config_t *cfg)
+_clear_callbacks(dr_data_t *cfg)
 {
 	do_tracker_reset_iterator(cfg->callbacks);
 	while (do_tracker_increment_iterator(cfg->callbacks))
@@ -368,7 +455,7 @@ _clear_callbacks(dr_config_t *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static const char *
-_source_select(const dr_config_t *cfg)
+_source_select(const dr_data_t *cfg)
 {
 	FILE *f;
 	const char *s;
@@ -390,7 +477,7 @@ _source_select(const dr_config_t *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-_update_status(dr_config_t *cfg)
+_update_status(dr_data_t *cfg)
 {
 	cfg->failed |= do_book_has_failed(cfg->params);
 	cfg->failed |= do_book_has_failed(cfg->sequences);

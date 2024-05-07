@@ -31,13 +31,13 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define _SAMPLE_CONFIG_PATH "/tmp/dr_config_sample"
+#define _SAMPLE_CONFIG_PATH "/tmp/dr_sample"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _callback        (dr_config_t *cfg, bool load_success, void *ref);
+static void _callback        (dr_data_t *cfg, bool load_success, void *ref);
 static void _generate_source (void);
 
 /************************************************************************************************************/
@@ -67,28 +67,28 @@ static do_color_t _g = {0};
  * value.
  *
  * Value assignment through callbacks is useful when dealing with program extensions. Each extension, when
- * initialized, will add its own callback to the configuration. Then a single call to dr_config_load() will
+ * initialized, will add its own callback to the configuration. Then a single call to dr_load() will
  * trigger them, hence reloading the configuration of both the main program and its extensions.
  */
 
 int
 main(void)
 {
-	dr_config_t *cfg;
+	dr_data_t *cfg;
 
 	/* init */
 
-	cfg = dr_config_create(0);
+	cfg = dr_create();
 
 	_generate_source();
 
 	/* operations */
 
-	dr_config_push_source(cfg, _SAMPLE_CONFIG_PATH);
-	dr_config_push_callback(cfg, _callback, NULL);
-	dr_config_push_parameter_double(cfg, "internal_param", 1337);
+	dr_push_source(cfg, _SAMPLE_CONFIG_PATH);
+	dr_push_callback(cfg, _callback, NULL);
+	dr_push_parameter_double(cfg, "internal_param", 1337);
 
-	dr_config_load(cfg); /* load success check is done in callback */
+	dr_load(cfg); /* load success check is done in callback */
 
 	/* print loaded values */
 
@@ -107,12 +107,12 @@ main(void)
 
 	/* end */
 
-	if (dr_config_has_failed(cfg))
+	if (dr_has_failed(cfg))
 	{
 		printf("configuration has failed during operation.\n");
 	}
 
-	dr_config_destroy(&cfg);
+	dr_destroy(&cfg);
 
 	return 0;
 }
@@ -122,7 +122,7 @@ main(void)
 /************************************************************************************************************/
 
 static void
-_callback(dr_config_t *cfg, bool load_success, void *ref)
+_callback(dr_data_t *cfg, bool load_success, void *ref)
 {
 	(void)(ref);
 
@@ -147,46 +147,46 @@ _callback(dr_config_t *cfg, bool load_success, void *ref)
 
 	/* apply values from config */
 
-	dr_resource_fetch(cfg, "example-2", "a");
-	if (dr_resource_pick_next_value(cfg))
+	dr_fetch_resource(cfg, "example-2", "a");
+	if (dr_pick_next_resource_value(cfg))
 	{
-		_a = dr_resource_convert_to_long(cfg);
+		_a = strtol(dr_get_resource_value(cfg), NULL, 0);
 	}
 
-	dr_resource_fetch(cfg, "example-2", "b");
-	if (dr_resource_pick_next_value(cfg))
+	dr_fetch_resource(cfg, "example-2", "b");
+	if (dr_pick_next_resource_value(cfg))
 	{
-		_b = dr_resource_convert_to_double(cfg);
+		_b = strtod(dr_get_resource_value(cfg), NULL);
 	}
 
-	dr_resource_fetch(cfg, "example-2", "c");
-	for (size_t i = 0; i < 3 && dr_resource_pick_next_value(cfg); i++)
+	dr_fetch_resource(cfg, "example-2", "c");
+	for (size_t i = 0; i < 3 && dr_pick_next_resource_value(cfg); i++)
 	{	
-		_c[i] = dr_resource_convert_to_double(cfg);
+		_c[i] = strtod(dr_get_resource_value(cfg), NULL);
 	}
 
-	dr_resource_fetch(cfg, "example-2", "d");
-	if (dr_resource_pick_next_value(cfg))
+	dr_fetch_resource(cfg, "example-2", "d");
+	if (dr_pick_next_resource_value(cfg))
 	{
-		_d = dr_resource_convert_to_bool(cfg);
+		_d = strtod(dr_get_resource_value(cfg), NULL) != 0.0;
 	}
 
-	dr_resource_fetch(cfg, "example-2", "e");
-	if (dr_resource_pick_next_value(cfg))
+	dr_fetch_resource(cfg, "example-2", "e");
+	if (dr_pick_next_resource_value(cfg))
 	{
-		snprintf(_e, sizeof(_e), "%s", dr_resource_convert_to_string(cfg));
+		snprintf(_e, sizeof(_e), "%s", dr_get_resource_value(cfg));
 	}
 
-	dr_resource_fetch(cfg, "example-2", "f");
-	if (dr_resource_pick_next_value(cfg))
+	dr_fetch_resource(cfg, "example-2", "f");
+	if (dr_pick_next_resource_value(cfg))
 	{
-		_f = dr_resource_convert_to_long(cfg);
+		_f = strtol(dr_get_resource_value(cfg), NULL, 0);
 	}
 
-	dr_resource_fetch(cfg, "example-2", "g");
-	if (dr_resource_pick_next_value(cfg))
+	dr_fetch_resource(cfg, "example-2", "g");
+	if (dr_pick_next_resource_value(cfg))
 	{
-		_g = dr_resource_convert_to_color(cfg);
+		_g = do_color_convert_str(dr_get_resource_value(cfg), NULL);
 	}
 }
 

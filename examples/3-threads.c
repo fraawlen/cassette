@@ -30,7 +30,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define _SAMPLE_CONFIG_PATH "/tmp/dr_config_sample"
+#define _SAMPLE_CONFIG_PATH "/tmp/dr_sample"
 #define _N_SIMULATIONS       10
 
 /************************************************************************************************************/
@@ -107,28 +107,28 @@ _generate_source(void)
 static void *
 _simulation_thread(void *param)
 {
-	dr_config_t *cfg;
+	dr_data_t *cfg;
 
 	unsigned long coords[3] = {0};
 	unsigned long long id;
 
 	/* simulation config setup */
 
-	cfg = dr_config_create(0);
+	cfg = dr_create();
 	id  = *(unsigned long long*)param;
 
-	dr_config_push_source(cfg, _SAMPLE_CONFIG_PATH);
-	dr_config_seed(cfg, id);
+	dr_push_source(cfg, _SAMPLE_CONFIG_PATH);
+	dr_seed(cfg, id);
 
-	if (!dr_config_load(cfg))
+	if (!dr_load(cfg))
 	{
 		printf("configuration for simulation %llu failed to load\n", id);
 	}
 
-	dr_resource_fetch(cfg, "example-3", "coordinates");
-	for (size_t i = 0; i < 3 && dr_resource_pick_next_value(cfg); i++)
+	dr_fetch_resource(cfg, "example-3", "coordinates");
+	for (size_t i = 0; i < 3 && dr_pick_next_resource_value(cfg); i++)
 	{
-		coords[i] = dr_resource_convert_to_ulong(cfg);
+		coords[i] = strtoul(dr_get_resource_value(cfg), NULL, 0);
 	}
 
 	/* simulation algorithm */
@@ -142,7 +142,7 @@ _simulation_thread(void *param)
 
 	/* simulation end */
 
-	dr_config_destroy(&cfg);
+	dr_destroy(&cfg);
 
 	pthread_exit(NULL);
 }

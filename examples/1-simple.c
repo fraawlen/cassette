@@ -28,14 +28,14 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define _SAMPLE_CONFIG_PATH "/tmp/dr_config_sample"
+#define _SAMPLE_CONFIG_PATH "/tmp/dr_sample"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
 static void _generate_source (void);
-static void _print_resource  (dr_config_t *cfg, const char *namespace, const char *property);
+static void _print_resource  (dr_data_t *cfg, const char *namespace, const char *property);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -48,19 +48,19 @@ static void _print_resource  (dr_config_t *cfg, const char *namespace, const cha
 int
 main(void)
 {
-	dr_config_t *cfg;
+	dr_data_t *cfg;
 
 	/* init */
 
-	cfg = dr_config_create(0);
+	cfg = dr_create();
 
 	_generate_source();
 
 	/* operations */
 
-	dr_config_push_source(cfg, _SAMPLE_CONFIG_PATH);
+	dr_push_source(cfg, _SAMPLE_CONFIG_PATH);
 
-	if (!dr_config_load(cfg))
+	if (!dr_load(cfg))
 	{
 		printf("configuration failed to load\n");
 	}
@@ -76,12 +76,12 @@ main(void)
 
 	/* end */
 
-	if (dr_config_has_failed(cfg))
+	if (dr_has_failed(cfg))
 	{
 		printf("configuration has failed during operation.\n");
 	}
 
-	dr_config_destroy(&cfg);
+	dr_destroy(&cfg);
 
 	return 0;
 }
@@ -109,14 +109,14 @@ _generate_source(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_print_resource(dr_config_t *cfg, const char *namespace, const char *property)
+_print_resource(dr_data_t *cfg, const char *namespace, const char *property)
 {
 	printf("%s\t%s", namespace, property);
 
-	dr_resource_fetch(cfg, namespace, property);
-	while (dr_resource_pick_next_value(cfg))
+	dr_fetch_resource(cfg, namespace, property);
+	while (dr_pick_next_resource_value(cfg))
 	{
-		printf("\t%s", dr_resource_convert_to_string(cfg));
+		printf("\t%s", dr_get_resource_value(cfg));
 	}
 
 	printf("\n");

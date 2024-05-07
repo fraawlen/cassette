@@ -30,8 +30,8 @@
 #include <derelict/do.h>
 #include <derelict/dr.h>
 
-#include "config.h"
 #include "context.h"
+#include "main.h"
 #include "sequence.h"
 #include "token.h"
 
@@ -101,7 +101,7 @@ dr_file_parse_child(dr_context_t *ctx_parent, const char *filename)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-dr_file_parse_root(dr_config_t *cfg, const char *filename)
+dr_file_parse_root(dr_data_t *cfg, const char *filename)
 {
 	dr_context_t ctx;
 	do_rand_t r;
