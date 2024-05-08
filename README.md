@@ -17,10 +17,10 @@ Features
 Dependencies
 ------------
 
-Tools :
+- Tools :
 
-- C99 compiler with a stdlib + POSIX 200809L
-- Make
+	- C99 compiler with a stdlib + POSIX 200809L
+	- Make
 
 Installation
 ------------
