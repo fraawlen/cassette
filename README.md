@@ -52,7 +52,7 @@ Usage
 Add this include to get access to the library functions :
 
 ```
-#include <cassette/cfg.h>
+#include <cassette/ccfg.h>
 ```
 
 As well as this compilation flag :
