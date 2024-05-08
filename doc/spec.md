@@ -1,9 +1,9 @@
-DR - Specification & Syntax (WIP 80%)
-===========================
+CCFG - Specification & Syntax (WIP 80%)
+=============================
 
-Derelict Resources (DR) is a configuration language and parser library featuring array based values and short s-like expressions based functions. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
+Cassette Configuration (CCFG) is a configuration language and parser library featuring array based values and short s-like expressions based functions. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
 
-This document specifies and details all of DR's features and syntax rules. It's aimed at both end-users of software that uses this language and developers of such software.
+This document specifies and details all of CCFG's features and syntax rules. It's aimed at both end-users of software that uses this language and developers of such software.
 
 Table of contents
 -----------------
@@ -57,7 +57,7 @@ TODO
 
 ### 2.1. Sequences
 
-Every DR configuration file is a series of 'sequences' separated by newlines until EOF is reached. Empty lines between sequences are ignored. Leading and trailing white-spaces (either space or tab characters) are ignored too.
+Every CCFG configuration file is a series of 'sequences' separated by newlines until EOF is reached. Empty lines between sequences are ignored. Leading and trailing white-spaces (either space or tab characters) are ignored too.
 
 ```
 sequence
@@ -77,7 +77,7 @@ token token token token token
 token token token token
 ```
 
-In DR, there is no concept of priority based on the presence of parentheses, brackets, or braces. In fact, parentheses get interpreted as white space, so even if they can be used to visually group tokens together, they bear no effect. Instead, tokens are strictly parsed from left to right and any language function that gets triggered should happen as the tokens are read. Thanks to that, words read from a source configuration file only need to be parsed and processed once. The only exception to this rule is the [iteration-type sequences]().
+In CCFG, there is no concept of priority based on the presence of parentheses, brackets, or braces. In fact, parentheses get interpreted as white space, so even if they can be used to visually group tokens together, they bear no effect. Instead, tokens are strictly parsed from left to right and any language function that gets triggered should happen as the tokens are read. Thanks to that, words read from a source configuration file only need to be parsed and processed once. The only exception to this rule is the [iteration-type sequences]().
 
 ```
 These 3 sequences are parsed the same way
@@ -110,7 +110,7 @@ If a program requires a resource with N values and the matching resource in the 
 
 By convention, and to minimize possible collision with function tokens, resources tokens (namespaces, names and values) should be written in full lowercase.
 
-At its simplest, a DR configuration file can just be a series of resources. In this example, for a hypothetical GUI library, we define 8 resources spread across 2 widgets, `button` and `label`. The resources namespaces borrow their widget name. The resources named `corner-radius` and `corner-style` get assigned 4 values, one for each widget corner. 
+At its simplest, a CCFG configuration file can just be a series of resources. In this example, for a hypothetical GUI library, we define 8 resources spread across 2 widgets, `button` and `label`. The resources namespaces borrow their widget name. The resources named `corner-radius` and `corner-style` get assigned 4 values, one for each widget corner. 
 
 ```
 button background_color #808080
@@ -185,7 +185,7 @@ Function tokens are defined by an exact, case-sensitive ASCII sequence of non-wh
 
 By convention, and to minimize possible collision with user strings, all function tokens are defined in fully capitalized characters.
 
-Substitution tokens are inline function tokens that may optionally take the next few tokens as input parameters, and then return a different token as a function result. These functions feature an s-like expression syntax without parenthesis. Parenthesis in DR functions are unnecessary because the amount of input parameters for each function is known in advance. Multiple substitutions tokens can be chained together, resulting in nested functions. Some functions may take string or numeral tokens as inputs, it is up to the parser to make the necessary implicit conversions. In the next few examples, the `JOIN` function tokens take the next 2 string tokens and return a concatenated string token.
+Substitution tokens are inline function tokens that may optionally take the next few tokens as input parameters, and then return a different token as a function result. These functions feature an s-like expression syntax without parenthesis. Parenthesis in CCFG functions are unnecessary because the amount of input parameters for each function is known in advance. Multiple substitutions tokens can be chained together, resulting in nested functions. Some functions may take string or numeral tokens as inputs, it is up to the parser to make the necessary implicit conversions. In the next few examples, the `JOIN` function tokens take the next 2 string tokens and return a concatenated string token.
 
 ```
 a b
@@ -280,7 +280,7 @@ Sequences belonging to a section will only be parsed and processed if said secti
 LET [new_variable_name] [value] [value] ...
 ```
 
-The DR configuration language offers support for user-defined variables. Similarly to resources, variables are arrays of values. They can be declared with a section starting with the token `LET` followed by the name of the variable (that will be used to reference it in other parts of the file), then by any number of tokens. After that, when a variable is invoked in another sequence (see [Variable Injection]()) the variable values will be injected into that sequence.
+The CCFG configuration language offers support for user-defined variables. Similarly to resources, variables are arrays of values. They can be declared with a section starting with the token `LET` followed by the name of the variable (that will be used to reference it in other parts of the file), then by any number of tokens. After that, when a variable is invoked in another sequence (see [Variable Injection]()) the variable values will be injected into that sequence.
 
 ```
 LET var a b c
@@ -637,7 +637,7 @@ Because the internal RNG is an LCG, as long as the initial seed is not modified,
 
 ### 6.1. GUI Configuration
 
-In this first example, we consider a hypothetical GUI tooklit or application that lets its end-users customize the appearance of its widgets. Thanks to DR's sections, different themes can co-exist in the same source file. Moreover, the themes are selected automatically depending on the value of a brightness variable. Said variable could be then set by an external program that tracks the values of a light sensor. Hence, with this kind of configuration, an application or toolkit can switch between a light and dark theme depending on the amount of light hitting the device they're running from.
+In this first example, we consider a hypothetical GUI tooklit or application that lets its end-users customize the appearance of its widgets. Thanks to CCFG's sections, different themes can co-exist in the same source file. Moreover, the themes are selected automatically depending on the value of a brightness variable. Said variable could be then set by an external program that tracks the values of a light sensor. Hence, with this kind of configuration, an application or toolkit can switch between a light and dark theme depending on the amount of light hitting the device they're running from.
 
 ```
 	LET brightness 0.6 // [0.0-1.0]

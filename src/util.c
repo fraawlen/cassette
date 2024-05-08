@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Resources (DR) library.
+ * This file is part of the Cassette Configuration (CCFG) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -25,9 +25,9 @@
 /************************************************************************************************************/
 
 double
-dr_util_limit(double d, double lim_1, double lim_2)
+util_limit(double d, double lim_1, double lim_2)
 {
-	dr_util_sort_pair(&lim_1, &lim_2);
+	util_sort_pair(&lim_1, &lim_2);
 
 	return d < lim_1 ? lim_1 : (d > lim_2 ? lim_2 : d);
 }
@@ -35,9 +35,9 @@ dr_util_limit(double d, double lim_1, double lim_2)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
-dr_util_interpolate(double d_1, double d_2, double ratio)
+util_interpolate(double d_1, double d_2, double ratio)
 {
-	ratio = dr_util_limit(ratio, 0.0, 1.0);
+	ratio = util_limit(ratio, 0.0, 1.0);
 
 	return d_2 * ratio + d_1 * (1.0 - ratio);
 }
@@ -45,7 +45,7 @@ dr_util_interpolate(double d_1, double d_2, double ratio)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dr_util_sort_pair(double *d_1, double *d_2)
+util_sort_pair(double *d_1, double *d_2)
 {
 	double tmp;
 

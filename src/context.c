@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Resources (DR) library.
+ * This file is part of the Cassette Configuration (CCFG) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <derelict/do.h>
+#include <cassette/cobj.h>
 
 #include "context.h"
 #include "substitution.h"
@@ -34,43 +34,43 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _read_word (dr_context_t *ctx, char token[static DR_TOKEN_N]);
+static bool _read_word (context_t *ctx, char token[static TOKEN_N]);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
-dr_token_kind_t
-dr_context_get_token(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result)
+token_kind_t
+context_get_token(context_t *ctx, char token[static TOKEN_N], double *math_result)
 {
 	assert(ctx && token);
 
-	if (dr_context_get_token_raw(ctx, token) == DR_TOKEN_INVALID)
+	if (context_get_token_raw(ctx, token) == TOKEN_INVALID)
 	{
-		return DR_TOKEN_INVALID;
+		return TOKEN_INVALID;
 	}
 
-	return dr_subtitution_apply(ctx, token, math_result);
+	return substitution_apply(ctx, token, math_result);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-dr_token_kind_t
-dr_context_get_token_numeral(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result)
+token_kind_t
+context_get_token_numeral(context_t *ctx, char token[static TOKEN_N], double *math_result)
 {
 	bool err = false;
 
 	assert(ctx && token && math_result);
 
-	switch (dr_context_get_token(ctx, token, math_result))
+	switch (context_get_token(ctx, token, math_result))
 	{
-		case DR_TOKEN_NUMBER:
-			return DR_TOKEN_NUMBER;
+		case TOKEN_NUMBER:
+			return TOKEN_NUMBER;
 		
-		case DR_TOKEN_STRING:
+		case TOKEN_STRING:
 			if (token[0] == '#')
 			{
-				*math_result = do_color_get_argb_uint(do_color_convert_str(token, &err));
+				*math_result = cobj_color_get_argb_uint(cobj_color_convert_str(token, &err));
 			}
 			else
 			{
@@ -78,42 +78,42 @@ dr_context_get_token_numeral(dr_context_t *ctx, char token[static DR_TOKEN_N], d
 			}
 			if (!err)
 			{
-				return DR_TOKEN_NUMBER;
+				return TOKEN_NUMBER;
 			}
 			/* fallthrough */
 
 		default:
-			return DR_TOKEN_INVALID;
+			return TOKEN_INVALID;
 	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-dr_token_kind_t
-dr_context_get_token_raw(dr_context_t *ctx, char token[static DR_TOKEN_N])
+token_kind_t
+context_get_token_raw(context_t *ctx, char token[static TOKEN_N])
 {
 	assert(ctx && token);
 
-	if (do_book_increment_iterator(ctx->variables))
+	if (cobj_book_increment_iterator(ctx->variables))
 	{
-		snprintf(token, DR_TOKEN_N, "%s", do_book_get_iteration(ctx->variables));
+		snprintf(token, TOKEN_N, "%s", cobj_book_get_iteration(ctx->variables));
 	}
-	else if (do_book_increment_iterator(ctx->iteration))
+	else if (cobj_book_increment_iterator(ctx->iteration))
 	{
-		snprintf(token, DR_TOKEN_N, "%s", do_book_get_iteration(ctx->iteration));
+		snprintf(token, TOKEN_N, "%s", cobj_book_get_iteration(ctx->iteration));
 	}
 	else if (!_read_word(ctx, token))
 	{
-		return DR_TOKEN_INVALID;
+		return TOKEN_INVALID;
 	}
 	
-	return DR_TOKEN_STRING;
+	return TOKEN_STRING;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-dr_context_goto_eol(dr_context_t *ctx)
+context_goto_eol(context_t *ctx)
 {
 	assert(ctx);
 
@@ -134,8 +134,8 @@ dr_context_goto_eol(dr_context_t *ctx)
 		}
 	}
 
-	do_book_lock_iterator(ctx->variables);
-	do_book_lock_iterator(ctx->iteration);
+	cobj_book_lock_iterator(ctx->variables);
+	cobj_book_lock_iterator(ctx->iteration);
 }
 
 /************************************************************************************************************/
@@ -143,7 +143,7 @@ dr_context_goto_eol(dr_context_t *ctx)
 /************************************************************************************************************/
 
 static bool
-_read_word(dr_context_t *ctx, char token[static DR_TOKEN_N])
+_read_word(context_t *ctx, char token[static TOKEN_N])
 {
 	size_t i = 0;
 	bool quotes_1 = false;
@@ -214,7 +214,7 @@ exit_lead:
 
 			default:
 			char_add:
-				if (i < DR_TOKEN_N - 1)
+				if (i < TOKEN_N - 1)
 				{
 					token[i++] = (char)c;
 				}

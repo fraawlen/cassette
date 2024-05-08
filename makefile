@@ -2,7 +2,7 @@
 # DESTINATIONS ##############################################################################################
 #############################################################################################################
 
-DEST_HEADERS := /usr/include/derelict
+DEST_HEADERS := /usr/include/cassette
 DEST_LIBS    := /usr/lib
 DEST_BUILD   := build
 
@@ -23,9 +23,9 @@ LIST_HEAD  := $(wildcard $(DIR_SRC)/*.h) $(wildcard $(DIR_INC)/*.h)
 LIST_OBJ   := $(patsubst $(DIR_SRC)/%.c, $(DIR_OBJ)/%.o, $(LIST_SRC))
 LIST_BIN   := $(patsubst $(DIR_DEMOS)/%.c, $(DIR_BIN)/%, $(LIST_DEMOS))
 
-OUTPUT := dr
+OUTPUT := ccfg
 FLAGS  := -std=c99 -pedantic -Wall -Wextra -O3 -D_POSIX_C_SOURCE=200809L
-LIBS   := -ldo -lm -lpthread
+LIBS   := -lcobj -lm -lpthread
 
 #############################################################################################################
 # PUBLIC TARGETS ############################################################################################
@@ -41,7 +41,7 @@ examples: --prep_lib --prep_examples lib $(LIST_BIN)
 
 install:
 	mkdir -p $(DEST_HEADERS)
-	cp $(DIR_INC)/derelict/* $(DEST_HEADERS)/
+	cp $(DIR_INC)/*/* $(DEST_HEADERS)/
 	cp $(DIR_LIB)/* $(DEST_LIBS)/
 
 clean:

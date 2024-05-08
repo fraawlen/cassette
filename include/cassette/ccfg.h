@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Resources (DR) library.
+ * This file is part of the Cassette Configuration (CCFG) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -18,13 +18,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef DR_H
-#define DR_H
+#ifndef CCFG_H
+#define CCFG_H
 
 #include <stdbool.h>
 #include <stdlib.h>
-
-#include <derelict/do.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,25 +34,25 @@ extern "C" {
 
 /**
  * Opaque configuration instance object that holds all parsed resources.
- * This object holds an internal fail state boolean that can be checked with dr_has_failed(). If
+ * This object holds an internal fail state boolean that can be checked with ccfg_has_failed(). If
  * happens to be put in a failure state due to a memory failure, any function that take this object as
  * argument will return early with no side effects and default return values. The only 2 functions that are
- * an exception to this rule are dr_destroy() and dr_has_failed().
+ * an exception to this rule are ccfg_destroy() and ccfg_has_failed().
  */
-typedef struct _data_t dr_data_t;
+typedef struct ccfg_t ccfg_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Allocates memory and initializes a DR configuration instance.
+ * Allocates memory and initializes a CCFG configuration instance.
  * This function always returns a valid and safe-to-use or destroy object instance. Even in case of memory
  * allocation failure, the returned value points to an internal static Configuration instanceuration object
  * instance set in a failed state. Therefore, checking for a NULL returned value is useless, instead, use
- * dr_has_failed().
+ * ccfg_has_failed().
  *
  * @return Created config instance object
  */
-dr_data_t *dr_create(void);
+ccfg_t *ccfg_create(void);
 
 /**
  * Destroy a given instance and free allocated memory. The pointed value is then replaced by a placeholder
@@ -63,7 +61,7 @@ dr_data_t *dr_create(void);
  *
  * @param cfg Configuration instance to interact with
  */
-void dr_destroy(dr_data_t **cfg);
+void ccfg_destroy(ccfg_t **cfg);
 
 /**
  * Gets a valid pointer to an internal configuration instance set in a failed state. To be used to avoid
@@ -71,34 +69,34 @@ void dr_destroy(dr_data_t **cfg);
  *
  * @return Placeholder config instance object
  */
-dr_data_t *dr_get_placeholder(void);
+ccfg_t *ccfg_get_placeholder(void);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Clears the list of callback functions that were added with dr_push_callback().
+ * Clears the list of callback functions that were added with ccfg_push_callback().
  *
  * @param cfg Configuration instance to interact with
  */
-void dr_clear_callbacks(dr_data_t *cfg);
+void ccfg_clear_callbacks(ccfg_t *cfg);
 
 /**
- * Clears the list of added parameters that were added with dr_push_parameter_*().
+ * Clears the list of added parameters that were added with ccfg_push_parameter_*().
  *
  * @param cfg Configuration instance to interact with
  */
-void dr_clear_parameters(dr_data_t *cfg);
+void ccfg_clear_parameters(ccfg_t *cfg);
 
 /**
- * Clears the list of source files that were added with dr_push_source().
+ * Clears the list of source files that were added with ccfg_push_source().
  *
  * @param cfg Configuration instance to interact with
  */
-void dr_clear_sources(dr_data_t *cfg);
+void ccfg_clear_sources(ccfg_t *cfg);
 
 /**
  * Looks-up a resource by its namespace and property name. If found, its reference is kept around and the
- * resource values will become accessible through dr_pick_next_resource_value() and dr_get_resource_*()
+ * resource values will become accessible through ccfg_pick_next_resource_value() and ccfg_get_resource_*()
  * functions. Empty or null namespaces or properties are not valid and will make the function return without
  * doing anything.
  *
@@ -108,11 +106,11 @@ void dr_clear_sources(dr_data_t *cfg);
  *
  * @return True if found, false otherwhise
  */
-bool dr_fetch_resource(dr_data_t *cfg, const char *namespace, const char *property);
+bool ccfg_fetch_resource(ccfg_t *cfg, const char *namespace, const char *property);
 
 /**
  * Reads the first source file that can be opened, parses it, and stores the resolved resources. Once done,
- * callback functions that were added with dr_push_callback() will be called successively in the order
+ * callback functions that were added with ccfg_push_callback() will be called successively in the order
  * they were added. Every time this function is called the saved resources will be cleared first before
  * reading the source. The return value will be set to false if the root source file cannot be opened or if
  * the configuration object has been put in a failure state. Note that if the load fails because no source
@@ -122,7 +120,7 @@ bool dr_fetch_resource(dr_data_t *cfg, const char *namespace, const char *proper
  *
  * @return Load success
  */
-bool dr_load(dr_data_t *cfg);
+bool ccfg_load(ccfg_t *cfg);
 
 /**
  * Initially, after a resource has been fetched, its values are not directly accessible by the getter
@@ -137,11 +135,11 @@ bool dr_load(dr_data_t *cfg);
  *
  * @return True is the next value could be picked, false otherwhise.
  */
-bool dr_pick_next_resource_value(dr_data_t *cfg);
+bool ccfg_pick_next_resource_value(ccfg_t *cfg);
 
 /**
  * Adds a function to call every time the given configuration object is done loading a source file. The
- * callback parameter load_success is set to the value of the return of dr_load(). The ref parameter
+ * callback parameter load_success is set to the value of the return of ccfg_load(). The ref parameter
  * here is a pointer of arbitrary value. That same value will be passed down to the callback's ref parameter
  * with no side effects. It is therefore the responsibility of the caller to ensure that the ref's value is
  * valid when the callback is triggered.
@@ -150,7 +148,7 @@ bool dr_pick_next_resource_value(dr_data_t *cfg);
  * @param fn Callback function
  * @param ref Abitrary pointer value to pass to callback
  */
-void dr_push_callback(dr_data_t *cfg, void (*fn)(dr_data_t *cfg, bool load_success, void *ref), void *ref);
+void ccfg_push_callback(ccfg_t *cfg, void (*fn)(ccfg_t *cfg, bool load_success, void *ref), void *ref);
 
 /**
  * Adds a configuration parameter in double format whose value can be accessed and used from a configuration
@@ -160,7 +158,7 @@ void dr_push_callback(dr_data_t *cfg, void (*fn)(dr_data_t *cfg, bool load_succe
  * @param name Name of the parameter to use in the source configuration
  * @param value Parameter's value
  */
-void dr_push_parameter_double(dr_data_t *cfg, const char *name, double value);
+void ccfg_push_parameter_double(ccfg_t *cfg, const char *name, double value);
 
 /**
  * Adds a configuration parameter in string format whose value can be accessed and used from a configuration
@@ -170,7 +168,7 @@ void dr_push_parameter_double(dr_data_t *cfg, const char *name, double value);
  * @param name Name of the parameter to use in the source configuration
  * @param value Parameter's value
  */
-void dr_push_parameter_string(dr_data_t *cfg, const char *name, const char *value);
+void ccfg_push_parameter_string(ccfg_t *cfg, const char *name, const char *value);
 
 /**
  * Adds a source file to potentially parse. Only the first added source that can be opened will be parsed,
@@ -179,7 +177,7 @@ void dr_push_parameter_string(dr_data_t *cfg, const char *name, const char *valu
  * @param cfg Configuration instance to interact with
  * @param filename Full path to the source file
  */
-void dr_push_source(dr_data_t *cfg, const char *filename);
+void ccfg_push_source(ccfg_t *cfg, const char *filename);
 
 /**
  * Seeds an internal random function that affects the output of random tokens. The seed only affects the
@@ -188,7 +186,7 @@ void dr_push_source(dr_data_t *cfg, const char *filename);
  * @param cfg Configuration instance to interact with
  * @param seed Seed value
  */
-void dr_seed(dr_data_t *cfg, unsigned long long seed);
+void ccfg_seed(ccfg_t *cfg, unsigned long long seed);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -200,7 +198,7 @@ void dr_seed(dr_data_t *cfg, unsigned long long seed);
  *
  * @return Number of values that can be iterated through
  */
-size_t dr_get_resource_size(const dr_data_t *cfg);
+size_t ccfg_get_resource_size(const ccfg_t *cfg);
 
 /**
  * Accesses a single value of a pre-fetched resource and returns it as a string.
@@ -209,7 +207,7 @@ size_t dr_get_resource_size(const dr_data_t *cfg);
  *
  * @return Converted value
  */
-const char *dr_get_resource_value(const dr_data_t *cfg);
+const char *ccfg_get_resource_value(const ccfg_t *cfg);
 
 /**
  * Checks if the configuration is in a failure state due to memory issues.
@@ -218,23 +216,23 @@ const char *dr_get_resource_value(const dr_data_t *cfg);
  *
  * @return Configuration instance error state
  */
-bool dr_has_failed(const dr_data_t *cfg);
+bool ccfg_has_failed(const ccfg_t *cfg);
 
 /**
  * Checks which source file will be opened and read through.
  * This function always returns a non-null string pointer. If no source file can be opened, none were added
- * with dr_push_source() or the config object has failed an empty null-terminated string is returned
+ * with ccfg_push_source() or the config object has failed an empty null-terminated string is returned
  * instead.
  *
  * @param cfg Configuration instance to interact with
  *
  * @return First source file that can be opened
  */
-const char *dr_data_test_sources(const dr_data_t *cfg);
+const char *ccfg_test_sources(const ccfg_t *cfg);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#endif /* DR_H */
+#endif /* CCFG_H */
 
