@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Objects (DO) library.
+ * This file is part of the Cassette Objects (COBJ) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -18,60 +18,22 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef DO_DICTIONARY_H
-#define DO_DICTIONARY_H
-
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef COBJ_H
+#define COBJ_H
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-typedef struct _dictionary_t do_dictionary_t;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-do_dictionary_t *do_dictionary_create(size_t n_alloc, double max_load);
-
-void do_dictionary_destroy(do_dictionary_t **dict);
-
-do_dictionary_t *do_dictionary_get_placeholder(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void do_dictionary_clear(do_dictionary_t *dict);
-
-void do_dictionary_clear_group(do_dictionary_t *dict, unsigned int group);
-
-void do_dictionary_erase(do_dictionary_t *dict, const char *key, unsigned int group);
-
-void do_dictionary_write(do_dictionary_t *dict, const char *key, unsigned int group, size_t value);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool do_dictionary_find(const do_dictionary_t *dict, const char *key, unsigned int group, size_t *value);
-
-size_t do_dictionary_get_alloc_size(const do_dictionary_t *dict);
-
-size_t do_dictionary_get_load(const do_dictionary_t *dict);
-
-double do_dictionary_get_load_factor(const do_dictionary_t *dict);
-
-bool do_dictionary_has_failed(const do_dictionary_t *dict);
+#include "cobj-book.h"
+#include "cobj-color.h"
+#include "cobj-dictionary.h"
+#include "cobj-rand.h"
+#include "cobj-string.h"
+#include "cobj-tracker.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* DO_DICTIONARY_H */
-
+#endif /* COBJ_H */

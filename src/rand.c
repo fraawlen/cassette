@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Objects (DO) library.
+ * This file is part of the Cassette Objects (COBJ) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -20,7 +20,7 @@
 
 #include <assert.h>
 
-#include <derelict/do.h>
+#include <cassette/cobj.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -33,7 +33,7 @@
 /************************************************************************************************************/
 
 double
-do_rand_get(do_rand_t *r, double lim_1, double lim_2)
+cobj_rand_get(cobj_rand_t *r, double lim_1, double lim_2)
 {
 	const unsigned long long m = 140737488355328ULL;
 	const unsigned long long a = 25214903917ULL;
@@ -49,9 +49,9 @@ do_rand_get(do_rand_t *r, double lim_1, double lim_2)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_rand_seed(do_rand_t *r, unsigned long long seed)
+cobj_rand_seed(cobj_rand_t *r, unsigned long long seed)
 {
 	assert(r);
 
-	*r = do_rand_get(&seed, 0, _MAX);
+	*r = cobj_rand_get(&seed, 0, _MAX);
 }
