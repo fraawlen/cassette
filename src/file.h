@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Resources (DR) library.
+ * This file is part of the Cassette Configuration (CCFG) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -30,9 +30,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-void dr_file_parse_child(dr_context_t *ctx_parent, const char *filename);
+void file_parse_child(context_t *ctx_parent, const char *filename);
 
-bool dr_file_parse_root(dr_data_t *cfg, const char *filename);
+bool file_parse_root(ccfg_t *cfg, const char *filename);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

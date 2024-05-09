@@ -1,11 +1,8 @@
-![Derelict Resources banner](./extras/banner.png)
+<p align="center"><img src="./extras/banner.svg"></p>
 
-Derelict Resources (DR) is a configuration language and parser library featuring array based values and short s-like expressions based functions. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
+Cassette Configuration (CCFG) is a configuration language and parser library featuring array based values and short s-like expressions based functions. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
 
 The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems, and except for the compiler and build system, is not dependent on third-party software.
-
-- Main repo : https://codeberg.org/fraawlen/derelict-resources
-- Mirror repo : https://github.com/fraawlen/derelict-resources
 
 Language Features
 -----------------
@@ -26,21 +23,21 @@ For more information about the language usage, features and syntax check out the
 Dependencies
 ------------
 
-Tools :
+- Tools :
 
-- C99 compiler with a stdlib + POSIX 200809L
-- Make
-- Xxd
+	- C99 compiler with a stdlib + POSIX 200809L
+	- Make
+	- Xxd
 
-First-party libraries :
+- First-party libraries :
 
-- [Derelict-Objects (DO)](https://codeberg.org/fraawlen/derelict-objects)
+	- [Cassette-Objects (COBJ)](https://codeberg.org/fraawlen/cassette-objects)
 
 Installation
 ------------
 
-First, edit the makefile if you want to change the installation destinations. These are represented by the variables `DEST_HEADERS` and `DEST_LIBS` for the public API headers and library files respectively. By default, they are set to `/usr/include/derelict/` and `/usr/lib`.
-Then, build and install DR with the following commands :
+First, edit the makefile if you want to change the installation destinations. These are represented by the variables `DEST_HEADERS` and `DEST_LIBS` for the public API headers and library files respectively. By default, they are set to `/usr/include/cassette/` and `/usr/lib`.
+Then, build and install CCFG with the following commands :
 
 ```
 make
@@ -55,46 +52,46 @@ Usage
 Add this include to get access to the library functions :
 
 ```
-#include <derelict/dr.h>
+#include <cassette/ccfg.h>
 ```
 
 As well as this compilation flag :
 
 ```
--ldr
+-lccfg
 ```
 
 Minimal Example
--------
+---------------
 
-The following code snippet shows a minimal example of the library usage. When compiled and run, it will look for the file `/tmp/dr-example` and load its data. It then attempts to fetch a resource named `property` under the namespace `namespace`, and if found, prints its values.
+The following code snippet shows a minimal example of the library usage. When compiled and run, it will look for the file `/tmp/ccfg` and load its contents. It then attempts to fetch a resource named `property` under the namespace `namespace`, and if found, prints its values.
 
 ```c
 #include <stdio.h>
-#include <derelict/dr.h>
+#include <cassette/ccfg.h>
 
 int
 main(void)
 {
-	dr_data_t *cfg = dr_create();
+	ccfg_t *cfg = ccfg_create();
 
-	dr_push_source(cfg, "/tmp/dr-example");
-	dr_load(cfg);
+	ccfg_push_source(cfg, "/tmp/ccfg");
+	ccfg_load(cfg);
 
-	dr_fetch_resource(cfg, "example_namespace", "example_property");
-	while (dr_pick_next_resource_value(cfg))
+	ccfg_fetch_resource(cfg, "namespace", "property");
+	while (ccfg_pick_next_resource_value(cfg))
 	{
-		printf("%s\n", dr_get_resource_value(cfg));
+		printf("%s\n", ccfg_get_resource_value(cfg));
 	}
 
 	return 0;
 }
 ```
 
-A matching minimal DR configuration in `/tmp/dr-example` will then look like this :
+A matching minimal CCFG configuration in `/tmp/ccfg` will then look like this :
 
 ```
-example_namespace example_property value_A value_B
+namespace property value_A value_B
 ```
 
 Output :
@@ -104,4 +101,11 @@ value_A
 value_B
 ```
 
-Check out the `examples` directory for more in depth demonstrations.
+Check out the `examples` directory for more in depth demonstrations and `include/cassette/ccfg.h` for full functions descriptions.
+
+Mirrors
+-------
+
+- https://codeberg.org/fraawlen/cassette-configuration
+- https://github.com/fraawlen/cassette-configuration
+

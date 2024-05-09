@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Resources (DR) library.
+ * This file is part of the Cassette Configuration (CCFG) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#include <derelict/do.h>
+#include <cassette/cobj.h>
 
 #include "token.h"
 
@@ -35,16 +35,16 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DR_CONTEXT_DICT_VARIABLE 0
-#define DR_CONTEXT_DICT_SECTION  1
+#define CONTEXT_DICT_VARIABLE 0
+#define CONTEXT_DICT_SECTION  1
 
-#define DR_CONTEXT_MAX_DEPTH 128
+#define CONTEXT_MAX_DEPTH 128
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-typedef struct dr_context_t dr_context_t;
+typedef struct context_t context_t;
 
-struct dr_context_t
+struct context_t
 {
 	/* file data */
 
@@ -61,30 +61,30 @@ struct dr_context_t
 
 	/* data storage */
 
-	do_book_t *params;
-	do_book_t *sequences;
-	do_book_t *variables;
-	do_book_t *iteration;
-	do_dictionary_t *ref_params;
-	do_dictionary_t *ref_sequences;
-	do_dictionary_t *ref_variables;
-	do_dictionary_t *tokens;
+	cobj_book_t *params;
+	cobj_book_t *sequences;
+	cobj_book_t *variables;
+	cobj_book_t *iteration;
+	cobj_dictionary_t *ref_params;
+	cobj_dictionary_t *ref_sequences;
+	cobj_dictionary_t *ref_variables;
+	cobj_dictionary_t *tokens;
 
 	/* misc */
 	
-	dr_context_t *parent;
-	do_rand_t *rand;
+	context_t *parent;
+	cobj_rand_t *rand;
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-dr_token_kind_t dr_context_get_token(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result);
+token_kind_t context_get_token(context_t *ctx, char token[static TOKEN_N], double *math_result);
 
-dr_token_kind_t dr_context_get_token_numeral(dr_context_t *ctx, char token[static DR_TOKEN_N], double *math_result);
+token_kind_t context_get_token_numeral(context_t *ctx, char token[static TOKEN_N], double *math_result);
 
-dr_token_kind_t dr_context_get_token_raw(dr_context_t *ctx, char token[static DR_TOKEN_N]);
+token_kind_t context_get_token_raw(context_t *ctx, char token[static TOKEN_N]);
 
-void dr_context_goto_eol(dr_context_t *ctx);
+void context_goto_eol(context_t *ctx);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

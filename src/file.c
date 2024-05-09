@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Resources (DR) library.
+ * This file is part of the Cassette Configuration (CCFG) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -27,8 +27,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <derelict/do.h>
-#include <derelict/dr.h>
+#include <cassette/ccfg.h>
+#include <cassette/cobj.h>
 
 #include "context.h"
 #include "main.h"
@@ -39,22 +39,22 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _open_file  (dr_context_t *ctx, const dr_context_t *ctx_parent, const char *filename);
-static void _parse_file (dr_context_t *ctx);
+static bool _open_file  (context_t *ctx, const context_t *ctx_parent, const char *filename);
+static void _parse_file (context_t *ctx);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
 void
-dr_file_parse_child(dr_context_t *ctx_parent, const char *filename)
+file_parse_child(context_t *ctx_parent, const char *filename)
 {
-	dr_context_t ctx;
+	context_t ctx;
 
 	size_t var_iter;
 	size_t var_group;
 	
-	if (ctx_parent->depth >= DR_CONTEXT_MAX_DEPTH)
+	if (ctx_parent->depth >= CONTEXT_MAX_DEPTH)
 	{
 		return;
 	}
@@ -71,7 +71,7 @@ dr_file_parse_child(dr_context_t *ctx_parent, const char *filename)
 	ctx.params         = ctx_parent->params;
 	ctx.sequences      = ctx_parent->sequences;
 	ctx.variables      = ctx_parent->variables;
-	ctx.iteration      = do_book_get_placeholder();
+	ctx.iteration      = cobj_book_get_placeholder();
 	ctx.ref_params     = ctx_parent->ref_params;
 	ctx.ref_sequences  = ctx_parent->ref_sequences;
 	ctx.ref_variables  = ctx_parent->ref_variables;
@@ -79,19 +79,19 @@ dr_file_parse_child(dr_context_t *ctx_parent, const char *filename)
 	ctx.parent         = ctx_parent;
 	ctx.rand           = ctx_parent->rand;
 
-	var_iter  = do_book_get_iterator_offset(ctx.variables);
-	var_group = do_book_get_iterator_group(ctx.variables);
+	var_iter  = cobj_book_get_iterator_offset(ctx.variables);
+	var_group = cobj_book_get_iterator_group(ctx.variables);
 
-	do_book_lock_iterator(ctx.variables);
+	cobj_book_lock_iterator(ctx.variables);
 
 	_parse_file(&ctx);
 
 	if (var_iter > 0)
 	{
-		do_book_reset_iterator(ctx.variables, var_group);
+		cobj_book_reset_iterator(ctx.variables, var_group);
 		for (size_t i = 0; i < var_iter; i++)
 		{
-			do_book_increment_iterator(ctx.variables);
+			cobj_book_increment_iterator(ctx.variables);
 		}
 	}
 
@@ -101,10 +101,10 @@ dr_file_parse_child(dr_context_t *ctx_parent, const char *filename)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-dr_file_parse_root(dr_data_t *cfg, const char *filename)
+file_parse_root(ccfg_t *cfg, const char *filename)
 {
-	dr_context_t ctx;
-	do_rand_t r;
+	context_t ctx;
+	cobj_rand_t r;
 
 	bool fail = false;
 
@@ -113,7 +113,7 @@ dr_file_parse_root(dr_data_t *cfg, const char *filename)
 		return false;
 	}
 
-	do_rand_seed(&r, cfg->seed);
+	cobj_rand_seed(&r, cfg->seed);
 
 	ctx.eol_reached    = false;
 	ctx.eof_reached    = false;
@@ -121,22 +121,22 @@ dr_file_parse_root(dr_data_t *cfg, const char *filename)
 	ctx.depth          = 0;
 	ctx.params         = cfg->params;
 	ctx.sequences      = cfg->sequences;
-	ctx.variables      = do_book_create(10, DR_TOKEN_N);
-	ctx.iteration      = do_book_get_placeholder();
+	ctx.variables      = cobj_book_create(10, TOKEN_N);
+	ctx.iteration      = cobj_book_get_placeholder();
 	ctx.ref_params     = cfg->ref_params;
 	ctx.ref_sequences  = cfg->ref_sequences;
-	ctx.ref_variables  = do_dictionary_create(10, 0.6);
+	ctx.ref_variables  = cobj_dictionary_create(10, 0.6);
 	ctx.tokens         = cfg->tokens;
 	ctx.parent         = NULL;
 	ctx.rand           = &r;
 
 	_parse_file(&ctx);
 
-	fail |= do_book_has_failed(ctx.variables);
-	fail |= do_dictionary_has_failed(ctx.ref_variables);
+	fail |= cobj_book_has_failed(ctx.variables);
+	fail |= cobj_dictionary_has_failed(ctx.ref_variables);
 
-	do_book_destroy(&ctx.variables);
-	do_dictionary_destroy(&ctx.ref_variables);
+	cobj_book_destroy(&ctx.variables);
+	cobj_dictionary_destroy(&ctx.ref_variables);
 
 	fclose(ctx.file);
 
@@ -148,7 +148,7 @@ dr_file_parse_root(dr_data_t *cfg, const char *filename)
 /************************************************************************************************************/
 
 static bool
-_open_file(dr_context_t *ctx, const dr_context_t *ctx_parent, const char *filename)
+_open_file(context_t *ctx, const context_t *ctx_parent, const char *filename)
 {
 	struct stat fs;
 
@@ -189,11 +189,11 @@ _open_file(dr_context_t *ctx, const dr_context_t *ctx_parent, const char *filena
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_parse_file(dr_context_t *ctx)
+_parse_file(context_t *ctx)
 {
 	while (!ctx->eof_reached)
 	{
 		ctx->eol_reached = false;
-		dr_sequence_parse(ctx);
+		sequence_parse(ctx);
 	}
 }

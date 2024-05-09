@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Resources (DR) library.
+ * This file is part of the Cassette Configuration (CCFG) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -21,102 +21,102 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-#include <derelict/do.h>
+#include <cassette/cobj.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DR_TOKEN_N 32
+#define TOKEN_N 32
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum dr_token_kind_t
+enum token_kind_t
 {
 	/* special tokens */
 
-	DR_TOKEN_INVALID = 0,
-	DR_TOKEN_STRING,
-	DR_TOKEN_NUMBER,
+	TOKEN_INVALID = 0,
+	TOKEN_STRING,
+	TOKEN_NUMBER,
 
 	/* substitution tokens */
 
-	DR_TOKEN_EOF,
-	DR_TOKEN_COMMENT,
-	DR_TOKEN_FILLER,
-	DR_TOKEN_JOIN,
-	DR_TOKEN_ESCAPE,
-	DR_TOKEN_VAR_INJECTION,
-	DR_TOKEN_ITER_INJECTION,
-	DR_TOKEN_PARAM_INJECTION,
-	DR_TOKEN_IF_LESS,
-	DR_TOKEN_IF_LESS_EQ,
-	DR_TOKEN_IF_MORE,
-	DR_TOKEN_IF_MORE_EQ,
-	DR_TOKEN_IF_EQ,
-	DR_TOKEN_IF_EQ_NOT,
-	DR_TOKEN_TIMESTAMP,
-	DR_TOKEN_CONST_PI,
-	DR_TOKEN_CONST_EULER,
-	DR_TOKEN_CONST_TRUE,
-	DR_TOKEN_CONST_FALSE,
-	DR_TOKEN_OP_SQRT,
-	DR_TOKEN_OP_CBRT,
-	DR_TOKEN_OP_ABS,
-	DR_TOKEN_OP_CEILING,
-	DR_TOKEN_OP_FLOOR,
-	DR_TOKEN_OP_ROUND,
-	DR_TOKEN_OP_COS,
-	DR_TOKEN_OP_SIN,
-	DR_TOKEN_OP_TAN,
-	DR_TOKEN_OP_ACOS,
-	DR_TOKEN_OP_ASIN,
-	DR_TOKEN_OP_ATAN,
-	DR_TOKEN_OP_COSH,
-	DR_TOKEN_OP_SINH,
-	DR_TOKEN_OP_LN,
-	DR_TOKEN_OP_LOG,
-	DR_TOKEN_OP_ADD,
-	DR_TOKEN_OP_SUBSTRACT,
-	DR_TOKEN_OP_MULTIPLY,
-	DR_TOKEN_OP_DIVIDE,
-	DR_TOKEN_OP_MOD,
-	DR_TOKEN_OP_POW,
-	DR_TOKEN_OP_BIGGEST,
-	DR_TOKEN_OP_SMALLEST,
-	DR_TOKEN_OP_RANDOM,
-	DR_TOKEN_OP_LIMIT,
-	DR_TOKEN_OP_INTERPOLATE,
-	DR_TOKEN_CL_INTERPOLATE,
-	DR_TOKEN_CL_RGB,
-	DR_TOKEN_CL_RGBA,
+	TOKEN_EOF,
+	TOKEN_COMMENT,
+	TOKEN_FILLER,
+	TOKEN_JOIN,
+	TOKEN_ESCAPE,
+	TOKEN_VAR_INJECTION,
+	TOKEN_ITER_INJECTION,
+	TOKEN_PARAM_INJECTION,
+	TOKEN_IF_LESS,
+	TOKEN_IF_LESS_EQ,
+	TOKEN_IF_MORE,
+	TOKEN_IF_MORE_EQ,
+	TOKEN_IF_EQ,
+	TOKEN_IF_EQ_NOT,
+	TOKEN_TIMESTAMP,
+	TOKEN_CONST_PI,
+	TOKEN_CONST_EULER,
+	TOKEN_CONST_TRUE,
+	TOKEN_CONST_FALSE,
+	TOKEN_OP_SQRT,
+	TOKEN_OP_CBRT,
+	TOKEN_OP_ABS,
+	TOKEN_OP_CEILING,
+	TOKEN_OP_FLOOR,
+	TOKEN_OP_ROUND,
+	TOKEN_OP_COS,
+	TOKEN_OP_SIN,
+	TOKEN_OP_TAN,
+	TOKEN_OP_ACOS,
+	TOKEN_OP_ASIN,
+	TOKEN_OP_ATAN,
+	TOKEN_OP_COSH,
+	TOKEN_OP_SINH,
+	TOKEN_OP_LN,
+	TOKEN_OP_LOG,
+	TOKEN_OP_ADD,
+	TOKEN_OP_SUBSTRACT,
+	TOKEN_OP_MULTIPLY,
+	TOKEN_OP_DIVIDE,
+	TOKEN_OP_MOD,
+	TOKEN_OP_POW,
+	TOKEN_OP_BIGGEST,
+	TOKEN_OP_SMALLEST,
+	TOKEN_OP_RANDOM,
+	TOKEN_OP_LIMIT,
+	TOKEN_OP_INTERPOLATE,
+	TOKEN_CL_INTERPOLATE,
+	TOKEN_CL_RGB,
+	TOKEN_CL_RGBA,
 
 	/* lead tokens */
 
-	DR_TOKEN_VAR_DECLARATION,
-	DR_TOKEN_VAR_APPEND,
-	DR_TOKEN_VAR_PREPEND,
-	DR_TOKEN_VAR_MERGE,
-	DR_TOKEN_ENUM_DECLARATION,
-	DR_TOKEN_SECTION_BEGIN,
-	DR_TOKEN_SECTION_ADD,
-	DR_TOKEN_SECTION_DEL,
-	DR_TOKEN_INCLUDE,
-	DR_TOKEN_ITERATE_RAW,
-	DR_TOKEN_ITERATE,
-	DR_TOKEN_RAND_SEED,
-	DR_TOKEN_PRINT,
+	TOKEN_VAR_DECLARATION,
+	TOKEN_VAR_APPEND,
+	TOKEN_VAR_PREPEND,
+	TOKEN_VAR_MERGE,
+	TOKEN_ENUM_DECLARATION,
+	TOKEN_SECTION_BEGIN,
+	TOKEN_SECTION_ADD,
+	TOKEN_SECTION_DEL,
+	TOKEN_INCLUDE,
+	TOKEN_ITERATE_RAW,
+	TOKEN_ITERATE,
+	TOKEN_RAND_SEED,
+	TOKEN_PRINT,
 };
 
-typedef enum dr_token_kind_t dr_token_kind_t;
+typedef enum token_kind_t token_kind_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_dictionary_t *dr_token_dictionary_create(void);
+cobj_dictionary_t *token_dictionary_create(void);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-dr_token_kind_t dr_token_match(do_dictionary_t *token_dict, const char *token);
+token_kind_t token_match(cobj_dictionary_t *token_dict, const char *token);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

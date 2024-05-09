@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Resources (DR) library.
+ * This file is part of the Cassette Configuration (CCFG) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -18,26 +18,26 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef MAIN_H
+#define MAIN_H
 
 #include <stdbool.h>
 
-#include <derelict/do.h>
+#include <cassette/cobj.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-struct _data_t
+struct ccfg_t
 {
-	do_book_t *params;
-	do_book_t *sequences; 
-	do_book_t *sources;
-	do_tracker_t *callbacks;
-	do_dictionary_t *ref_params;
-	do_dictionary_t *ref_sequences;
-	do_dictionary_t *tokens;
+	cobj_book_t *params;
+	cobj_book_t *sequences; 
+	cobj_book_t *sources;
+	cobj_tracker_t *callbacks;
+	cobj_dictionary_t *ref_params;
+	cobj_dictionary_t *ref_sequences;
+	cobj_dictionary_t *tokens;
 	unsigned long long seed;
 	bool failed;
 };
@@ -46,4 +46,4 @@ struct _data_t
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#endif /* CONFIG_H */
+#endif /* MAIN_H */
