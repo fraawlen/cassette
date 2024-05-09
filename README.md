@@ -1,14 +1,11 @@
-![Derelict Objects banner](./extras/banner.png)
+<p align=center><img src="./extras/banner.svg"></p>
 
-Derelict Objects (DO) is a little collection self-contained data structures. Its API is written in a (somewhat) safe C style in which all structures that depend on dynamic memory allocation are opaque and their handler functions are designed to minimize the return of null pointer values. In other words, save for a few explicit exceptions, functions including constructors always return valid values or pointers, even in case of memory allocation failure. Moreover, destructor functions are also protected from double-free and dandling pointers.
+Cassette Objects (COBJ) is a little collection self-contained data structures. Its API is written in a (somewhat) safe C style in which all structures that depend on dynamic memory allocation are opaque and their handler functions are designed to minimize the return of null pointer values. In other words, save for a few explicit exceptions, functions including constructors always return valid values or pointers, even in case of memory allocation failure. Moreover, destructor functions are also protected from double-free and dandling pointers.
 
 The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems, and except for the compiler and build system, is not dependent on third-party software.
 
-- Main repo : https://codeberg.org/fraawlen/derelict-objects
-- Mirror repo : https://github.com/fraawlen/derelict-objects
-
 Features
---------------------
+--------
 
 - Book : a dynamic array/vector for c-strings with grouping features
 - Dictionary : an hashmap with string + group keys, FNV-1A hashing and linear probing
@@ -20,16 +17,16 @@ Features
 Dependencies
 ------------
 
-Tools :
+- Tools :
 
-- C99 compiler with a stdlib + POSIX 200809L
-- Make
+	- C99 compiler with a stdlib + POSIX 200809L
+	- Make
 
 Installation
 ------------
 
-First, edit the makefile if you want to change the installation destinations. These are represented by the variables `DEST_HEADERS` and `DEST_LIBS` for the public API headers and library files respectively. By default, they are set to `/usr/include/derelict/` and `/usr/lib`.
-Then, build and install DO with the following commands :
+First, edit the makefile if you want to change the installation destinations. These are represented by the variables `DEST_HEADERS` and `DEST_LIBS` for the public API headers and library files respectively. By default, they are set to `/usr/include/cassette/` and `/usr/lib`.
+Then, build and install COBJ with the following commands :
 
 ```
 make
@@ -44,12 +41,17 @@ Usage
 Add this include to get access to the library functions :
 
 ```
-#include <derelict/do.h>
+#include <cassette/cobj.h>
 ```
 
 As well as this compilation flag :
 
 ```
--ldo
+-lcobj
 ```
 
+Mirrors
+-------
+
+- https://codeberg.org/fraawlen/cassette-objects
+- https://github.com/fraawlen/cassette-objects

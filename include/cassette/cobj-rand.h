@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Objects (DO) library.
+ * This file is part of the Cassette Objects (COBJ) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -18,74 +18,26 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef DO_TRACKER_H
-#define DO_TRACKER_H
-
-#include <stdbool.h>
-#include <stdlib.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef COBJ_RAND_H
+#define COBJ_RAND_H
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-typedef struct _tracker_t do_tracker_t;
+typedef unsigned long long cobj_rand_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_tracker_t *do_tracker_create(size_t n_alloc);
-
-void do_tracker_destroy(do_tracker_t **tracker);
-
-do_tracker_t *do_tracker_get_placeholder(void);
+void cobj_rand_seed(cobj_rand_t *r, unsigned long long seed);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void do_tracker_clear(do_tracker_t *tracker);
-
-bool do_tracker_increment_iterator(do_tracker_t *tracker);
-
-void do_tracker_lock_iterator(do_tracker_t *tracker);
-
-void do_tracker_pull_index(do_tracker_t *tracker, size_t index);
-
-void do_tracker_pull_pointer(do_tracker_t *tracker, const void *ptr, size_t index);
-
-void do_tracker_push(do_tracker_t *tracker, const void *ptr, size_t *index);
-
-void do_tracker_reset_iterator(do_tracker_t *tracker);
-
-void do_tracker_trim(do_tracker_t *tracker);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-unsigned long do_tracker_find(const do_tracker_t *tracker, const void *ptr, size_t *index);
-
-size_t do_tracker_get_alloc_size(const do_tracker_t *tracker);
-
-const void *do_tracker_get_index(const do_tracker_t *tracker, size_t index);
-
-unsigned long do_tracker_get_index_n_ref(const do_tracker_t *tracker, size_t index);
-
-const void *do_tracker_get_iteration(const do_tracker_t *tracker);
-
-size_t do_tracker_get_iterator_offset(const do_tracker_t *tracker);
-
-unsigned long do_tracker_get_iteration_n_ref(const do_tracker_t *tracker);
-
-size_t do_tracker_get_size(const do_tracker_t *tracker);
-
-bool do_tracker_has_failed(const do_tracker_t *tracker);
+double cobj_rand_get(cobj_rand_t *r, double lim_1, double lim_2);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifdef __cplusplus
-}
-#endif
+#endif /* COBJ_RAND_H */
 
-#endif /* DO_TRACKER_H */

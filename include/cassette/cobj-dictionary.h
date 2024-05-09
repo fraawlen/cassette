@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Objects (DO) library.
+ * This file is part of the Cassette Objects (COBJ) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -18,26 +18,60 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef DO_RAND_H
-#define DO_RAND_H
+#ifndef COBJ_DICTIONARY_H
+#define COBJ_DICTIONARY_H
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-typedef unsigned long long do_rand_t;
+typedef struct _dictionary_t cobj_dictionary_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void do_rand_seed(do_rand_t *r, unsigned long long seed);
+cobj_dictionary_t *cobj_dictionary_create(size_t n_alloc, double max_load);
+
+void cobj_dictionary_destroy(cobj_dictionary_t **dict);
+
+cobj_dictionary_t *cobj_dictionary_get_placeholder(void);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-double do_rand_get(do_rand_t *r, double lim_1, double lim_2);
+void cobj_dictionary_clear(cobj_dictionary_t *dict);
+
+void cobj_dictionary_clear_group(cobj_dictionary_t *dict, unsigned int group);
+
+void cobj_dictionary_erase(cobj_dictionary_t *dict, const char *key, unsigned int group);
+
+void cobj_dictionary_write(cobj_dictionary_t *dict, const char *key, unsigned int group, size_t value);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool cobj_dictionary_find(const cobj_dictionary_t *dict, const char *key, unsigned int group, size_t *value);
+
+size_t cobj_dictionary_get_alloc_size(const cobj_dictionary_t *dict);
+
+size_t cobj_dictionary_get_load(const cobj_dictionary_t *dict);
+
+double cobj_dictionary_get_load_factor(const cobj_dictionary_t *dict);
+
+bool cobj_dictionary_has_failed(const cobj_dictionary_t *dict);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#endif /* DO_RAND_H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* COBJ_DICTIONARY_H */
 

@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Objects (DO) library.
+ * This file is part of the Cassette Objects (COBJ) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -22,26 +22,26 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <derelict/do.h>
+#include <cassette/cobj.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
  
-static void       _bind_cl       (do_color_t *cl);
+static void       _bind_cl       (cobj_color_t *cl);
 static void       _bind_d        (double *d);
 static uint8_t    _hex_to_int    (char c);
-static do_color_t _convert_hex   (const char *str, bool *err);
-static do_color_t _convert_ulong (const char *str, bool *err);
+static cobj_color_t _convert_hex   (const char *str, bool *err);
+static cobj_color_t _convert_ulong (const char *str, bool *err);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-do_color_t
-do_color_convert_argb_uint(uint32_t argb)
+cobj_color_t
+cobj_color_convert_argb_uint(uint32_t argb)
 {
-	return do_color_convert_rgba(
+	return cobj_color_convert_rgba(
 		(argb >> 16) & 0xFF,
 		(argb >>  8) & 0xFF,
 		(argb >>  0) & 0xFF,
@@ -50,10 +50,10 @@ do_color_convert_argb_uint(uint32_t argb)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_color_t
-do_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+cobj_color_t
+cobj_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
-	do_color_t cl;
+	cobj_color_t cl;
 
 	cl.a = a / 255.0;
 	cl.r = r / 255.0;
@@ -65,17 +65,17 @@ do_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_color_t
-do_color_convert_str(const char *str, bool *err)
+cobj_color_t
+cobj_color_convert_str(const char *str, bool *err)
 {
-	do_color_t cl;
+	cobj_color_t cl;
 
 	bool fail = false;
 
 	if (!str)
 	{
 		fail = true;
-		cl = DO_COLOR_TRANSPARENT;
+		cl = COBJ_COLOR_TRANSPARENT;
 	}
 	else if (str[0] == '#')
 	{
@@ -97,7 +97,7 @@ do_color_convert_str(const char *str, bool *err)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 uint32_t
-do_color_get_argb_uint(do_color_t cl)
+cobj_color_get_argb_uint(cobj_color_t cl)
 {
 	uint32_t a;
 	uint32_t r;
@@ -116,10 +116,10 @@ do_color_get_argb_uint(do_color_t cl)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_color_t
-do_color_interpolate(do_color_t cl_1, do_color_t cl_2, double ratio)
+cobj_color_t
+cobj_color_interpolate(cobj_color_t cl_1, cobj_color_t cl_2, double ratio)
 {
-	do_color_t cl;
+	cobj_color_t cl;
 
 	_bind_cl(&cl_1);
 	_bind_cl(&cl_2);
@@ -138,7 +138,7 @@ do_color_interpolate(do_color_t cl_1, do_color_t cl_2, double ratio)
 /************************************************************************************************************/
 
 static void
-_bind_cl(do_color_t *cl)
+_bind_cl(cobj_color_t *cl)
 {
 	_bind_d(&cl->r);
 	_bind_d(&cl->g);
@@ -163,7 +163,7 @@ _bind_d(double *d)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_color_t
+cobj_color_t
 _convert_hex(const char *str, bool *err)
 {
 	uint8_t v[8] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xF, 0xF};
@@ -185,7 +185,7 @@ _convert_hex(const char *str, bool *err)
 
 	/* apply conversion */
 
-	return do_color_convert_rgba(
+	return cobj_color_convert_rgba(
 		(v[0] << 4) + v[1],
 		(v[2] << 4) + v[3],
 		(v[4] << 4) + v[5],
@@ -194,7 +194,7 @@ _convert_hex(const char *str, bool *err)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_color_t
+cobj_color_t
 _convert_ulong(const char *str, bool *err)
 {
 	char *endptr = NULL;
@@ -206,7 +206,7 @@ _convert_ulong(const char *str, bool *err)
 		*err = true;
 	}
 
-	return do_color_convert_argb_uint(u);
+	return cobj_color_convert_argb_uint(u);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

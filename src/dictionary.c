@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Objects (DO) library.
+ * This file is part of the Cassette Objects (COBJ) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <derelict/do.h>
+#include <cassette/cobj.h>
 
 #include "safe.h"
 
@@ -67,15 +67,15 @@ struct _dictionary_t
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static _slot_t *_find_slot (const do_dictionary_t *dict, uint64_t hash, _state_t state_cut_off);
+static _slot_t *_find_slot (const cobj_dictionary_t *dict, uint64_t hash, _state_t state_cut_off);
 static uint64_t _hash      (const char *str, unsigned int group);
-static bool     _resize    (do_dictionary_t *dict, size_t n, size_t a, size_t b);
+static bool     _resize    (cobj_dictionary_t *dict, size_t n, size_t a, size_t b);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static do_dictionary_t _err_dict = 
+static cobj_dictionary_t _err_dict = 
 {
 	.slots    = NULL,
 	.n        = 0,
@@ -89,7 +89,7 @@ static do_dictionary_t _err_dict =
 /************************************************************************************************************/
 
 void
-do_dictionary_clear(do_dictionary_t *dict)
+cobj_dictionary_clear(cobj_dictionary_t *dict)
 {
 	assert(dict);
 
@@ -105,7 +105,7 @@ do_dictionary_clear(do_dictionary_t *dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_dictionary_clear_group(do_dictionary_t *dict, unsigned int group)
+cobj_dictionary_clear_group(cobj_dictionary_t *dict, unsigned int group)
 {
 	assert(dict);
 
@@ -131,10 +131,10 @@ do_dictionary_clear_group(do_dictionary_t *dict, unsigned int group)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_dictionary_t *
-do_dictionary_create(size_t n_alloc, double max_load)
+cobj_dictionary_t *
+cobj_dictionary_create(size_t n_alloc, double max_load)
 {
-	do_dictionary_t *dict;
+	cobj_dictionary_t *dict;
 
 	assert(max_load > 0.0 && max_load <= 1.0);
 
@@ -143,7 +143,7 @@ do_dictionary_create(size_t n_alloc, double max_load)
 		return &_err_dict;
 	}
 
-	if (!(dict = malloc(sizeof(do_dictionary_t))))
+	if (!(dict = malloc(sizeof(cobj_dictionary_t))))
 	{
 		return &_err_dict;
 	}
@@ -162,7 +162,7 @@ do_dictionary_create(size_t n_alloc, double max_load)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_dictionary_destroy(do_dictionary_t **dict)
+cobj_dictionary_destroy(cobj_dictionary_t **dict)
 {
 	assert(dict && *dict);
 
@@ -180,7 +180,7 @@ do_dictionary_destroy(do_dictionary_t **dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_dictionary_erase(do_dictionary_t *dict, const char *key, unsigned int group)
+cobj_dictionary_erase(cobj_dictionary_t *dict, const char *key, unsigned int group)
 {
 	_slot_t *slot;
 
@@ -206,7 +206,7 @@ do_dictionary_erase(do_dictionary_t *dict, const char *key, unsigned int group)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-do_dictionary_find(const do_dictionary_t *dict, const char *key, unsigned int group, size_t *value)
+cobj_dictionary_find(const cobj_dictionary_t *dict, const char *key, unsigned int group, size_t *value)
 {
 	_slot_t *slot;
 
@@ -238,7 +238,7 @@ do_dictionary_find(const do_dictionary_t *dict, const char *key, unsigned int gr
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-do_dictionary_get_alloc_size(const do_dictionary_t *dict)
+cobj_dictionary_get_alloc_size(const cobj_dictionary_t *dict)
 {
 	assert(dict);
 
@@ -253,7 +253,7 @@ do_dictionary_get_alloc_size(const do_dictionary_t *dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-do_dictionary_get_load(const do_dictionary_t *dict)
+cobj_dictionary_get_load(const cobj_dictionary_t *dict)
 {
 	assert(dict);
 
@@ -268,7 +268,7 @@ do_dictionary_get_load(const do_dictionary_t *dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
-do_dictionary_get_load_factor(const do_dictionary_t *dict)
+cobj_dictionary_get_load_factor(const cobj_dictionary_t *dict)
 {
 	assert(dict);
 
@@ -281,8 +281,8 @@ do_dictionary_get_load_factor(const do_dictionary_t *dict)
 }
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_dictionary_t *
-do_dictionary_get_placeholder(void)
+cobj_dictionary_t *
+cobj_dictionary_get_placeholder(void)
 {
 	return &_err_dict;
 }
@@ -290,7 +290,7 @@ do_dictionary_get_placeholder(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-do_dictionary_has_failed(const do_dictionary_t *dict)
+cobj_dictionary_has_failed(const cobj_dictionary_t *dict)
 {
 	assert(dict);
 
@@ -300,7 +300,7 @@ do_dictionary_has_failed(const do_dictionary_t *dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_dictionary_write(do_dictionary_t *dict, const char *key, unsigned int group, size_t value)
+cobj_dictionary_write(cobj_dictionary_t *dict, const char *key, unsigned int group, size_t value)
 {
 	_slot_t *slot;
 	_slot_t *slot_2;
@@ -353,7 +353,7 @@ do_dictionary_write(do_dictionary_t *dict, const char *key, unsigned int group, 
 
 
 static _slot_t *
-_find_slot(const do_dictionary_t *dict, uint64_t hash, _state_t state_cut_off)
+_find_slot(const cobj_dictionary_t *dict, uint64_t hash, _state_t state_cut_off)
 {
 	_slot_t *slot;
 
@@ -409,7 +409,7 @@ _hash(const char *str, unsigned int group)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-_resize(do_dictionary_t *dict, size_t n, size_t a, size_t b)
+_resize(cobj_dictionary_t *dict, size_t n, size_t a, size_t b)
 {
 	_slot_t *tmp;
 	_slot_t *tmp_2;
@@ -419,9 +419,9 @@ _resize(do_dictionary_t *dict, size_t n, size_t a, size_t b)
 
 	/* test for overflow */
 
-	safe &= do_safe_mul(&n,   n, a);
-	safe &= do_safe_add(&n,   n, b);
-	safe &= do_safe_mul(NULL, n, sizeof(_slot_t));
+	safe &= safe_mul(&n,   n, a);
+	safe &= safe_add(&n,   n, b);
+	safe &= safe_mul(NULL, n, sizeof(_slot_t));
 
 	if (!safe)
 	{

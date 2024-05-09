@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Objects (DO) library.
+ * This file is part of the Cassette Objects (COBJ) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -28,13 +28,13 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-bool do_safe_add(size_t *result, size_t a, size_t b);
+bool safe_add(size_t *result, size_t a, size_t b);
 
-bool do_safe_div(size_t *result, size_t a, size_t b);
+bool safe_div(size_t *result, size_t a, size_t b);
 
-bool do_safe_mul(size_t *result, size_t a, size_t b);
+bool safe_mul(size_t *result, size_t a, size_t b);
 
-bool do_safe_sub(size_t *result, size_t a, size_t b);
+bool safe_sub(size_t *result, size_t a, size_t b);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

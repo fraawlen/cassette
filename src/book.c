@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Objects (DO) library.
+ * This file is part of the Cassette Objects (COBJ) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <derelict/do.h>
+#include <cassette/cobj.h>
 
 #include "safe.h"
 
@@ -49,14 +49,14 @@ struct _book_t
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static size_t _get_group_size (const do_book_t *book, size_t index);
-static bool   _resize         (do_book_t *book, size_t n, size_t a, size_t b);
+static size_t _get_group_size (const cobj_book_t *book, size_t index);
+static bool   _resize         (cobj_book_t *book, size_t n, size_t a, size_t b);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static do_book_t _err_book =
+static cobj_book_t _err_book =
 {
 	.words          = NULL,
 	.groups         = NULL,
@@ -74,7 +74,7 @@ static do_book_t _err_book =
 /************************************************************************************************************/
 
 void
-do_book_clear(do_book_t *book)
+cobj_book_clear(cobj_book_t *book)
 {
 	assert(book);
 
@@ -89,14 +89,14 @@ do_book_clear(do_book_t *book)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_book_t *
-do_book_create(size_t n_alloc, size_t word_n)
+cobj_book_t *
+cobj_book_create(size_t n_alloc, size_t word_n)
 {
 	assert(word_n > 0);
 
-	do_book_t *book;
+	cobj_book_t *book;
 
-	if (!(book = malloc(sizeof(do_book_t))))
+	if (!(book = malloc(sizeof(cobj_book_t))))
 	{
 		return &_err_book;
 	}
@@ -119,7 +119,7 @@ do_book_create(size_t n_alloc, size_t word_n)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_book_destroy(do_book_t **book)
+cobj_book_destroy(cobj_book_t **book)
 {
 	assert(book && *book);
 
@@ -138,7 +138,7 @@ do_book_destroy(do_book_t **book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_book_erase_last_group(do_book_t *book)
+cobj_book_erase_last_group(cobj_book_t *book)
 {
 	assert(book);
 
@@ -158,7 +158,7 @@ do_book_erase_last_group(do_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_book_erase_last_word(do_book_t *book)
+cobj_book_erase_last_word(cobj_book_t *book)
 {
 	assert(book);
 
@@ -181,7 +181,7 @@ do_book_erase_last_word(do_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-do_book_get_alloc_words(const do_book_t *book)
+cobj_book_get_alloc_words(const cobj_book_t *book)
 {
 	assert(book);
 
@@ -196,7 +196,7 @@ do_book_get_alloc_words(const do_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-do_book_get_group_size(const do_book_t *book, size_t group_index)
+cobj_book_get_group_size(const cobj_book_t *book, size_t group_index)
 {
 	assert(book);
 
@@ -211,7 +211,7 @@ do_book_get_group_size(const do_book_t *book, size_t group_index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-do_book_get_iteration(const do_book_t *book)
+cobj_book_get_iteration(const cobj_book_t *book)
 {
 	assert(book);
 
@@ -231,7 +231,7 @@ do_book_get_iteration(const do_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-do_book_get_iterator_group(const do_book_t *book)
+cobj_book_get_iterator_group(const cobj_book_t *book)
 {
 	assert(book);
 
@@ -251,7 +251,7 @@ do_book_get_iterator_group(const do_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-do_book_get_iterator_offset(const do_book_t *book)
+cobj_book_get_iterator_offset(const cobj_book_t *book)
 {
 	assert(book);
 
@@ -272,7 +272,7 @@ do_book_get_iterator_offset(const do_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-do_book_get_number_groups(const do_book_t *book)
+cobj_book_get_number_groups(const cobj_book_t *book)
 {
 	assert(book);
 
@@ -287,7 +287,7 @@ do_book_get_number_groups(const do_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-do_book_get_number_words(const do_book_t *book)
+cobj_book_get_number_words(const cobj_book_t *book)
 {
 	assert(book);
 
@@ -301,8 +301,8 @@ do_book_get_number_words(const do_book_t *book)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_book_t *
-do_book_get_placeholder(void)
+cobj_book_t *
+cobj_book_get_placeholder(void)
 {
 	return &_err_book;
 }
@@ -310,7 +310,7 @@ do_book_get_placeholder(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-do_book_get_word(const do_book_t *book, size_t group_index, size_t word_index)
+cobj_book_get_word(const cobj_book_t *book, size_t group_index, size_t word_index)
 {
 	assert(book);
 
@@ -330,7 +330,7 @@ do_book_get_word(const do_book_t *book, size_t group_index, size_t word_index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-do_book_get_word_max_size(const do_book_t *book)
+cobj_book_get_word_max_size(const cobj_book_t *book)
 {
 	assert(book);
 
@@ -345,7 +345,7 @@ do_book_get_word_max_size(const do_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-do_book_has_failed(const do_book_t *book)
+cobj_book_has_failed(const cobj_book_t *book)
 {
 	assert(book);
 
@@ -355,7 +355,7 @@ do_book_has_failed(const do_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-do_book_increment_iterator(do_book_t *book)
+cobj_book_increment_iterator(cobj_book_t *book)
 {
 	assert(book);
 
@@ -377,7 +377,7 @@ do_book_increment_iterator(do_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_book_lock_iterator(do_book_t *book)
+cobj_book_lock_iterator(cobj_book_t *book)
 {
 	assert(book);
 
@@ -393,7 +393,7 @@ do_book_lock_iterator(do_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 char *
-do_book_prepare_new_word(do_book_t *book, do_book_group_mode_t group_mode)
+cobj_book_prepare_new_word(cobj_book_t *book, cobj_book_group_mode_t group_mode)
 {
 	assert(book);
 
@@ -407,7 +407,7 @@ do_book_prepare_new_word(do_book_t *book, do_book_group_mode_t group_mode)
 		return NULL;
 	}
 
-	if (book->n_words == 0 || group_mode == DO_BOOK_NEW_GROUP)
+	if (book->n_words == 0 || group_mode == COBJ_BOOK_NEW_GROUP)
 	{
 		book->groups[book->n_groups++] = book->n_words;
 	}
@@ -418,7 +418,7 @@ do_book_prepare_new_word(do_book_t *book, do_book_group_mode_t group_mode)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_book_reset_iterator(do_book_t *book, size_t group_index)
+cobj_book_reset_iterator(cobj_book_t *book, size_t group_index)
 {
 	assert(book);
 
@@ -439,7 +439,7 @@ do_book_reset_iterator(do_book_t *book, size_t group_index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_book_rewrite_word(do_book_t *book, const char *str, size_t group_index, size_t word_index)
+cobj_book_rewrite_word(cobj_book_t *book, const char *str, size_t group_index, size_t word_index)
 {
 	char *word;
 
@@ -463,7 +463,7 @@ do_book_rewrite_word(do_book_t *book, const char *str, size_t group_index, size_
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_book_trim(do_book_t *book)
+cobj_book_trim(cobj_book_t *book)
 {
 	assert(book);
 
@@ -478,7 +478,7 @@ do_book_trim(do_book_t *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_book_write_new_word(do_book_t *book, const char *str, do_book_group_mode_t group_mode)
+cobj_book_write_new_word(cobj_book_t *book, const char *str, cobj_book_group_mode_t group_mode)
 {
 	char *word;
 
@@ -489,7 +489,7 @@ do_book_write_new_word(do_book_t *book, const char *str, do_book_group_mode_t gr
 		return;
 	}
 	
-	if ((word = do_book_prepare_new_word(book, group_mode)))
+	if ((word = cobj_book_prepare_new_word(book, group_mode)))
 	{
 		snprintf(word, book->word_n, "%s", str);
 	}
@@ -500,7 +500,7 @@ do_book_write_new_word(do_book_t *book, const char *str, do_book_group_mode_t gr
 /************************************************************************************************************/
 
 static size_t
-_get_group_size(const do_book_t *book, size_t index)
+_get_group_size(const cobj_book_t *book, size_t index)
 {
 	if (book->n_groups == 0 || index >= book->n_groups)
 	{
@@ -519,7 +519,7 @@ _get_group_size(const do_book_t *book, size_t index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-_resize(do_book_t *book, size_t n, size_t a, size_t b)
+_resize(cobj_book_t *book, size_t n, size_t a, size_t b)
 {
 	bool    safe = true;
 	char   *tmp_1;
@@ -527,10 +527,10 @@ _resize(do_book_t *book, size_t n, size_t a, size_t b)
 
 	/* test for overflow */
 
-	safe &= do_safe_mul(&n,   n, a);
-	safe &= do_safe_add(&n,   n, b);
-	safe &= do_safe_mul(NULL, n, book->word_n);
-	safe &= do_safe_mul(NULL, n, sizeof(size_t));
+	safe &= safe_mul(&n,   n, a);
+	safe &= safe_add(&n,   n, b);
+	safe &= safe_mul(NULL, n, book->word_n);
+	safe &= safe_mul(NULL, n, sizeof(size_t));
 
 	if (!safe)
 	{

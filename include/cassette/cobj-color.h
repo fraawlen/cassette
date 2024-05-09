@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Objects (DO) library.
+ * This file is part of the Cassette Objects (COBJ) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -18,8 +18,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef DO_COLOR_H
-#define DO_COLOR_H
+#ifndef COBJ_COLOR_H
+#define COBJ_COLOR_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -32,19 +32,19 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DO_COLOR_TRANSPARENT (do_color_t){0.000, 0.000, 0.000, 0.000}
-#define DO_COLOR_WHITE       (do_color_t){1.000, 1.000, 1.000, 1.000}
-#define DO_COLOR_BLACK       (do_color_t){0.000, 0.000, 0.000, 1.000}
-#define DO_COLOR_RED         (do_color_t){1.000, 0.000, 0.000, 1.000}
-#define DO_COLOR_GREEN       (do_color_t){0.000, 1.000, 0.000, 1.000}
-#define DO_COLOR_BLUE        (do_color_t){0.000, 0.000, 1.000, 1.000}
-#define DO_COLOR_YELLOW      (do_color_t){1.000, 1.000, 0.000, 1.000}
-#define DO_COLOR_MAGENTA     (do_color_t){1.000, 0.000, 1.000, 1.000}
-#define DO_COLOR_CYAN        (do_color_t){0.000, 1.000, 1.000, 1.000}
+#define COBJ_COLOR_TRANSPARENT (cobj_color_t){0.000, 0.000, 0.000, 0.000}
+#define COBJ_COLOR_WHITE       (cobj_color_t){1.000, 1.000, 1.000, 1.000}
+#define COBJ_COLOR_BLACK       (cobj_color_t){0.000, 0.000, 0.000, 1.000}
+#define COBJ_COLOR_RED         (cobj_color_t){1.000, 0.000, 0.000, 1.000}
+#define COBJ_COLOR_GREEN       (cobj_color_t){0.000, 1.000, 0.000, 1.000}
+#define COBJ_COLOR_BLUE        (cobj_color_t){0.000, 0.000, 1.000, 1.000}
+#define COBJ_COLOR_YELLOW      (cobj_color_t){1.000, 1.000, 0.000, 1.000}
+#define COBJ_COLOR_MAGENTA     (cobj_color_t){1.000, 0.000, 1.000, 1.000}
+#define COBJ_COLOR_CYAN        (cobj_color_t){0.000, 1.000, 1.000, 1.000}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-struct do_color_t
+struct cobj_color_t
 {
 	double r;
 	double g;
@@ -52,23 +52,23 @@ struct do_color_t
 	double a;
 };
 
-typedef struct do_color_t do_color_t;
+typedef struct cobj_color_t cobj_color_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_color_t do_color_convert_argb_uint(uint32_t argb);
+cobj_color_t cobj_color_convert_argb_uint(uint32_t argb);
 
-do_color_t do_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+cobj_color_t cobj_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
-do_color_t do_color_convert_str(const char *str, bool *err);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-do_color_t do_color_interpolate(do_color_t cl_1, do_color_t cl_2, double ratio);
+cobj_color_t cobj_color_convert_str(const char *str, bool *err);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-uint32_t do_color_get_argb_uint(do_color_t cl);
+cobj_color_t cobj_color_interpolate(cobj_color_t cl_1, cobj_color_t cl_2, double ratio);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint32_t cobj_color_get_argb_uint(cobj_color_t cl);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -78,5 +78,5 @@ uint32_t do_color_get_argb_uint(do_color_t cl);
 }
 #endif
 
-#endif /* DO_COLOR_H */
+#endif /* COBJ_COLOR_H */
 

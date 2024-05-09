@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Objects (DO) library.
+ * This file is part of the Cassette Objects (COBJ) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <derelict/do.h>
+#include <cassette/cobj.h>
 
 #include "safe.h"
 
@@ -55,13 +55,13 @@ struct _tracker_t
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _resize(do_tracker_t *tracker, size_t n, size_t a, size_t b);
+static bool _resize(cobj_tracker_t *tracker, size_t n, size_t a, size_t b);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static do_tracker_t _err_tracker = 
+static cobj_tracker_t _err_tracker = 
 {
 	.slots    = NULL,
 	.n        = 0,
@@ -75,7 +75,7 @@ static do_tracker_t _err_tracker =
 /************************************************************************************************************/
 
 void
-do_tracker_clear(do_tracker_t *tracker)
+cobj_tracker_clear(cobj_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -89,12 +89,12 @@ do_tracker_clear(do_tracker_t *tracker)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_tracker_t *
-do_tracker_create(size_t n_alloc)
+cobj_tracker_t *
+cobj_tracker_create(size_t n_alloc)
 {
-	do_tracker_t *tracker;
+	cobj_tracker_t *tracker;
 
-	if (!(tracker = malloc(sizeof(do_tracker_t))))
+	if (!(tracker = malloc(sizeof(cobj_tracker_t))))
 	{
 		return &_err_tracker;
 	}
@@ -113,7 +113,7 @@ do_tracker_create(size_t n_alloc)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_tracker_destroy(do_tracker_t **tracker)
+cobj_tracker_destroy(cobj_tracker_t **tracker)
 {
 	assert(tracker && *tracker);
 
@@ -131,7 +131,7 @@ do_tracker_destroy(do_tracker_t **tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 unsigned long
-do_tracker_find(const do_tracker_t *tracker, const void *ptr, size_t *index)
+cobj_tracker_find(const cobj_tracker_t *tracker, const void *ptr, size_t *index)
 {
 	size_t i0;
 	size_t i;
@@ -190,7 +190,7 @@ found:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-do_tracker_get_alloc_size(const do_tracker_t *tracker)
+cobj_tracker_get_alloc_size(const cobj_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -205,7 +205,7 @@ do_tracker_get_alloc_size(const do_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const void *
-do_tracker_get_index(const do_tracker_t *tracker, size_t index)
+cobj_tracker_get_index(const cobj_tracker_t *tracker, size_t index)
 {
 	assert(tracker);
 
@@ -225,7 +225,7 @@ do_tracker_get_index(const do_tracker_t *tracker, size_t index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 unsigned long
-do_tracker_get_index_n_ref(const do_tracker_t *tracker, size_t index)
+cobj_tracker_get_index_n_ref(const cobj_tracker_t *tracker, size_t index)
 {
 	assert(tracker);
 
@@ -245,7 +245,7 @@ do_tracker_get_index_n_ref(const do_tracker_t *tracker, size_t index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const void *
-do_tracker_get_iteration(const do_tracker_t *tracker)
+cobj_tracker_get_iteration(const cobj_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -265,7 +265,7 @@ do_tracker_get_iteration(const do_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 unsigned long
-do_tracker_get_iteration_n_ref(const do_tracker_t *tracker)
+cobj_tracker_get_iteration_n_ref(const cobj_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -285,7 +285,7 @@ do_tracker_get_iteration_n_ref(const do_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-do_tracker_get_iterator_offset(const do_tracker_t *tracker)
+cobj_tracker_get_iterator_offset(const cobj_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -303,8 +303,8 @@ do_tracker_get_iterator_offset(const do_tracker_t *tracker)
 }
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-do_tracker_t *
-do_tracker_get_placeholder(void)
+cobj_tracker_t *
+cobj_tracker_get_placeholder(void)
 {
 	return &_err_tracker;
 }
@@ -312,7 +312,7 @@ do_tracker_get_placeholder(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-do_tracker_get_size(const do_tracker_t *tracker)
+cobj_tracker_get_size(const cobj_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -327,7 +327,7 @@ do_tracker_get_size(const do_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-do_tracker_has_failed(const do_tracker_t *tracker)
+cobj_tracker_has_failed(const cobj_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -337,7 +337,7 @@ do_tracker_has_failed(const do_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-do_tracker_increment_iterator(do_tracker_t *tracker)
+cobj_tracker_increment_iterator(cobj_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -358,7 +358,7 @@ do_tracker_increment_iterator(do_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_tracker_lock_iterator(do_tracker_t *tracker)
+cobj_tracker_lock_iterator(cobj_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -373,7 +373,7 @@ do_tracker_lock_iterator(do_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_tracker_pull_index(do_tracker_t *tracker, size_t index)
+cobj_tracker_pull_index(cobj_tracker_t *tracker, size_t index)
 {
 	assert(tracker);
 
@@ -406,20 +406,20 @@ do_tracker_pull_index(do_tracker_t *tracker, size_t index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_tracker_pull_pointer(do_tracker_t *tracker, const void *ptr, size_t index)
+cobj_tracker_pull_pointer(cobj_tracker_t *tracker, const void *ptr, size_t index)
 {
 	assert(tracker);
 
-	if (do_tracker_find(tracker, ptr, &index) > 0)
+	if (cobj_tracker_find(tracker, ptr, &index) > 0)
 	{
-		do_tracker_pull_index(tracker, index);
+		cobj_tracker_pull_index(tracker, index);
 	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_tracker_push(do_tracker_t *tracker, const void *ptr, size_t *index)
+cobj_tracker_push(cobj_tracker_t *tracker, const void *ptr, size_t *index)
 {
 	size_t i = 0;
 	
@@ -442,7 +442,7 @@ do_tracker_push(do_tracker_t *tracker, const void *ptr, size_t *index)
 		index = &i;
 	}
 
-	if (do_tracker_find(tracker, ptr, index) > 0)
+	if (cobj_tracker_find(tracker, ptr, index) > 0)
 	{
 		if (tracker->slots[*index].n_ref < ULONG_MAX)
 		{
@@ -471,7 +471,7 @@ do_tracker_push(do_tracker_t *tracker, const void *ptr, size_t *index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_tracker_reset_iterator(do_tracker_t *tracker)
+cobj_tracker_reset_iterator(cobj_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -486,7 +486,7 @@ do_tracker_reset_iterator(do_tracker_t *tracker)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-do_tracker_trim(do_tracker_t *tracker)
+cobj_tracker_trim(cobj_tracker_t *tracker)
 {
 	assert(tracker);
 
@@ -503,7 +503,7 @@ do_tracker_trim(do_tracker_t *tracker)
 /************************************************************************************************************/
 
 static bool
-_resize(do_tracker_t *tracker, size_t n, size_t a, size_t b)
+_resize(cobj_tracker_t *tracker, size_t n, size_t a, size_t b)
 {
 	_slot_t *tmp;
 	
@@ -511,9 +511,9 @@ _resize(do_tracker_t *tracker, size_t n, size_t a, size_t b)
 
 	/* test for overflow */
 
-	safe &= do_safe_mul(&n,   n, a);
-	safe &= do_safe_add(&n,   n, b);
-	safe &= do_safe_mul(NULL, n, sizeof(_slot_t));
+	safe &= safe_mul(&n,   n, a);
+	safe &= safe_add(&n,   n, b);
+	safe &= safe_mul(NULL, n, sizeof(_slot_t));
 
 	if (!safe)
 	{
