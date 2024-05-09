@@ -1,6 +1,6 @@
 <p align=center><img src="./extras/banner.svg"></p>
 
-Cassette Graphics (CGUI) is a modular general-purpose GUI toolkit written in C for X11 end-user applications. It's designed as a universal GUI, equally targeting desktop, laptop, mobile, and miscellaneous devices with more or less limited inputs. All thanks to a flexible grid layout, simple widget appearance, and an advanced configuration system, allowing one to tailor the theme, behavior, keybinds and input interpretation for each device class. CGUI also tries to limit the amount of direct external dependencies to make it easier to set it up on any system running an X11 display server.
+Cassette Graphics, or Cassette GUI (CGUI) is a modular general-purpose GUI toolkit written in C for X11 end-user applications. It's designed as a universal GUI, equally targeting desktop, laptop, mobile, and miscellaneous devices with more or less limited inputs. All thanks to a flexible grid layout, simple widget appearance, and an advanced configuration system, allowing one to tailor the theme, behavior, keybinds and input interpretation for each device class. CGUI also tries to limit the amount of direct external dependencies to make it easier to set it up on any system running an X11 display server.
 
 The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems.
 
@@ -19,11 +19,6 @@ Features
 - Native transparency
 - Vertically synced animations
 
-Notice
-------
-
-This library is alpha software! Some features and widgets are still missing. Moreover, it is currently being rewritten in a better code and interface style under the Cassette name (formerly Derelict Graphics or DG, and on this branch the functions namespaces have not been yet updated). Some of its components have also been split off into their own self-contained support libraries, [Cassette Objects (COBJ)](https://codeberg.org/fraawlen/cassette-objects) and [Cassette Configuration (CCFG)](https://codeberg.org/fraawlen/cassette-configuration). The remaining library components, originally distributed across 3 modules, Core (GUI engine), Base (widgets implementations), and Wm (extra tools for desktop environments), will all be merged into a single module that will be the library itself. Because of that, the function's namespaces, and thus their names, will change in the next release. Checkout the 'rewrite' branch for the latest developments.
-
 Dependencies
 ------------
 
@@ -31,7 +26,11 @@ Dependencies
 
 	- C11 compiler with a stdlib + POSIX 200809L
 	- Make
-	- Rsync
+
+- First-party libraries :
+
+	- [Cassette-Configuration](https://codeberg.org/fraawlen/cassette-configuration)
+	- [Cassette-Objects](https://codeberg.org/fraawlen/cassette-objects)
 
 - Third-party libraries :
 
@@ -43,7 +42,7 @@ Dependencies
 Installation
 ------------
 
-First, edit the makefile if you want to change the installation destinations. These are represented by the variables DEST_HEADERS and DEST_LIBS for the public API headers and library files respectively. By default, they are set to /usr/include/dg/ and /usr/lib. Then, build and install CGUI with the following commands :
+First, edit the makefile if you want to change the installation destinations. These are represented by the variables DEST_HEADERS and DEST_LIBS for the public API headers and library files respectively. By default, they are set to /usr/include/cassette/ and /usr/lib. Then, build and install CGUI with the following commands :
 
 ```
 make
@@ -58,11 +57,26 @@ Post-Installation
 By default, the library is set to use the font "Monospace" with size 14 because it currently does not ship with its own built-in font. But because the windows geometry is dependent on the font, it is recommended to customize your font before anything else. Do note, that the font must be mono-spaced since CGUI has been specifically developed around this class of font. To set it, create a configuration file `~/.config/dg.conf` and add to it these two lines :
 
 ```
-core.font_face = "FONT_NAME"
-core.font_size = VALUE
+font face "FONT_NAME"
+font size  VALUE
 ```
 
 Replace `FONT_NAME` and `VALUE` with your preferred font name and size. The font name follows the FontConfig naming convention. After that, if the rendered text still looks wrong, check out the other font configuration parameters `core.font_*` in the [sample configuration file](dg.conf) and add them to your current configuration to further tweak font rendering. A few themes are also provided in the `theme` directory. To install them, simply copy paste their contents into your working configuration file.
+
+Usage
+-----
+
+Add this include to get access to the library functions :
+
+```
+#include <cassette/cgui.h>
+```
+
+As well as this compilation flag :
+
+```
+-lcgui
+```
 
 Minimal Example
 ---------------
@@ -70,44 +84,43 @@ Minimal Example
 One of the simplest GUI programs, a HelloWorld :
 
 ```c
-#include <dg/core/core.h>
-#include <dg/base/base.h>
+#include <cassette/cgui.h>
 
 int
 main(int argc, char **argv)
 {
-	dg_core_window_t *w;
-	dg_core_grid_t *g;
-	dg_core_cell_t *c;
+	cgui_window_t *w;
+	cgui_grid_t *g;
+	cgui_cell_t *c;
 
 	/* library modules initialisation */
 
-	dg_core_init(argc, argv, NULL, NULL, NULL);
-	dg_base_init();
+	cgui_init(argc, argv, NULL, NULL, NULL);
+	cgui_init();
 
 	/* object instantiation */
 
-	w = dg_core_window_create(DG_CORE_WINDOW_DEFAULT);
-	g = dg_core_grid_create(1, 1);
-	c = dg_base_label_create();
+	w = cgui_window_create_default();
+	g = cgui_grid_create(1, 1);
+	c = cgui_label_create();
 
 	/* cell configuration */
 
-	dg_base_label_set_label(c, "Hello World");
+	cgui_label_set_label(c, "Hello World");
 	
 	/* grid configuration */
 
-	dg_core_grid_set_column_width(g, 0, 11);
-	dg_core_grid_assign_cell(g, c, 0, 0, 1, 1);
+	cgui_grid_set_column_width(g, 0, 11);
+	cgui_grid_assign_cell(g, c, 0, 0, 1, 1);
 	
 	/* window configuration */
 
-	dg_core_window_push_grid(w, g);
-	dg_core_window_activate(w);
+	cgui_window_push_grid(w, g);
+	cgui_window_activate(w);
 
 	/* run */
 
-	dg_core_loop_run();
+	cgui_loop_run();
 
 	/* end */
 
@@ -118,7 +131,7 @@ main(int argc, char **argv)
 Compile with :
 
 ```
-cc hello.c -ldg -ldg-base 
+cc hello.c -lcgui
 ```
 
 Output :
