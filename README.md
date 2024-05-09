@@ -1,11 +1,8 @@
-![Derelict Graphics banner](./extras/banner.png)
+<p align=center><img src="./extras/banner.svg"></p>
 
-Derelict Graphics (DG) is a modular general-purpose GUI toolkit written in C for X11 end-user applications. It's designed as a universal GUI, equally targeting desktop, laptop, mobile, and miscellaneous devices with more or less limited inputs. All thanks to a flexible grid layout, simple widget appearance, and an advanced configuration system, allowing one to tailor the theme, behavior, keybinds and input interpretation for each device class. DG also tries to limit the amount of direct external dependencies to make it easier to set it up on any system running an X11 display server.
+Cassette Graphics (CGUI) is a modular general-purpose GUI toolkit written in C for X11 end-user applications. It's designed as a universal GUI, equally targeting desktop, laptop, mobile, and miscellaneous devices with more or less limited inputs. All thanks to a flexible grid layout, simple widget appearance, and an advanced configuration system, allowing one to tailor the theme, behavior, keybinds and input interpretation for each device class. CGUI also tries to limit the amount of direct external dependencies to make it easier to set it up on any system running an X11 display server.
 
-The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems, and except for the compiler and build system, is not dependent on third-party software.
-
-- Main repo : https://codeberg.org/fraawlen/derelict-graphics
-- Mirror repo : https://github.com/fraawlen/derelict-graphics
+The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems.
 
 Features
 --------
@@ -25,28 +22,28 @@ Features
 Notice
 ------
 
-This library is alpha software! Some features and widgets are still missing. Moreover, it is currently being rewritten in a better code and interface style. Some of its components have also been split off into their own self-contained support libraries, [Derelict Objects (DO)](https://codeberg.org/fraawlen/derelict-objects) and [Derelict Resources (DR)](https://codeberg.org/fraawlen/derelict-resources). The remaining library components, originally distributed across 3 modules, Core (GUI engine), Base (widgets implementations), and Wm (extra tools for desktop environments), will all be merged into a single module that will be the library itself. Because of that, the function's namespaces, and thus their names, will change in the next release.
+This library is alpha software! Some features and widgets are still missing. Moreover, it is currently being rewritten in a better code and interface style under the Cassette name (formerly Derelict Graphics or DG, and on this branch the functions namespaces have not been yet updated). Some of its components have also been split off into their own self-contained support libraries, [Cassette Objects (COBJ)](https://codeberg.org/fraawlen/cassette-objects) and [DCassette Configuration (CCFG)](https://codeberg.org/fraawlen/cassette). The remaining library components, originally distributed across 3 modules, Core (GUI engine), Base (widgets implementations), and Wm (extra tools for desktop environments), will all be merged into a single module that will be the library itself. Because of that, the function's namespaces, and thus their names, will change in the next release. Checkout the 'rewrite' branch for the latest developments.
 
 Dependencies
 ------------
 
-Tools :
+- Tools :
 
-- C11 compiler with a stdlib + POSIX 200809L
-- Make
-- Rsync
+	- C11 compiler with a stdlib + POSIX 200809L
+	- Make
+	- Rsync
 
-Third-party libraries :
+- Third-party libraries :
 
-- [Cairo](https://cgit.freedesktop.org/cairo/)
-- [FontConfig](https://gitlab.freedesktop.org/fontconfig/fontconfig)
-- [XCB](https://gitlab.freedesktop.org/xorg/lib/libxcb)
-- [XKBCommon](https://github.com/xkbcommon/libxkbcommon)
+	- [Cairo](https://cgit.freedesktop.org/cairo/)
+	- [FontConfig](https://gitlab.freedesktop.org/fontconfig/fontconfig)
+	- [XCB](https://gitlab.freedesktop.org/xorg/lib/libxcb)
+	- [XKBCommon](https://github.com/xkbcommon/libxkbcommon)
 
 Installation
 ------------
 
-First, edit the makefile if you want to change the installation destinations. These are represented by the variables DEST_HEADERS and DEST_LIBS for the public API headers and library files respectively. By default, they are set to /usr/include/dg/ and /usr/lib. Then, build and install DG with the following commands :
+First, edit the makefile if you want to change the installation destinations. These are represented by the variables DEST_HEADERS and DEST_LIBS for the public API headers and library files respectively. By default, they are set to /usr/include/dg/ and /usr/lib. Then, build and install CGUI with the following commands :
 
 ```
 make
@@ -58,7 +55,7 @@ After these steps, a shared binary will be generated and installed on your syste
 Post-Installation
 -----------------
 
-By default, the library is set to use the font "Monospace" with size 14 because it currently does not ship with its own built-in font. But because the windows geometry is dependent on the font, it is recommended to customize your font before anything else. Do note, that the font must be mono-spaced since DG has been specifically developed around this class of font. To set it, create a configuration file `~/.config/dg.conf` and add to it these two lines :
+By default, the library is set to use the font "Monospace" with size 14 because it currently does not ship with its own built-in font. But because the windows geometry is dependent on the font, it is recommended to customize your font before anything else. Do note, that the font must be mono-spaced since CGUI has been specifically developed around this class of font. To set it, create a configuration file `~/.config/dg.conf` and add to it these two lines :
 
 ```
 core.font_face = "FONT_NAME"
@@ -143,3 +140,11 @@ In these screenshots, the following third-party resources were used :
 - [Scientifica font](https://github.com/nerdypepper/scientifica)
 - [NASA Curiosity's view of Mars sky at sunset](https://www.nasa.gov/)
 - [Picom for shadow and blur effects](https://github.com/yshui/picom)
+
+Mirrors
+-------
+
+- https://codeberg.org/fraawlen/cassette-graphics
+- https://github.com/fraawlen/cassette-graphics
+
+
