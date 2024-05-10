@@ -26,7 +26,7 @@ Dependencies
 
 	- C99 compiler with a stdlib + POSIX 200809L
 	- Make
-	- Xxd
+	- Xxd (optional, is only needed to build examples)
 
 - First-party libraries :
 
