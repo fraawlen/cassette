@@ -40,6 +40,7 @@ token_dictionary_create(void)
 	cobj_dictionary_write(dict, "EOF",    0, TOKEN_EOF);
 	cobj_dictionary_write(dict, "",       0, TOKEN_INVALID);
 	cobj_dictionary_write(dict, "//",     0, TOKEN_COMMENT);
+	cobj_dictionary_write(dict, "EOS",    0, TOKEN_COMMENT);
 	cobj_dictionary_write(dict, "=",      0, TOKEN_FILLER);
 	cobj_dictionary_write(dict, ":=",     0, TOKEN_FILLER);
 	cobj_dictionary_write(dict, "JOIN",   0, TOKEN_JOIN);
