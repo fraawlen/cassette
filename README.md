@@ -17,8 +17,7 @@ Language Features
 - iteration loops
 - conditionals
 - child file inclusion
-
-For more information about the language usage, features and syntax check out the [full language spec](./doc/spec.md).
+- [more](./doc/spec.md)
 
 Dependencies
 ------------
@@ -101,7 +100,7 @@ value_A
 value_B
 ```
 
-Check out the `examples` directory for more in depth demonstrations and `include/cassette/ccfg.h` for full functions descriptions.
+Check out the `examples` directory for more in depth demonstrations and `include/cassette/*.h` header files for full functions descriptions. For more information about the language usage, features and syntax check out the [language spec](./doc/spec.md).
 
 Mirrors
 -------

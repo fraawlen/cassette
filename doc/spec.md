@@ -1,61 +1,62 @@
-CCFG - Specification & Syntax (WIP 80%)
-=============================
+# CCFG - Specification & Syntax (WIP 80%)
 
 Cassette Configuration (CCFG) is a configuration language and parser library featuring array based values and short s-like expressions based functions. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
 
 This document specifies and details all of CCFG's features and syntax rules. It's aimed at both end-users of software that uses this language and developers of such software.
 
-Table of contents
------------------
+## Table of contents <a name="toc"></a>
 
-1. Use-case & Scope
-2. Fundamentals
-	1. Sequences
-	2. Tokens
-	3. Resources
-3. Tokens Types
-	1. Invalids
-	2. Strings
-	3. Numerals
-	4. Functions
-4. Sequences Leads
-	1. Sections
-	2. Section Additions
-	3. Section Deletions
-	4. Variable Declaration
-	5. Enumeration Declaration
-	6. Combination of Variables
-	7. Iterations
-	8. Child File Inclusion
-	9. Seed Override
-	10. Debug Print
-5. Substitutions
-	1. Comments
-	2. Fillers
-	3. End-of-File
-	4. Escape
-	5. Variable Injection
-	6. Parameter Injection
-	7. Iteration Injection
-	8. Join
-	9. Conditions
-	10. Math Operations
-	11. Color Operations
-	12. Constants
-	13. Timestamp
-	14. Random value
-6. Full examples
-	1. GUI Configuration
-	2. Network Simulator
+1. [Use-case & Scope](#scope)
+2. [Fundamentals](#fundamentals)
+	1. [Sequences](#sequences)
+	2. [Tokens](#tokens)
+	3. [Resources](#resources)
+3. [Tokens Types](#tokens-types)
+	1. [Invalids](#invalids)
+	2. [Strings](#strings)
+	3. [Numerals](#numerals)
+	4. [Functions](#functions)
+4. [Sequences Leads](#leads)
+	1. [Sections](#section)
+	2. [Section Additions](#section-add)
+	3. [Section Deletions](#section-del)
+	4. [Variable Declaration](#let)
+	5. [Enumeration Declaration](#enum)
+	6. [Combination of Variables](#combine)
+	7. [Iterations](#iterate)
+	8. [Child File Inclusion](#include)
+	9. [Seed Override](#seed)
+	10. [Debug Print](#debug)
+5. [Substitutions](#substitutions)
+	1. [Comments / End-of-Sequence](#eos)
+	2. [Fillers](#filler)
+	3. [End-of-File](#eof)
+	4. [Escape](#esc)
+	5. [Variable Injection](#var)
+	6. [Parameter Injection](#param)
+	7. [Iteration Injection](#iter)
+	8. [Join](#join)
+	9. [Conditions](#if)
+	10. [Math Operations](#math)
+	11. [Color Operations](#color)
+	12. [Constants](#const)
+	13. [Timestamp](#time)
+	14. [Random value](#rand)
+6. [Full examples](#examples)
+	1. [GUI Configuration](#gui-conf)
+	2. [Network Simulator](#net-sim)
 
-## 1. Use-case & Scope
+## 1. Use-case & Scope <a name="scope"></a>
 
 TODO
 
-## 2. Fundamentals
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
 
+## 2. Fundamentals <a name="fundamentals"></a>
 
-### 2.1. Sequences
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 2.1. Sequences <a name="sequences"></a>
 
 Every CCFG configuration file is a series of 'sequences' separated by newlines until EOF is reached. Empty lines between sequences are ignored. Leading and trailing white-spaces (either space or tab characters) are ignored too.
 
@@ -66,7 +67,9 @@ sequence
 sequence
 ```
 
-### 2.2. Tokens
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 2.2. Tokens <a name="tokens"></a>
 
 Sequences themselves are a series of 'tokens'. Tokens are 32 bytes words, null terminator included, encoded in ASCII / UTF-8, separated by any amount of white space in-between. If the word's length exceeds 31 bytes, only the first 31 bytes are kept and a null terminator is appended at the 32th byte.
 
@@ -97,8 +100,9 @@ token'
 'this is a single 'token
 'this is'" still a single "token
 ```
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 2.3. Resources
+### 2.3. Resources <a name="resources"></a>
 
 Sequences that make up a program's configuration are called resources. The first token represents the resource's namespace and the second one is the resource's name. Namespaces help reuse resource names without collisions. The tokens that follow until the end of the sequence are interpreted as values attributed to the resource. Resources definitions with no values are ignored. Therefore, valid resources are sequences of at least 3 tokens. There are no upper token count limit (apart from the system's memory). If the same resource is defined more than once, the latest definition overwrites the previous ones.
 
@@ -124,7 +128,9 @@ label corner-radius 4 4 4 4
 button corner-style radii radii radii radii
 ```
 
-## 3. Tokens Types
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+## 3. Tokens Types <a name="tokens-types"></a>
 
  When parsed, tokens get converted into one of the following 4 types:
 
@@ -133,15 +139,21 @@ button corner-style radii radii radii radii
 - numeral
 - function
 
-### 3.1. Invalids
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 3.1. Invalids <a name="invalids"></a>
 
 If any error during token parsing happens, like a failed conversion, wrong or missing function parameters, or a system error, the token will be marked as invalid. If an invalid type token is encountered in the middle of a sequence, the sequence is ended prematurely and the following tokens are skipped until a new sequence begins.
 
-### 3.2. Strings
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 3.2. Strings <a name="strings"></a>
 
 String tokens are the default token type, as they are just a text value that represents a resource namespace, resource name, or general purpose value with no language function. 
 
-### 3.3. Numerals
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 3.3. Numerals <a name="numerals"></a>
 
 Numeral tokens are double-floating IEEE-754 values. Tokens are only interpreted as numerals when a language function requires it. They can be represented in 3 styles:
 
@@ -179,13 +191,15 @@ An RGBA color hexadecimal number consists of a '#' followed by 6 or 8 hexadecima
 -> invalid, not enough digits
 ```
 
-### 3.4. Functions
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 3.4. Functions <a name="functions"></a>
 
 Function tokens are defined by an exact, case-sensitive ASCII sequence of non-white-space characters. As soon as they're read, they should trigger a language function. If the function fails due to invalid input parameters or internal memory issues, an invalid token is returned. Functions tokens can be separated into two sub-types: transformation tokens and sequences leads.
 
 By convention, and to minimize possible collision with user strings, all function tokens are defined in fully capitalized characters.
 
-Substitution tokens are inline function tokens that may optionally take the next few tokens as input parameters, and then return a different token as a function result. These functions feature an s-like expression syntax without parenthesis. Parenthesis in CCFG functions are unnecessary because the amount of input parameters for each function is known in advance. Multiple substitutions tokens can be chained together, resulting in nested functions. Some functions may take string or numeral tokens as inputs, it is up to the parser to make the necessary implicit conversions. In the next few examples, the `JOIN` function tokens take the next 2 string tokens and return a concatenated string token.
+Substitution tokens are inline function tokens that may optionally take the next few tokens as input parameters, and then return a different token as a function result. These functions feature an s-like expression syntax without parenthesis. Parenthesis in CCFG functions are unnecessary because the amount of input parameters for each function is known in advance. Multiple substitutions tokens can be chained together, resulting in nested functions. Some functions may take string or numeral tokens as inputs, it is up to the parser to make the necessary implicit conversions. In the next few examples, the [`JOIN`](#join) function tokens take the next 2 string tokens and return a concatenated string token.
 
 ```
 a b
@@ -213,7 +227,7 @@ JOIN a
 -> invalid, missing 2nd JOIN parameter
 ```
 
-Sequence lead tokens are special function tokens that define the role and type of a given sequence. As their name implies they are always the first token in a sequence. If they are placed elsewhere they have no effect. However, if the first token in a sequence is a transformation token, and this token returns a valid sequence lead token, then the sequence lead may still be processed normally. But if the first token, after transformation, is not a sequence lead nor is invalid, the started sequence will be then treated as resource definition. The following examples demonstrate the applications of the `INCLUDE` sequence lead. When valid, the remaining tokens in the sequence (post-transformation) are interpreted as paths to child configuration files.
+Sequence lead tokens are special function tokens that define the role and type of a given sequence. As their name implies they are always the first token in a sequence. If they are placed elsewhere they have no effect. However, if the first token in a sequence is a transformation token, and this token returns a valid sequence lead token, then the sequence lead may still be processed normally. But if the first token, after transformation, is not a sequence lead nor is invalid, the started sequence will be then treated as resource definition. The following examples demonstrate the applications of the [`INCLUDE`](include) sequence lead. When valid, the remaining tokens in the sequence (post-transformation) are interpreted as paths to child configuration files.
 
 ```
 INCLUDE path1 path2
@@ -223,19 +237,23 @@ a INCLUDE path1 path2
 -> not an inclusion because INCLUDE is not first, instead the sequence is now a resource definition with a resource namespace "a", resource name "INCLUDE", and assigned resource values "path_1" and "path_2"
 ```
 
-## 4. Sequences Leads
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 4.1. Sections
+## 4. Sequences Leads <a name="leads"></a>
+
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 4.1. Sections <a name="section"></a>
 
 ```
 SECTION [section_name] [section_name] ...
 ```
 
-Sequences can be grouped into user-defined sections. Sections can be then selectively parsed. When a section is not enabled, all other sequences will be skipped until a new section starts.
+Sequences can be grouped into user-defined sections. Sections can be then selectively parsed. When a section is not enabled, all sequences following the section definition will be skipped until a new section starts.
 
-A section sequence is defined with a `SECTION` lead token, followed by section names. All section names need to be enabled (they are disabled by default, see [Section Additions]() and [Section Deletions]()) for the given section to be allowed to be parsed. Sections can be repeated. By convention, to differentiate section names from function tokens and generic strings or values, section names should capitalize their first character.
+A section sequence is defined with a `SECTION` lead token, followed by section names. All section names within a section definition need to be enabled beforehand with [`SECTION_ADD`](#section-add), otherwhise the given section is disabled. Sections can be repeated. By convention, to differentiate section names from function tokens and generic strings or values, section names should capitalize their first character.
 
-Before a section is defined, all sequences are part of the 'always' section, and will always be read and processed. Likewise, if a section definition does not have any section name following it, the following sequences will also belong to the 'always' section and will always be processed.
+Sequences defined before the first section (if any) will always be read and processed. Likewise, if a section definition does not have any section name following it, the sequences following it will always be processed.
 
 ```
 	sequence // always read
@@ -258,7 +276,9 @@ SECTION
 	sequence // always read
 ```
 
-### 4.2. Section Additions
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 4.2. Section Additions <a name="section-add"></a>
 
 ```
 SECTION_ADD [section_name] [section_name] ...
@@ -266,21 +286,25 @@ SECTION_ADD [section_name] [section_name] ...
 
 Sequences belonging to a section will only be parsed and processed if said section has been enabled. This can be done with a sequence starting with `SECTION_ADD` followed by any number of tokens. These tokens represent the names of sections to enable.
 
-### 4.3. Section Deletions
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 4.3. Section Deletions <a name="section-del"></a>
 
 ```
 SECTION_DEL [section_name] [section_name] ...
 ```
 
-Sequences belonging to a section will only be parsed and processed if said section has been enabled. But after having been enabled, sections can be disabled again with a sequence starting with `SECTION_DEL` followed by any number of tokens.  These tokens represent the names of sections to disable. The effects of this sequence are only applicable after the present section ends.
+Sequences belonging to a section will only be parsed and processed if said section has been enabled. But after having been enabled, sections can be disabled again with a sequence starting with `SECTION_DEL` followed by any number of tokens. These tokens represent the names of sections to disable. The effects of this sequence are only applicable after the present section ends.
 
-### 4.4. Variable Declaration
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 4.4. Variable Declaration <a name="let"></a>
 
 ```
 LET [new_variable_name] [value] [value] ...
 ```
 
-The CCFG configuration language offers support for user-defined variables. Similarly to resources, variables are arrays of values. They can be declared with a section starting with the token `LET` followed by the name of the variable (that will be used to reference it in other parts of the file), then by any number of tokens. After that, when a variable is invoked in another sequence (see [Variable Injection]()) the variable values will be injected into that sequence.
+The CCFG configuration language offers support for user-defined variables. Similarly to resources, variables are arrays of values. They can be declared with a section starting with the token `LET` followed by the name of the variable (that will be used to reference it in other parts of the file), then by any number of tokens. After that, when a variable is invoked in another sequence with [`$`](#var) or [`VAR`](var) the variable values will be injected into that sequence.
 
 ```
 LET var a b c
@@ -314,7 +338,9 @@ $ var
 -> h i j
 ```
 
-### 4.5. Enumerations Declaration
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 4.5. Enumerations Declaration <a name="enum"></a>
 
 ```
 LET_ENUM [new_variable_name] [min] [max] [steps] [precision]
@@ -332,7 +358,9 @@ Enumerations are variables whose values are not written down strings but instead
 
 TODO
 
-### 4.6. Combination of variables
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 4.6. Combination of variables <a name="combine"></a>
 
 ```
 LET_APPEND  [new_variable_name] [variable_name] [string]
@@ -342,7 +370,9 @@ LET_MERGE   [new_variable_name] [variable_name] [variable_name]
 
 TODO
 
-### 4.7. Iterations
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 4.7. Iterations <a name="iterate"></a>
 
 ```
 ITERATE_RAW [variable_name] [token] [token] ...
@@ -351,30 +381,29 @@ ITERATE     [variable_name] [token] [token] ...
 
 TODO
 
-### 4.8. Child File Inclusion
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 4.8. Child File Inclusion <a name="include"></a>
 
 ```
 INCLUDE [filename] [filename] ...
 ```
 
-Alongside sections, resources can also be put in separate files that can be opened and parsed with an inclusion sequence that starts with an `INCLUDE`token followed by filenames of files to include. The filenames are relative to the location of the file the sequence is read from. Unless they start with '/' in which case the given filename are absolute.
+Alongside sections, resources can also be put in separate files that can be opened and parsed with an inclusion sequence that starts with an `INCLUDE` token followed by filenames of files to include. The filenames are relative to the location of the file the sequence is read from. Unless they start with '/' in which case the given filename are absolute.
 
 The contents of the included files are treated as if they've been copy-pasted into the parent file at the position of the inclusion sequence. In other words, declared variables, enumerations, and section states are carried over to the included child file. And any modifications that happen in inclusions are also brought back to the parent file.
 
-For example, these 3 files :
+For example, the following 3 files (respectively : `~/.config/parent`, `~/child_1` and `/child_2`) :
 
 ```
-// ~/.config/parent
 SECTION_ADD Sa
 INCLUDE ../child_1 /child_2
 1 2 3 $ var
 ```
 ```
-// ~/child_1
 SECTION Sa
 ```
 ```
-// /child_2
 LET var a b c
 ```
 
@@ -392,15 +421,19 @@ That gets resolved into :
 1 2 3 a b c
 ```
 
-### 4.9. Seed Override
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 4.9. Seed Override <a name="seed"></a>
 
 ```
 SEED_OVERRIDE [seed_value]
 ```
 
-Resets and sets the seed of the parser's random number LCG. Can be used to shuffle the values returned by [random substitutions](). However, this sequence is an override. It can conflict with software that sets its own parser seed. Check the software's documentation before using it.
+Resets and sets the seed of the parser's random number LCG. Can be used to shuffle the values returned by [`RAND`](#rand). However, this sequence is an override. It can conflict with software that sets its own parser seed. Check the software's documentation before using it.
 
-### 4.10. Debug Print
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 4.10. Debug Print <a name="debug"></a>
 
 ```
 DEBUG_PRINT [token] [token] ...
@@ -408,12 +441,17 @@ DEBUG_PRINT [token] [token] ...
 
 Prints to `stderr` the resolved sequence that follows the lead token.
 
-## 5. Substitutions
-	
-### 5.1. Comments
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+## 5. Substitutions <a name="substitutions"></a>
+
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 5.1. Comments / End-of-Sequence <a name="eos"></a>
 
 ```
 //
+EOS
 ```
 
 Any tokens written after this token will be ignored until the next newline.
@@ -421,11 +459,14 @@ Any tokens written after this token will be ignored until the next newline.
 It should be noted that this is a token, therefore there should be some white space before the start of the comment text.
 
 ```
+a b EOS proper comment
 a b // proper comment
 a b //not a comment
 ```
 
-### 5.2. Fillers
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 5.2. Fillers <a name="filler"></a>
 
 ```
 =
@@ -441,15 +482,19 @@ namespace property  = value
 namespace property := value
 ```
 
-### 5.3. End-of-File
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 5.3. End-of-File <a name="eof"></a>
 
 ```
 EOF
 ```
 
-Ends a sequence and file early. If the file this token is read from happens to be an [included file](), only that file gets closed, and parsing resumes in the parent file.
+Ends a sequence and file early. If the file this token is read from happens to be an [included file](#include), only that file gets closed, and parsing resumes in the parent file.
 
-### 5.4. Escape
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 5.4. Escape <a name="esc"></a>
 
 ```
 \ [token]
@@ -473,14 +518,16 @@ sequence
 -> this is a multiline sequence
 ```
 
-### 5.5. Variable Injection
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 5.5. Variable Injection <a name="var"></a>
 
 ```
 $   [variable_name]
 VAR [variable_name]
 ```
 
-Injects a variable's sequence of values into the current sequence. The variable being called needs to be declared first with a sequence starting with `LET`, `LET_ENUM`, `LET_APPEND`, `LET_PREPEND`, or `LET_MERGE`. If the variable was not declared beforehand, an invalid token will be returned instead.
+Injects a variable's sequence of values into the current sequence. The variable being called needs to be declared first with a sequence starting with [`LET`](#let), [`LET_ENUM`](#enum), [`LET_APPEND`](#combine), [`LET_PREPEND`](#combine), or [`LET_MERGE`](#combine). If the variable was not declared beforehand, an invalid token will be returned instead.
 
 ```
 LET var a b c
@@ -488,7 +535,9 @@ LET var a b c
 -> 1 2 a b c 3
 ```
 
-### 5.6. Parameter Injection
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 5.6. Parameter Injection <a name="param"></a>
 
 ```
 $$    [parameter_name]
@@ -499,8 +548,8 @@ Returns the value of a parameter defined within the calling program. If the para
 
 ```c
 /* inside caller program */
-dr_config_push_parameter_string(cfg, "param_a", 23);
-dr_config_push_parameter_double(cfg, "param_b", "abc");
+ccfg_push_parameter_string(cfg, "param_a", 23);
+ccfg_push_parameter_double(cfg, "param_b", "abc");
 ```
 
 ```
@@ -509,18 +558,25 @@ $$ param_a
 
 $$ param_b
 -> abc
+
+$$ param_c
+-> invalid, not defined in the calling program
 ```
 
-### 5.7. Iteration Injection
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 5.7. Iteration Injection <a name="iter"></a>
 
 ```
 %
 ITER
 ```
 
-Within an iterated sequence, this token returns a value of the iteration's variable. Outside iterations this token is treated as a string. See [Iterations]() for more details.
+Within an iterated sequence, this token returns a value of the iteration's variable. Outside iterations this token is treated as a string. See [Iterations](#iterate) for more details.
 
-### 5.8. Join
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 5.8. Join <a name="join"></a>
 
 ```
 JOIN [string] [string]
@@ -533,7 +589,9 @@ JOIN a b
 -> ab
 ```
 
-### 5.9. Conditions
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 5.9. Conditions <a name="if"></a>
 
 ```
 <  [double] [double] [token_if_true] [token_if_false]
@@ -551,7 +609,7 @@ Compares two doubles. Depending on the result, either the 3rd or 4th token is re
 -> a
 ```
 
-Only one token is returned at a time. However it can be combined with variables is whole sequences need to be returned instead :
+Only one token is returned at a time. But conditionals, being substitutions, can be combined with [variables](#var) if a multi-token sequence needs to be returned :
 
 ```
 LET var_a a b c
@@ -562,7 +620,9 @@ $ == 0.0 1.0 var_a var_b
 -> 1 2 3
 ```
 
-### 5.10. Math Operations
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 5.10. Math Operations <a name="math"></a>
 
 ```
 SQRT  [double]
@@ -595,7 +655,9 @@ LIMIT [double] [min] [max]
 
 Performs a mathematical operation and returns the resulting double value.
 
-### 5.11. Color Operations
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 5.11. Color Operations <a name="color"></a>
 
 ```
 CITRPL [color] [color] [0.0-1.0]       // Color interpolation
@@ -603,9 +665,11 @@ RGB    [0-255] [0-255] [0-255]         // Composes a color
 RGBA   [0-255] [0-255] [0-255] [0-255] // Composes a color
 ```
 
-Performs color specific operations and returns a double value representing a color. Color being internally represented as number, normal [mathematical operations]() can also be used. However this set of substitutions perform operations channel by channel.
+Performs color specific operations and returns a double value representing a color. Since colors are [internally represented as doubles](#numerals), normal [mathematical operations](#math) can also be used. But unlike 'normal' math, this set of substitutions perform operations on each color channel individually.
 
-### 5.12. Constants
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 5.12. Constants <a name="const"></a>
 
 ```
 PI    // 3.1415926535897932
@@ -616,7 +680,9 @@ FALSE // 0.0
 
 Returns a constant value in double format.
 
-### 5.13. Timestamp
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 5.13. Timestamp <a name="time"></a>
 
 ```
 TIME
@@ -624,18 +690,24 @@ TIME
 
 Returns a UNIX timestamp in seconds.
 
-### 5.14. Random value
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 5.14. Random value <a name="rand"></a>
 
 ```
 RAND [min] [max]
 ```
 
 Returns a pseudo-random double ranging from `min` to `max`.
-Because the internal RNG is an LCG, as long as the initial seed is not modified, the same value will be returned between different reloads.
+Because the internal RNG is an LCG, as long as the initial seed is not modified (either by the caller program or with [`SEED_OVERRIDE`](#seed)), the same value will be returned between different reloads.
 
-## 6. Full Examples
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 6.1. GUI Configuration
+## 6. Full Examples <a name="examples"></a>
+
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 6.1. GUI Configuration <a name="gui-conf"></a>
 
 In this first example, we consider a hypothetical GUI tooklit or application that lets its end-users customize the appearance of its widgets. Thanks to CCFG's sections, different themes can co-exist in the same source file. Moreover, the themes are selected automatically depending on the value of a brightness variable. Said variable could be then set by an external program that tracks the values of a light sensor. Hence, with this kind of configuration, an application or toolkit can switch between a light and dark theme depending on the amount of light hitting the device they're running from.
 
@@ -661,7 +733,7 @@ SECTION
 	ITERATE_RAW widgets % background_color ($ bg_color)
 ```
 
-Result :
+Resolved resources :
 
 ```
 button background_color #ccccccff
@@ -669,7 +741,9 @@ switch background_color #ccccccff
 label  background_color #ccccccff
 ```
 
-### 6.2. Network Simulator
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 6.2. Network Simulator <a name="net-sim"></a>
 
 This second example shows off a possible simulation description/input file for some sort of wireless network simulator. Said simulation requires a list of communication nodes to be declared and set up. Here, a linear wireless network consisting of 5 nodes is created. Each node is then attributed a (simplified) mac address, an x-y position, and a random communication range. Thanks to the usage of variables and iterations, that same simulation can be scaled up to hundreds of nodes by just changing the `number_of_nodes` value.
 
@@ -686,7 +760,7 @@ ITERATE     nodes_names % y 0
 ITERATE_RAW nodes_names % range (ROUND (RAND 15 35))
 ```
 
-Result :
+Resolved resources :
 
 ```
 node list n_1 n_2 n_3 n_4 n_5
@@ -715,3 +789,5 @@ n_3 range 18
 n_4 range 18
 n_5 range 28
 ```
+
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
