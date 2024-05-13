@@ -277,7 +277,8 @@ _join(context_t *ctx, char token[static TOKEN_N])
 	char token_b[TOKEN_N];
 
 	if (context_get_token(ctx, token_a, NULL) == TOKEN_INVALID ||
-	    context_get_token(ctx, token_b, NULL) == TOKEN_INVALID) {
+	    context_get_token(ctx, token_b, NULL) == TOKEN_INVALID)
+	{
 		return TOKEN_INVALID;
 	}
 
