@@ -26,7 +26,7 @@ LIST_BIN   := $(patsubst $(DIR_DEMOS)/%.c, $(DIR_BIN)/%, $(LIST_DEMOS))
 OUTPUT   := cgui
 FLAGS    := -std=c11 -pedantic -Wall -Wextra -O3 -D_POSIX_C_SOURCE=200809L
 LIBS     := -lcobj -lccfg -lm -lpthread 
-LIBS_DYN := -lcairo -lfontconfig -lxcb -lxcb-keysym -lxcb-present -lxcb-randr -lxcb-xinput -lxkbcommon
+LIBS_DYN := -lcairo -lfontconfig -lxcb -lxcb-keysyms -lxcb-present -lxcb-randr -lxcb-xinput -lxkbcommon
 
 #############################################################################################################
 # PUBLIC TARGETS ############################################################################################
@@ -65,4 +65,4 @@ $(DIR_OBJ)/%.o: $(DIR_SRC)/%.c $(LIST_HEAD)
 	$(CC) -c -fPIC $(FLAGS) -c $< -o $@ -I$(DIR_INC) $(LIBS) $(LIBS_DYN)
 
 $(DIR_BIN)%: $(DIR_DEMOS)/%.c
-	$(CC) -static $(FLAGS) $< -o $@ -I$(DIR_INC) -L$(DIR_LIB) -l$(OUTPUT) $(LIBS)
+	$(CC) $(FLAGS) $< -o $@ -I$(DIR_INC) -L$(DIR_LIB) -l$(OUTPUT) $(LIBS) $(LIBS_DYN)

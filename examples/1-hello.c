@@ -37,6 +37,10 @@
 
 	cgui_init(argc, argv);
 
+	/* run */
+
+	cgui_run();
+
 	/* end */
 
 	if (cgui_has_failed())

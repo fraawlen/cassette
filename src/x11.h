@@ -18,63 +18,38 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_H
-#define CGUI_H
-
-#include <stdbool.h>
-#include <stdlib.h>
+#include <stdint.h>
 
 #include <xcb/xcb.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <xcb/xcb_keysyms.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-void cgui_init(int argc, char **argv);
+xcb_colormap_t x11_create_colormap(xcb_connection_t *x_con, xcb_screen_t *x_scr, xcb_visualtype_t *x_vis);
 
-void cgui_reset(void);
+xcb_connection_t *x11_create_connection(void);
+
+xcb_key_symbols_t *x11_create_keysym_table(xcb_connection_t *x_con);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void cgui_setup_x11_class(const char *class_name, const char *class_class);
+void  x11_destroy_colormap(xcb_connection_t *x_con, xcb_colormap_t *x_clm);
 
-void cgui_setup_x11_connection(xcb_connection_t *connection);
+void x11_destroy_connection(xcb_connection_t **x_con);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void cgui_allow_user_exit(void);
-
-void cgui_block_user_exit(void);
-
-void cgui_exit(void);
-
-void cgui_reconfig(void);
-
-void cgui_run(void);
-
-void cgui_send_signal(uint32_t serial);
-
-void cgui_set_callback_signal(void (*fn)(uint32_t serial));
-
-void cgui_set_callback_x11_events(bool (*fn)(xcb_generic_event_t *x_ev));
+void x11_destroy_keysym_table(xcb_key_symbols_t **x_ksm);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-xcb_connection_t *cgui_get_x11_connection(void);
+xcb_atom_t x11_get_atom(xcb_connection_t *x_con, const char *name);
 
-xcb_window_t cgui_get_x11_leader_window(void);
+xcb_depth_t *x11_get_depth(xcb_screen_t *x_scr);
 
-bool cgui_has_failed(void);
+uint8_t x11_get_extension_opcode(xcb_connection_t *x_con, const char *name);
 
-bool cgui_is_init(void);
+xcb_screen_t *x11_get_screen(xcb_connection_t *x_con);
 
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-#endif /* CGUI_H */
+xcb_visualtype_t *x11_get_visual(xcb_depth_t *x_dph);
 
