@@ -18,6 +18,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#ifndef X11_H
+#define X11_H
+
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <xcb/xcb.h>
@@ -27,29 +31,26 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-xcb_colormap_t x11_create_colormap(xcb_connection_t *x_con, xcb_screen_t *x_scr, xcb_visualtype_t *x_vis);
+bool x11_init(int argc, char **argv, const char *class_name, const char *class_class, xcb_connection_t *connection);
 
-xcb_connection_t *x11_create_connection(void);
-
-xcb_key_symbols_t *x11_create_keysym_table(xcb_connection_t *x_con);
+void x11_reset(bool kill_connection);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void  x11_destroy_colormap(xcb_connection_t *x_con, xcb_colormap_t *x_clm);
-
-void x11_destroy_connection(xcb_connection_t **x_con);
-
-void x11_destroy_keysym_table(xcb_key_symbols_t **x_ksm);
+bool x11_send_signal(uint32_t serial);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-xcb_atom_t x11_get_atom(xcb_connection_t *x_con, const char *name);
+xcb_connection_t *x11_get_connection(void);
 
-xcb_depth_t *x11_get_depth(xcb_screen_t *x_scr);
+xcb_key_symbols_t *x11_get_keysyms(void);
 
-uint8_t x11_get_extension_opcode(xcb_connection_t *x_con, const char *name);
+xcb_window_t x11_get_leader_window(void);
 
-xcb_screen_t *x11_get_screen(xcb_connection_t *x_con);
+xcb_generic_event_t x11_get_next_event(void);
 
-xcb_visualtype_t *x11_get_visual(xcb_depth_t *x_dph);
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
 
+#endif /* X11_H */

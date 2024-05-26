@@ -23,36 +23,34 @@
 #include <stdlib.h>
 
 #include <xcb/xcb.h>
-#include <xcb/xcb_keysyms.h>
 
 #include <cassette/cgui.h>
+#include <cassette/cobj.h>
 
+#include "config.h"
+#include "event.h"
+#include "main.h"
 #include "x11.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-/* xcb globals */
+/* objects trackers */
 
-static xcb_connection_t *_x_con   = NULL;
-static xcb_screen_t      *_x_scr  = NULL;
-static xcb_depth_t       *_x_dph  = NULL;
-static xcb_visualtype_t  *_x_vis  = NULL;
-static xcb_key_symbols_t *_x_ksm  = NULL;
-static xcb_colormap_t     _x_clm  = 0;
-static xcb_window_t       _x_lead = 0;
+static cobj_tracker_t *_windows = NULL;
+static cobj_tracker_t *_grids   = NULL;
+static cobj_tracker_t *_cells   = NULL;
 
-/* program startup args for ICCCM properties */
+/* x11 init args */
 
-static char  const *_class_name  = NULL;
-static char  const *_class_class = NULL;
-static char *const *_argv = NULL;
-static int          _argc = 0;
+static xcb_connection_t *_ext_connection = NULL;
+
+static const char *_class_name  = NULL;
+static const char *_class_class = NULL;
 
 /* session states */
 
-static bool _ext_con  = false;
 static bool _init     = false;
 static bool _running  = false;
 static bool _usr_exit = true;
@@ -60,7 +58,7 @@ static bool _failed   = false;
 
 /* callbacks */
 
-static bool (*_fn_event)  (xcb_generic_event_t *x_ev) = NULL;
+static bool (*_fn_event)  (xcb_generic_event_t *event) = NULL;
 static void (*_fn_signal) (uint32_t serial) = NULL;
 
 /************************************************************************************************************/
@@ -101,7 +99,7 @@ cgui_get_xcb_connection(void)
 		return NULL;
 	}
 
-	return _x_con;
+	return x11_get_connection();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -114,7 +112,7 @@ cgui_get_xcb_leader_window(void)
 		return 0;
 	}
 
-	return _x_lead;
+	return x11_get_leader_window();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -132,26 +130,30 @@ cgui_init(int argc, char **argv)
 {
 	assert(!_init);
 
-	(void)(argc);
-	(void)(argv);
-	
-	// TODO
+	if (!_class_class)
+	{
+		_class_class = argv ? argv[0] : "cgui";
+	}
 
-	/* init structs */
+	if (!_class_name)
+	{
+		_class_name = _class_class;
+	}
 
-	/* setup class and cmd args */
+	_windows = cobj_tracker_create(1);
+	_cells   = cobj_tracker_create(1);
+	_grids   = cobj_tracker_create(1);
 
-	/* setup x11 main components */
+	_failed |= cobj_tracker_has_failed(_windows);
+	_failed |= cobj_tracker_has_failed(_grids);
+	_failed |= cobj_tracker_has_failed(_cells);
 
-	_x_con = x11_create_connection();
-	_x_scr = x11_get_screen(_x_con);
-	_x_dph = x11_get_depth(_x_scr);
-	_x_vis = x11_get_visual(_x_dph);
-	_x_ksm = x11_create_keysym_table(_x_con);
-	_x_clm = x11_create_colormap(_x_con, _x_scr, _x_vis);
+	_failed |= !x11_init(argc, argv, _class_name, _class_class, _ext_connection);
+	_failed |= !config_reload();
 
-	/* setup x11_atoms */
+	/* end */
 
+	_init = true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -174,7 +176,7 @@ cgui_reconfig(void)
 		return;
 	}
 
-	// TODO
+	_failed = !config_reload();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -182,7 +184,25 @@ cgui_reconfig(void)
 void
 cgui_reset(void)
 {
-	// TODO
+	assert(_init);
+
+	cobj_tracker_destroy(&_windows);
+	cobj_tracker_destroy(&_grids);
+	cobj_tracker_destroy(&_cells);
+
+	x11_reset(!!_ext_connection);
+
+	_ext_connection = NULL;
+	_class_class    = NULL;
+	_class_name     = NULL;
+
+	_fn_signal = NULL;
+	_fn_event  = NULL;
+
+	_usr_exit = true;
+	_failed   = false;
+	_running  = false;
+	_init     = false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -190,14 +210,46 @@ cgui_reset(void)
 void
 cgui_run(void)
 {
+	xcb_generic_event_t event;
+
 	assert(_init);
 
-	if (_failed)
+	if (_failed || _running)
 	{
 		return;
 	}
 
-	// TODO
+	_running = true;
+
+	while (_init && _running)
+	{
+		/*****/
+
+		event = x11_get_next_event();
+		if (event.response_type == 0)
+		{
+			_failed = true;
+		}
+
+		/*****/
+
+		if (_fn_event)
+		{
+			_fn_event(&event);
+		}
+		
+		event_process(&event);
+
+		/*****/
+
+		// TODO
+
+		/*****/
+
+		xcb_flush(x11_get_connection());
+	}
+
+	_running = false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -212,9 +264,7 @@ cgui_send_signal(uint32_t serial)
 		return;
 	}
 
-	(void)(serial);
-	
-	// TODO
+	_failed = !x11_send_signal(serial);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -228,7 +278,7 @@ cgui_set_callback_signal(void (*fn)(uint32_t serial))
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_set_callback_xcb_events(bool (*fn)(xcb_generic_event_t *x_ev))
+cgui_set_callback_xcb_events(bool (*fn)(xcb_generic_event_t *event))
 {
 	_fn_event = fn;
 }
@@ -251,7 +301,11 @@ cgui_setup_x11_connection(xcb_connection_t *connection)
 {
 	assert(!_init);
 
-	_x_con   =   connection;
-	_ext_con = !!connection;
+	_ext_connection = connection;
 }
+
+/************************************************************************************************************/
+/* PRIVATE **************************************************************************************************/
+/************************************************************************************************************/
+
 
