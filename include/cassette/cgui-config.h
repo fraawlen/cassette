@@ -38,6 +38,7 @@ extern "C" {
 /************************************************************************************************************/
 
 #define CGUI_CONFIG_MAX_ACCELS 12
+#define CGUI_CONFIG_MAX_STRING 32
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -67,10 +68,11 @@ typedef enum cgui_config_font_subpixel_t cgui_config_font_subpixel_t;
 struct cgui_config_t
 {
 	bool init;
+	double scale;
 
 	/* font */
 
-	cobj_string_t *font_face;
+	char font_face[CGUI_CONFIG_MAX_STRING];
 
 	uint16_t font_size;
 	uint16_t font_width;

@@ -20,11 +20,12 @@
 
 static const cgui_config_t config_default =
 {
-	.init = false,
+	.init  = false,
+	.scale = 1.0,
 
 	/* font */
 
-	.font_face                = NULL,
+	.font_face                = "Monospace",
 	.font_size                = 14,
 	.font_spacing_horizontal  = 0,
 	.font_spacing_vertical    = 2,
