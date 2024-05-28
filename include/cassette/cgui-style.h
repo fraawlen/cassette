@@ -21,6 +21,7 @@
 #ifndef CGUI_STYLE_H
 #define CGUI_STYLE_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <cassette/cobj.h>
@@ -72,6 +73,12 @@ struct cgui_style_window_t
 	cobj_color_t color_border_disabled;
 	cobj_color_t color_border_focused;
 	cobj_color_t color_border_locked;
+
+	/* switches */
+
+	bool enable_disabled;
+	bool enable_focused;
+	bool enable_locked;
 };
 
 typedef struct cgui_style_window_t cgui_style_window_t;

@@ -29,54 +29,101 @@
 #include <cassette/cobj.h>
 
 #include "config.h"
+#include "config-default.h"
 #include "util.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-enum _word_group_t
+#define _STYLE_WINDOW(NAMESPACE, TARGET) \
+\
+	{ NAMESPACE, "border_thickness",          _LENGTH, &TARGET.thickness_border          }, \
+	{ NAMESPACE, "outer_padding",             _LENGTH, &TARGET.padding_outer             }, \
+	{ NAMESPACE, "inner_padding",             _LENGTH, &TARGET.padding_inner             }, \
+	{ NAMESPACE, "cell_padding",              _LENGTH, &TARGET.padding_cell              }, \
+	{ NAMESPACE, "color_background",          _COLOR,  &TARGET.color_background          }, \
+	{ NAMESPACE, "color_background_disabled", _COLOR,  &TARGET.color_background_disabled }, \
+	{ NAMESPACE, "color_background_focused",  _COLOR,  &TARGET.color_background_focused  }, \
+	{ NAMESPACE, "color_background_locked",   _COLOR,  &TARGET.color_background_locked   }, \
+	{ NAMESPACE, "color_border",              _COLOR,  &TARGET.color_border              }, \
+	{ NAMESPACE, "color_border_disabled",     _COLOR,  &TARGET.color_border_disabled     }, \
+	{ NAMESPACE, "color_border_focused",      _COLOR,  &TARGET.color_border_focused      }, \
+	{ NAMESPACE, "color_border_locked",       _COLOR,  &TARGET.color_border_locked       }, \
+	{ NAMESPACE, "enable_disabled_substyle",  _BOOL,   &TARGET.enable_disabled           }, \
+	{ NAMESPACE, "enable_focused_substyle",   _BOOL,   &TARGET.enable_focused            }, \
+	{ NAMESPACE, "enable_locked_substyle",    _BOOL,   &TARGET.enable_locked             },
+
+#define _STYLE_CELL(NAMESPACE, TARGET) \
+\
+	{ NAMESPACE, "border_thickness",          _LENGTH, &TARGET.thickness_border          }, \
+	{ NAMESPACE, "outline_thickness",         _LENGTH, &TARGET.thickness_outline         }, \
+	{ NAMESPACE, "margin",                    _LENGTH, &TARGET.margin                    }, \
+	{ NAMESPACE, "color_background",          _COLOR,  &TARGET.color_background          }, \
+	{ NAMESPACE, "color_border",              _COLOR,  &TARGET.color_border              }, \
+	{ NAMESPACE, "color_outline",             _COLOR,  &TARGET.color_outline             },
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+enum _value_t
 {
-	_WORD_MODKEY,
-	_WORD_SWAP_TYPE,
-	_WORD_ACTION_CELL,
-	_WORD_ACTION_FOCUS,
-	_WORD_ACTION_WINDOW,
-	_WORD_ACTION_MISC,
-	_WORD_ANTIALIAS,
-	_WORD_SUBPIXEL,
+	_STRING,
+	_COLOR,
+	_BOOL,
+	_LENGTH,
+	_POSITION,
+	_ANTIALIAS,
+	_SUBPIXEL,
 };
 
-typedef enum _word_group_t _word_group_t;
+typedef enum _value_t _value_t;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct _resource_t
+{
+	char *namespace;
+	char *name;
+	_value_t type;
+	void *target;
+};
+
+typedef struct _resource_t _resource_t;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _apply_defaults     (void);
-static void _apply_fetched      (void);
-static void _apply_generated    (void);
-static void _fetch_boolean      (const char *namespace, const char *name, bool *value);
-static void _fetch_color        (const char *namespace, const char *name, cobj_color_t *value);
-static void _fetch_length       (const char *namespace, const char *name, uint16_t *value);
-static void _fetch_position     (const char *namespace, const char *name, int16_t *value);
-static void _fetch_string       (const char *namespace, const char *name, cobj_string_t *value);
-static void _fetch_style_window (const char *namespace, cgui_style_window_t *style);
-static void _fetch_word         (const char *namespace, const char *name, _word_group_t group, int *value);
+static void _fetch (const _resource_t *resource);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static ccfg_t *_config_data = NULL;
-
+static cgui_config_t _config     = config_default;
+static ccfg_t *_config_data      = NULL;
 static cobj_dictionary_t *_words = NULL;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static cgui_config_t _config =
+static const _resource_t _resources[] =
 {
-	.init = false,
+	{ "font",   "face",                _STRING,    &_config.font_face                },
+	{ "font",   "size",                _LENGTH,    &_config.font_size                },
+	{ "font",   "horizontal_spacing",  _LENGTH,    &_config.font_spacing_horizontal  },
+	{ "font",   "vertical_spacing",    _LENGTH,    &_config.font_spacing_vertical    },
+	{ "font",   "width_override",      _LENGTH,    &_config.font_override_width      },
+	{ "font",   "ascent_override",     _LENGTH,    &_config.font_override_ascent     },
+	{ "font",   "descent_override",    _LENGTH,    &_config.font_override_descent    },
+	{ "font",   "x_offset",            _POSITION,  &_config.font_offset_x            },
+	{ "font",   "y_offset",            _POSITION,  &_config.font_offset_y            },
+	{ "font",   "enable_overrides",    _BOOL,      &_config.font_enable_overrides    },
+	{ "font",   "enable_hint_metrics", _BOOL,      &_config.font_enable_hint_metrics },
+	{ "font",   "antialias_mode",      _ANTIALIAS, &_config.font_antialias           },
+	{ "font",   "subpixel_mode",       _SUBPIXEL,  &_config.font_subpixel            },
+
+	_STYLE_WINDOW("window", _config.window_style)
+	_STYLE_WINDOW("popup",  _config.popup_style)
 };
 
 /************************************************************************************************************/
@@ -86,7 +133,7 @@ static cgui_config_t _config =
 const cgui_config_t *
 cgui_config_get(void)
 {
-	return &_config;
+	return _config_data ? &_config : &config_default;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -127,18 +174,19 @@ config_init(void)
 
 	_words = cobj_dictionary_create(5, 0.6);
 
-	cobj_dictionary_write(_words, "none",     _WORD_ANTIALIAS, CGUI_CONFIG_ANTIALIAS_NONE);
-	cobj_dictionary_write(_words, "gray",     _WORD_ANTIALIAS, CGUI_CONFIG_ANTIALIAS_GRAY);
-	cobj_dictionary_write(_words, "subpixel", _WORD_ANTIALIAS, CGUI_CONFIG_ANTIALIAS_SUBPIXEL);
-	cobj_dictionary_write(_words, "rgb",      _WORD_SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_RGB);
-	cobj_dictionary_write(_words, "bgr",      _WORD_SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_BGR);
-	cobj_dictionary_write(_words, "vrgb",     _WORD_SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_VRGB);
-	cobj_dictionary_write(_words, "vbgr",     _WORD_SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_VBGR);
+	cobj_dictionary_write(_words, "none",     _ANTIALIAS, CGUI_CONFIG_ANTIALIAS_NONE);
+	cobj_dictionary_write(_words, "gray",     _ANTIALIAS, CGUI_CONFIG_ANTIALIAS_GRAY);
+	cobj_dictionary_write(_words, "subpixel", _ANTIALIAS, CGUI_CONFIG_ANTIALIAS_SUBPIXEL);
+	cobj_dictionary_write(_words, "rgb",      _SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_RGB);
+	cobj_dictionary_write(_words, "bgr",      _SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_BGR);
+	cobj_dictionary_write(_words, "vrgb",     _SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_VRGB);
+	cobj_dictionary_write(_words, "vbgr",     _SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_VBGR);
 
 	/* config fields */
 
+	_config           = config_default;
 	_config.font_face = cobj_string_create();
-	_config.init = true;
+	_config.init      = true;
 	
 	/* end */
 
@@ -154,13 +202,35 @@ config_init(void)
 bool
 config_load(void)
 {
+	cobj_string_t *font_face;
+
+	bool fail = false;
+
+	/* set defaults */
+
+	font_face         = _config.font_face;
+	_config           = config_default;
+	_config.font_face = font_face;
+
+	/* retrieve new resources values */
+
 	ccfg_load(_config_data);
+	for (size_t i = 0; i < sizeof(_resources) / sizeof(_resource_t); i++)
+	{
+		_fetch(_resources + i);
+	}
 
-	_apply_defaults();
-	_apply_fetched();
-	_apply_generated();
+	/* generate remaining resources values */
 
-	return !ccfg_has_failed(_config_data) && !cobj_string_has_failed(_config.font_face);
+	printf(">> %u\n", _config.window_style.padding_cell);
+	printf(">> %i\n", _config.font_antialias);
+
+	/* end */
+
+	fail |= ccfg_has_failed(_config_data);
+	fail |= cobj_string_has_failed(_config.font_face);
+
+	return !fail;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -180,219 +250,65 @@ config_reset(void)
 /************************************************************************************************************/
 
 static void
-_apply_defaults(void)
+_fetch(const _resource_t *resource)
 {
-	/* font */
-
-	cobj_string_set_raw(_config.font_face, "Monospace");
-
-	_config.font_size                = 14;
-	_config.font_spacing_horizontal  = 0;
-	_config.font_spacing_vertical    = 2;
-	_config.font_offset_x            = 0;
-	_config.font_offset_y            = 0;
-	_config.font_override_width      = 7;
-	_config.font_override_ascent     = 14;
-	_config.font_override_descent    = 0;
-	_config.font_enable_overrides    = false;
-	_config.font_enable_hint_metrics = true;
-	_config.font_antialias           = CGUI_CONFIG_ANTIALIAS_SUBPIXEL;
-	_config.font_subpixel            = CGUI_CONFIG_SUBPIXEL_RGB;
-
-	/* window */
-
-	_config.window_style.thickness_border = 2;
-	_config.window_style.padding_outer    = 10;
-	_config.window_style.padding_inner    = 10;
-	_config.window_style.padding_cell     = 10;
-
-	_config.window_style.color_background          = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-	_config.window_style.color_background_disabled = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-	_config.window_style.color_background_focused  = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-	_config.window_style.color_background_locked   = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-	_config.window_style.color_border              = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-	_config.window_style.color_border_disabled     = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-	_config.window_style.color_border_focused      = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-	_config.window_style.color_border_locked       = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-
-	/* popup */
-
-	_config.popup_style.thickness_border = 2;
-	_config.popup_style.padding_outer    = 10;
-	_config.popup_style.padding_inner    = 10;
-	_config.popup_style.padding_cell     = 10;
-
-	_config.popup_style.color_background          = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-	_config.popup_style.color_background_disabled = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-	_config.popup_style.color_background_focused  = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-	_config.popup_style.color_background_locked   = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-	_config.popup_style.color_border              = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-	_config.popup_style.color_border_disabled     = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-	_config.popup_style.color_border_focused      = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-	_config.popup_style.color_border_locked       = (cobj_color_t){0.000, 0.000, 0.000, 1.000};
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-_apply_fetched(void)
-{
-	/* font */
-
-	_fetch_string   ("font", "face",                 _config.font_face);
-	_fetch_length   ("font", "size",                &_config.font_size);
-	_fetch_length   ("font", "horizontal_spacing",  &_config.font_spacing_horizontal);
-	_fetch_length   ("font", "vertical_spacing",    &_config.font_spacing_vertical);
-	_fetch_length   ("font", "width_override",      &_config.font_override_width);
-	_fetch_length   ("font", "ascent_override",     &_config.font_override_ascent);
-	_fetch_length   ("font", "descent_override",    &_config.font_override_descent);
-	_fetch_position ("font", "x_offset",            &_config.font_offset_x);
-	_fetch_position ("font", "y_offset",            &_config.font_offset_y);
-	_fetch_boolean  ("font", "enable_overrides",    &_config.font_enable_overrides);
-	_fetch_boolean  ("font", "enable_hint_metrics", &_config.font_enable_hint_metrics);
-
-	_fetch_word ("font", "antialias", _WORD_ANTIALIAS, (int*)&_config.font_antialias);
-	_fetch_word ("font", "subpixel",  _WORD_SUBPIXEL,  (int*)&_config.font_subpixel);
-
-	/* window */
-
-	_fetch_style_window("window", &_config.window_style);
-
-	/* popup */
-
-	_fetch_style_window("popup", &_config.popup_style);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-_apply_generated(void)
-{
-	printf(">> %u\n", _config.window_style.padding_cell);
-	printf(">> %i\n", _config.font_antialias);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-_fetch_boolean(const char *namespace, const char *name, bool *value)
-{
-	ccfg_fetch_resource(_config_data, namespace, name);
-	if (ccfg_pick_next_resource_value(_config_data))
-	{
-		*value = strtod(ccfg_get_resource_value(_config_data), NULL) != 0.0;
-	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-_fetch_color(const char *namespace, const char *name, cobj_color_t *value)
-{
-	cobj_color_t tmp = {0};
+	cobj_color_t cl;
 
 	bool err = false;
+	size_t s;
+	long l;
 
-	ccfg_fetch_resource(_config_data, namespace, name);
-	if (ccfg_pick_next_resource_value(_config_data))
+	ccfg_fetch_resource(_config_data, resource->namespace, resource->name);
+	if (!ccfg_pick_next_resource_value(_config_data))
 	{
-		tmp = cobj_color_convert_str(ccfg_get_resource_value(_config_data), &err);
-		if (!err)
-		{
-			*value = tmp;
-		}
+		return;
 	}
-}
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-_fetch_length(const char *namespace, const char *name, uint16_t *value)
-{
-	unsigned long tmp = 0;
-
-	ccfg_fetch_resource(_config_data, namespace, name);
-	if (ccfg_pick_next_resource_value(_config_data))
+	switch (resource->type)
 	{
-		tmp = strtoul(ccfg_get_resource_value(_config_data), NULL, 0);
-		if (tmp <= UINT16_MAX)
-		{
-			*value = tmp;
-		}
-	}
-}
+		case _STRING:
+			cobj_string_set_raw(
+				(cobj_string_t*)resource->target,
+				ccfg_get_resource_value(_config_data));
+			break;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+		case _COLOR:
+			cl = cobj_color_convert_str(ccfg_get_resource_value(_config_data), &err);
+			if (!err)
+			{
+				*(cobj_color_t*)resource->target = cl;
+			}
+			break;
 
-static void
-_fetch_position(const char *namespace, const char *name, int16_t *value)
-{
-	long tmp = 0;
+		case _BOOL:
+			*(bool*)resource->target = strtod(ccfg_get_resource_value(_config_data), NULL) != 0.0;
+			break;
 
-	ccfg_fetch_resource(_config_data, namespace, name);
-	if (ccfg_pick_next_resource_value(_config_data))
-	{
-		tmp = strtol(ccfg_get_resource_value(_config_data), NULL, 0);
-		if (tmp <= INT16_MAX && tmp >= INT16_MIN)
-		{
-			*value = tmp;
-		}
-	}
-}
+		case _LENGTH:
+			l = strtoul(ccfg_get_resource_value(_config_data), NULL, 0);
+			if (l <= UINT16_MAX)
+			{
+				*(uint16_t*)resource->target = l;
+			}
+			break;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+		case _POSITION:
+			l = strtol(ccfg_get_resource_value(_config_data), NULL, 0);
+			if (l <= INT16_MAX && l >= INT16_MIN)
+			{
+				*(int16_t*)resource->target = l;
+			}
+			break;
 
-static void
-_fetch_string(const char *namespace, const char *name, cobj_string_t *value)
-{
-	ccfg_fetch_resource(_config_data, namespace, name);
-	if (ccfg_pick_next_resource_value(_config_data))
-	{
-		cobj_string_set_raw(value, ccfg_get_resource_value(_config_data));
-	}
-}
+		case _ANTIALIAS:
+		case _SUBPIXEL:
+			if (cobj_dictionary_find(_words, ccfg_get_resource_value(_config_data), resource->type, &s))
+			{
+				*(int*)resource->target = s;
+			}
+			break;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-_fetch_style_window(const char *namespace, cgui_style_window_t *style)
-{
-	_fetch_length(namespace, "border_thickness", &style->thickness_border);
-	_fetch_length(namespace, "outer_padding",    &style->padding_outer);
-	_fetch_length(namespace, "inner_padding",    &style->padding_inner);
-	_fetch_length(namespace, "cell_padding",     &style->padding_cell);
-
-	_fetch_color(namespace, "color_background", &style->color_background);
-	_fetch_color(namespace, "color_border",     &style->color_border);
-
-	style->color_background_disabled = style->color_background;
-	style->color_background_focused  = style->color_background;
-	style->color_background_locked   = style->color_background;
-	style->color_border_disabled     = style->color_border;
-	style->color_border_focused      = style->color_border;
-	style->color_border_locked       = style->color_border;
-
-	_fetch_color(namespace, "color_background_disabled", &style->color_background_disabled);
-	_fetch_color(namespace, "color_background_focused",  &style->color_background_focused);
-	_fetch_color(namespace, "color_background_locked",   &style->color_background_locked);
-	_fetch_color(namespace, "color_boder_disabled",      &style->color_border_disabled);
-	_fetch_color(namespace, "color_border_focused",      &style->color_border_focused);
-	_fetch_color(namespace, "color_border_locked",       &style->color_border_locked);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-_fetch_word(const char *namespace, const char *name, _word_group_t group, int *value)
-{
-	size_t tmp;
-
-	ccfg_fetch_resource(_config_data, namespace, name);
-	if (ccfg_pick_next_resource_value(_config_data))
-	{
-		if (cobj_dictionary_find(_words, ccfg_get_resource_value(_config_data), group, &tmp))
-		{
-			*value = tmp;
-		}
+		default:
+			return;
 	}
 }
