@@ -18,16 +18,12 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_CONFIG_H
-#define CGUI_CONFIG_H
+#ifndef CGUI_STYLE_H
+#define CGUI_STYLE_H
 
-#include <stdbool.h>
 #include <stdint.h>
 
-#include <cassette/ccfg.h>
 #include <cassette/cobj.h>
-
-#include "cgui-style.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,79 +33,48 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define CGUI_CONFIG_MAX_ACCELS 12
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-enum cgui_config_font_antialias_t
+struct cgui_style_cell_t
 {
-	CGUI_CONFIG_ANTIALIAS_NONE,
-	CGUI_CONFIG_ANTIALIAS_GRAY,
-	CGUI_CONFIG_ANTIALIAS_SUBPIXEL,
+	/* geometry */
+
+	uint16_t thickness_border;
+	uint16_t thickness_outline;
+	uint16_t margin;
+
+	/* colors */
+
+	cobj_color_t color_background;
+	cobj_color_t color_border;
+	cobj_color_t color_outline;
 };
 
-typedef enum cgui_config_font_antialias_t cgui_config_font_antialias_t;
+typedef struct cgui_style_cell_t cgui_style_cell_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cgui_config_font_subpixel_t
+struct cgui_style_window_t
 {
-	CGUI_CONFIG_SUBPIXEL_RGB,
-	CGUI_CONFIG_SUBPIXEL_BGR,
-	CGUI_CONFIG_SUBPIXEL_VRGB,
-	CGUI_CONFIG_SUBPIXEL_VBGR,
+	/* geometry */
+
+	uint16_t thickness_border;
+	uint16_t padding_outer;
+	uint16_t padding_inner;
+	uint16_t padding_cell;
+
+	/* colors */
+
+	cobj_color_t color_background;
+	cobj_color_t color_background_disabled;
+	cobj_color_t color_background_focused;
+	cobj_color_t color_background_locked;
+
+	cobj_color_t color_border;
+	cobj_color_t color_border_disabled;
+	cobj_color_t color_border_focused;
+	cobj_color_t color_border_locked;
 };
 
-typedef enum cgui_config_font_subpixel_t cgui_config_font_subpixel_t;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-struct cgui_config_t
-{
-	bool init;
-
-	/* font */
-
-	cobj_string_t *font_face;
-
-	uint16_t font_size;
-	uint16_t font_width;
-	uint16_t font_height;
-	uint16_t font_ascent;
-	uint16_t font_descent;
-	uint16_t font_spacing_horizontal;
-	uint16_t font_spacing_vertical;
-	uint16_t font_override_width;
-	uint16_t font_override_ascent;
-	uint16_t font_override_descent;
-	int16_t  font_offset_x;
-	int16_t  font_offset_y;
-
-	bool font_enable_overrides;
-	bool font_enable_hint_metrics;
-	cgui_config_font_antialias_t font_antialias;
-	cgui_config_font_subpixel_t font_subpixel;
-
-	/* window */
-
-	cgui_style_window_t popup_style;
-	
-	/* popup */
-	
-	cgui_style_window_t window_style;
-
-	/* misc */
-
-	/* input swaps */
-};
-
-typedef struct cgui_config_t cgui_config_t;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-const cgui_config_t *cgui_config_get(void);
-
-ccfg_t *cgui_config_get_object(void);
+typedef struct cgui_style_window_t cgui_style_window_t;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -119,4 +84,4 @@ ccfg_t *cgui_config_get_object(void);
 }
 #endif
 
-#endif /* CGUI_CONFIG_H */
+#endif /* CGUI_STYLE_H */

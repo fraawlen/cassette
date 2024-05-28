@@ -148,6 +148,7 @@ cgui_init(int argc, char **argv)
 	_failed  = false;	
 	_failed |= !x11_init(argc, argv, _class_name, _class_class, _ext_connection);
 	_failed |= !config_init();
+	_failed |= !config_load();
 
 	main_update_status();
 
@@ -175,6 +176,10 @@ cgui_is_running(void)
 void
 cgui_reconfig(void)
 {
+	cgui_window_t *window;
+//	cgui_grid_t *grid;
+//	cgui_grid_t *grid_min;
+
 	assert(_init);
 
 	if (_failed)
@@ -182,7 +187,19 @@ cgui_reconfig(void)
 		return;
 	}
 
-	_failed = !config_reload();
+	_failed = !config_load();
+
+	cobj_tracker_reset_iterator(_windows);
+	while (cobj_tracker_increment_iterator(_windows))
+	{
+		window = (cgui_window_t*)cobj_tracker_get_iteration(_windows);
+		if (window->failed)
+		{
+			continue;
+		}
+
+		// TODO
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
