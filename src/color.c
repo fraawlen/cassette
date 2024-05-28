@@ -28,9 +28,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
  
-static void       _bind_cl       (cobj_color_t *cl);
-static void       _bind_d        (double *d);
-static uint8_t    _hex_to_int    (char c);
+static void         _bind_cl       (cobj_color_t *cl);
+static void         _bind_d        (double *d);
+static uint8_t      _hex_to_int    (char c);
 static cobj_color_t _convert_hex   (const char *str, bool *err);
 static cobj_color_t _convert_ulong (const char *str, bool *err);
 
