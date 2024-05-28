@@ -27,10 +27,21 @@
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
 
+#include "cell.h"
 #include "config.h"
 #include "event.h"
+#include "grid.h"
 #include "main.h"
+#include "window.h"
 #include "x11.h"
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+static void _dummy_callback_event    (xcb_generic_event_t *event);
+static void _dummy_callback_signal   (uint32_t serial);
+static bool _is_any_window_activated (void);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -38,9 +49,9 @@
 
 /* objects trackers */
 
-static cobj_tracker_t *_windows = NULL;
-static cobj_tracker_t *_grids   = NULL;
 static cobj_tracker_t *_cells   = NULL;
+static cobj_tracker_t *_grids   = NULL;
+static cobj_tracker_t *_windows = NULL;
 
 /* x11 init args */
 
@@ -54,12 +65,12 @@ static const char *_class_class = NULL;
 static bool _init     = false;
 static bool _running  = false;
 static bool _usr_exit = true;
-static bool _failed   = false;
+static bool _failed   = true;
 
 /* callbacks */
 
-static bool (*_fn_event)  (xcb_generic_event_t *event) = NULL;
-static void (*_fn_signal) (uint32_t serial) = NULL;
+static void (*_fn_event)  (xcb_generic_event_t *event) = _dummy_callback_event;
+static void (*_fn_signal) (uint32_t serial)            = _dummy_callback_signal;
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -94,12 +105,7 @@ cgui_exit(void)
 xcb_connection_t *
 cgui_get_xcb_connection(void)
 {
-	if (_failed)
-	{
-		return NULL;
-	}
-
-	return x11_get_connection();
+	return _failed || !_init ? NULL : x11_get_connection();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -107,12 +113,7 @@ cgui_get_xcb_connection(void)
 xcb_window_t
 cgui_get_xcb_leader_window(void)
 {
-	if (_failed || !_init)
-	{
-		return 0;
-	}
-
-	return x11_get_leader_window();
+	return _failed || !_init ? 0 : x11_get_leader_window();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -140,18 +141,15 @@ cgui_init(int argc, char **argv)
 		_class_name = _class_class;
 	}
 
-	_windows = cobj_tracker_create(1);
 	_cells   = cobj_tracker_create(1);
 	_grids   = cobj_tracker_create(1);
+	_windows = cobj_tracker_create(1);
 
-	_failed |= cobj_tracker_has_failed(_windows);
-	_failed |= cobj_tracker_has_failed(_grids);
-	_failed |= cobj_tracker_has_failed(_cells);
-
+	_failed  = false;	
 	_failed |= !x11_init(argc, argv, _class_name, _class_class, _ext_connection);
-	_failed |= !config_reload();
+	_failed |= !config_init();
 
-	/* end */
+	main_update_status();
 
 	_init = true;
 }
@@ -162,6 +160,14 @@ bool
 cgui_is_init(void)
 {
 	return _init;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+cgui_is_running(void)
+{
+	return _running;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -186,23 +192,42 @@ cgui_reset(void)
 {
 	assert(_init);
 
-	cobj_tracker_destroy(&_windows);
-	cobj_tracker_destroy(&_grids);
+	cobj_tracker_reset_iterator(_windows);
+	while (cobj_tracker_increment_iterator(_windows))
+	{
+		((cgui_window_t*)cobj_tracker_get_iteration(_windows))->failed = true;
+	}
+
+	cobj_tracker_reset_iterator(_grids);
+	while (cobj_tracker_increment_iterator(_grids))
+	{
+		((cgui_grid_t*)cobj_tracker_get_iteration(_grids))->failed = true;
+	}
+
+	cobj_tracker_reset_iterator(_cells);
+	while (cobj_tracker_increment_iterator(_cells))
+	{
+		((cgui_cell_t*)cobj_tracker_get_iteration(_cells))->failed = true;
+	}
+
 	cobj_tracker_destroy(&_cells);
+	cobj_tracker_destroy(&_grids);
+	cobj_tracker_destroy(&_windows);
 
 	x11_reset(!!_ext_connection);
+	config_reset();
 
 	_ext_connection = NULL;
 	_class_class    = NULL;
 	_class_name     = NULL;
 
-	_fn_signal = NULL;
-	_fn_event  = NULL;
-
 	_usr_exit = true;
-	_failed   = false;
+	_failed   = true;
 	_running  = false;
 	_init     = false;
+
+	_fn_signal = _dummy_callback_signal;
+	_fn_event  = _dummy_callback_event;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -221,9 +246,9 @@ cgui_run(void)
 
 	_running = true;
 
-	while (_init && _running)
+	while (_init && _running && _is_any_window_activated())
 	{
-		/*****/
+		/***************/
 
 		event = x11_get_next_event();
 		if (event.response_type == 0)
@@ -231,20 +256,31 @@ cgui_run(void)
 			_failed = true;
 		}
 
-		/*****/
-
-		if (_fn_event)
-		{
-			_fn_event(&event);
-		}
-		
+		_fn_event(&event);
 		event_process(&event);
 
-		/*****/
+		/***************/
 
-		// TODO
+		cobj_tracker_reset_iterator(_windows);
+		while (cobj_tracker_increment_iterator(_windows))
+		{
+			window_present((cgui_window_t*)cobj_tracker_get_iteration(_windows));
+			window_destroy((cgui_window_t*)cobj_tracker_get_iteration(_windows));
+		}
 
-		/*****/
+		cobj_tracker_reset_iterator(_grids);
+		while (cobj_tracker_increment_iterator(_grids))
+		{
+			grid_destroy((cgui_grid_t*)cobj_tracker_get_iteration(_grids));
+		}
+
+		cobj_tracker_reset_iterator(_cells);
+		while (cobj_tracker_increment_iterator(_cells))
+		{
+			cell_destroy((cgui_cell_t*)cobj_tracker_get_iteration(_cells));
+		}
+
+		/***************/
 
 		xcb_flush(x11_get_connection());
 	}
@@ -272,15 +308,15 @@ cgui_send_signal(uint32_t serial)
 void
 cgui_set_callback_signal(void (*fn)(uint32_t serial))
 {
-	_fn_signal = fn;	
+	_fn_signal = fn ? fn : _dummy_callback_signal;	
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_set_callback_xcb_events(bool (*fn)(xcb_generic_event_t *event))
+cgui_set_callback_x11_events(void (*fn)(xcb_generic_event_t *event))
 {
-	_fn_event = fn;
+	_fn_event = fn ? fn : _dummy_callback_event;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -308,4 +344,69 @@ cgui_setup_x11_connection(xcb_connection_t *connection)
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
+cobj_tracker_t *
+main_get_cells(void)
+{
+	return _cells ? _cells : cobj_tracker_get_placeholder();
+}
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cobj_tracker_t *
+main_get_grids(void)
+{
+	return _grids ? _grids : cobj_tracker_get_placeholder();
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cobj_tracker_t *
+main_get_windows(void)
+{
+	return _windows ? _windows : cobj_tracker_get_placeholder();
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+main_update_status(void)
+{
+	_failed |= cobj_tracker_has_failed(main_get_cells());
+	_failed |= cobj_tracker_has_failed(main_get_grids());
+	_failed |= cobj_tracker_has_failed(main_get_windows());
+}
+
+/************************************************************************************************************/
+/* _ ********************************************************************************************************/
+/************************************************************************************************************/
+
+static void
+_dummy_callback_event(xcb_generic_event_t *event)
+{
+	(void)event;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_dummy_callback_signal(uint32_t serial)
+{
+	(void)serial;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static bool
+_is_any_window_activated(void)
+{
+	cobj_tracker_reset_iterator(_windows);
+	while (cobj_tracker_increment_iterator(_windows))
+	{
+		if (((cgui_window_t*)cobj_tracker_get_iteration(_windows))->state & CGUI_WINDOW_STATE_ACTIVE)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}

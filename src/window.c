@@ -20,58 +20,110 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include <cassette/cgui.h>
+#include <cassette/cobj.h>
 
-#include "config.h"
+#include "window.h"
+#include "main.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static cgui_config_t _config =
+static cgui_window_t _err_window =
 {
-	.loaded = 0,
+	.id         = 0,
+	.to_destroy = false,
+	.failed     = true,
+	.state      = CGUI_WINDOW_STATE_INITIAL,
 };
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-const
-cgui_config_t *cgui_config_get(void)
+cgui_window_t *
+cgui_window_create(void)
 {
-	return &_config;
+	cgui_window_t *window;
+
+	assert(cgui_is_init());
+
+	if (!(window = malloc(sizeof(cgui_window_t))))
+	{
+		return &_err_window;
+	}
+
+	window->id         = 0;
+	window->to_destroy = false;
+	window->failed     = false;
+	window->state      = CGUI_WINDOW_STATE_INITIAL;
+
+	cobj_tracker_push(main_get_windows(), window, &window->id);
+	main_update_status();
+
+	return window;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_destroy(cgui_window_t **window)
+{
+	assert(cgui_is_init());
+	assert(window && *window);
+
+	if (*window == &_err_window)
+	{
+		return;
+	}
+
+	(*window)->to_destroy = true;
+	if (!cgui_is_running())
+	{
+		window_destroy(*window);
+	}
+
+	*window = &_err_window;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cgui_window_t *
+cgui_window_get_placeholder(void)
+{
+	return &_err_window;
 }
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
-bool
-config_init(void)
+void
+window_destroy(cgui_window_t *window)
 {
-	return true;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-config_reload(void)
-{
-	return true;
+	if (!window->to_destroy)
+	{
+		return;
+	}
+	
+	cobj_tracker_pull_pointer(main_get_windows(), window, window->id);
+	free(window);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-config_reset(void)
+window_present(cgui_window_t *window)
 {
+	(void)window;
 
+	// TODO
 }
 
 /************************************************************************************************************/
 /* _ ********************************************************************************************************/
 /************************************************************************************************************/
-
 

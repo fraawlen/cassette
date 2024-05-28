@@ -18,81 +18,32 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_H
-#define CGUI_H
+#ifndef WINDOW_H
+#define WINDOW_H
 
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include <xcb/xcb.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define CGUI_VERSION "0.2.0"
+struct window_t
+{
+	size_t id;
+	bool to_destroy;
+	bool failed;
+	cgui_window_state_t state;
+};
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void cgui_init(int argc, char **argv);
+void window_destroy(cgui_window_t *window);
 
-void cgui_reset(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void cgui_setup_x11_class(const char *class_name, const char *class_class);
-
-void cgui_setup_x11_connection(xcb_connection_t *connection);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void cgui_allow_user_exit(void);
-
-void cgui_block_user_exit(void);
-
-void cgui_exit(void);
-
-void cgui_reconfig(void);
-
-void cgui_run(void);
-
-void cgui_send_signal(uint32_t serial);
-
-void cgui_set_callback_signal(void (*fn)(uint32_t serial));
-
-void cgui_set_callback_x11_events(void (*fn)(xcb_generic_event_t *event));
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-xcb_connection_t *cgui_get_x11_connection(void);
-
-xcb_window_t cgui_get_x11_leader_window(void);
-
-bool cgui_has_failed(void);
-
-bool cgui_is_init(void);
-
-bool cgui_is_running(void);
+void window_present(cgui_window_t *window);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include "cgui-cell.h"
-#include "cgui-config.h"
-#include "cgui-grid.h"
-#include "cgui-window.h"
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* CGUI_H */
+#endif /* WINDOW_H */

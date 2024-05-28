@@ -18,13 +18,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_H
-#define CGUI_H
+#ifndef CGUI_CELL_H
+#define CGUI_CELL_H
 
 #include <stdbool.h>
-#include <stdlib.h>
-
-#include <xcb/xcb.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,58 +31,73 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define CGUI_VERSION "0.2.0"
+typedef struct cell_t cgui_cell_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void cgui_init(int argc, char **argv);
+struct cgui_cell_event_t
+{
+	int dummy;
 
-void cgui_reset(void);
+	// TODO
+};
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void cgui_setup_x11_class(const char *class_name, const char *class_class);
-
-void cgui_setup_x11_connection(xcb_connection_t *connection);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void cgui_allow_user_exit(void);
-
-void cgui_block_user_exit(void);
-
-void cgui_exit(void);
-
-void cgui_reconfig(void);
-
-void cgui_run(void);
-
-void cgui_send_signal(uint32_t serial);
-
-void cgui_set_callback_signal(void (*fn)(uint32_t serial));
-
-void cgui_set_callback_x11_events(void (*fn)(xcb_generic_event_t *event));
+typedef struct cgui_cell_event_t cgui_cell_event_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-xcb_connection_t *cgui_get_x11_connection(void);
+struct cgui_cell_drawing_context_t
+{
+	int dummy;
+	
+	// TODO
+};
 
-xcb_window_t cgui_get_x11_leader_window(void);
+typedef struct cgui_cell_drawing_context_t cgui_cell_drawing_context_t;
 
-bool cgui_has_failed(void);
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool cgui_is_init(void);
+cgui_cell_t *cgui_cell_create(void);
 
-bool cgui_is_running(void);
+cgui_cell_t *cgui_cell_get_placeholder(void);
 
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
+void cgui_cell_destroy(cgui_cell_t **cell);
 
-#include "cgui-cell.h"
-#include "cgui-config.h"
-#include "cgui-grid.h"
-#include "cgui-window.h"
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void cgui_cell_disable(cgui_cell_t *cell);
+
+void cgui_cell_enable(cgui_cell_t *cell);
+
+void cgui_cell_redraw(cgui_cell_t *cell);
+
+bool cgui_cell_send_custom_event(cgui_cell_t *cell, unsigned int id, void *data, size_t data_n);
+
+void cgui_cell_toggle(cgui_cell_t *cell);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void cgui_cell_set_callback_destroy(cgui_cell_t *cell, void (*fn)(cgui_cell_t *cell));
+
+void cgui_cell_set_callback_draw(cgui_cell_t *cell, void (*fn)(cgui_cell_t *cell, cgui_cell_drawing_context_t *context));
+
+void cgui_cell_set_callback_event(cgui_cell_t *cell, void (*fn)(cgui_cell_t *cell, cgui_cell_event_t *event));
+
+void cgui_cell_set_data(cgui_cell_t *cell, void *data);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void (*cgui_cell_get_callback_destroy(cgui_cell_t *cell))(cgui_cell_t *cell);
+
+void (*cgui_cell_get_callback_draw(cgui_cell_t *cell))(cgui_cell_t *cell, cgui_cell_drawing_context_t *context);
+
+void (*cgui_cell_get_callback_event(cgui_cell_t *cell))(cgui_cell_t *cell, cgui_cell_event_t *event);
+
+void *cgui_cell_get_data(cgui_cell_t *cell);
+
+bool cgui_cell_is_enabled(cgui_cell_t *cell);
+
+bool cgui_cell_has_failed(cgui_cell_t *cell);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -95,4 +107,4 @@ bool cgui_is_running(void);
 }
 #endif
 
-#endif /* CGUI_H */
+#endif /* CGUI_CELL_H */

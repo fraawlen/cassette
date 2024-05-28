@@ -33,9 +33,19 @@
  int
  main(int argc, char **argv)
  {
+	cgui_cell_t *cell;
+
 	/* setup */
 
 	cgui_init(argc, argv);
+
+	/* object instantiation */
+
+	cell = cgui_cell_create();
+
+	/* cell setup */
+
+	cgui_cell_enable(cell);
 
 	/* run */
 
@@ -47,6 +57,8 @@
 	{
 		printf("gui has failed during operation.\n");
 	}
+
+	cgui_cell_destroy(&cell);
 
 	cgui_reset();
 

@@ -18,81 +18,100 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_H
-#define CGUI_H
-
+#include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include <xcb/xcb.h>
+#include <cassette/cgui.h>
+#include <cassette/cobj.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-#define CGUI_VERSION "0.2.0"
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void cgui_init(int argc, char **argv);
-
-void cgui_reset(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void cgui_setup_x11_class(const char *class_name, const char *class_class);
-
-void cgui_setup_x11_connection(xcb_connection_t *connection);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void cgui_allow_user_exit(void);
-
-void cgui_block_user_exit(void);
-
-void cgui_exit(void);
-
-void cgui_reconfig(void);
-
-void cgui_run(void);
-
-void cgui_send_signal(uint32_t serial);
-
-void cgui_set_callback_signal(void (*fn)(uint32_t serial));
-
-void cgui_set_callback_x11_events(void (*fn)(xcb_generic_event_t *event));
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-xcb_connection_t *cgui_get_x11_connection(void);
-
-xcb_window_t cgui_get_x11_leader_window(void);
-
-bool cgui_has_failed(void);
-
-bool cgui_is_init(void);
-
-bool cgui_is_running(void);
+#include "grid.h"
+#include "main.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include "cgui-cell.h"
-#include "cgui-config.h"
-#include "cgui-grid.h"
-#include "cgui-window.h"
+static cgui_grid_t _err_grid =
+{
+	.id         = 0,
+	.to_destroy = false,
+	.failed     = true,
+};
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-#ifdef __cplusplus
+cgui_grid_t *
+cgui_grid_create(void)
+{
+	cgui_grid_t *grid;
+
+	assert(cgui_is_init());
+
+	if (!(grid = malloc(sizeof(cgui_grid_t))))
+	{
+		return &_err_grid;
+	}
+
+	grid->id         = 0;
+	grid->to_destroy = false;
+	grid->failed     = false;
+
+	cobj_tracker_push(main_get_grids(), grid, &grid->id);
+	main_update_status();
+
+	return grid;
 }
-#endif
 
-#endif /* CGUI_H */
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_grid_destroy(cgui_grid_t **grid)
+{
+	assert(cgui_is_init());
+	assert(grid && *grid);
+
+	if (*grid == &_err_grid)
+	{
+		return;
+	}
+
+	(*grid)->to_destroy = true;
+	if (!cgui_is_running())
+	{
+		grid_destroy(*grid);
+	}
+
+	*grid = &_err_grid;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cgui_grid_t *
+cgui_grid_get_placeholder(void)
+{
+	return &_err_grid;
+}
+
+/************************************************************************************************************/
+/* PRIVATE **************************************************************************************************/
+/************************************************************************************************************/
+
+void
+grid_destroy(cgui_grid_t *grid)
+{
+	if (!grid->to_destroy)
+	{
+		return;
+	}
+	
+	cobj_tracker_pull_pointer(main_get_grids(), grid, grid->id);
+	free(grid);
+}
+
+/************************************************************************************************************/
+/* _ ********************************************************************************************************/
+/************************************************************************************************************/
+

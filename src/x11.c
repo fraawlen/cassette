@@ -57,6 +57,16 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static xcb_atom_t _get_atom             (const char *name);
+static uint8_t    _get_extension_opcode (const char *name);
+static bool       _prop_append          (xcb_window_t win, xcb_atom_t prop, xcb_atom_t type, uint32_t data_n, const void *data);
+static bool       _prop_set             (xcb_window_t win, xcb_atom_t prop, xcb_atom_t type, uint32_t data_n, const void *data);
+static bool       _test_cookie          (xcb_void_cookie_t xc);
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
 /* ICCCM properties */
 
 static char  const *_class_name  = NULL;
@@ -122,16 +132,6 @@ static uint8_t _opcode_xinput  = 0;
 /* events buffer */
 
 static cobj_tracker_t *_events = NULL;
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-static xcb_atom_t _get_atom             (const char *name);
-static uint8_t    _get_extension_opcode (const char *name);
-static bool       _prop_append          (xcb_window_t win, xcb_atom_t prop, xcb_atom_t type, uint32_t data_n, const void *data);
-static bool       _prop_set             (xcb_window_t win, xcb_atom_t prop, xcb_atom_t type, uint32_t data_n, const void *data);
-static bool       _test_cookie          (xcb_void_cookie_t xc);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
