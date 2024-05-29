@@ -24,6 +24,7 @@
 #include <string.h>
 #include <time.h>
 
+#include <cassette/ccfg.h>
 #include <cassette/cobj.h>
 
 #include "context.h"
@@ -36,21 +37,21 @@
 
 static token_kind_t _comment  (void);
 static token_kind_t _eof      (context_t *ctx);
-static token_kind_t _escape   (context_t *ctx, char token[static TOKEN_N]);
-static token_kind_t _filler   (context_t *ctx, char token[static TOKEN_N], double *math_result);
-static token_kind_t _if       (context_t *ctx, char token[static TOKEN_N], double *math_result, token_kind_t type);
-static token_kind_t _join     (context_t *ctx, char token[static TOKEN_N]);
-static token_kind_t _math     (context_t *ctx, char token[static TOKEN_N], double *math_result, token_kind_t type, size_t n);
-static token_kind_t _math_cl  (context_t *ctx, char token[static TOKEN_N], double *math_result, token_kind_t type, size_t n);
-static token_kind_t _param    (context_t *ctx, char token[static TOKEN_N]);
-static token_kind_t _variable (context_t *ctx, char token[static TOKEN_N], double *math_result);
+static token_kind_t _escape   (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]);
+static token_kind_t _filler   (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result);
+static token_kind_t _if       (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result, token_kind_t type);
+static token_kind_t _join     (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]);
+static token_kind_t _math     (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result, token_kind_t type, size_t n);
+static token_kind_t _math_cl  (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result, token_kind_t type, size_t n);
+static token_kind_t _param    (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]);
+static token_kind_t _variable (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
 token_kind_t
-substitution_apply(context_t *ctx, char token[static TOKEN_N], double *math_result)
+substitution_apply(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result)
 {
 	token_kind_t type;
 
@@ -188,7 +189,7 @@ _eof(context_t *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static token_kind_t
-_escape(context_t *ctx, char token[TOKEN_N])
+_escape(context_t *ctx, char token[CCFG_MAX_WORD_BYTES])
 {
 	ctx->eol_reached = false;
 
@@ -198,7 +199,7 @@ _escape(context_t *ctx, char token[TOKEN_N])
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static token_kind_t
-_filler(context_t *ctx, char token[static TOKEN_N], double *math_result)
+_filler(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result)
 {
 	return context_get_token(ctx, token, math_result);
 }
@@ -206,9 +207,9 @@ _filler(context_t *ctx, char token[static TOKEN_N], double *math_result)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static token_kind_t
-_if(context_t *ctx, char token[static TOKEN_N], double *math_result, token_kind_t type)
+_if(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result, token_kind_t type)
 {
-	char token_2[TOKEN_N];
+	char token_2[CCFG_MAX_WORD_BYTES];
 	bool result;
 	double a;
 	double b;
@@ -271,10 +272,10 @@ _if(context_t *ctx, char token[static TOKEN_N], double *math_result, token_kind_
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static token_kind_t
-_join(context_t *ctx, char token[static TOKEN_N])
+_join(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES])
 {
-	char token_a[TOKEN_N];
-	char token_b[TOKEN_N];
+	char token_a[CCFG_MAX_WORD_BYTES];
+	char token_b[CCFG_MAX_WORD_BYTES];
 
 	if (context_get_token(ctx, token_a, NULL) == TOKEN_INVALID ||
 	    context_get_token(ctx, token_b, NULL) == TOKEN_INVALID)
@@ -282,7 +283,7 @@ _join(context_t *ctx, char token[static TOKEN_N])
 		return TOKEN_INVALID;
 	}
 
-	if (snprintf(token, TOKEN_N, "%s%s", token_a, token_b) < 0)
+	if (snprintf(token, CCFG_MAX_WORD_BYTES, "%s%s", token_a, token_b) < 0)
 	{
 		return TOKEN_INVALID;
 	}
@@ -293,7 +294,7 @@ _join(context_t *ctx, char token[static TOKEN_N])
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static token_kind_t
-_math(context_t *ctx, char token[static TOKEN_N], double *math_result, token_kind_t type, size_t n)
+_math(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result, token_kind_t type, size_t n)
 {
 	double result;
 	double d[3] = {0};
@@ -462,7 +463,7 @@ _math(context_t *ctx, char token[static TOKEN_N], double *math_result, token_kin
 	}
 	else
 	{
-		snprintf(token, TOKEN_N, "%.8f", result);
+		snprintf(token, CCFG_MAX_WORD_BYTES, "%.8f", result);
 	}
 
 	return TOKEN_NUMBER;
@@ -471,7 +472,7 @@ _math(context_t *ctx, char token[static TOKEN_N], double *math_result, token_kin
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static token_kind_t
-_math_cl(context_t *ctx, char token[static TOKEN_N], double *math_result, token_kind_t type, size_t n)
+_math_cl(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result, token_kind_t type, size_t n)
 {
 	cobj_color_t result;
 	cobj_color_t cl[4] = {0};
@@ -523,7 +524,7 @@ _math_cl(context_t *ctx, char token[static TOKEN_N], double *math_result, token_
 	}
 	else
 	{
-		snprintf(token, TOKEN_N, "%u", cobj_color_get_argb_uint(result));
+		snprintf(token, CCFG_MAX_WORD_BYTES, "%u", cobj_color_get_argb_uint(result));
 	}
 
 	return TOKEN_NUMBER;
@@ -532,7 +533,7 @@ _math_cl(context_t *ctx, char token[static TOKEN_N], double *math_result, token_
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static token_kind_t
-_param(context_t *ctx, char token[static TOKEN_N])
+_param(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES])
 {
 	size_t i; 
 
@@ -546,7 +547,7 @@ _param(context_t *ctx, char token[static TOKEN_N])
 		return TOKEN_INVALID;
 	}
 
-	snprintf(token, TOKEN_N, "%s", cobj_book_get_word(ctx->params, 0, i));
+	snprintf(token, CCFG_MAX_WORD_BYTES, "%s", cobj_book_get_word(ctx->params, 0, i));
 	
 	return TOKEN_STRING;
 }
@@ -554,7 +555,7 @@ _param(context_t *ctx, char token[static TOKEN_N])
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static token_kind_t
-_variable(context_t *ctx, char token[static TOKEN_N], double *math_result)
+_variable(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result)
 {
 	size_t i;
 

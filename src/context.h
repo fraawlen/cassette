@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
+#include <cassette/ccfg.h>
 #include <cassette/cobj.h>
 
 #include "token.h"
@@ -37,8 +38,7 @@
 
 #define CONTEXT_DICT_VARIABLE 0
 #define CONTEXT_DICT_SECTION  1
-
-#define CONTEXT_MAX_DEPTH 128
+#define CONTEXT_MAX_DEPTH     128
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -78,11 +78,11 @@ struct context_t
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-token_kind_t context_get_token(context_t *ctx, char token[static TOKEN_N], double *math_result);
+token_kind_t context_get_token(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result);
 
-token_kind_t context_get_token_numeral(context_t *ctx, char token[static TOKEN_N], double *math_result);
+token_kind_t context_get_token_numeral(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result);
 
-token_kind_t context_get_token_raw(context_t *ctx, char token[static TOKEN_N]);
+token_kind_t context_get_token_raw(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]);
 
 void context_goto_eol(context_t *ctx);
 

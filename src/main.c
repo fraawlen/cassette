@@ -128,8 +128,8 @@ ccfg_create(void)
 		return &_err_cfg;
 	}
 
-	cfg->sequences     = cobj_book_create(0, TOKEN_N);
-	cfg->params        = cobj_book_create(4, TOKEN_N);
+	cfg->sequences     = cobj_book_create(0, CCFG_MAX_WORD_BYTES);
+	cfg->params        = cobj_book_create(4, CCFG_MAX_WORD_BYTES);
 	cfg->sources       = cobj_book_create(4, PATH_MAX);
 	cfg->callbacks     = cobj_tracker_create(2);
 	cfg->ref_params    = cobj_dictionary_create(4, 0.6);

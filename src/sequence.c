@@ -60,7 +60,7 @@ sequence_parse(context_t *ctx)
 {
 	token_kind_t type;
 
-	char token[TOKEN_N];
+	char token[CCFG_MAX_WORD_BYTES];
 
 	if (ctx->depth >= CONTEXT_MAX_DEPTH)
 	{
@@ -146,9 +146,9 @@ _combine_var(context_t *ctx, token_kind_t type)
 	cobj_book_group_mode_t mode = COBJ_BOOK_NEW_GROUP;
 	cobj_string_t *val;
 
-	char name[TOKEN_N];
-	char token_1[TOKEN_N];
-	char token_2[TOKEN_N];
+	char name[CCFG_MAX_WORD_BYTES];
+	char token_1[CCFG_MAX_WORD_BYTES];
+	char token_2[CCFG_MAX_WORD_BYTES];
 	size_t i_var_1;
 	size_t i_var_2;
 
@@ -227,8 +227,8 @@ _declare_enum(context_t *ctx)
 {
 	cobj_book_group_mode_t mode = COBJ_BOOK_NEW_GROUP;
 
-	char name[TOKEN_N];
-	char token[TOKEN_N];
+	char name[CCFG_MAX_WORD_BYTES];
+	char token[CCFG_MAX_WORD_BYTES];
 	char *tmp;
 	double min;
 	double max;
@@ -284,7 +284,7 @@ _declare_enum(context_t *ctx)
 		{
 			mode  = COBJ_BOOK_OLD_GROUP;
 			ratio = util_interpolate(min, max, i / steps);
-			snprintf(tmp, TOKEN_N, "%.*f", (int)precision, ratio);
+			snprintf(tmp, CCFG_MAX_WORD_BYTES, "%.*f", (int)precision, ratio);
 		}
 	}
 
@@ -311,7 +311,7 @@ _declare_resource(context_t *ctx, const char *namespace)
 
 	size_t n = 0;
 	size_t m;
-	char  name[TOKEN_N];
+	char  name[CCFG_MAX_WORD_BYTES];
 	char *tmp;
 
 	/* get resource's name */
@@ -361,7 +361,7 @@ _declare_variable(context_t *ctx)
 	cobj_book_group_mode_t mode = COBJ_BOOK_NEW_GROUP;
 
 	size_t n = 0;
-	char  name[TOKEN_N];
+	char  name[CCFG_MAX_WORD_BYTES];
 	char *tmp;
 
 	/* get variable's name */
@@ -405,7 +405,7 @@ _include(context_t *ctx)
 {
 	cobj_string_t *filename;
 
-	char token[TOKEN_N];
+	char token[CCFG_MAX_WORD_BYTES];
 
 	filename = cobj_string_create();
 
@@ -432,7 +432,7 @@ _iterate(context_t *ctx, token_kind_t type)
 {
 	cobj_book_t *iteration;
 
-	char token[TOKEN_N];
+	char token[CCFG_MAX_WORD_BYTES];
 	char *tmp;
 	bool raw;
 	size_t inject[_MAX_ITER_INJECTIONS];
@@ -443,7 +443,7 @@ _iterate(context_t *ctx, token_kind_t type)
 
 	raw          = type == TOKEN_ITERATE_RAW;
 	n_inject_max = raw ? 1 : _MAX_ITER_INJECTIONS;
-	iteration    = cobj_book_create(10, TOKEN_N);
+	iteration    = cobj_book_create(10, CCFG_MAX_WORD_BYTES);
 
 	/* grab variable to iterate through */
 
@@ -522,7 +522,7 @@ _iterate(context_t *ctx, token_kind_t type)
 static void
 _print(context_t *ctx)
 {
-	char token[TOKEN_N];
+	char token[CCFG_MAX_WORD_BYTES];
 	
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
@@ -537,7 +537,7 @@ _print(context_t *ctx)
 static void
 _section_add(context_t *ctx)
 {
-	char token[TOKEN_N];
+	char token[CCFG_MAX_WORD_BYTES];
 
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
@@ -550,7 +550,7 @@ _section_add(context_t *ctx)
 static void
 _section_begin(context_t *ctx)
 {
-	char token[TOKEN_N];
+	char token[CCFG_MAX_WORD_BYTES];
 
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
@@ -569,7 +569,7 @@ _section_begin(context_t *ctx)
 static void
 _section_del(context_t *ctx)
 {
-	char token[TOKEN_N];
+	char token[CCFG_MAX_WORD_BYTES];
 
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
@@ -582,7 +582,7 @@ _section_del(context_t *ctx)
 static void
 _seed(context_t *ctx)
 {
-	char token[TOKEN_N];
+	char token[CCFG_MAX_WORD_BYTES];
 	double d;
 	
 	if (context_get_token_numeral(ctx, token, &d) != TOKEN_INVALID)

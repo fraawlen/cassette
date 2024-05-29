@@ -121,7 +121,7 @@ file_parse_root(ccfg_t *cfg, const char *filename)
 	ctx.depth          = 0;
 	ctx.params         = cfg->params;
 	ctx.sequences      = cfg->sequences;
-	ctx.variables      = cobj_book_create(10, TOKEN_N);
+	ctx.variables      = cobj_book_create(10, CCFG_MAX_WORD_BYTES);
 	ctx.iteration      = cobj_book_get_placeholder();
 	ctx.ref_params     = cfg->ref_params;
 	ctx.ref_sequences  = cfg->ref_sequences;

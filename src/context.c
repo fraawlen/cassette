@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <cassette/ccfg.h>
 #include <cassette/cobj.h>
 
 #include "context.h"
@@ -34,14 +35,14 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _read_word (context_t *ctx, char token[static TOKEN_N]);
+static bool _read_word (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
 token_kind_t
-context_get_token(context_t *ctx, char token[static TOKEN_N], double *math_result)
+context_get_token(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result)
 {
 	assert(ctx && token);
 
@@ -56,7 +57,7 @@ context_get_token(context_t *ctx, char token[static TOKEN_N], double *math_resul
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 token_kind_t
-context_get_token_numeral(context_t *ctx, char token[static TOKEN_N], double *math_result)
+context_get_token_numeral(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result)
 {
 	bool err = false;
 
@@ -90,17 +91,17 @@ context_get_token_numeral(context_t *ctx, char token[static TOKEN_N], double *ma
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 token_kind_t
-context_get_token_raw(context_t *ctx, char token[static TOKEN_N])
+context_get_token_raw(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES])
 {
 	assert(ctx && token);
 
 	if (cobj_book_increment_iterator(ctx->variables))
 	{
-		snprintf(token, TOKEN_N, "%s", cobj_book_get_iteration(ctx->variables));
+		snprintf(token, CCFG_MAX_WORD_BYTES, "%s", cobj_book_get_iteration(ctx->variables));
 	}
 	else if (cobj_book_increment_iterator(ctx->iteration))
 	{
-		snprintf(token, TOKEN_N, "%s", cobj_book_get_iteration(ctx->iteration));
+		snprintf(token, CCFG_MAX_WORD_BYTES, "%s", cobj_book_get_iteration(ctx->iteration));
 	}
 	else if (!_read_word(ctx, token))
 	{
@@ -143,7 +144,7 @@ context_goto_eol(context_t *ctx)
 /************************************************************************************************************/
 
 static bool
-_read_word(context_t *ctx, char token[static TOKEN_N])
+_read_word(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES])
 {
 	size_t i = 0;
 	bool quotes_1 = false;
@@ -214,7 +215,7 @@ exit_lead:
 
 			default:
 			char_add:
-				if (i < TOKEN_N - 1)
+				if (i < CCFG_MAX_WORD_BYTES - 1)
 				{
 					token[i++] = (char)c;
 				}

@@ -32,6 +32,10 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#define CCFG_MAX_WORD_BYTES 32
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Opaque configuration instance object that holds all parsed resources.
  * This object holds an internal fail state boolean that can be checked with ccfg_has_failed(). If
