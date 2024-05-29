@@ -148,7 +148,6 @@ cgui_init(int argc, char **argv)
 	_failed  = false;	
 	_failed |= !x11_init(argc, argv, _class_name, _class_class, _ext_connection);
 	_failed |= !config_init();
-	_failed |= !config_load();
 
 	main_update_status();
 

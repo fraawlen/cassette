@@ -36,3 +36,29 @@ util_env_exists(const char *name)
 
 	return val && val[0] != '\0';
 }
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+double
+util_str_to_double(const char *str, double min, double max)
+{
+	double d;
+
+	d = strtod(str, NULL);
+
+	return d > max ? max : (d < min ? min : d);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+long
+util_str_to_long(const char *str, long min, long max)
+{
+	long l;
+
+	l = strtoul(str, NULL, 0);
+
+	return l > max ? max : (l < min ? min : l);
+}
+
+
