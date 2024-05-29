@@ -121,7 +121,7 @@ static bool _fill  (void);
 /************************************************************************************************************/
 
 static cgui_config_t _config     = config_default;
-static ccfg_t *_config_data      = NULL;
+static ccfg_t *_parser           = NULL;
 static cobj_dictionary_t *_words = NULL;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -163,7 +163,7 @@ cgui_config_get(void)
 ccfg_t *
 cgui_config_get_object(void)
 {
-	return _config_data ? _config_data : ccfg_get_placeholder();
+	return _parser ? _parser : ccfg_get_placeholder();
 }
 
 /************************************************************************************************************/
@@ -179,16 +179,16 @@ config_init(void)
 
 	/* parser */
 
-	_config_data = ccfg_create();
+	_parser = ccfg_create();
 	home  = cobj_string_create();
 
 	cobj_string_set_raw(home, util_env_exists("HOME") ? getenv("HOME") : getpwuid(getuid())->pw_dir);
 	cobj_string_append_raw(home, "/.config/cgui.conf");
 
-	ccfg_push_source(_config_data, getenv("CGUI_CONFIG_SOURCE"));
-	ccfg_push_source(_config_data, cobj_string_get_chars(home));
-	ccfg_push_source(_config_data, "/usr/share/cgui/cgui.conf");
-	ccfg_push_source(_config_data, "/etc/cgui.conf");
+	ccfg_push_source(_parser, getenv("CGUI_CONFIG_SOURCE"));
+	ccfg_push_source(_parser, cobj_string_get_chars(home));
+	ccfg_push_source(_parser, "/usr/share/cgui/cgui.conf");
+	ccfg_push_source(_parser, "/etc/cgui.conf");
 
 	cobj_string_destroy(&home);
 
@@ -206,7 +206,7 @@ config_init(void)
 	
 	/* end */
 
-	fail |= ccfg_has_failed(_config_data);
+	fail |= ccfg_has_failed(_parser);
 	fail |= cobj_dictionary_has_failed(_words);
 	fail |= !config_load();
 
@@ -226,13 +226,13 @@ config_load(void)
 		return true;
 	}
 
-	ccfg_load(_config_data);
+	ccfg_load(_parser);
 	for (size_t i = 0; i < sizeof(_resources) / sizeof(_resource_t); i++)
 	{
 		_fetch(_resources + i);
 	}
 
-	return _fill() && !ccfg_has_failed(_config_data);
+	return _fill() && !ccfg_has_failed(_parser);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -240,7 +240,7 @@ config_load(void)
 void
 config_reset(void)
 {
-	ccfg_destroy(&_config_data);
+	ccfg_destroy(&_parser);
 	cobj_dictionary_destroy(&_words);
 
 	_config = config_default;
@@ -256,10 +256,10 @@ _fetch(const _resource_t *resource)
 	const char *str;
 	size_t ref;
 
-	ccfg_fetch_resource(_config_data, resource->namespace, resource->name);
-	if (ccfg_pick_next_resource_value(_config_data))
+	ccfg_fetch_resource(_parser, resource->namespace, resource->name);
+	if (ccfg_pick_next_resource_value(_parser))
 	{
-		str = ccfg_get_resource_value(_config_data);
+		str = ccfg_get_resource_value(_parser);
 	}
 	else
 	{
