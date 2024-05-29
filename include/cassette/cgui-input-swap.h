@@ -18,13 +18,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_H
-#define CGUI_H
+#ifndef CGUI_INPUT_SWAP_H
+#define CGUI_INPUT_SWAP_H
 
-#include <stdbool.h>
-#include <stdlib.h>
-
-#include <xcb/xcb.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,65 +31,83 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define CGUI_VERSION "0.2.0"
+enum cgui_input_swap_kind_t
+{
+	CGUI_INPUT_SWAP_TO_DEFAULT = 0,
+	CGUI_INPUT_SWAP_TO_NONE,
+	CGUI_INPUT_SWAP_TO_VALUE,
+	CGUI_INPUT_SWAP_TO_ACCELERATOR,
+	CGUI_INPUT_SWAP_TO_CLIPBOARD_CUT,
+	CGUI_INPUT_SWAP_TO_CLIPBOARD_COPY,
+	CGUI_INPUT_SWAP_TO_CLIPBOARD_PASTE,
+	CGUI_INPUT_SWAP_TO_ACTION_CELL,
+	CGUI_INPUT_SWAP_TO_ACTION_FOCUS,
+	CGUI_INPUT_SWAP_TO_ACTION_WINDOW,
+	CGUI_INPUT_SWAP_TO_ACTION_MISC,
+};
+
+typedef uint8_t cgui_input_swap_type_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void cgui_init(int argc, char **argv);
+enum cgui_input_swap_cell_t
+{
+	CGUI_INPUT_SWAP_CELL_REDRAW,
+	CGUI_INPUT_SWAP_CELL_SELECT_LESS,
+	CGUI_INPUT_SWAP_CELL_SELECT_MORE,
+	CGUI_INPUT_SWAP_CELL_SELECT_NONE,
+	CGUI_INPUT_SWAP_CELL_SELECT_ALL,
+	CGUI_INPUT_SWAP_CELL_TRIGGER_1,
+	CGUI_INPUT_SWAP_CELL_TRIGGER_2,
+	CGUI_INPUT_SWAP_CELL_TRIGGER_3,
+	CGUI_INPUT_SWAP_CELL_TRIGGER_4,
+	CGUI_INPUT_SWAP_CELL_TRIGGER_5,
+};
 
-void cgui_reset(void);
+enum cgui_input_swap_focus_t
+{
+	CGUI_INPUT_SWAP_FOCUS_LEFT,
+	CGUI_INPUT_SWAP_FOCUS_RIGHT,
+	CGUI_INPUT_SWAP_FOCUS_UP,
+	CGUI_INPUT_SWAP_FOCUS_DOWN,
+	CGUI_INPUT_SWAP_FOCUS_LEFTMOST,
+	CGUI_INPUT_SWAP_FOCUS_RIGHTMOST,
+	CGUI_INPUT_SWAP_FOCUS_TOP,
+	CGUI_INPUT_SWAP_FOCUS_BOTTOM,
+	CGUI_INPUT_SWAP_FOCUS_NEXT,
+	CGUI_INPUT_SWAP_FOCUS_PREV,
+	CGUI_INPUT_SWAP_FOCUS_FIRST,
+	CGUI_INPUT_SWAP_FOCUS_LAST,
+	CGUI_INPUT_SWAP_FOCUS_NONE,
+};
+
+enum cgui_input_swap_window_t
+{
+	CGUI_INPUT_SWAP_WINDOW_LOCK_GRID,
+	CGUI_INPUT_SWAP_WINDOW_LOCK_FOCUS,
+	CGUI_INPUT_SWAP_WINDOW_REDRAW,
+};
+
+enum cgui_input_swap_misc_t
+{
+	CGUI_INPUT_SWAP_RECONFIG,
+	CGUI_INPUT_SWAP_EXIT,
+};
+
+typedef uint8_t cgui_input_swap_misc_t;
+typedef uint8_t cgui_input_swap_window_t;
+typedef uint8_t cgui_input_swap_focus_t;
+typedef uint8_t cgui_input_swap_cell_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void cgui_setup_x11_class(const char *class_name, const char *class_class);
+struct cgui_input_swap_t
+{
+	uint8_t kind;
+	uint8_t value;
+};
 
-void cgui_setup_x11_connection(xcb_connection_t *connection);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void cgui_allow_user_exit(void);
-
-void cgui_block_user_exit(void);
-
-void cgui_exit(void);
-
-void cgui_reconfig(void);
-
-void cgui_run(void);
-
-void cgui_send_signal(uint32_t serial);
-
-void cgui_set_callback_signal(void (*fn)(uint32_t serial));
-
-void cgui_set_callback_x11_events(void (*fn)(xcb_generic_event_t *event));
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-xcb_connection_t *cgui_get_x11_connection(void);
-
-xcb_window_t cgui_get_x11_leader_window(void);
-
-bool cgui_has_failed(void);
-
-bool cgui_is_init(void);
-
-bool cgui_is_running(void);
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-/* init dependent headers */
-
-#include "cgui-cell.h"
-#include "cgui-grid.h"
-#include "cgui-window.h"
-
-/* init independent headers */
-
-#include "cgui-config.h"
-#include "cgui-input-swap.h"
-#include "cgui-style.h"
+typedef struct cgui_input_swap_t cgui_input_swap_t;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -102,4 +117,4 @@ bool cgui_is_running(void);
 }
 #endif
 
-#endif /* CGUI_H */
+#endif /* CGUI_INPUT_SWAP_H */

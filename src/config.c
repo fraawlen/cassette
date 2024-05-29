@@ -20,6 +20,7 @@
 
 #include <assert.h>
 #include <float.h>
+#include <limits.h>
 #include <pwd.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -80,23 +81,62 @@
 	{ NAMESPACE, "color_border",              _COLOR,  &TARGET.color_border              }, \
 	{ NAMESPACE, "color_outline",             _COLOR,  &TARGET.color_outline             },
 
+#define _BUTTON(VALUE) \
+	{ "button",     #VALUE, _MAP_BUTTON, &_config.buttons[VALUE][0] }, \
+	{ "button", "M" #VALUE, _MAP_BUTTON, &_config.buttons[VALUE][1] }, \
+	{ "button", "S" #VALUE, _MAP_BUTTON, &_config.buttons[VALUE][2] },
+
+#define _KEY(VALUE) \
+	{ "key",        #VALUE, _MAP_KEY,    &_config.keys[VALUE][0]    }, \
+	{ "key",    "M" #VALUE, _MAP_KEY,    &_config.keys[VALUE][1]    }, \
+	{ "key",    "S" #VALUE, _MAP_KEY,    &_config.keys[VALUE][2]    },
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 enum _value_t
 {
+	/* primitives */
+
 	_STRING,
 	_COLOR,
 	_BOOL,
 	_LENGTH,
 	_POSITION,
+	_INT,
+	_UINT,
 	_DOUBLE,
 	_UDOUBLE,
 	_RATIO,
-	_ANTIALIAS,
-	_SUBPIXEL,
+
+	/* dict based */
+
+	_MODKEY,
+	_FONT_ANTIALIAS,
+	_FONT_SUBPIXEL,
+	_SWAP_KIND,
+	_SWAP_CELL,
+	_SWAP_FOCUS,
+	_SWAP_WINDOW,
+	_SWAP_MISC,
+
+	/* composite */
+
+	_MAP_KEY,
+	_MAP_BUTTON,
 };
 
 typedef enum _value_t _value_t;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct _word_t
+{
+	char *name;
+	_value_t type;
+	size_t value;
+};
+
+typedef struct _word_t _word_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -121,32 +161,255 @@ static bool _fill  (void);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static cgui_config_t _config     = config_default;
-static ccfg_t *_parser           = NULL;
-static cobj_dictionary_t *_words = NULL;
+static cgui_config_t _config    = config_default;
+static ccfg_t *_parser          = NULL;
+static cobj_dictionary_t *_dict = NULL;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static const _word_t _words[] =
+{
+	{ "mod1",       _MODKEY,         CGUI_CONFIG_MOD_1                  },
+	{ "mod2",       _MODKEY,         CGUI_CONFIG_MOD_2                  },
+	{ "mod3",       _MODKEY,         CGUI_CONFIG_MOD_3                  },
+	{ "mod4",       _MODKEY,         CGUI_CONFIG_MOD_4                  },
+	{ "mod5",       _MODKEY,         CGUI_CONFIG_MOD_5                  },
+	{ "ctrl",       _MODKEY,         CGUI_CONFIG_MOD_CTRL               },
+	{ "lock",       _MODKEY,         CGUI_CONFIG_MOD_LOCK               },
+	{ "shift",      _MODKEY,         CGUI_CONFIG_MOD_SHIFT              },
+
+	{ "none",       _FONT_ANTIALIAS, CGUI_CONFIG_ANTIALIAS_NONE         },
+	{ "gray",       _FONT_ANTIALIAS, CGUI_CONFIG_ANTIALIAS_GRAY         },
+	{ "subpixel",   _FONT_ANTIALIAS, CGUI_CONFIG_ANTIALIAS_SUBPIXEL     },
+
+	{ "rgb",        _FONT_SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_RGB           },
+	{ "bgr",        _FONT_SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_BGR           },
+	{ "vrgb",       _FONT_SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_VRGB          },
+	{ "vbgr",       _FONT_SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_VBGR          },
+
+	{ "default",    _SWAP_KIND,      CGUI_INPUT_SWAP_TO_DEFAULT         },
+	{ "none",       _SWAP_KIND,      CGUI_INPUT_SWAP_TO_NONE            },
+	{ "value",      _SWAP_KIND,      CGUI_INPUT_SWAP_TO_VALUE           },
+	{ "accel",      _SWAP_KIND,      CGUI_INPUT_SWAP_TO_ACCELERATOR     },
+	{ "cut",        _SWAP_KIND,      CGUI_INPUT_SWAP_TO_CLIPBOARD_CUT   },
+	{ "copy",       _SWAP_KIND,      CGUI_INPUT_SWAP_TO_CLIPBOARD_COPY  },
+	{ "paste",      _SWAP_KIND,      CGUI_INPUT_SWAP_TO_CLIPBOARD_PASTE },
+	{ "cell",       _SWAP_KIND,      CGUI_INPUT_SWAP_TO_ACTION_CELL     },
+	{ "focus",      _SWAP_KIND,      CGUI_INPUT_SWAP_TO_ACTION_FOCUS    },
+	{ "window",     _SWAP_KIND,      CGUI_INPUT_SWAP_TO_ACTION_WINDOW   },
+	{ "misc",       _SWAP_KIND,      CGUI_INPUT_SWAP_TO_ACTION_MISC     },
+
+	{ "select-",    _SWAP_CELL,      CGUI_INPUT_SWAP_CELL_SELECT_LESS   },
+	{ "select+",    _SWAP_CELL,      CGUI_INPUT_SWAP_CELL_SELECT_MORE   },
+	{ "unselect",   _SWAP_CELL,      CGUI_INPUT_SWAP_CELL_SELECT_NONE   },
+	{ "select_all", _SWAP_CELL,      CGUI_INPUT_SWAP_CELL_SELECT_ALL    },
+	{ "redraw",     _SWAP_CELL,      CGUI_INPUT_SWAP_CELL_SELECT_ALL    },
+	{ "trigger1",   _SWAP_CELL,      CGUI_INPUT_SWAP_CELL_TRIGGER_1     },
+	{ "trigger2",   _SWAP_CELL,      CGUI_INPUT_SWAP_CELL_TRIGGER_2     },
+	{ "trigger3",   _SWAP_CELL,      CGUI_INPUT_SWAP_CELL_TRIGGER_3     },
+	{ "trigger4",   _SWAP_CELL,      CGUI_INPUT_SWAP_CELL_TRIGGER_4     },
+	{ "trigger5",   _SWAP_CELL,      CGUI_INPUT_SWAP_CELL_TRIGGER_5     },
+
+	{ "left",       _SWAP_FOCUS,     CGUI_INPUT_SWAP_FOCUS_LEFT         },
+	{ "right",      _SWAP_FOCUS,     CGUI_INPUT_SWAP_FOCUS_RIGHT        },
+	{ "up",         _SWAP_FOCUS,     CGUI_INPUT_SWAP_FOCUS_UP           },
+	{ "down",       _SWAP_FOCUS,     CGUI_INPUT_SWAP_FOCUS_DOWN         },
+	{ "leftmost",   _SWAP_FOCUS,     CGUI_INPUT_SWAP_FOCUS_LEFTMOST     },
+	{ "rightmost",  _SWAP_FOCUS,     CGUI_INPUT_SWAP_FOCUS_RIGHTMOST    },
+	{ "top",        _SWAP_FOCUS,     CGUI_INPUT_SWAP_FOCUS_TOP          },
+	{ "bottom",     _SWAP_FOCUS,     CGUI_INPUT_SWAP_FOCUS_BOTTOM       },
+	{ "next",       _SWAP_FOCUS,     CGUI_INPUT_SWAP_FOCUS_NEXT         },
+	{ "previous",   _SWAP_FOCUS,     CGUI_INPUT_SWAP_FOCUS_PREV         },
+	{ "first",      _SWAP_FOCUS,     CGUI_INPUT_SWAP_FOCUS_FIRST        },
+	{ "last",       _SWAP_FOCUS,     CGUI_INPUT_SWAP_FOCUS_LAST         },
+	{ "none",       _SWAP_FOCUS,     CGUI_INPUT_SWAP_FOCUS_NONE         },
+
+	{ "lock_grid",  _SWAP_WINDOW,    CGUI_INPUT_SWAP_WINDOW_LOCK_GRID   },
+	{ "lock_focus", _SWAP_WINDOW,    CGUI_INPUT_SWAP_WINDOW_LOCK_FOCUS  },
+	{ "redraw",     _SWAP_WINDOW,    CGUI_INPUT_SWAP_WINDOW_LOCK_FOCUS  },
+	
+	{ "reconfig",   _SWAP_MISC,      CGUI_INPUT_SWAP_RECONFIG           },
+	{ "exit",       _SWAP_MISC,      CGUI_INPUT_SWAP_EXIT               },
+};
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static const _resource_t _resources[] =
 {
-	{ "global", "scale",               _UDOUBLE,   &_config.scale                    },
+	{ "global",   "scale",                       _UDOUBLE,        &_config.scale                          },
 
-	{ "font",   "face",                _STRING,     _config.font_face                },
-	{ "font",   "size",                _LENGTH,    &_config.font_size                },
-	{ "font",   "horizontal_spacing",  _LENGTH,    &_config.font_spacing_horizontal  },
-	{ "font",   "vertical_spacing",    _LENGTH,    &_config.font_spacing_vertical    },
-	{ "font",   "width_override",      _LENGTH,    &_config.font_override_width      },
-	{ "font",   "ascent_override",     _LENGTH,    &_config.font_override_ascent     },
-	{ "font",   "descent_override",    _LENGTH,    &_config.font_override_descent    },
-	{ "font",   "x_offset",            _POSITION,  &_config.font_offset_x            },
-	{ "font",   "y_offset",            _POSITION,  &_config.font_offset_y            },
-	{ "font",   "enable_overrides",    _BOOL,      &_config.font_enable_overrides    },
-	{ "font",   "enable_hint_metrics", _BOOL,      &_config.font_enable_hint_metrics },
-	{ "font",   "antialias_mode",      _ANTIALIAS, &_config.font_antialias           },
-	{ "font",   "subpixel_mode",       _SUBPIXEL,  &_config.font_subpixel            },
+	{ "font",     "face",                        _STRING,          _config.font_face                      },
+	{ "font",     "size",                        _LENGTH,         &_config.font_size                      },
+	{ "font",     "horizontal_spacing",          _LENGTH,         &_config.font_spacing_horizontal        },
+	{ "font",     "vertical_spacing",            _LENGTH,         &_config.font_spacing_vertical          },
+	{ "font",     "width_override",              _LENGTH,         &_config.font_override_width            },
+	{ "font",     "ascent_override",             _LENGTH,         &_config.font_override_ascent           },
+	{ "font",     "descent_override",            _LENGTH,         &_config.font_override_descent          },
+	{ "font",     "x_offset",                    _POSITION,       &_config.font_offset_x                  },
+	{ "font",     "y_offset",                    _POSITION,       &_config.font_offset_y                  },
+	{ "font",     "enable_overrides",            _BOOL,           &_config.font_enable_overrides          },
+	{ "font",     "enable_hint_metrics",         _BOOL,           &_config.font_enable_hint_metrics       },
+	{ "font",     "antialias_mode",              _FONT_ANTIALIAS, &_config.font_antialias                 },
+	{ "font",     "subpixel_mode",               _FONT_SUBPIXEL,  &_config.font_subpixel                  },
+
+	{ "popup",    "max_width",                   _LENGTH,         &_config.popup_max_width                },
+	{ "popup",    "max_height",                  _LENGTH,         &_config.popup_max_height               },
+	{ "popup",    "width_override",              _LENGTH,         &_config.popup_override_width           },
+	{ "popup",    "height_override",             _LENGTH,         &_config.popup_override_height          },
+	{ "popup",    "x_position_override",         _POSITION,       &_config.popup_override_x               },
+	{ "popup",    "y_position_override",         _POSITION,       &_config.popup_override_y               },
+	{ "popup",    "enable_position_overrides",   _BOOL,           &_config.popup_enable_override_position },
+	{ "popup",    "enable_width_override",       _BOOL,           &_config.popup_enable_override_width    },
+	{ "popup",    "ennable_height_override",     _BOOL,           &_config.popup_enable_override_height   },
+	
+	{ "behavior", "enable_cell_auto_lock",       _BOOL,           &_config.cell_auto_lock                 },
+	{ "behavior", "enable_persistent_pointer",   _BOOL,           &_config.input_persistent_pointer       },
+	{ "behavior", "enable_persistent_touch",     _BOOL,           &_config.input_persistent_touch         },
+	{ "behavior", "animation_framerate_divider", _UINT,           &_config.anim_divider                   },
 
 	_STYLE_WINDOW("window", _config.window_style)
 	_STYLE_WINDOW("popup",  _config.popup_style)
+
+	_BUTTON(1)
+	_BUTTON(2)
+	_BUTTON(3)
+	_BUTTON(4)
+	_BUTTON(5)
+	_BUTTON(6)
+	_BUTTON(7)
+	_BUTTON(8)
+	_BUTTON(9)
+	_BUTTON(10)
+	_BUTTON(11)
+	_BUTTON(12)
+
+	_KEY(1)
+	_KEY(2)
+	_KEY(3)
+	_KEY(4)
+	_KEY(5)
+	_KEY(6)
+	_KEY(7)
+	_KEY(8)
+	_KEY(9)
+	_KEY(10)
+	_KEY(11)
+	_KEY(12)
+	_KEY(13)
+	_KEY(14)
+	_KEY(15)
+	_KEY(16)
+	_KEY(17)
+	_KEY(18)
+	_KEY(19)
+	_KEY(20)
+	_KEY(21)
+	_KEY(22)
+	_KEY(23)
+	_KEY(24)
+	_KEY(25)
+	_KEY(26)
+	_KEY(27)
+	_KEY(28)
+	_KEY(29)
+	_KEY(30)
+	_KEY(31)
+	_KEY(32)
+	_KEY(33)
+	_KEY(34)
+	_KEY(35)
+	_KEY(36)
+	_KEY(37)
+	_KEY(38)
+	_KEY(39)
+	_KEY(40)
+	_KEY(41)
+	_KEY(42)
+	_KEY(43)
+	_KEY(44)
+	_KEY(45)
+	_KEY(46)
+	_KEY(47)
+	_KEY(48)
+	_KEY(49)
+	_KEY(50)
+	_KEY(51)
+	_KEY(52)
+	_KEY(53)
+	_KEY(54)
+	_KEY(55)
+	_KEY(56)
+	_KEY(57)
+	_KEY(58)
+	_KEY(59)
+	_KEY(60)
+	_KEY(61)
+	_KEY(62)
+	_KEY(63)
+	_KEY(64)
+	_KEY(65)
+	_KEY(66)
+	_KEY(67)
+	_KEY(68)
+	_KEY(69)
+	_KEY(70)
+	_KEY(71)
+	_KEY(72)
+	_KEY(73)
+	_KEY(74)
+	_KEY(75)
+	_KEY(76)
+	_KEY(77)
+	_KEY(78)
+	_KEY(79)
+	_KEY(80)
+	_KEY(81)
+	_KEY(82)
+	_KEY(83)
+	_KEY(84)
+	_KEY(85)
+	_KEY(86)
+	_KEY(87)
+	_KEY(88)
+	_KEY(89)
+	_KEY(90)
+	_KEY(91)
+	_KEY(92)
+	_KEY(93)
+	_KEY(94)
+	_KEY(95)
+	_KEY(96)
+	_KEY(97)
+	_KEY(98)
+	_KEY(99)
+	_KEY(100)
+	_KEY(101)
+	_KEY(102)
+	_KEY(103)
+	_KEY(104)
+	_KEY(105)
+	_KEY(106)
+	_KEY(107)
+	_KEY(108)
+	_KEY(109)
+	_KEY(110)
+	_KEY(111)
+	_KEY(112)
+	_KEY(113)
+	_KEY(114)
+	_KEY(115)
+	_KEY(116)
+	_KEY(117)
+	_KEY(118)
+	_KEY(119)
+	_KEY(120)
+	_KEY(121)
+	_KEY(122)
+	_KEY(123)
+	_KEY(124)
+	_KEY(125)
+	_KEY(126)
+	_KEY(127)
 };
 
 /************************************************************************************************************/
@@ -162,7 +425,7 @@ cgui_config_get(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 ccfg_t *
-cgui_config_get_object(void)
+cgui_config_get_parser(void)
 {
 	return _parser ? _parser : ccfg_get_placeholder();
 }
@@ -178,10 +441,13 @@ config_init(void)
 
 	bool fail = false;
 
-	/* parser */
+	/* instantiation */
 
 	_parser = ccfg_create();
-	home  = cobj_string_create();
+	_dict   = cobj_dictionary_create(sizeof(_words) / sizeof(_word_t), 0.6);
+	 home   = cobj_string_create();
+
+	/* parser setup */
 
 	cobj_string_set_raw(home, util_env_exists("HOME") ? getenv("HOME") : getpwuid(getuid())->pw_dir);
 	cobj_string_append_raw(home, "/.config/cgui.conf");
@@ -193,22 +459,17 @@ config_init(void)
 
 	cobj_string_destroy(&home);
 
-	/* dictionary */
+	/* dictionary setup */
 
-	_words = cobj_dictionary_create(5, 0.6);
-
-	cobj_dictionary_write(_words, "none",     _ANTIALIAS, CGUI_CONFIG_ANTIALIAS_NONE);
-	cobj_dictionary_write(_words, "gray",     _ANTIALIAS, CGUI_CONFIG_ANTIALIAS_GRAY);
-	cobj_dictionary_write(_words, "subpixel", _ANTIALIAS, CGUI_CONFIG_ANTIALIAS_SUBPIXEL);
-	cobj_dictionary_write(_words, "rgb",      _SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_RGB);
-	cobj_dictionary_write(_words, "bgr",      _SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_BGR);
-	cobj_dictionary_write(_words, "vrgb",     _SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_VRGB);
-	cobj_dictionary_write(_words, "vbgr",     _SUBPIXEL,  CGUI_CONFIG_SUBPIXEL_VBGR);
+	for (size_t i = 0; i < sizeof(_words) / sizeof(_word_t); i++)
+	{
+		cobj_dictionary_write(_dict, _words[i].name, _words[i].type, _words[i].value);
+	}
 	
 	/* end */
 
 	fail |= ccfg_has_failed(_parser);
-	fail |= cobj_dictionary_has_failed(_words);
+	fail |= cobj_dictionary_has_failed(_dict);
 	fail |= !config_load();
 
 	return !fail;
@@ -242,7 +503,7 @@ void
 config_reset(void)
 {
 	ccfg_destroy(&_parser);
-	cobj_dictionary_destroy(&_words);
+	cobj_dictionary_destroy(&_dict);
 
 	_config = config_default;
 }
@@ -255,7 +516,6 @@ static void
 _fetch(const _resource_t *resource)
 {
 	const char *str;
-	size_t ref;
 
 	ccfg_fetch_resource(_parser, resource->namespace, resource->name);
 	if (ccfg_pick_next_resource_value(_parser))
@@ -270,7 +530,7 @@ _fetch(const _resource_t *resource)
 	switch (resource->type)
 	{
 		case _STRING:
-			snprintf((char*)resource->target, CGUI_CONFIG_MAX_STRING, "%s", str);
+			snprintf((char*)resource->target, CCFG_MAX_WORD_BYTES, "%s", str);
 			break;
 
 		case _COLOR:
@@ -289,6 +549,14 @@ _fetch(const _resource_t *resource)
 			*(int16_t*)resource->target = util_str_to_long(str, INT16_MIN, INT16_MAX);
 			break;
 
+		case _INT:
+			*(int*)resource->target = util_str_to_long(str, 0, UINT_MAX);
+			break;
+
+		case _UINT:
+			*(unsigned int*)resource->target = util_str_to_long(str, INT_MIN, INT_MAX);
+			break;
+
 		case _DOUBLE:
 			*(double*)resource->target = util_str_to_double(str, DBL_MIN, DBL_MAX);
 			break;
@@ -301,10 +569,15 @@ _fetch(const _resource_t *resource)
 			*(double*)resource->target = util_str_to_double(str, 0.0, 1.0);
 			break;
 
-		case _ANTIALIAS:
-		case _SUBPIXEL:
-			cobj_dictionary_find(_words, str, resource->type, &ref);
-			*(int*)resource->target = ref;
+		case _MODKEY:
+		case _FONT_ANTIALIAS:
+		case _FONT_SUBPIXEL:
+			cobj_dictionary_find(_dict, str, resource->type, (size_t*)resource->target);
+			break;
+
+		case _MAP_KEY:
+		case _MAP_BUTTON:
+			// TODO
 			break;
 
 		default:
@@ -381,9 +654,9 @@ skip_auto_font:
 
 	/* end */
 
-	printf(">> %u\n", _config.window_style.padding_cell);
-	printf(">> %i\n", _config.font_antialias);
-	printf(">> %s\n", _config.font_face);
+	printf(">> %u\n",  _config.window_style.padding_cell);
+	printf(">> %zu\n", _config.font_antialias);
+	printf(">> %s\n",  _config.font_face);
 
 	return !failed;
 }

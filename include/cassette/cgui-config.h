@@ -23,10 +23,12 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include <cassette/ccfg.h>
 #include <cassette/cobj.h>
 
+#include "cgui-input-swap.h"
 #include "cgui-style.h"
 
 #ifdef __cplusplus
@@ -37,8 +39,25 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define CGUI_CONFIG_MAX_ACCELS 12
-#define CGUI_CONFIG_MAX_STRING 32
+#define CGUI_CONFIG_MAX_ACCELS  12
+#define CGUI_CONFIG_MAX_BUTTONS 12
+#define CGUI_CONFIG_MAX_KEYS    128
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+enum cgui_config_modkey_t
+{
+	CGUI_CONFIG_MOD_SHIFT = 1U << 0, /* cannot be used as modkey config option */
+	CGUI_CONFIG_MOD_LOCK  = 1U << 1, /* cannot be used as modkey config option */
+	CGUI_CONFIG_MOD_CTRL  = 1U << 2, 
+	CGUI_CONFIG_MOD_1     = 1U << 3, 
+	CGUI_CONFIG_MOD_2     = 1U << 4, /* cannot be used as modkey config option */
+	CGUI_CONFIG_MOD_3     = 1U << 5, /* cannot be used as modkey config option */
+	CGUI_CONFIG_MOD_4     = 1U << 6,
+	CGUI_CONFIG_MOD_5     = 1U << 7, /* cannot be used as modkey config option */
+};
+
+typedef size_t cgui_config_modkey_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -49,7 +68,7 @@ enum cgui_config_font_antialias_t
 	CGUI_CONFIG_ANTIALIAS_SUBPIXEL,
 };
 
-typedef enum cgui_config_font_antialias_t cgui_config_font_antialias_t;
+typedef size_t cgui_config_font_antialias_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -61,7 +80,7 @@ enum cgui_config_font_subpixel_t
 	CGUI_CONFIG_SUBPIXEL_VBGR,
 };
 
-typedef enum cgui_config_font_subpixel_t cgui_config_font_subpixel_t;
+typedef size_t cgui_config_font_subpixel_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -72,7 +91,7 @@ struct cgui_config_t
 
 	/* font */
 
-	char font_face[CGUI_CONFIG_MAX_STRING];
+	char font_face[CCFG_MAX_WORD_BYTES];
 
 	uint16_t font_size;
 	uint16_t font_width;
@@ -100,9 +119,28 @@ struct cgui_config_t
 	
 	cgui_style_window_t window_style;
 
-	/* misc */
+	int16_t  popup_override_x;
+	int16_t  popup_override_y;
+	uint16_t popup_max_width;
+	uint16_t popup_max_height;
+	uint16_t popup_override_width;
+	uint16_t popup_override_height;
+
+	bool popup_enable_override_position;
+	bool popup_enable_override_width;
+	bool popup_enable_override_height;
+
+	/* behavior */
+
+	bool cell_auto_lock;
+	bool input_persistent_pointer;
+	bool input_persistent_touch;
+	unsigned int anim_divider;
 
 	/* input swaps */
+
+	cgui_input_swap_t    keys[CGUI_CONFIG_MAX_KEYS    + 1][3];
+	cgui_input_swap_t buttons[CGUI_CONFIG_MAX_BUTTONS + 1][3];
 };
 
 typedef struct cgui_config_t cgui_config_t;
@@ -111,7 +149,7 @@ typedef struct cgui_config_t cgui_config_t;
 
 const cgui_config_t *cgui_config_get(void);
 
-ccfg_t *cgui_config_get_object(void);
+ccfg_t *cgui_config_get_parser(void);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
