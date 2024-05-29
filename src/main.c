@@ -22,6 +22,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include <cairo/cairo.h>
+#include <fontconfig/fontconfig.h>
 #include <xcb/xcb.h>
 
 #include <cassette/cgui.h>
@@ -29,10 +31,12 @@
 
 #include "cell.h"
 #include "config.h"
+#include "env.h"
 #include "event.h"
 #include "grid.h"
 #include "main.h"
 #include "window.h"
+#include "util.h"
 #include "x11.h"
 
 /************************************************************************************************************/
@@ -226,11 +230,17 @@ cgui_reset(void)
 		((cgui_cell_t*)cobj_tracker_get_iteration(_cells))->failed = true;
 	}
 
+	if (!_ext_connection || util_env_exists(ENV_FORCE_CLEAN))
+	{
+		cairo_debug_reset_static_data();
+		FcFini();
+	}
+
 	cobj_tracker_destroy(&_cells);
 	cobj_tracker_destroy(&_grids);
 	cobj_tracker_destroy(&_windows);
 
-	x11_reset(!!_ext_connection);
+	x11_reset(!_ext_connection);
 	config_reset();
 
 	_ext_connection = NULL;

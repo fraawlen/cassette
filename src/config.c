@@ -33,6 +33,7 @@
 
 #include "config.h"
 #include "config-default.h"
+#include "env.h"
 #include "util.h"
 
 /************************************************************************************************************/
@@ -185,7 +186,7 @@ config_init(void)
 	cobj_string_set_raw(home, util_env_exists("HOME") ? getenv("HOME") : getpwuid(getuid())->pw_dir);
 	cobj_string_append_raw(home, "/.config/cgui.conf");
 
-	ccfg_push_source(_parser, getenv("CGUI_CONFIG_SOURCE"));
+	ccfg_push_source(_parser, getenv(ENV_CONF_SOURCE));
 	ccfg_push_source(_parser, cobj_string_get_chars(home));
 	ccfg_push_source(_parser, "/usr/share/cgui/cgui.conf");
 	ccfg_push_source(_parser, "/etc/cgui.conf");
@@ -221,7 +222,7 @@ config_load(void)
 	_config      = config_default;
 	_config.init = true;
 
-	if (util_env_exists("CGUI_CONFIG_HARDCODED_ONLY"))
+	if (util_env_exists(ENV_NO_PARSING))
 	{
 		return true;
 	}
