@@ -43,8 +43,13 @@ static void _dummy_callback_event   (cgui_cell_t *cell, cgui_cell_event_t *event
 static cgui_cell_t _err_cell =
 {
 	.id         = 0,
+	.data       = NULL,
 	.to_destroy = false,
+	.enabled    = false,
 	.failed     = true,
+	.fn_destroy = _dummy_callback_destroy,
+	.fn_draw    = _dummy_callback_draw,
+	.fn_event   = _dummy_callback_event,
 };
 
 /************************************************************************************************************/
