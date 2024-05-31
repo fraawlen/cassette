@@ -52,9 +52,14 @@ extern "C" {
 
 enum cgui_config_modkey_t
 {
-	CGUI_CONFIG_MOD_CTRL, 
-	CGUI_CONFIG_MOD_1, 
-	CGUI_CONFIG_MOD_4,
+	CGUI_CONFIG_MOD_NONE  = 0,       /* cannor be used as modkey config option */
+	CGUI_CONFIG_MOD_LOCK  = 1U << 1, /* cannot be used as modkey config option */
+	CGUI_CONFIG_MOD_CTRL  = 1U << 2, 
+	CGUI_CONFIG_MOD_1     = 1U << 3, 
+	CGUI_CONFIG_MOD_2     = 1U << 4, /* cannot be used as modkey config option */
+	CGUI_CONFIG_MOD_3     = 1U << 5, /* cannot be used as modkey config option */
+	CGUI_CONFIG_MOD_4     = 1U << 6,
+	CGUI_CONFIG_MOD_5     = 1U << 7, /* cannot be used as modkey config option */
 };
 
 typedef size_t cgui_config_modkey_t;
