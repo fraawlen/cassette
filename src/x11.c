@@ -122,7 +122,7 @@ static xcb_atom_t _atom_conf = 0; /* _ATOM_RECONFIG          */
 static xcb_atom_t _atom_acl  = 0; /* _ATOM_ACCEL             */
 
 static xcb_atom_t _atom_isig = 0;                           /* "_INTERNAL_LOOP_SIGNAL"          */
-static xcb_atom_t _atom_aclx[CGUI_CONFIG_MAX_ACCELS] = {0}; /* "_CGUI_WINDOW_ACCEL_x" x = 1..12 */
+static xcb_atom_t _atom_aclx[CGUI_CONFIG_ACCELS] = {0}; /* "_CGUI_WINDOW_ACCEL_x" x = 1..12 */
 
 /* extensions op codes */
 
@@ -355,7 +355,7 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 	_atom_acl  = _get_atom(_ATOM_ACCEL);
 
 	char s[20];
-	for (int i = 0; i < CGUI_CONFIG_MAX_ACCELS; i++) {
+	for (int i = 0; i < CGUI_CONFIG_ACCELS; i++) {
 		sprintf(s, _ATOM_ACCEL "_%i", i + 1);
 		_atom_aclx[i] = _get_atom(s);
 	}

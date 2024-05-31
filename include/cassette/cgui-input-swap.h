@@ -50,8 +50,12 @@ typedef uint8_t cgui_input_swap_type_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cgui_input_swap_cell_t
+enum cgui_input_swap_action_t
 {
+	CGUI_INPUT_SWAP_NONE = 0,
+	
+	/* cell */
+
 	CGUI_INPUT_SWAP_CELL_REDRAW,
 	CGUI_INPUT_SWAP_CELL_SELECT_LESS,
 	CGUI_INPUT_SWAP_CELL_SELECT_MORE,
@@ -62,10 +66,9 @@ enum cgui_input_swap_cell_t
 	CGUI_INPUT_SWAP_CELL_TRIGGER_3,
 	CGUI_INPUT_SWAP_CELL_TRIGGER_4,
 	CGUI_INPUT_SWAP_CELL_TRIGGER_5,
-};
 
-enum cgui_input_swap_focus_t
-{
+	/* focus */
+
 	CGUI_INPUT_SWAP_FOCUS_LEFT,
 	CGUI_INPUT_SWAP_FOCUS_RIGHT,
 	CGUI_INPUT_SWAP_FOCUS_UP,
@@ -79,25 +82,20 @@ enum cgui_input_swap_focus_t
 	CGUI_INPUT_SWAP_FOCUS_FIRST,
 	CGUI_INPUT_SWAP_FOCUS_LAST,
 	CGUI_INPUT_SWAP_FOCUS_NONE,
-};
 
-enum cgui_input_swap_window_t
-{
+	/* window */
+
 	CGUI_INPUT_SWAP_WINDOW_LOCK_GRID,
 	CGUI_INPUT_SWAP_WINDOW_LOCK_FOCUS,
 	CGUI_INPUT_SWAP_WINDOW_REDRAW,
-};
 
-enum cgui_input_swap_misc_t
-{
+	/* misc */
+
 	CGUI_INPUT_SWAP_RECONFIG,
 	CGUI_INPUT_SWAP_EXIT,
 };
 
-typedef uint8_t cgui_input_swap_misc_t;
-typedef uint8_t cgui_input_swap_window_t;
-typedef uint8_t cgui_input_swap_focus_t;
-typedef uint8_t cgui_input_swap_cell_t;
+typedef uint8_t cgui_input_swap_action_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

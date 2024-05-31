@@ -39,22 +39,22 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define CGUI_CONFIG_MAX_ACCELS  12
-#define CGUI_CONFIG_MAX_BUTTONS 12
-#define CGUI_CONFIG_MAX_KEYS    128
+#define CGUI_CONFIG_CLIPBOARDS 3
+#define CGUI_CONFIG_ACCELS     12
+#define CGUI_CONFIG_BUTTONS    12
+#define CGUI_CONFIG_KEYS       128
+
+#define CGUI_CONFIG_SWAP_DIRECT 0
+#define CGUI_CONFIG_SWAP_MOD    1
+#define CGUI_CONFIG_SWAP_SHIFT  2
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 enum cgui_config_modkey_t
 {
-	CGUI_CONFIG_MOD_SHIFT = 1U << 0, /* cannot be used as modkey config option */
-	CGUI_CONFIG_MOD_LOCK  = 1U << 1, /* cannot be used as modkey config option */
-	CGUI_CONFIG_MOD_CTRL  = 1U << 2, 
-	CGUI_CONFIG_MOD_1     = 1U << 3, 
-	CGUI_CONFIG_MOD_2     = 1U << 4, /* cannot be used as modkey config option */
-	CGUI_CONFIG_MOD_3     = 1U << 5, /* cannot be used as modkey config option */
-	CGUI_CONFIG_MOD_4     = 1U << 6,
-	CGUI_CONFIG_MOD_5     = 1U << 7, /* cannot be used as modkey config option */
+	CGUI_CONFIG_MOD_CTRL, 
+	CGUI_CONFIG_MOD_1, 
+	CGUI_CONFIG_MOD_4,
 };
 
 typedef size_t cgui_config_modkey_t;
@@ -88,6 +88,7 @@ struct cgui_config_t
 {
 	bool init;
 	double scale;
+	cgui_config_modkey_t modkey;
 
 	/* font */
 
@@ -139,8 +140,8 @@ struct cgui_config_t
 
 	/* input swaps */
 
-	cgui_input_swap_t    keys[CGUI_CONFIG_MAX_KEYS    + 1][3];
-	cgui_input_swap_t buttons[CGUI_CONFIG_MAX_BUTTONS + 1][3];
+	cgui_input_swap_t    keys[CGUI_CONFIG_KEYS    + 1][3];
+	cgui_input_swap_t buttons[CGUI_CONFIG_BUTTONS + 1][3];
 };
 
 typedef struct cgui_config_t cgui_config_t;
