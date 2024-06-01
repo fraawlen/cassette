@@ -86,13 +86,12 @@ static const cgui_config_t config_default =
 		.enable_locked   = true,
 	},
 
-	
-	.popup_override_x      = 0,
-	.popup_override_y      = 0,
 	.popup_max_width       = 0,
 	.popup_max_height      = 0,
 	.popup_override_width  = 0,
 	.popup_override_height = 0,
+	.popup_override_x      = 0,
+	.popup_override_y      = 0,
 
 	.popup_enable_override_position = false,
 	.popup_enable_override_width    = false,

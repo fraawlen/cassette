@@ -71,7 +71,7 @@ void cgui_cell_enable(cgui_cell_t *cell);
 
 void cgui_cell_redraw(cgui_cell_t *cell);
 
-bool cgui_cell_send_custom_event(cgui_cell_t *cell, unsigned int id, void *data, size_t data_n);
+bool cgui_cell_send_custom_event(cgui_cell_t *cell, int id, void *data, size_t data_n);
 
 void cgui_cell_toggle(cgui_cell_t *cell);
 

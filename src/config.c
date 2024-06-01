@@ -101,10 +101,10 @@ enum _value_t
 	_STRING,
 	_COLOR,
 	_BOOL,
-	_LENGTH,
 	_POSITION,
-	_INT,
-	_UINT,
+	_LENGTH,
+	_LONG,
+	_ULONG,
 	_DOUBLE,
 	_UDOUBLE,
 	_RATIO,
@@ -260,7 +260,7 @@ static const _resource_t _resources[] =
 	{ "behavior", "enable_cell_auto_lock",       _BOOL,           &_config.cell_auto_lock                 },
 	{ "behavior", "enable_persistent_pointer",   _BOOL,           &_config.input_persistent_pointer       },
 	{ "behavior", "enable_persistent_touch",     _BOOL,           &_config.input_persistent_touch         },
-	{ "behavior", "animation_framerate_divider", _UINT,           &_config.anim_divider                   },
+	{ "behavior", "animation_framerate_divider", _ULONG,          &_config.anim_divider                   },
 
 	_STYLE_WINDOW("window", _config.window_style)
 	_STYLE_WINDOW("popup",  _config.popup_style)
@@ -412,20 +412,20 @@ _fetch(const _resource_t *resource)
 			*(bool*)resource->target = strtod(str, NULL) != 0.0;
 			break;
 
-		case _LENGTH:
-			*(uint16_t*)resource->target = util_str_to_long(str, 0, UINT16_MAX);
-			break;
-
 		case _POSITION:
-			*(int16_t*)resource->target = util_str_to_long(str, INT16_MIN, INT16_MAX);
+			*(int*)resource->target = util_str_to_long(str, INT_MIN, INT_MAX);
 			break;
 
-		case _INT:
-			*(int*)resource->target = util_str_to_long(str, 0, UINT_MAX);
+		case _LENGTH:
+			*(unsigned int*)resource->target = util_str_to_long(str, 0, UINT_MAX);
 			break;
 
-		case _UINT:
-			*(unsigned int*)resource->target = util_str_to_long(str, INT_MIN, INT_MAX);
+		case _LONG:
+			*(long*)resource->target = util_str_to_long(str, LONG_MIN, LONG_MAX);
+			break;
+
+		case _ULONG:
+			*(unsigned long*)resource->target = util_str_to_long(str, 0, ULONG_MAX);
 			break;
 
 		case _DOUBLE:

@@ -44,7 +44,29 @@ static cgui_grid_t _err_grid =
 /************************************************************************************************************/
 
 cgui_grid_t *
-cgui_grid_create(void)
+cgui_grid_clone(cgui_grid_t *grid)
+{
+	cgui_grid_t *clone;
+
+	assert(cgui_is_init());
+	assert(grid);
+
+	if (grid->failed)
+	{
+		return &_err_grid;
+	}
+
+	clone = cgui_grid_create(0, 0);
+
+	// TODO
+
+	return clone;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cgui_grid_t *
+cgui_grid_create(size_t n_cols, size_t n_rows)
 {
 	cgui_grid_t *grid;
 
@@ -58,6 +80,8 @@ cgui_grid_create(void)
 	grid->id         = 0;
 	grid->to_destroy = false;
 	grid->failed     = false;
+
+	// TODO
 
 	cobj_tracker_push(main_get_grids(), grid, &grid->id);
 	main_update_status();

@@ -22,7 +22,6 @@
 #define CGUI_STYLE_H
 
 #include <stdbool.h>
-#include <stdint.h>
 
 #include <cassette/cobj.h>
 
@@ -38,9 +37,9 @@ struct cgui_style_cell_t
 {
 	/* geometry */
 
-	uint16_t thickness_border;
-	uint16_t thickness_outline;
-	uint16_t margin;
+	unsigned int thickness_border;
+	unsigned int thickness_outline;
+	unsigned int margin;
 
 	/* colors */
 
@@ -57,10 +56,10 @@ struct cgui_style_window_t
 {
 	/* geometry */
 
-	uint16_t thickness_border;
-	uint16_t padding_outer;
-	uint16_t padding_inner;
-	uint16_t padding_cell;
+	unsigned int thickness_border;
+	unsigned int padding_outer;
+	unsigned int padding_inner;
+	unsigned int padding_cell;
 
 	/* colors */
 

@@ -22,7 +22,6 @@
 #define CGUI_CONFIG_H
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdlib.h>
 
 #include <cassette/ccfg.h>
@@ -99,18 +98,18 @@ struct cgui_config_t
 
 	char font_face[CCFG_MAX_WORD_BYTES];
 
-	uint16_t font_size;
-	uint16_t font_width;
-	uint16_t font_height;
-	uint16_t font_ascent;
-	uint16_t font_descent;
-	uint16_t font_spacing_horizontal;
-	uint16_t font_spacing_vertical;
-	uint16_t font_override_width;
-	uint16_t font_override_ascent;
-	uint16_t font_override_descent;
-	int16_t  font_offset_x;
-	int16_t  font_offset_y;
+	unsigned int font_size;
+	unsigned int font_width;
+	unsigned int font_height;
+	unsigned int font_ascent;
+	unsigned int font_descent;
+	unsigned int font_spacing_horizontal;
+	unsigned int font_spacing_vertical;
+	unsigned int font_override_width;
+	unsigned int font_override_ascent;
+	unsigned int font_override_descent;
+	int font_offset_x;
+	int font_offset_y;
 
 	bool font_enable_overrides;
 	bool font_enable_hint_metrics;
@@ -125,12 +124,12 @@ struct cgui_config_t
 	
 	cgui_style_window_t window_style;
 
-	int16_t  popup_override_x;
-	int16_t  popup_override_y;
-	uint16_t popup_max_width;
-	uint16_t popup_max_height;
-	uint16_t popup_override_width;
-	uint16_t popup_override_height;
+	unsigned int popup_max_width;
+	unsigned int popup_max_height;
+	unsigned int popup_override_width;
+	unsigned int popup_override_height;
+	int popup_override_x;
+	int popup_override_y;
 
 	bool popup_enable_override_position;
 	bool popup_enable_override_width;
@@ -141,7 +140,7 @@ struct cgui_config_t
 	bool cell_auto_lock;
 	bool input_persistent_pointer;
 	bool input_persistent_touch;
-	unsigned int anim_divider;
+	unsigned long anim_divider;
 
 	/* input swaps */
 

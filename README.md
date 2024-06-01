@@ -89,34 +89,33 @@ One of the simplest GUI programs, a HelloWorld :
 int
 main(int argc, char **argv)
 {
-	cgui_window_t *w;
-	cgui_grid_t *g;
-	cgui_cell_t *c;
+	cgui_window_t *window;
+	cgui_grid_t   *grid;
+	cgui_label_t  *label;
 
 	/* library modules initialisation */
 
-	cgui_init(argc, argv, NULL, NULL, NULL);
-	cgui_init();
+	cgui_init(argc, argv);
 
 	/* object instantiation */
 
-	w = cgui_window_create_default();
-	g = cgui_grid_create(1, 1);
-	c = cgui_label_create();
+	window = cgui_window_create_default();
+	grid   = cgui_grid_create(1, 1);
+	label  = cgui_label_create();
 
 	/* cell configuration */
 
-	cgui_label_set_label(c, "Hello World");
+	cgui_label_set_label(label, "Hello World");
 	
 	/* grid configuration */
 
-	cgui_grid_set_column_width(g, 0, 11);
-	cgui_grid_assign_cell(g, c, 0, 0, 1, 1);
+	cgui_grid_set_column_width(grid, 0, 11);
+	cgui_grid_assign_cell(grid, label, 0, 0, 1, 1);
 	
 	/* window configuration */
 
-	cgui_window_push_grid(w, g);
-	cgui_window_activate(w);
+	cgui_window_push_grid(window, grid);
+	cgui_window_activate(window);
 
 	/* run */
 
