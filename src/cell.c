@@ -144,7 +144,12 @@ void
 	assert(cgui_is_init());
 	assert(cell);
 
-	return cell->failed ? _dummy_callback_destroy : cell->fn_destroy;
+	if (cell->failed)
+	{
+		return _dummy_callback_destroy;
+	}
+
+	return cell->fn_destroy;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -155,7 +160,12 @@ void
 	assert(cgui_is_init());
 	assert(cell);
 
-	return cell->failed ? _dummy_callback_draw : cell->fn_draw;
+	if (cell->failed)
+	{
+		return _dummy_callback_draw;
+	}
+
+	return cell->fn_draw;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -166,7 +176,12 @@ void
 	assert(cgui_is_init());
 	assert(cell);
 
-	return cell->failed ? _dummy_callback_event : cell->fn_event;
+	if (cell->failed)
+	{
+		return _dummy_callback_event;
+	}
+
+	return cell->fn_event;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -176,8 +191,13 @@ cgui_cell_get_data(cgui_cell_t *cell)
 {
 	assert(cgui_is_init());
 	assert(cell);
+	
+	if (cell->failed)
+	{
+		return NULL;
+	}
 
-	return cell->failed ? NULL : cell->data;
+	return cell->data;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -187,6 +207,7 @@ cgui_cell_get_placeholder(void)
 {
 	return &_err_cell;
 }
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
@@ -340,7 +361,9 @@ cell_destroy(cgui_cell_t *cell)
 	}
 
 	cell->fn_destroy(cell);
+
 	cobj_tracker_pull_pointer(main_get_cells(), cell, cell->id);
+
 	free(cell);
 }
 

@@ -24,15 +24,38 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include <cassette/cobj.h>
+
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+struct grid_line_t
+{
+	unsigned int size;
+	double flex;
+};
+
+typedef struct grid_line_t grid_line_t;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 struct grid_t
 {
 	size_t id;
+
+	/* states */
+
 	bool to_destroy;
 	bool failed;
+
+	/* data */
+
+	size_t n_cols;
+	size_t n_rows;
+	grid_line_t *cols;
+	grid_line_t *rows;
+	cobj_tracker_t *areas;
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

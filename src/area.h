@@ -18,49 +18,30 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_GRID_H
-#define CGUI_GRID_H
+#ifndef AREA_H
+#define AREA_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <stdlib.h>
 
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-typedef struct grid_t cgui_grid_t;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-cgui_grid_t *cgui_grid_clone(cgui_grid_t *grid);
-
-cgui_grid_t *cgui_grid_create(size_t n_cols, size_t n_rows);
-
-cgui_grid_t *cgui_grid_get_placeholder(void);
-
-void cgui_grid_destroy(cgui_grid_t **grid);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void cgui_grid_assign_cell(cgui_grid_t *grid, cgui_cell_t *cell, size_t x, size_t y, size_t width, size_t height);
-
-void cgui_grid_set_col_flex(cgui_grid_t *grid, size_t col, double flex);
-
-void cgui_grid_set_col_width(cgui_grid_t *grid, size_t col, unsigned int width);
-
-void cgui_grid_set_row_flex(cgui_grid_t *grid, size_t row, double flex);
-
-void cgui_grid_set_row_height(cgui_grid_t *grid, size_t row, unsigned int height);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+#include <cassette/cgui.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifdef __cplusplus
-}
-#endif
+struct area_t
+{
+	size_t x;
+	size_t y;
+	size_t width;
+	size_t height;
+	cgui_cell_t *cell;
+};
 
-#endif /* CGUI_GRID_H */
+typedef struct area_t area_t;
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+#endif /* AREA_H */

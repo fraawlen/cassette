@@ -109,7 +109,12 @@ cgui_exit(void)
 xcb_connection_t *
 cgui_get_xcb_connection(void)
 {
-	return _failed || !_init ? NULL : x11_get_connection();
+	if (_failed || !_init)
+	{
+		return NULL;
+	}
+
+	return x11_get_connection();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -117,7 +122,12 @@ cgui_get_xcb_connection(void)
 xcb_window_t
 cgui_get_xcb_leader_window(void)
 {
-	return _failed || !_init ? 0 : x11_get_leader_window();
+	if (_failed || !_init)
+	{
+		return 0;
+	}
+
+	return  x11_get_leader_window();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

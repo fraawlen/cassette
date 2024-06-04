@@ -31,13 +31,16 @@
 struct cell_t
 {
 	size_t id;
-	void *data;
 
 	/* states */
 
 	bool to_destroy;
 	bool enabled;
 	bool failed;
+
+	/* data */
+
+	void *data;
 
 	/* callbacks */
 

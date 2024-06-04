@@ -33,6 +33,7 @@
  int
  main(int argc, char **argv)
  {
+ 	cgui_grid_t *grid;
 	cgui_cell_t *cell;
 
 	/* setup */
@@ -41,11 +42,14 @@
 
 	/* object instantiation */
 
+	grid = cgui_grid_create(1, 1);
 	cell = cgui_cell_create();
 
 	/* cell setup */
 
 	cgui_cell_enable(cell);
+
+	/* grid setup */
 
 	/* run */
 
@@ -58,6 +62,7 @@
 		printf("gui has failed during operation.\n");
 	}
 
+	cgui_grid_destroy(&grid);
 	cgui_cell_destroy(&cell);
 
 	cgui_reset();
