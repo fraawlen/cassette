@@ -18,13 +18,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_H
-#define CGUI_H
+#ifndef CGUI_INPUT_TRACKER_H
+#define CGUI_INPUT_TRACKER_H
 
-#include <stdbool.h>
 #include <stdlib.h>
-
-#include <xcb/xcb.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,66 +31,59 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define CGUI_VERSION "0.2.0"
+struct cgui_input_tracker_input_t
+{
+	unsigned int id;
+	unsigned int x;
+	unsigned int y;
+	const void *ref;
+};
+
+typedef struct cgui_input_tracker_input_t cgui_input_tracker_input_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void cgui_init(int argc, char **argv);
-
-void cgui_reset(void);
+typedef struct _input_tracker_t cgui_input_tracker_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void cgui_setup_x11_class(const char *class_name, const char *class_class);
+cgui_input_tracker_t *cgui_input_tracker_create(size_t max_inputs);
 
-void cgui_setup_x11_connection(xcb_connection_t *connection);
+cgui_input_tracker_t *cgui_input_tracker_get_placeholder(void);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void cgui_allow_user_exit(void);
-
-void cgui_block_user_exit(void);
-
-void cgui_exit(void);
-
-void cgui_reconfig(void);
-
-void cgui_run(void);
-
-void cgui_send_signal(uint32_t serial);
-
-void cgui_set_callback_signal(void (*fn)(uint32_t serial));
-
-void cgui_set_callback_x11_events(void (*fn)(xcb_generic_event_t *event));
+void cgui_input_tracker_destroy(cgui_input_tracker_t **inputs);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-xcb_connection_t *cgui_get_x11_connection(void);
+void cgui_input_tracker_clear(cgui_input_tracker_t *inputs);
 
-xcb_window_t cgui_get_x11_leader_window(void);
+bool cgui_input_tracker_increment_iterator(cgui_input_tracker_t *inputs);
 
-bool cgui_has_failed(void);
+void cgui_input_tracker_lock_iterator(cgui_input_tracker_t *inputs);
 
-bool cgui_is_init(void);
+void cgui_input_tracker_pull_id(cgui_input_tracker_t *inputs, unsigned int id);
 
-bool cgui_is_running(void);
+void cgui_input_tracker_pull_index(cgui_input_tracker_t *inputs, unsigned int index);
 
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
+void cgui_input_tracker_push(cgui_input_tracker_t *inputs, unsigned int id, unsigned int x, unsigned int y, void *ref);
 
-/* init dependent headers */
+void cgui_input_tracker_reset_iterator(cgui_input_tracker_t *inputs);
 
-#include "cgui-cell.h"
-#include "cgui-grid.h"
-#include "cgui-window.h"
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-/* init independent headers */
+bool cgui_input_tracker_find(cgui_input_tracker_t *inputs, unsigned int id, size_t *index);
 
-#include "cgui-config.h"
-#include "cgui-input-tracker.h"
-#include "cgui-input-swap.h"
-#include "cgui-style.h"
+size_t cgui_input_tracker_get_alloc_size(const cgui_input_tracker_t *inputs);
+
+cgui_input_tracker_input_t cgui_input_tracker_get_index(const cgui_input_tracker_t *inputs, size_t index);
+
+cgui_input_tracker_input_t cgui_input_tracker_get_iteration(const cgui_input_tracker_t *inputs);
+
+size_t cgui_input_tracker_get_iterator_offset(const cgui_input_tracker_t *inputs);
+
+size_t cgui_input_tracker_get_load(const cgui_input_tracker_t *inputs);
+
+bool cgui_input_tracker_has_failed(const cgui_input_tracker_t *inputs);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -103,4 +93,4 @@ bool cgui_is_running(void);
 }
 #endif
 
-#endif /* CGUI_H */
+#endif /* CGUI_INPUT_TRACKER_H */
