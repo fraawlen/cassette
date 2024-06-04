@@ -294,7 +294,7 @@ cobj_tracker_get_iterator_offset(const cobj_tracker_t *tracker)
 		return 0;
 	}
 
-	if (tracker->iterator == 0 || tracker->iterator > tracker->n)
+	if (tracker->iterator > tracker->n)
 	{
 		return 0;
 	}
