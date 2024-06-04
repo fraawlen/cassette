@@ -85,6 +85,7 @@ bool cgui_is_running(void);
 /* init dependent headers */
 
 #include "cgui-cell.h"
+#include "cgui-clipboard.h"
 #include "cgui-grid.h"
 #include "cgui-window.h"
 
@@ -93,7 +94,6 @@ bool cgui_is_running(void);
 #include "cgui-config.h"
 #include "cgui-input-tracker.h"
 #include "cgui-input-swap.h"
-#include "cgui-style.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/

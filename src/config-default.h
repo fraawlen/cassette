@@ -40,52 +40,37 @@ static const cgui_config_t config_default =
 	.font_antialias           = CGUI_CONFIG_ANTIALIAS_SUBPIXEL,
 	.font_subpixel            = CGUI_CONFIG_SUBPIXEL_RGB,
 
+	/* grid */
+
+	.grid_padding = 10,
+	.grid_spacing = 10,
+
 	/* window */
 
-	.window_style =
-	{
-		.thickness_border = 2,
-		.padding_outer    = 10,
-		.padding_inner    = 10,
-		.padding_cell     = 10,
+	.window_color_background          = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.window_color_background_disabled = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.window_color_background_focused  = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.window_color_background_locked   = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.window_color_border              = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.window_color_border_disabled     = { .r = 0.400, .g = 0.400, .b = 0.400, .a = 1.000 },
+	.window_color_border_focused      = { .r = 0.671, .g = 0.671, .b = 0.671, .a = 1.000 },
+	.window_color_border_locked       = { .r = 0.500, .g = 0.100, .b = 0.100, .a = 1.000 },
 
-		.color_background          = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background_disabled = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background_focused  = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background_locked   = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border              = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border_disabled     = { .r = 0.400, .g = 0.400, .b = 0.400, .a = 1.000 },
-		.color_border_focused      = { .r = 0.671, .g = 0.671, .b = 0.671, .a = 1.000 },
-		.color_border_locked       = { .r = 0.500, .g = 0.100, .b = 0.100, .a = 1.000 },
+	.window_border   = 2,
+	.window_padding  = 10,
 
-		.enable_disabled = true,
-		.enable_focused  = true,
-		.enable_locked   = true,
-	},
+	.window_enable_disabled = true,
+	.window_enable_focused  = true,
+	.window_enable_locked   = true,
 
 	/* popup */
 
-	.popup_style =
-	{
-		.thickness_border = 2,
-		.padding_outer    = 10,
-		.padding_inner    = 10,
-		.padding_cell     = 10,
 
-		.color_background          = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background_disabled = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background_focused  = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background_locked   = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border              = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border_disabled     = { .r = 0.400, .g = 0.400, .b = 0.400, .a = 1.000 },
-		.color_border_focused      = { .r = 0.671, .g = 0.671, .b = 0.671, .a = 1.000 },
-		.color_border_locked       = { .r = 0.500, .g = 0.100, .b = 0.100, .a = 1.000 },
+	.popup_color_background = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.popup_color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
 
-		.enable_disabled = true,
-		.enable_focused  = true,
-		.enable_locked   = true,
-	},
-
+	.popup_border          = 2,
+	.popup_padding         = 10,
 	.popup_max_width       = 0,
 	.popup_max_height      = 0,
 	.popup_override_width  = 0,

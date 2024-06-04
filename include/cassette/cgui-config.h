@@ -28,7 +28,6 @@
 #include <cassette/cobj.h>
 
 #include "cgui-input-swap.h"
-#include "cgui-style.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -116,14 +115,36 @@ struct cgui_config_t
 	cgui_config_font_antialias_t font_antialias;
 	cgui_config_font_subpixel_t font_subpixel;
 
+	/* grid */
+
+	unsigned int grid_padding;
+	unsigned int grid_spacing;
+
 	/* window */
 
-	cgui_style_window_t popup_style;
+	cobj_color_t window_color_background;
+	cobj_color_t window_color_background_disabled;
+	cobj_color_t window_color_background_focused;
+	cobj_color_t window_color_background_locked;
+	cobj_color_t window_color_border;
+	cobj_color_t window_color_border_disabled;
+	cobj_color_t window_color_border_focused;
+	cobj_color_t window_color_border_locked;
+
+	unsigned int window_border;
+	unsigned int window_padding;
+
+	bool window_enable_disabled;
+	bool window_enable_focused;
+	bool window_enable_locked;
 	
 	/* popup */
-	
-	cgui_style_window_t window_style;
 
+	cobj_color_t popup_color_background;
+	cobj_color_t popup_color_border;
+
+	unsigned int popup_border;
+	unsigned int popup_padding;
 	unsigned int popup_max_width;
 	unsigned int popup_max_height;
 	unsigned int popup_override_width;

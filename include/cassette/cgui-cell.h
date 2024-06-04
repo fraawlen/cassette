@@ -23,6 +23,8 @@
 
 #include <stdbool.h>
 
+#include <cassette/cobj.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -54,6 +56,25 @@ struct cgui_cell_drawing_context_t
 };
 
 typedef struct cgui_cell_drawing_context_t cgui_cell_drawing_context_t;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct cgui_cell_style_t
+{
+	/* geometry */
+
+	unsigned int thickness_border;
+	unsigned int thickness_outline;
+	unsigned int margin;
+
+	/* colors */
+
+	cobj_color_t color_background;
+	cobj_color_t color_border;
+	cobj_color_t color_outline;
+};
+
+typedef struct cgui_cell_style_t cgui_cell_style_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

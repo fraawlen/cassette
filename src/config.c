@@ -44,12 +44,6 @@
 
 #define _SCALE(X) X *= _config.scale;
 
-#define _SCALE_WINDOW(W) \
-	W.thickness_border  *= _config.scale; \
-	W.padding_outer     *= _config.scale; \
-	W.padding_inner     *= _config.scale; \
-	W.padding_cell      *= _config.scale; \
-
 #define _SCALE_CELL(C) \
 	C.thickness_border  *= _config.scale; \
 	C.thickness_outline *= _config.scale; \
@@ -57,35 +51,18 @@
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-#define _STYLE_WINDOW(NAMESPACE, TARGET) \
-	{ NAMESPACE, "border_thickness",          _LENGTH, &TARGET.thickness_border          }, \
-	{ NAMESPACE, "outer_padding",             _LENGTH, &TARGET.padding_outer             }, \
-	{ NAMESPACE, "inner_padding",             _LENGTH, &TARGET.padding_inner             }, \
-	{ NAMESPACE, "cell_padding",              _LENGTH, &TARGET.padding_cell              }, \
-	{ NAMESPACE, "color_background",          _COLOR,  &TARGET.color_background          }, \
-	{ NAMESPACE, "color_background_disabled", _COLOR,  &TARGET.color_background_disabled }, \
-	{ NAMESPACE, "color_background_focused",  _COLOR,  &TARGET.color_background_focused  }, \
-	{ NAMESPACE, "color_background_locked",   _COLOR,  &TARGET.color_background_locked   }, \
-	{ NAMESPACE, "color_border",              _COLOR,  &TARGET.color_border              }, \
-	{ NAMESPACE, "color_border_disabled",     _COLOR,  &TARGET.color_border_disabled     }, \
-	{ NAMESPACE, "color_border_focused",      _COLOR,  &TARGET.color_border_focused      }, \
-	{ NAMESPACE, "color_border_locked",       _COLOR,  &TARGET.color_border_locked       }, \
-	{ NAMESPACE, "enable_disabled_substyle",  _BOOL,   &TARGET.enable_disabled           }, \
-	{ NAMESPACE, "enable_focused_substyle",   _BOOL,   &TARGET.enable_focused            }, \
-	{ NAMESPACE, "enable_locked_substyle",    _BOOL,   &TARGET.enable_locked             },
-
 #define _STYLE_CELL(NAMESPACE, TARGET) \
-	{ NAMESPACE, "border_thickness",          _LENGTH, &TARGET.thickness_border          }, \
-	{ NAMESPACE, "outline_thickness",         _LENGTH, &TARGET.thickness_outline         }, \
-	{ NAMESPACE, "margin",                    _LENGTH, &TARGET.margin                    }, \
-	{ NAMESPACE, "color_background",          _COLOR,  &TARGET.color_background          }, \
-	{ NAMESPACE, "color_border",              _COLOR,  &TARGET.color_border              }, \
-	{ NAMESPACE, "color_outline",             _COLOR,  &TARGET.color_outline             },
+	{ NAMESPACE, "border_thickness",  _LENGTH, &TARGET.thickness_border  }, \
+	{ NAMESPACE, "outline_thickness", _LENGTH, &TARGET.thickness_outline }, \
+	{ NAMESPACE, "margin",            _LENGTH, &TARGET.margin            }, \
+	{ NAMESPACE, "color_background",  _COLOR,  &TARGET.color_background  }, \
+	{ NAMESPACE, "color_border",      _COLOR,  &TARGET.color_border      }, \
+	{ NAMESPACE, "color_outline",     _COLOR,  &TARGET.color_outline     },
 
 #define _KEY(VALUE) \
-	{ "key",        #VALUE, _MAP_KEY,    &_config.keys[VALUE][CGUI_CONFIG_SWAP_DIRECT]    }, \
-	{ "key",    "M" #VALUE, _MAP_KEY,    &_config.keys[VALUE][CGUI_CONFIG_SWAP_MOD]       }, \
-	{ "key",    "S" #VALUE, _MAP_KEY,    &_config.keys[VALUE][CGUI_CONFIG_SWAP_SHIFT]     },
+	{ "key",     #VALUE, _MAP_KEY, &_config.keys[VALUE][CGUI_CONFIG_SWAP_DIRECT] }, \
+	{ "key", "M" #VALUE, _MAP_KEY, &_config.keys[VALUE][CGUI_CONFIG_SWAP_MOD]    }, \
+	{ "key", "S" #VALUE, _MAP_KEY, &_config.keys[VALUE][CGUI_CONFIG_SWAP_SHIFT]  },
 
 #define _BUTTON(VALUE) \
 	{ "button",     #VALUE, _MAP_BUTTON, &_config.buttons[VALUE][CGUI_CONFIG_SWAP_DIRECT] }, \
@@ -230,40 +207,58 @@ static const _word_t _words[] =
 
 static const _resource_t _resources[] =
 {
-	{ "global",   "scale",                       _UDOUBLE,        &_config.scale                          },
-	{ "global",   "modkey",                      _MODKEY,         &_config.modkey                         },
+	{ "global",   "scale",                       _UDOUBLE,        &_config.scale                            },
+	{ "global",   "modkey",                      _MODKEY,         &_config.modkey                           },
 
-	{ "font",     "face",                        _STRING,          _config.font_face                      },
-	{ "font",     "size",                        _LENGTH,         &_config.font_size                      },
-	{ "font",     "horizontal_spacing",          _LENGTH,         &_config.font_spacing_horizontal        },
-	{ "font",     "vertical_spacing",            _LENGTH,         &_config.font_spacing_vertical          },
-	{ "font",     "width_override",              _LENGTH,         &_config.font_override_width            },
-	{ "font",     "ascent_override",             _LENGTH,         &_config.font_override_ascent           },
-	{ "font",     "descent_override",            _LENGTH,         &_config.font_override_descent          },
-	{ "font",     "x_offset",                    _POSITION,       &_config.font_offset_x                  },
-	{ "font",     "y_offset",                    _POSITION,       &_config.font_offset_y                  },
-	{ "font",     "enable_overrides",            _BOOL,           &_config.font_enable_overrides          },
-	{ "font",     "enable_hint_metrics",         _BOOL,           &_config.font_enable_hint_metrics       },
-	{ "font",     "antialias_mode",              _FONT_ANTIALIAS, &_config.font_antialias                 },
-	{ "font",     "subpixel_mode",               _FONT_SUBPIXEL,  &_config.font_subpixel                  },
+	{ "font",     "face",                        _STRING,          _config.font_face                        },
+	{ "font",     "size",                        _LENGTH,         &_config.font_size                        },
+	{ "font",     "horizontal_spacing",          _LENGTH,         &_config.font_spacing_horizontal          },
+	{ "font",     "vertical_spacing",            _LENGTH,         &_config.font_spacing_vertical            },
+	{ "font",     "width_override",              _LENGTH,         &_config.font_override_width              },
+	{ "font",     "ascent_override",             _LENGTH,         &_config.font_override_ascent             },
+	{ "font",     "descent_override",            _LENGTH,         &_config.font_override_descent            },
+	{ "font",     "x_offset",                    _POSITION,       &_config.font_offset_x                    },
+	{ "font",     "y_offset",                    _POSITION,       &_config.font_offset_y                    },
+	{ "font",     "enable_overrides",            _BOOL,           &_config.font_enable_overrides            },
+	{ "font",     "enable_hint_metrics",         _BOOL,           &_config.font_enable_hint_metrics         },
+	{ "font",     "antialias_mode",              _FONT_ANTIALIAS, &_config.font_antialias                   },
+	{ "font",     "subpixel_mode",               _FONT_SUBPIXEL,  &_config.font_subpixel                    },
 
-	{ "popup",    "max_width",                   _LENGTH,         &_config.popup_max_width                },
-	{ "popup",    "max_height",                  _LENGTH,         &_config.popup_max_height               },
-	{ "popup",    "width_override",              _LENGTH,         &_config.popup_override_width           },
-	{ "popup",    "height_override",             _LENGTH,         &_config.popup_override_height          },
-	{ "popup",    "x_position_override",         _POSITION,       &_config.popup_override_x               },
-	{ "popup",    "y_position_override",         _POSITION,       &_config.popup_override_y               },
-	{ "popup",    "enable_position_overrides",   _BOOL,           &_config.popup_enable_override_position },
-	{ "popup",    "enable_width_override",       _BOOL,           &_config.popup_enable_override_width    },
-	{ "popup",    "ennable_height_override",     _BOOL,           &_config.popup_enable_override_height   },
+	{ "grid",     "padding",                     _LENGTH,         &_config.grid_padding                     },
+	{ "grid",     "spacing",                     _LENGTH,         &_config.grid_spacing                     },
+
+	{ "window",   "border_thickness",            _LENGTH,         &_config.window_border                    },
+	{ "window",   "padding",                     _LENGTH,         &_config.window_padding                   },
+	{ "window",   "color_background",            _COLOR,          &_config.window_color_background          },
+	{ "window",   "color_background_disabled",   _COLOR,          &_config.window_color_background_disabled },
+	{ "window",   "color_background_focused",    _COLOR,          &_config.window_color_background_focused  },
+	{ "window",   "color_background_locked",     _COLOR,          &_config.window_color_background_locked   },
+	{ "window",   "color_border",                _COLOR,          &_config.window_color_border              },
+	{ "window",   "color_border_disabled",       _COLOR,          &_config.window_color_border_disabled     },
+	{ "window",   "color_border_focused",        _COLOR,          &_config.window_color_border_focused      },
+	{ "window",   "color_border_locked",         _COLOR,          &_config.window_color_border_locked       },
+	{ "window",   "enable_disabled_substyle",    _BOOL,           &_config.window_enable_disabled           },
+	{ "window",   "enable_focused_substyle",     _BOOL,           &_config.window_enable_focused            },
+	{ "window",   "enable_locked_substyle",      _BOOL,           &_config.window_enable_locked             },
+
+	{ "popup",    "border_thickness",            _LENGTH,         &_config.popup_border                     },
+	{ "popup",    "padding",                     _LENGTH,         &_config.popup_padding                    },
+	{ "popup",    "color_background",            _COLOR,          &_config.popup_color_background           },
+	{ "popup",    "color_border",                _COLOR,          &_config.popup_color_border               },
+	{ "popup",    "max_width",                   _LENGTH,         &_config.popup_max_width                  },
+	{ "popup",    "max_height",                  _LENGTH,         &_config.popup_max_height                 },
+	{ "popup",    "width_override",              _LENGTH,         &_config.popup_override_width             },
+	{ "popup",    "height_override",             _LENGTH,         &_config.popup_override_height            },
+	{ "popup",    "x_position_override",         _POSITION,       &_config.popup_override_x                 },
+	{ "popup",    "y_position_override",         _POSITION,       &_config.popup_override_y                 },
+	{ "popup",    "enable_position_overrides",   _BOOL,           &_config.popup_enable_override_position   },
+	{ "popup",    "enable_width_override",       _BOOL,           &_config.popup_enable_override_width      },
+	{ "popup",    "ennable_height_override",     _BOOL,           &_config.popup_enable_override_height     },
 	
-	{ "behavior", "enable_cell_auto_lock",       _BOOL,           &_config.cell_auto_lock                 },
-	{ "behavior", "enable_persistent_pointer",   _BOOL,           &_config.input_persistent_pointer       },
-	{ "behavior", "enable_persistent_touch",     _BOOL,           &_config.input_persistent_touch         },
-	{ "behavior", "animation_framerate_divider", _ULONG,          &_config.anim_divider                   },
-
-	_STYLE_WINDOW("window", _config.window_style)
-	_STYLE_WINDOW("popup",  _config.popup_style)
+	{ "behavior", "enable_cell_auto_lock",       _BOOL,           &_config.cell_auto_lock                   },
+	{ "behavior", "enable_persistent_pointer",   _BOOL,           &_config.input_persistent_pointer         },
+	{ "behavior", "enable_persistent_touch",     _BOOL,           &_config.input_persistent_touch           },
+	{ "behavior", "animation_framerate_divider", _ULONG,          &_config.anim_divider                     },
 
 	_KEY(  1) _KEY(  2) _KEY(  3) _KEY(  4) _KEY(  5) _KEY(  6) _KEY(  7) _KEY(  8) _KEY(  9) _KEY( 10)
 	_KEY( 11) _KEY( 12) _KEY( 13) _KEY( 14) _KEY( 15) _KEY( 16) _KEY( 17) _KEY( 18) _KEY( 19) _KEY( 20)
@@ -481,9 +476,12 @@ _fill(void)
 	_SCALE(_config.font_override_ascent);
 	_SCALE(_config.font_override_descent);
 	_SCALE(_config.font_override_width);
-
-	_SCALE_WINDOW(_config.window_style);
-	_SCALE_WINDOW(_config.popup_style);
+	_SCALE(_config.grid_padding);
+	_SCALE(_config.grid_spacing);
+	_SCALE(_config.window_border);
+	_SCALE(_config.window_padding);
+	_SCALE(_config.popup_border);
+	_SCALE(_config.popup_padding);
 
 	/* get font geometry with cairo */
 
