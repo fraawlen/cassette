@@ -32,7 +32,7 @@
 
 struct grid_line_t
 {
-	unsigned int size;
+	int size;
 	double flex;
 };
 
@@ -53,6 +53,12 @@ struct grid_t
 
 	size_t n_cols;
 	size_t n_rows;
+	double total_col_flex;
+	double total_row_flex;
+	unsigned int total_width;
+	unsigned int total_width_inv;
+	unsigned int total_height;
+	unsigned int total_height_inv;
 	grid_line_t *cols;
 	grid_line_t *rows;
 	cobj_tracker_t *areas;

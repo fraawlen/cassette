@@ -18,7 +18,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <cassette/cgui.h>
 
@@ -33,8 +35,12 @@
  int
  main(int argc, char **argv)
  {
- 	cgui_grid_t *grid;
-	cgui_cell_t *cell;
+ 	cgui_grid_t   *grid;
+	cgui_cell_t   *cell;
+	cgui_window_t *window;
+
+	const char *str = "Hello World!";
+	bool fail = false;
 
 	/* setup */
 
@@ -42,8 +48,9 @@
 
 	/* object instantiation */
 
-	grid = cgui_grid_create(1, 1);
-	cell = cgui_cell_create();
+	grid   = cgui_grid_create(1, 1);
+	cell   = cgui_cell_create();
+	window = cgui_window_create();
 
 	/* cell setup */
 
@@ -51,17 +58,30 @@
 
 	/* grid setup */
 
+	cgui_grid_set_col_width(grid, 0, strlen(str));
+	cgui_grid_set_col_flex(grid, 0, 1.0);
+	cgui_grid_set_row_flex(grid, 0, 1.0);
+	cgui_grid_assign_cell(grid, cell, 0, 0, 1, 1);
+
+	/* window setup */
+
 	/* run */
 
 	cgui_run();
 
 	/* end */
 
-	if (cgui_has_failed())
+	fail |= cgui_has_failed();
+	fail |= cgui_window_has_failed(window);
+	fail |= cgui_grid_has_failed(grid);
+	fail |= cgui_cell_has_failed(cell);
+
+	if (fail)
 	{
 		printf("gui has failed during operation.\n");
 	}
 
+	cgui_window_destroy(&window);
 	cgui_grid_destroy(&grid);
 	cgui_cell_destroy(&cell);
 

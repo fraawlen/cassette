@@ -21,6 +21,8 @@
 #ifndef CGUI_WINDOW_H
 #define CGUI_WINDOW_H
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -56,6 +58,8 @@ cgui_window_t *cgui_window_get_placeholder(void);
 void cgui_window_destroy(cgui_window_t **window);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool cgui_window_has_failed(const cgui_window_t *window);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

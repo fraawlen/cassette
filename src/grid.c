@@ -19,6 +19,7 @@
 /************************************************************************************************************/
 
 #include <assert.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -36,14 +37,20 @@
 
 static cgui_grid_t _err_grid =
 {
-	.id         = 0,
-	.to_destroy = false,
-	.failed     = true,
-	.n_cols     = SIZE_MAX,
-	.n_rows     = SIZE_MAX,
-	.rows       = NULL,
-	.cols       = NULL,
-	.areas      = NULL,
+	.id               = 0,
+	.to_destroy       = false,
+	.failed           = true,
+	.n_cols           = SIZE_MAX,
+	.n_rows           = SIZE_MAX,
+	.total_col_flex   = 0.0,
+	.total_row_flex   = 0.0,
+	.total_width      = 0,
+	.total_width_inv  = 0,
+	.total_height     = 0,
+	.total_height_inv = 0,
+	.rows             = NULL,
+	.cols             = NULL,
+	.areas            = NULL,
 };
 
 /************************************************************************************************************/
@@ -133,8 +140,12 @@ cgui_grid_create(size_t n_cols, size_t n_rows)
 	assert(cgui_is_init());
 	assert(n_cols > 0 && n_rows > 0);
 
-	if (n_cols > SIZE_MAX / sizeof(grid_line_t) ||
-	    n_rows > SIZE_MAX / sizeof(grid_line_t))
+	if (n_cols > INT_MAX || n_rows > INT_MAX)
+	{
+		return &_err_grid;
+	}
+
+	if (n_cols > SIZE_MAX / sizeof(grid_line_t) || n_rows > SIZE_MAX / sizeof(grid_line_t))
 	{
 		return &_err_grid;
 	}
@@ -144,21 +155,40 @@ cgui_grid_create(size_t n_cols, size_t n_rows)
 		return &_err_grid;
 	}
 
-	grid->id         = 0;
-	grid->to_destroy = false;
-	grid->failed     = false;
-	grid->n_cols     = n_cols;
-	grid->n_rows     = n_rows;
-	grid->cols       = malloc(n_cols * sizeof(grid_line_t));
-	grid->rows       = malloc(n_rows * sizeof(grid_line_t));
-	grid->areas      = cobj_tracker_create(1);
-
-	grid->failed |= cobj_tracker_has_failed(grid->areas);
-	grid->failed |= !grid->cols;
-	grid->failed |= !grid->rows;
+	grid->id               = 0;
+	grid->to_destroy       = false;
+	grid->failed           = false;
+	grid->n_cols           = n_cols;
+	grid->n_rows           = n_rows;
+	grid->total_col_flex   = 0.0;
+	grid->total_row_flex   = 0.0;
+	grid->total_width      = 0;
+	grid->total_width_inv  = n_cols;
+	grid->total_height     = n_rows;
+	grid->total_height_inv = 0;
+	grid->cols             = malloc(n_cols * sizeof(grid_line_t));
+	grid->rows             = malloc(n_rows * sizeof(grid_line_t));
+	grid->areas            = cobj_tracker_create(1);
 
 	cobj_tracker_push(main_get_grids(), grid, &grid->id);
 	main_update_status();
+
+	grid->failed |= cobj_tracker_has_failed(grid->areas);
+	grid->failed |= !grid->cols;
+	grid->failed |= !grid->rows;	
+
+	if (!grid->failed)
+	{
+		for (size_t i = 0; i < n_cols; i++)
+		{
+			grid->cols[i].size = -1;
+		}
+
+		for (size_t i = 0; i < n_rows; i++)
+		{
+			grid->rows[i].size = 1;
+		}
+	}
 
 	return grid;
 }
@@ -195,6 +225,16 @@ cgui_grid_get_placeholder(void)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+bool
+cgui_grid_has_failed(const cgui_grid_t *grid)
+{
+	assert(grid);
+
+	return grid->failed;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 cgui_grid_set_col_flex(cgui_grid_t *grid, size_t col, double flex)
 {
@@ -207,12 +247,15 @@ cgui_grid_set_col_flex(cgui_grid_t *grid, size_t col, double flex)
 	{
 		return;
 	}
+
+	grid->total_col_flex += flex - grid->cols[col].flex;
+	grid->cols[col].flex  = flex;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_grid_set_col_width(cgui_grid_t *grid, size_t col, unsigned int width)
+cgui_grid_set_col_width(cgui_grid_t *grid, size_t col, int width)
 {
 	assert(cgui_is_init());
 	assert(grid);
@@ -222,6 +265,26 @@ cgui_grid_set_col_width(cgui_grid_t *grid, size_t col, unsigned int width)
 	{
 		return;
 	}
+
+	if (grid->cols[col].size > 0)
+	{
+		grid->total_width -= grid->cols[col].size;	
+	}
+	else
+	{
+		grid->total_width_inv += grid->cols[col].size;
+	}
+
+	if (width > 0)
+	{
+		grid->total_width += width;
+	}
+	else
+	{
+		grid->total_width_inv -= width;
+	}
+
+	grid->cols[col].size = width;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -238,12 +301,15 @@ cgui_grid_set_row_flex(cgui_grid_t *grid, size_t row, double flex)
 	{
 		return;
 	}
+
+	grid->total_row_flex += flex - grid->rows[row].flex;
+	grid->rows[row].flex  = flex;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_grid_set_row_height(cgui_grid_t *grid, size_t row, unsigned int height)
+cgui_grid_set_row_height(cgui_grid_t *grid, size_t row, int height)
 {
 	assert(cgui_is_init());
 	assert(grid);
@@ -253,6 +319,26 @@ cgui_grid_set_row_height(cgui_grid_t *grid, size_t row, unsigned int height)
 	{
 		return;
 	}
+
+	if (grid->rows[row].size > 0)
+	{
+		grid->total_height -= grid->rows[row].size;	
+	}
+	else
+	{
+		grid->total_height_inv += grid->rows[row].size;
+	}
+
+	if (height > 0)
+	{
+		grid->total_height += height;
+	}
+	else
+	{
+		grid->total_height_inv -= height;
+	}
+
+	grid->rows[row].size = height;
 }
 
 /************************************************************************************************************/

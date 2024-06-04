@@ -122,7 +122,7 @@ cgui_input_tracker_destroy(cgui_input_tracker_t **inputs)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-cgui_input_tracker_find(cgui_input_tracker_t *inputs, unsigned int id, size_t *index)
+cgui_input_tracker_find(const cgui_input_tracker_t *inputs, unsigned int id, size_t *index)
 {
 	assert(inputs);
 

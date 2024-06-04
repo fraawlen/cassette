@@ -71,7 +71,7 @@ void cgui_input_tracker_reset_iterator(cgui_input_tracker_t *inputs);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool cgui_input_tracker_find(cgui_input_tracker_t *inputs, unsigned int id, size_t *index);
+bool cgui_input_tracker_find(const cgui_input_tracker_t *inputs, unsigned int id, size_t *index);
 
 size_t cgui_input_tracker_get_alloc_size(const cgui_input_tracker_t *inputs);
 

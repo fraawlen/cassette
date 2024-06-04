@@ -44,9 +44,9 @@ struct cell_t
 
 	/* callbacks */
 
-	void (*fn_destroy) (cgui_cell_t *cell);
-	void (*fn_draw)    (cgui_cell_t *cell, cgui_cell_drawing_context_t *dc);
-	void (*fn_event)   (cgui_cell_t *cell, cgui_cell_event_t *ev);
+	cgui_cell_callback_destroy_t fn_destroy;
+	cgui_cell_callback_draw_t    fn_draw;
+	cgui_cell_callback_event_t   fn_event;
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

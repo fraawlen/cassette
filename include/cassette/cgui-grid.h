@@ -21,6 +21,8 @@
 #ifndef CGUI_GRID_H
 #define CGUI_GRID_H
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -47,13 +49,15 @@ void cgui_grid_assign_cell(cgui_grid_t *grid, cgui_cell_t *cell, size_t x, size_
 
 void cgui_grid_set_col_flex(cgui_grid_t *grid, size_t col, double flex);
 
-void cgui_grid_set_col_width(cgui_grid_t *grid, size_t col, unsigned int width);
+void cgui_grid_set_col_width(cgui_grid_t *grid, size_t col, int width);
 
 void cgui_grid_set_row_flex(cgui_grid_t *grid, size_t row, double flex);
 
-void cgui_grid_set_row_height(cgui_grid_t *grid, size_t row, unsigned int height);
+void cgui_grid_set_row_height(cgui_grid_t *grid, size_t row, int height);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool cgui_grid_has_failed(const cgui_grid_t *grid);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
