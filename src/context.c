@@ -44,7 +44,7 @@ static bool _read_word (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]);
 token_kind_t
 context_get_token(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result)
 {
-	assert(ctx && token);
+	assert(ctx);
 
 	if (context_get_token_raw(ctx, token) == TOKEN_INVALID)
 	{
@@ -61,7 +61,7 @@ context_get_token_numeral(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]
 {
 	bool err = false;
 
-	assert(ctx && token && math_result);
+	assert(ctx && math_result);
 
 	switch (context_get_token(ctx, token, math_result))
 	{
@@ -93,7 +93,7 @@ context_get_token_numeral(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]
 token_kind_t
 context_get_token_raw(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES])
 {
-	assert(ctx && token);
+	assert(ctx);
 
 	if (cobj_book_increment_iterator(ctx->variables))
 	{
