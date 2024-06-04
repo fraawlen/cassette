@@ -95,8 +95,8 @@ cobj_rect_pad(cobj_rect_t *rect, int padding)
 
 	rect->x      = _add(rect->x, padding);
 	rect->y      = _add(rect->y, padding);
-	rect->width  = _bind_len(rect->x, _add(rect->width,  _scale(-padding, 2.0)));
-	rect->height = _bind_len(rect->y, _add(rect->height, _scale(-padding, 2.0)));
+	rect->width  = _bind_len(rect->x, _add(rect->width,  _scale(padding, -2.0)));
+	rect->height = _bind_len(rect->y, _add(rect->height, _scale(padding, -2.0)));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
