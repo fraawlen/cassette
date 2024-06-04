@@ -67,7 +67,7 @@ safe_mul(size_t *result, size_t a, size_t b)
 {
 	bool safe;
 
-	safe = a <= SIZE_MAX / b;
+	safe = b == 0 || a <= SIZE_MAX / b;
 
 	if (result)
 	{

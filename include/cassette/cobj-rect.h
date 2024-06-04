@@ -18,8 +18,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef COBJ_RAND_H
-#define COBJ_RAND_H
+#ifndef COBJ_RECT_H
+#define COBJ_RECT_H
+
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,15 +31,35 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-typedef unsigned long long cobj_rand_t;
+struct cobj_rect_t
+{
+	int x;
+	int y;
+	int width;
+	int height;
+};
+
+typedef struct cobj_rect_t cobj_rect_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void cobj_rand_seed(cobj_rand_t *r, unsigned long long seed);
+cobj_rect_t cobj_rect_create(int x, int y, int width, int height);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-double cobj_rand_get(cobj_rand_t *r, double lim_1, double lim_2);
+void cobj_rect_bind(cobj_rect_t *rect);
+
+void cobj_rect_grow(cobj_rect_t *rect, int width, int height);
+
+void cobj_rect_offset(cobj_rect_t *rect, int x, int y);
+
+void cobj_rect_pad(cobj_rect_t *rect, int padding);
+
+void cobj_rect_scale(cobj_rect_t *rect, double scale);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool cobj_rect_test_bounds(cobj_rect_t rect, int x, int y);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -47,5 +69,4 @@ double cobj_rand_get(cobj_rand_t *r, double lim_1, double lim_2);
 }
 #endif
 
-#endif /* COBJ_RAND_H */
-
+#endif /* COBJ_RECT_H */
