@@ -100,7 +100,7 @@ void ccfg_clear_sources(ccfg_t *cfg);
 
 /**
  * Looks-up a resource by its namespace and property name. If found, its reference is kept around and the
- * resource values will become accessible through ccfg_pick_next_resource_value() and ccfg_get_resource_*()
+ * resource values will become accessible through ccfg_pick_next_value() and ccfg_get_value().
  * functions. Empty or null namespaces or properties are not valid and will make the function return without
  * doing anything.
  *
@@ -110,7 +110,7 @@ void ccfg_clear_sources(ccfg_t *cfg);
  *
  * @return True if found, false otherwhise
  */
-bool ccfg_fetch_resource(ccfg_t *cfg, const char *namespace, const char *property);
+bool ccfg_fetch(ccfg_t *cfg, const char *namespace, const char *property);
 
 /**
  * Reads the first source file that can be opened, parses it, and stores the resolved resources. Once done,
@@ -139,7 +139,7 @@ bool ccfg_load(ccfg_t *cfg);
  *
  * @return True is the next value could be picked, false otherwhise.
  */
-bool ccfg_pick_next_resource_value(ccfg_t *cfg);
+bool ccfg_pick_next_value(ccfg_t *cfg);
 
 /**
  * Adds a function to call every time the given configuration object is done loading a source file. The
@@ -155,24 +155,14 @@ bool ccfg_pick_next_resource_value(ccfg_t *cfg);
 void ccfg_push_callback(ccfg_t *cfg, void (*fn)(ccfg_t *cfg, bool load_success, void *ref), void *ref);
 
 /**
- * Adds a configuration parameter in double format whose value can be accessed and used from a configuration
+ * Adds a configuration parameter in C-string format whose value can be accessed and used from a configuration
  * source file. Unlike user-defined variables, only one value per parameter can be defined.
  *
  * @param cfg Configuration instance to interact with
  * @param name Name of the parameter to use in the source configuration
  * @param value Parameter's value
  */
-void ccfg_push_parameter_double(ccfg_t *cfg, const char *name, double value);
-
-/**
- * Adds a configuration parameter in string format whose value can be accessed and used from a configuration
- * source file. Unlike user-defined variables, only one value per parameter can be defined.
- *
- * @param cfg Configuration instance to interact with
- * @param name Name of the parameter to use in the source configuration
- * @param value Parameter's value
- */
-void ccfg_push_parameter_string(ccfg_t *cfg, const char *name, const char *value);
+void ccfg_push_parameter(ccfg_t *cfg, const char *name, const char *value);
 
 /**
  * Adds a source file to potentially parse. Only the first added source that can be opened will be parsed,
@@ -195,23 +185,25 @@ void ccfg_seed(ccfg_t *cfg, unsigned long long seed);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Gets the number of values a pre-fetched resource has.
+ * Gets the number of values the last fetched resource has.
  * If the no resource is pre-fetched, or if the configuration object is in an error state, 0 is returned.
  *
  * @param cfg Configuration instance to interact with
  *
  * @return Number of values that can be iterated through
  */
-size_t ccfg_get_resource_size(const ccfg_t *cfg);
+size_t ccfg_get_fetch_size(const ccfg_t *cfg);
 
 /**
- * Accesses a single value of a pre-fetched resource and returns it as a string.
+ * Accesses a single value of a pre-fetched resource and returns it as a string. This function never returns
+ * NULL. Instead, if cgui_fetch() and cgui_pick_next_value() weren't called beforehand, an empty string
+ * consisting of a single '\0' character is returned instead.
  *
  * @param cfg Configuration instance to interact with
  *
  * @return Converted value
  */
-const char *ccfg_get_resource_value(const ccfg_t *cfg);
+const char *ccfg_get_value(const ccfg_t *cfg);
 
 /**
  * Checks if the configuration is in a failure state due to memory issues.

@@ -86,7 +86,7 @@ main(void)
 
 	ccfg_push_source(cfg, _SAMPLE_CONFIG_PATH);
 	ccfg_push_callback(cfg, _callback, NULL);
-	ccfg_push_parameter_double(cfg, "internal_param", 1337);
+	ccfg_push_parameter(cfg, "internal_param", "1337");
 
 	ccfg_load(cfg); /* load success check is done in callback */
 
@@ -147,46 +147,46 @@ _callback(ccfg_t *cfg, bool load_success, void *ref)
 
 	/* apply values from config */
 
-	ccfg_fetch_resource(cfg, "example-2", "a");
-	if (ccfg_pick_next_resource_value(cfg))
+	ccfg_fetch(cfg, "example-2", "a");
+	if (ccfg_pick_next_value(cfg))
 	{
-		_a = strtol(ccfg_get_resource_value(cfg), NULL, 0);
+		_a = strtol(ccfg_get_value(cfg), NULL, 0);
 	}
 
-	ccfg_fetch_resource(cfg, "example-2", "b");
-	if (ccfg_pick_next_resource_value(cfg))
+	ccfg_fetch(cfg, "example-2", "b");
+	if (ccfg_pick_next_value(cfg))
 	{
-		_b = strtod(ccfg_get_resource_value(cfg), NULL);
+		_b = strtod(ccfg_get_value(cfg), NULL);
 	}
 
-	ccfg_fetch_resource(cfg, "example-2", "c");
-	for (size_t i = 0; i < 3 && ccfg_pick_next_resource_value(cfg); i++)
+	ccfg_fetch(cfg, "example-2", "c");
+	for (size_t i = 0; i < 3 && ccfg_pick_next_value(cfg); i++)
 	{	
-		_c[i] = strtod(ccfg_get_resource_value(cfg), NULL);
+		_c[i] = strtod(ccfg_get_value(cfg), NULL);
 	}
 
-	ccfg_fetch_resource(cfg, "example-2", "d");
-	if (ccfg_pick_next_resource_value(cfg))
+	ccfg_fetch(cfg, "example-2", "d");
+	if (ccfg_pick_next_value(cfg))
 	{
-		_d = strtod(ccfg_get_resource_value(cfg), NULL) != 0.0;
+		_d = strtod(ccfg_get_value(cfg), NULL) != 0.0;
 	}
 
-	ccfg_fetch_resource(cfg, "example-2", "e");
-	if (ccfg_pick_next_resource_value(cfg))
+	ccfg_fetch(cfg, "example-2", "e");
+	if (ccfg_pick_next_value(cfg))
 	{
-		snprintf(_e, sizeof(_e), "%s", ccfg_get_resource_value(cfg));
+		snprintf(_e, sizeof(_e), "%s", ccfg_get_value(cfg));
 	}
 
-	ccfg_fetch_resource(cfg, "example-2", "f");
-	if (ccfg_pick_next_resource_value(cfg))
+	ccfg_fetch(cfg, "example-2", "f");
+	if (ccfg_pick_next_value(cfg))
 	{
-		_f = strtol(ccfg_get_resource_value(cfg), NULL, 0);
+		_f = strtol(ccfg_get_value(cfg), NULL, 0);
 	}
 
-	ccfg_fetch_resource(cfg, "example-2", "g");
-	if (ccfg_pick_next_resource_value(cfg))
+	ccfg_fetch(cfg, "example-2", "g");
+	if (ccfg_pick_next_value(cfg))
 	{
-		_g = cobj_color_convert_str(ccfg_get_resource_value(cfg), NULL);
+		_g = cobj_color_convert_str(ccfg_get_value(cfg), NULL);
 	}
 }
 

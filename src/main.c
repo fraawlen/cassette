@@ -173,7 +173,7 @@ ccfg_destroy(ccfg_t **cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-ccfg_fetch_resource(ccfg_t *cfg, const char *namespace, const char *property)
+ccfg_fetch(ccfg_t *cfg, const char *namespace, const char *property)
 {
 	size_t i_namespace;
 	size_t i_prop;
@@ -238,7 +238,7 @@ ccfg_get_resource_size(const ccfg_t *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-ccfg_get_resource_value(const ccfg_t *cfg)
+ccfg_get_value(const ccfg_t *cfg)
 {
 	assert(cfg);
 	
@@ -295,7 +295,7 @@ ccfg_load(ccfg_t *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-ccfg_pick_next_resource_value(ccfg_t *cfg)
+ccfg_pick_next_value(ccfg_t *cfg)
 {
 	assert(cfg);
 	
@@ -343,26 +343,7 @@ ccfg_push_callback(ccfg_t *cfg, void (*fn)(ccfg_t *cfg, bool load_success, void 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-ccfg_push_parameter_double(ccfg_t *cfg, const char *name, double value)
-{
-	char str[25];
-
-	assert(cfg);
-
-	if (cfg->failed)
-	{
-		return;
-	}
-
-	snprintf(str, 25, "%f", value);
-
-	ccfg_push_parameter_string(cfg, name, str);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-ccfg_push_parameter_string(ccfg_t *cfg, const char *name, const char *value)
+ccfg_push_parameter(ccfg_t *cfg, const char *name, const char *value)
 {
 	size_t i;
 

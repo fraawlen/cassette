@@ -77,10 +77,10 @@ main(void)
 	ccfg_push_source(cfg, "/tmp/ccfg");
 	ccfg_load(cfg);
 
-	ccfg_fetch_resource(cfg, "namespace", "property");
-	while (ccfg_pick_next_resource_value(cfg))
+	ccfg_fetch(cfg, "namespace", "property");
+	while (ccfg_pick_next_value(cfg))
 	{
-		printf("%s\n", ccfg_get_resource_value(cfg));
+		printf("%s\n", ccfg_get_value(cfg));
 	}
 
 	return 0;

@@ -113,10 +113,10 @@ _print_resource(ccfg_t *cfg, const char *namespace, const char *property)
 {
 	printf("%s\t%s", namespace, property);
 
-	ccfg_fetch_resource(cfg, namespace, property);
-	while (ccfg_pick_next_resource_value(cfg))
+	ccfg_fetch(cfg, namespace, property);
+	while (ccfg_pick_next_value(cfg))
 	{
-		printf("\t%s", ccfg_get_resource_value(cfg));
+		printf("\t%s", ccfg_get_value(cfg));
 	}
 
 	printf("\n");

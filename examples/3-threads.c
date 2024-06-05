@@ -125,10 +125,10 @@ _simulation_thread(void *param)
 		printf("configuration for simulation %llu failed to load\n", id);
 	}
 
-	ccfg_fetch_resource(cfg, "example-3", "coordinates");
-	for (size_t i = 0; i < 3 && ccfg_pick_next_resource_value(cfg); i++)
+	ccfg_fetch(cfg, "example-3", "coordinates");
+	for (size_t i = 0; i < 3 && ccfg_pick_next_value(cfg); i++)
 	{
-		coords[i] = strtoul(ccfg_get_resource_value(cfg), NULL, 0);
+		coords[i] = strtoul(ccfg_get_value(cfg), NULL, 0);
 	}
 
 	/* simulation algorithm */
