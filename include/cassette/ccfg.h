@@ -59,6 +59,14 @@ typedef struct ccfg_t ccfg_t;
 ccfg_t *ccfg_create(void);
 
 /**
+ * Gets a valid pointer to an internal configuration instance set in a failed state. To be used to avoid
+ * leaving around uninitialised configuration instance pointers.
+ *
+ * @return Placeholder config instance object
+ */
+ccfg_t *ccfg_get_placeholder(void);
+
+/**
  * Destroy a given instance and free allocated memory. The pointed value is then replaced by a placeholder
  * value that points to an internal static configuration instance set in a failed state. Hence, it is safe
  * to call this function multiple times.
@@ -66,14 +74,6 @@ ccfg_t *ccfg_create(void);
  * @param cfg Configuration instance to interact with
  */
 void ccfg_destroy(ccfg_t **cfg);
-
-/**
- * Gets a valid pointer to an internal configuration instance set in a failed state. To be used to avoid
- * leaving around uninitialised configuration instance pointers.
- *
- * @return Placeholder config instance object
- */
-ccfg_t *ccfg_get_placeholder(void);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
