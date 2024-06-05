@@ -112,11 +112,6 @@ cgui_exit(void)
 xcb_connection_t *
 cgui_get_xcb_connection(void)
 {
-	if (_failed)
-	{
-		return NULL;
-	}
-
 	return x11_get_connection();
 }
 
@@ -125,11 +120,6 @@ cgui_get_xcb_connection(void)
 xcb_window_t
 cgui_get_xcb_leader_window(void)
 {
-	if (_failed)
-	{
-		return 0;
-	}
-
 	return  x11_get_leader_window();
 }
 
@@ -154,10 +144,7 @@ cgui_has_failed(void)
 void
 cgui_init(int argc, char **argv)
 {
-	if (_init)
-	{
-		return;
-	}
+	assert(!_init);
 
 	if (!_class_class)
 	{
@@ -244,10 +231,7 @@ cgui_reconfig(void)
 void
 cgui_reset(void)
 {
-	if (!_init)
-	{
-		return;
-	}
+	assert(_init);
 
 	cobj_tracker_reset_iterator(_windows);
 	while (cobj_tracker_increment_iterator(_windows))

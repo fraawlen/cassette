@@ -216,6 +216,14 @@ x11_get_next_event(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
+x11_has_failed(void)
+{
+	return _failed;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
 x11_init(int argc, char **argv, const char *class_name, const char *class_class, xcb_connection_t *connection)
 {
 	xcb_visualtype_iterator_t visual_it;
