@@ -38,9 +38,9 @@ typedef struct _tracker_t cobj_tracker_t;
 
 cobj_tracker_t *cobj_tracker_create(size_t n_alloc);
 
-void cobj_tracker_destroy(cobj_tracker_t **tracker);
-
 cobj_tracker_t *cobj_tracker_get_placeholder(void);
+
+void cobj_tracker_destroy(cobj_tracker_t **tracker);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

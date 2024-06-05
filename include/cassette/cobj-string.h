@@ -36,15 +36,15 @@ typedef struct _string_t cobj_string_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+cobj_string_t *cobj_string_clone(const cobj_string_t *str);
+
 cobj_string_t *cobj_string_create(void);
 
 cobj_string_t *cobj_string_create_double(double d, int precision);
 
-cobj_string_t *cobj_string_create_duplicate(const cobj_string_t *str);
+cobj_string_t *cobj_string_get_placeholder(void);
 
 void cobj_string_destroy(cobj_string_t **str);
-
-cobj_string_t *cobj_string_get_placeholder(void);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

@@ -48,9 +48,9 @@ typedef enum cobj_book_group_mode_t cobj_book_group_mode_t;
 
 cobj_book_t *cobj_book_create(size_t n_alloc, size_t word_n);
 
-void cobj_book_destroy(cobj_book_t **book);
-
 cobj_book_t *cobj_book_get_placeholder(void);
+
+void cobj_book_destroy(cobj_book_t **book);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

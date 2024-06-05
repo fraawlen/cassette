@@ -39,9 +39,9 @@ typedef struct _dictionary_t cobj_dictionary_t;
 
 cobj_dictionary_t *cobj_dictionary_create(size_t n_alloc, double max_load);
 
-void cobj_dictionary_destroy(cobj_dictionary_t **dict);
-
 cobj_dictionary_t *cobj_dictionary_get_placeholder(void);
+
+void cobj_dictionary_destroy(cobj_dictionary_t **dict);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

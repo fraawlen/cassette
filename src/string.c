@@ -99,6 +99,20 @@ cobj_string_clear(cobj_string_t *str)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+cobj_string_t *
+cobj_string_clone(const cobj_string_t *str)
+{
+	assert(str);
+
+	cobj_string_t *str_dup = cobj_string_create();
+
+	cobj_string_set(str_dup, str);
+
+	return str_dup;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 size_t
 cobj_string_convert_coords_to_offset(const cobj_string_t *str, size_t row, size_t col)
 {
@@ -237,20 +251,6 @@ cobj_string_create_double(double d, int precision)
 	cobj_string_set_raw(str, tmp);
 
 	return str;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-cobj_string_t *
-cobj_string_create_duplicate(const cobj_string_t *str)
-{
-	assert(str);
-
-	cobj_string_t *str_dup = cobj_string_create();
-
-	cobj_string_set(str_dup, str);
-
-	return str_dup;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
