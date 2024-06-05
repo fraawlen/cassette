@@ -305,8 +305,6 @@ config_init(void)
 {
 	cobj_string_t *home;
 
-	bool fail = false;
-
 	/* instantiation */
 
 	_parser = ccfg_create();
@@ -334,11 +332,7 @@ config_init(void)
 	
 	/* end */
 
-	fail |= ccfg_has_failed(_parser);
-	fail |= cobj_dictionary_has_failed(_dict);
-	fail |= !config_load();
-
-	return !fail;
+	return !ccfg_has_failed(_parser) && !cobj_dictionary_has_failed(_dict);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -383,10 +377,10 @@ _fetch(const _resource_t *resource)
 {
 	const char *str;
 
-	ccfg_fetch_resource(_parser, resource->namespace, resource->name);
-	if (ccfg_pick_next_resource_value(_parser))
+	ccfg_fetch(_parser, resource->namespace, resource->name);
+	if (ccfg_pick_next_value(_parser))
 	{
-		str = ccfg_get_resource_value(_parser);
+		str = ccfg_get_value(_parser);
 	}
 	else
 	{
@@ -412,7 +406,7 @@ _fetch(const _resource_t *resource)
 			break;
 
 		case _LENGTH:
-			*(unsigned int*)resource->target = util_str_to_long(str, 0, UINT_MAX);
+			*(int*)resource->target = util_str_to_long(str, 0, INT_MAX);
 			break;
 
 		case _LONG:

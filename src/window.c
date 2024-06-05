@@ -49,7 +49,10 @@ cgui_window_create(void)
 {
 	cgui_window_t *window;
 
-	assert(cgui_is_init());
+	if (cgui_has_failed())
+	{
+		return &_err_window;
+	}
 
 	if (!(window = malloc(sizeof(cgui_window_t))))
 	{
@@ -72,7 +75,6 @@ cgui_window_create(void)
 void
 cgui_window_destroy(cgui_window_t **window)
 {
-	assert(cgui_is_init());
 	assert(window && *window);
 
 	if (*window == &_err_window)

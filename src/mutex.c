@@ -18,41 +18,77 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef X11_H
-#define X11_H
-
+#include <errno.h>
+#include <pthread.h>
 #include <stdbool.h>
-#include <stdint.h>
-
-#include <xcb/xcb.h>
-#include <xcb/xcb_keysyms.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-bool x11_init(int argc, char **argv, const char *class_name, const char *class_class, xcb_connection_t *connection);
+pthread_mutex_t _mutex;
 
-void x11_reset(bool kill_connection);
+bool _failed = true;
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+bool
+mutex_init(void)
+{
+	pthread_mutexattr_t mut_attr;
+
+	if (pthread_mutexattr_init(&mut_attr) != 0)
+	{
+		return false;
+	}
+
+	if (pthread_mutexattr_settype(&mut_attr, PTHREAD_MUTEX_ERRORCHECK) != 0)
+	{
+		return false;
+	}
+	
+	_failed = pthread_mutex_init(&_mutex, &mut_attr) != 0;
+
+	pthread_mutexattr_destroy(&mut_attr);
+
+	return !_failed;
+}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void x11_send_signal(void);
+bool
+mutex_lock(void)
+{
+	if (_failed)
+	{
+		return true;
+	}
+
+	return pthread_mutex_lock(&_mutex) != EDEADLK;
+}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-xcb_connection_t *x11_get_connection(void);
+void
+mutex_reset(void)
+{
+	if (!_failed)
+	{
+		pthread_mutex_destroy(&_mutex);
+	}
+}
 
-xcb_key_symbols_t *x11_get_keysyms(void);
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-xcb_window_t x11_get_leader_window(void);
+bool
+mutex_unlock(void)
+{
+	if (_failed)
+	{
+		return true;
+	}
 
-xcb_generic_event_t x11_get_next_event(void);
-
-bool x11_has_failed(void);
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-#endif /* X11_H */
+	return pthread_mutex_unlock(&_mutex) != EPERM;
+}

@@ -97,16 +97,16 @@ struct cgui_config_t
 
 	char font_face[CCFG_MAX_WORD_BYTES];
 
-	unsigned int font_size;
-	unsigned int font_width;
-	unsigned int font_height;
-	unsigned int font_ascent;
-	unsigned int font_descent;
-	unsigned int font_spacing_horizontal;
-	unsigned int font_spacing_vertical;
-	unsigned int font_override_width;
-	unsigned int font_override_ascent;
-	unsigned int font_override_descent;
+	int font_size;
+	int font_width;
+	int font_height;
+	int font_ascent;
+	int font_descent;
+	int font_spacing_horizontal;
+	int font_spacing_vertical;
+	int font_override_width;
+	int font_override_ascent;
+	int font_override_descent;
 	int font_offset_x;
 	int font_offset_y;
 
@@ -117,8 +117,8 @@ struct cgui_config_t
 
 	/* grid */
 
-	unsigned int grid_padding;
-	unsigned int grid_spacing;
+	int grid_padding;
+	int grid_spacing;
 
 	/* window */
 
@@ -131,8 +131,8 @@ struct cgui_config_t
 	cobj_color_t window_color_border_focused;
 	cobj_color_t window_color_border_locked;
 
-	unsigned int window_border;
-	unsigned int window_padding;
+	int window_border;
+	int window_padding;
 
 	bool window_enable_disabled;
 	bool window_enable_focused;
@@ -143,12 +143,12 @@ struct cgui_config_t
 	cobj_color_t popup_color_background;
 	cobj_color_t popup_color_border;
 
-	unsigned int popup_border;
-	unsigned int popup_padding;
-	unsigned int popup_max_width;
-	unsigned int popup_max_height;
-	unsigned int popup_override_width;
-	unsigned int popup_override_height;
+	int popup_border;
+	int popup_padding;
+	int popup_max_width;
+	int popup_max_height;
+	int popup_override_width;
+	int popup_override_height;
 	int popup_override_x;
 	int popup_override_y;
 
@@ -161,7 +161,7 @@ struct cgui_config_t
 	bool cell_auto_lock;
 	bool input_persistent_pointer;
 	bool input_persistent_touch;
-	unsigned long anim_divider;
+	long anim_divider;
 
 	/* input swaps */
 

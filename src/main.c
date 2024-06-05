@@ -19,6 +19,7 @@
 /************************************************************************************************************/
 
 #include <assert.h>
+#include <pthread.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -35,6 +36,7 @@
 #include "event.h"
 #include "grid.h"
 #include "main.h"
+#include "mutex.h"
 #include "window.h"
 #include "util.h"
 #include "x11.h"
@@ -44,7 +46,6 @@
 /************************************************************************************************************/
 
 static void _dummy_callback_event    (xcb_generic_event_t *event);
-static void _dummy_callback_signal   (uint32_t serial);
 static bool _is_any_window_activated (void);
 
 /************************************************************************************************************/
@@ -73,8 +74,7 @@ static bool _failed   = true;
 
 /* callbacks */
 
-static void (*_fn_event)  (xcb_generic_event_t *event) = _dummy_callback_event;
-static void (*_fn_signal) (uint32_t serial)            = _dummy_callback_signal;
+static void (*_fn_event) (xcb_generic_event_t *event) = _dummy_callback_event;
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -83,6 +83,8 @@ static void (*_fn_signal) (uint32_t serial)            = _dummy_callback_signal;
 void
 cgui_allow_user_exit(void)
 {
+	assert(_init);
+
 	_usr_exit = true;
 }
 
@@ -91,6 +93,8 @@ cgui_allow_user_exit(void)
 void
 cgui_block_user_exit(void)
 {
+	assert(_init);
+
 	_usr_exit = false;
 }
 
@@ -109,7 +113,7 @@ cgui_exit(void)
 xcb_connection_t *
 cgui_get_xcb_connection(void)
 {
-	if (_failed || !_init)
+	if (_failed)
 	{
 		return NULL;
 	}
@@ -122,7 +126,7 @@ cgui_get_xcb_connection(void)
 xcb_window_t
 cgui_get_xcb_leader_window(void)
 {
-	if (_failed || !_init)
+	if (_failed)
 	{
 		return 0;
 	}
@@ -143,7 +147,10 @@ cgui_has_failed(void)
 void
 cgui_init(int argc, char **argv)
 {
-	assert(!_init);
+	if (_init)
+	{
+		return;
+	}
 
 	if (!_class_class)
 	{
@@ -159,9 +166,11 @@ cgui_init(int argc, char **argv)
 	_grids   = cobj_tracker_create(1);
 	_windows = cobj_tracker_create(1);
 
-	_failed  = false;	
+	_failed  = false;
 	_failed |= !x11_init(argc, argv, _class_name, _class_class, _ext_connection);
 	_failed |= !config_init();
+	_failed |= !config_load();
+	_failed |= !mutex_init();
 
 	main_update_status();
 
@@ -182,6 +191,16 @@ bool
 cgui_is_running(void)
 {
 	return _running;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_lock(void)
+{
+	assert(_init);
+
+	assert(mutex_lock());
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -220,7 +239,10 @@ cgui_reconfig(void)
 void
 cgui_reset(void)
 {
-	assert(_init);
+	if (!_init)
+	{
+		return;
+	}
 
 	cobj_tracker_reset_iterator(_windows);
 	while (cobj_tracker_increment_iterator(_windows))
@@ -252,6 +274,7 @@ cgui_reset(void)
 
 	x11_reset(!_ext_connection);
 	config_reset();
+	mutex_reset();
 
 	_ext_connection = NULL;
 	_class_class    = NULL;
@@ -262,8 +285,7 @@ cgui_reset(void)
 	_running  = false;
 	_init     = false;
 
-	_fn_signal = _dummy_callback_signal;
-	_fn_event  = _dummy_callback_event;
+	_fn_event = _dummy_callback_event;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -284,9 +306,14 @@ cgui_run(void)
 
 	while (_init && _running && _is_any_window_activated())
 	{
-		/***************/
+		/*****/
 
 		event = x11_get_next_event();
+		
+		cgui_lock();
+
+		/*****/
+
 		if (event.response_type == 0)
 		{
 			_failed = true;
@@ -295,7 +322,7 @@ cgui_run(void)
 		_fn_event(&event);
 		event_process(&event);
 
-		/***************/
+		/*****/
 
 		cobj_tracker_reset_iterator(_windows);
 		while (cobj_tracker_increment_iterator(_windows))
@@ -316,9 +343,11 @@ cgui_run(void)
 			cell_destroy((cgui_cell_t*)cobj_tracker_get_iteration(_cells));
 		}
 
-		/***************/
+		/*****/
 
 		xcb_flush(x11_get_connection());
+		
+		cgui_unlock();
 	}
 
 	_running = false;
@@ -327,31 +356,10 @@ cgui_run(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_send_signal(uint32_t serial)
+cgui_set_callback_x11_events(void (*fn)(xcb_generic_event_t *event))
 {
 	assert(_init);
 
-	if (_failed)
-	{
-		return;
-	}
-
-	_failed = !x11_send_signal(serial);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_set_callback_signal(void (*fn)(uint32_t serial))
-{
-	_fn_signal = fn ? fn : _dummy_callback_signal;	
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_set_callback_x11_events(void (*fn)(xcb_generic_event_t *event))
-{
 	_fn_event = fn ? fn : _dummy_callback_event;
 }
 
@@ -374,6 +382,16 @@ cgui_setup_x11_connection(xcb_connection_t *connection)
 	assert(!_init);
 
 	_ext_connection = connection;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_unlock(void)
+{
+	assert(_init);
+
+	assert(mutex_unlock());
 }
 
 /************************************************************************************************************/
@@ -420,14 +438,6 @@ static void
 _dummy_callback_event(xcb_generic_event_t *event)
 {
 	(void)event;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-_dummy_callback_signal(uint32_t serial)
-{
-	(void)serial;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

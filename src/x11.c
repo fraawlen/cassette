@@ -67,6 +67,8 @@ static bool       _test_cookie          (xcb_void_cookie_t xc);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static bool _failed = true;
+
 /* ICCCM properties */
 
 static char  const *_class_name  = NULL;
@@ -121,7 +123,7 @@ static xcb_atom_t _atom_flck = 0; /* _ATOM_WINDOW_FOCUS_LOCK */
 static xcb_atom_t _atom_conf = 0; /* _ATOM_RECONFIG          */
 static xcb_atom_t _atom_acl  = 0; /* _ATOM_ACCEL             */
 
-static xcb_atom_t _atom_isig = 0;                           /* "_INTERNAL_LOOP_SIGNAL"          */
+static xcb_atom_t _atom_isig = 0;                       /* "_INTERNAL_LOOP_SIGNAL"          */
 static xcb_atom_t _atom_aclx[CGUI_CONFIG_ACCELS] = {0}; /* "_CGUI_WINDOW_ACCEL_x" x = 1..12 */
 
 /* extensions op codes */
@@ -140,6 +142,11 @@ static cobj_tracker_t *_events = NULL;
 xcb_connection_t *
 x11_get_connection(void)
 {
+	if (_failed)
+	{
+		return NULL;
+	}
+
 	return _connection;
 }
 
@@ -148,6 +155,11 @@ x11_get_connection(void)
 xcb_key_symbols_t *
 x11_get_keysyms(void)
 {
+	if (_failed)
+	{
+		return NULL;
+	}
+
 	return _keysyms;
 }
 
@@ -156,6 +168,11 @@ x11_get_keysyms(void)
 xcb_window_t
 x11_get_leader_window(void)
 {
+	if (_failed)
+	{
+		return 0;
+	}
+
 	return _win_leader;
 }
 
@@ -165,7 +182,12 @@ xcb_generic_event_t
 x11_get_next_event(void)
 {
 	xcb_generic_event_t event = {0};
-	xcb_generic_event_t *tmp;
+	xcb_generic_event_t *tmp = NULL;
+
+	if (_failed)
+	{
+		return event;
+	}
 
 	/* grab next event from stack buffer if any  */
 	/* otherwhise retrieve new event from server */
@@ -233,14 +255,14 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 
 	if (!(_connection = connection ? connection : xcb_connect(NULL, NULL)))
 	{
-		goto fail_connection;
+		goto fail_xserver;
 	}
 
 	/* find screen */
 
 	if (!(_screen = xcb_setup_roots_iterator(xcb_get_setup(_connection)).data))
 	{
-		goto fail_screen;
+		goto fail_xserver;
 	}
 
 	/* get depth */
@@ -256,7 +278,7 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 	}
 	if (!_depth)
 	{
-		goto fail_depth;
+		goto fail_xserver;
 	}
 
 	/* get visual */
@@ -272,7 +294,7 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 	}
 	if (!_visual)
 	{
-		goto fail_visual;
+		goto fail_xserver;
 	}
 
 	/* create colormap */
@@ -287,7 +309,7 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 
 	if (!_test_cookie(xc))
 	{
-		goto fail_colormap;
+		goto fail_xserver;
 	}
 
 	/* create leader window */
@@ -391,6 +413,8 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 	
 	xcb_flush(_connection);
 
+	_failed = false;
+
 	return true;
 
 	/* errors */
@@ -399,14 +423,10 @@ fail_keysyms:
 	xcb_destroy_window(_connection, _win_leader);
 fail_leader:
 	xcb_free_colormap(_connection, _colormap);
-fail_colormap:
-fail_visual:
-fail_depth:
-fail_screen:
-fail_connection:
+fail_xserver:
 	cobj_tracker_destroy(&_events);
-	_connection = NULL;
 fail_events:
+	_failed = true;
 
 	return false;
 }
@@ -416,6 +436,11 @@ fail_events:
 void
 x11_reset(bool kill_connection)
 {
+	if (_failed)
+	{
+		return;
+	}
+
 	cobj_tracker_reset_iterator(_events);
 	while (cobj_tracker_increment_iterator(_events))
 	{
@@ -426,36 +451,38 @@ x11_reset(bool kill_connection)
 	xcb_key_symbols_free(_keysyms);
 	xcb_destroy_window(_connection, _win_leader);
 	xcb_free_colormap(_connection, _colormap);
-
 	if (kill_connection)
 	{
 		xcb_disconnect(_connection);
 	}
 	
-	_connection = NULL;
-	_keysyms    = NULL;
+	_failed = true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
-x11_send_signal(uint32_t serial)
+void
+x11_send_signal(void)
 {
 	xcb_void_cookie_t xc;
 
-	const xcb_client_message_data_t data = {.data32 = {serial}};
+	if (_failed)
+	{
+		return;
+	}
+
 	const xcb_client_message_event_t event = {
 		.response_type = XCB_CLIENT_MESSAGE,
 		.format   = 32,
 		.sequence = 0,
 		.window   = _win_leader,
 		.type     = _atom_isig,
-		.data     = data};
+		.data     = {{0}}};
 
 	xc = xcb_send_event_checked(_connection, 0, _win_leader, XCB_EVENT_MASK_NO_EVENT, (char*)&event),
 	xcb_flush(_connection);
 
-	return _test_cookie(xc);
+	_failed = !_test_cookie(xc);
 }
 
 /************************************************************************************************************/

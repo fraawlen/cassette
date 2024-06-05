@@ -18,89 +18,27 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_H
-#define CGUI_H
+#ifndef MUTEX_H
+#define MUTEX_H
 
 #include <stdbool.h>
-#include <stdlib.h>
-
-#include <xcb/xcb.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define CGUI_VERSION "0.2.0"
+bool mutex_init(void);
+
+void mutex_reset(void);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void cgui_init(int argc, char **argv);
+bool mutex_lock(void);
 
-void cgui_reset(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void cgui_setup_x11_class(const char *class_name, const char *class_class);
-
-void cgui_setup_x11_connection(xcb_connection_t *connection);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void cgui_allow_user_exit(void);
-
-void cgui_block_user_exit(void);
-
-void cgui_exit(void);
-
-void cgui_lock(void);
-
-void cgui_reconfig(void);
-
-void cgui_run(void);
-
-void cgui_set_callback_x11_events(void (*fn)(xcb_generic_event_t *event));
-
-void cgui_unlock(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-xcb_connection_t *cgui_get_x11_connection(void);
-
-xcb_window_t cgui_get_x11_leader_window(void);
-
-bool cgui_has_failed(void);
-
-bool cgui_is_init(void);
-
-bool cgui_is_running(void);
+bool mutex_unlock(void);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-/* init dependent headers */
-
-#include "cgui-cell.h"
-#include "cgui-clipboard.h"
-#include "cgui-grid.h"
-#include "cgui-window.h"
-
-/* init independent headers */
-
-#include "cgui-config.h"
-#include "cgui-input-tracker.h"
-#include "cgui-input-swap.h"
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* CGUI_H */
+#endif /* MUTEX_H */

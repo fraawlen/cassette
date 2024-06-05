@@ -62,7 +62,6 @@ cgui_grid_assign_cell(cgui_grid_t *grid, cgui_cell_t *cell, size_t x, size_t y, 
 {
 	area_t *area;
 
-	assert(cgui_is_init());
 	assert(grid);
 	assert(cell);
 	assert(width > 0 && height > 0);
@@ -98,7 +97,6 @@ cgui_grid_clone(cgui_grid_t *grid)
 	cgui_grid_t *clone;
 	area_t *area;
 
-	assert(cgui_is_init());
 	assert(grid);
 
 	if (grid->failed)
@@ -137,8 +135,12 @@ cgui_grid_create(size_t n_cols, size_t n_rows)
 {
 	cgui_grid_t *grid;
 
-	assert(cgui_is_init());
 	assert(n_cols > 0 && n_rows > 0);
+
+	if (cgui_has_failed())
+	{
+		return &_err_grid;
+	}
 
 	if (n_cols > INT_MAX || n_rows > INT_MAX)
 	{
@@ -198,7 +200,6 @@ cgui_grid_create(size_t n_cols, size_t n_rows)
 void
 cgui_grid_destroy(cgui_grid_t **grid)
 {
-	assert(cgui_is_init());
 	assert(grid && *grid);
 
 	if (*grid == &_err_grid)
@@ -238,7 +239,6 @@ cgui_grid_has_failed(const cgui_grid_t *grid)
 void
 cgui_grid_set_col_flex(cgui_grid_t *grid, size_t col, double flex)
 {
-	assert(cgui_is_init());
 	assert(grid);
 	assert(grid->n_cols > col);
 	assert(flex >= 0.0);
@@ -257,7 +257,6 @@ cgui_grid_set_col_flex(cgui_grid_t *grid, size_t col, double flex)
 void
 cgui_grid_set_col_width(cgui_grid_t *grid, size_t col, int width)
 {
-	assert(cgui_is_init());
 	assert(grid);
 	assert(grid->n_cols > col);
 
@@ -292,7 +291,6 @@ cgui_grid_set_col_width(cgui_grid_t *grid, size_t col, int width)
 void
 cgui_grid_set_row_flex(cgui_grid_t *grid, size_t row, double flex)
 {
-	assert(cgui_is_init());
 	assert(grid);
 	assert(grid->n_rows > row);
 	assert(flex >= 0.0);
@@ -311,7 +309,6 @@ cgui_grid_set_row_flex(cgui_grid_t *grid, size_t row, double flex)
 void
 cgui_grid_set_row_height(cgui_grid_t *grid, size_t row, int height)
 {
-	assert(cgui_is_init());
 	assert(grid);
 	assert(grid->n_rows > row);
 
