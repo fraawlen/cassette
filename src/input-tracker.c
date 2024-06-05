@@ -342,7 +342,7 @@ cgui_input_tracker_pull_index(cgui_input_tracker_t *inputs, unsigned int index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_input_tracker_push(cgui_input_tracker_t *inputs, unsigned int id, unsigned int x, unsigned int y, void *ref)
+cgui_input_tracker_push(cgui_input_tracker_t *inputs, unsigned int id, int x, int y, void *ref)
 {
 	assert(inputs);
 

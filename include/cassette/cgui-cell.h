@@ -63,9 +63,9 @@ struct cgui_cell_style_t
 {
 	/* geometry */
 
-	unsigned int thickness_border;
-	unsigned int thickness_outline;
-	unsigned int margin;
+	int thickness_border;
+	int thickness_outline;
+	int margin;
 
 	/* colors */
 

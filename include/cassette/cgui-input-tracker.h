@@ -34,9 +34,9 @@ extern "C" {
 struct cgui_input_tracker_input_t
 {
 	unsigned int id;
-	unsigned int x;
-	unsigned int y;
 	const void *ref;
+	int x;
+	int y;
 };
 
 typedef struct cgui_input_tracker_input_t cgui_input_tracker_input_t;
@@ -65,7 +65,7 @@ void cgui_input_tracker_pull_id(cgui_input_tracker_t *inputs, unsigned int id);
 
 void cgui_input_tracker_pull_index(cgui_input_tracker_t *inputs, unsigned int index);
 
-void cgui_input_tracker_push(cgui_input_tracker_t *inputs, unsigned int id, unsigned int x, unsigned int y, void *ref);
+void cgui_input_tracker_push(cgui_input_tracker_t *inputs, unsigned int id, int x, int y, void *ref);
 
 void cgui_input_tracker_reset_iterator(cgui_input_tracker_t *inputs);
 
