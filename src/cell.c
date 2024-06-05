@@ -80,7 +80,6 @@ cgui_cell_create(void)
 	cell->fn_event   = _dummy_callback_event;
 
 	cobj_tracker_push(main_get_cells(), cell, &cell->id);
-	main_update_status();
 
 	return cell;
 }

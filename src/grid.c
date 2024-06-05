@@ -173,7 +173,6 @@ cgui_grid_create(size_t n_cols, size_t n_rows)
 	grid->areas            = cobj_tracker_create(1);
 
 	cobj_tracker_push(main_get_grids(), grid, &grid->id);
-	main_update_status();
 
 	grid->failed |= cobj_tracker_has_failed(grid->areas);
 	grid->failed |= !grid->cols;

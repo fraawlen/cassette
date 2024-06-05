@@ -19,7 +19,6 @@
 /************************************************************************************************************/
 
 #include <assert.h>
-#include <pthread.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -139,6 +138,14 @@ cgui_get_xcb_leader_window(void)
 bool
 cgui_has_failed(void)
 {
+	if (_init)
+	{
+		_failed |= cobj_tracker_has_failed(main_get_cells());
+		_failed |= cobj_tracker_has_failed(main_get_grids());
+		_failed |= cobj_tracker_has_failed(main_get_windows());
+		_failed |= x11_has_failed();
+	}
+
 	return _failed;
 }
 
@@ -171,8 +178,6 @@ cgui_init(int argc, char **argv)
 	_failed |= !config_init();
 	_failed |= !config_load();
 	_failed |= !mutex_init();
-
-	main_update_status();
 
 	_init = true;
 }
@@ -219,7 +224,7 @@ cgui_reconfig(void)
 		return;
 	}
 
-	_failed = !config_load();
+	_failed |= !config_load();
 
 	cobj_tracker_reset_iterator(_windows);
 	while (cobj_tracker_increment_iterator(_windows))
@@ -418,16 +423,6 @@ cobj_tracker_t *
 main_get_windows(void)
 {
 	return _windows ? _windows : cobj_tracker_get_placeholder();
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-main_update_status(void)
-{
-	_failed |= cobj_tracker_has_failed(main_get_cells());
-	_failed |= cobj_tracker_has_failed(main_get_grids());
-	_failed |= cobj_tracker_has_failed(main_get_windows());
 }
 
 /************************************************************************************************************/

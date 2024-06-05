@@ -65,7 +65,6 @@ cgui_window_create(void)
 	window->state      = CGUI_WINDOW_STATE_INITIAL;
 
 	cobj_tracker_push(main_get_windows(), window, &window->id);
-	main_update_status();
 
 	return window;
 }
