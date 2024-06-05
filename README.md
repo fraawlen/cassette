@@ -109,7 +109,7 @@ main(int argc, char **argv)
 	
 	/* grid configuration */
 
-	cgui_grid_set_column_width(grid, 0, 11);
+	cgui_grid_set_col_width(grid, 0, 11);
 	cgui_grid_assign_cell(grid, label, 0, 0, 1, 1);
 	
 	/* window configuration */
@@ -119,7 +119,7 @@ main(int argc, char **argv)
 
 	/* run */
 
-	cgui_loop_run();
+	cgui_run();
 
 	/* end */
 
