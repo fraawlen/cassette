@@ -548,18 +548,14 @@ Returns the value of a parameter defined within the calling program. If the para
 
 ```c
 /* inside caller program */
-ccfg_push_parameter_string(cfg, "param_a", 23);
-ccfg_push_parameter_double(cfg, "param_b", "abc");
+ccfg_push_parameter(cfg, "param_a", "abc");
 ```
 
 ```
 $$ param_a
--> 23
-
-$$ param_b
 -> abc
 
-$$ param_c
+$$ param_b
 -> invalid, not defined in the calling program
 ```
 
