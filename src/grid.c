@@ -183,11 +183,13 @@ cgui_grid_create(size_t n_cols, size_t n_rows)
 		for (size_t i = 0; i < n_cols; i++)
 		{
 			grid->cols[i].size = -1;
+			grid->cols[i].flex = 0.0;
 		}
 
 		for (size_t i = 0; i < n_rows; i++)
 		{
 			grid->rows[i].size = 1;
+			grid->rows[i].flex = 0.0;
 		}
 	}
 

@@ -301,7 +301,7 @@ cgui_config_get_parser(void)
 /************************************************************************************************************/
 
 bool
-config_init(void)
+config_init(const char *app_name, const char *app_class)
 {
 	cobj_string_t *home;
 
@@ -320,6 +320,9 @@ config_init(void)
 	ccfg_push_source(_parser, cobj_string_get_chars(home));
 	ccfg_push_source(_parser, "/usr/share/cgui/cgui.conf");
 	ccfg_push_source(_parser, "/etc/cgui.conf");
+
+	ccfg_push_parameter(_parser, "app_name",  app_name);
+	ccfg_push_parameter(_parser, "app_class", app_class);
 
 	cobj_string_destroy(&home);
 

@@ -44,7 +44,9 @@ void cgui_reset(void);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void cgui_setup_x11_class(const char *class_name, const char *class_class);
+void cgui_setup_app_class(const char *class_name);
+
+void cgui_setup_app_name(const char *name);
 
 void cgui_setup_x11_connection(xcb_connection_t *connection);
 

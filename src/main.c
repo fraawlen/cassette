@@ -61,8 +61,8 @@ static cobj_tracker_t *_windows = NULL;
 
 static xcb_connection_t *_ext_connection = NULL;
 
-static const char *_class_name  = NULL;
-static const char *_class_class = NULL;
+static const char *_app_name  = NULL;
+static const char *_app_class = NULL;
 
 /* session states */
 
@@ -146,14 +146,14 @@ cgui_init(int argc, char **argv)
 {
 	assert(!_init);
 
-	if (!_class_class)
+	if (!_app_class)
 	{
-		_class_class = argv ? argv[0] : "cgui";
+		_app_class = argv ? argv[0] : "cgui";
 	}
 
-	if (!_class_name)
+	if (!_app_name)
 	{
-		_class_name = _class_class;
+		_app_name = _app_class;
 	}
 
 	_cells   = cobj_tracker_create(1);
@@ -161,8 +161,8 @@ cgui_init(int argc, char **argv)
 	_windows = cobj_tracker_create(1);
 
 	_failed  = false;
-	_failed |= !x11_init(argc, argv, _class_name, _class_class, _ext_connection);
-	_failed |= !config_init();
+	_failed |= !x11_init(argc, argv, _app_name, _app_class, _ext_connection);
+	_failed |= !config_init(_app_name, _app_class);
 	_failed |= !config_load();
 	_failed |= !mutex_init();
 
@@ -266,8 +266,8 @@ cgui_reset(void)
 	mutex_reset();
 
 	_ext_connection = NULL;
-	_class_class    = NULL;
-	_class_name     = NULL;
+	_app_class    = NULL;
+	_app_name     = NULL;
 
 	_usr_exit = true;
 	_failed   = true;
@@ -355,12 +355,21 @@ cgui_set_callback_x11_events(void (*fn)(xcb_generic_event_t *event))
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_setup_x11_class(const char *class_name, const char *class_class)
+cgui_setup_app_class(const char *class_name)
 {
 	assert(!_init);
 
-	_class_name  = class_name;
-	_class_class = class_class;
+	_app_class = class_name;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_setup_app_name(const char *name)
+{
+	assert(!_init);
+
+	_app_name = name;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
