@@ -37,17 +37,13 @@ void x11_reset(bool kill_connection);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void x11_send_signal(void);
+bool x11_update(void);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 xcb_connection_t *x11_get_connection(void);
 
-xcb_key_symbols_t *x11_get_keysyms(void);
-
 xcb_window_t x11_get_leader_window(void);
-
-xcb_generic_event_t x11_get_next_event(void);
 
 bool x11_has_failed(void);
 

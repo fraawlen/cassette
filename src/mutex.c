@@ -92,7 +92,5 @@ mutex_unlock(void)
 		return true;
 	}
 
-	x11_send_signal();
-
 	return pthread_mutex_unlock(&_mutex) != EPERM;
 }

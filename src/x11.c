@@ -31,6 +31,7 @@
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
 
+#include "main.h"
 #include "x11.h"
 
 /************************************************************************************************************/
@@ -62,6 +63,10 @@ static uint8_t    _get_extension_opcode (const char *name);
 static bool       _prop_append          (xcb_window_t win, xcb_atom_t prop, xcb_atom_t type, uint32_t data_n, const void *data);
 static bool       _prop_set             (xcb_window_t win, xcb_atom_t prop, xcb_atom_t type, uint32_t data_n, const void *data);
 static bool       _test_cookie          (xcb_void_cookie_t xc);
+
+/* event handlers */
+
+static void _event_unknown (xcb_generic_event_t *xcb_event);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -174,43 +179,6 @@ x11_get_leader_window(void)
 	}
 
 	return _win_leader;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-xcb_generic_event_t
-x11_get_next_event(void)
-{
-	xcb_generic_event_t event = {0};
-	xcb_generic_event_t *tmp = NULL;
-
-	if (_failed)
-	{
-		return event;
-	}
-
-	/* grab next event from stack buffer if any  */
-	/* otherwhise retrieve new event from server */
-
-	if (cobj_tracker_get_size(_events) > 0)
-	{
-		tmp = (xcb_generic_event_t*)cobj_tracker_get_index(_events, 0);
-		cobj_tracker_pull_index(_events, 0);
-	}
-	else
-	{
-		tmp = xcb_wait_for_event(_connection);
-	}
-
-	/* dereference event and return a copy so that the caller does not need to free it */
-
-	if (tmp)
-	{
-		event = *tmp;
-		free(tmp);
-	}
-
-	return event;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -469,33 +437,65 @@ x11_reset(bool kill_connection)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-x11_send_signal(void)
+bool
+x11_update(void)
 {
-	xcb_void_cookie_t xc;
+	xcb_generic_event_t *event;
 
-	if (_failed)
+	/* grab next event from stack buffer if any  */
+	/* otherwhise retrieve new event from server */
+
+	if (cobj_tracker_get_size(_events) > 0)
 	{
-		return;
+		event = (xcb_generic_event_t*)cobj_tracker_get_index(_events, 0);
+		cobj_tracker_pull_index(_events, 0);
+	}
+	else
+	{
+		event = xcb_wait_for_event(_connection);
 	}
 
-	const xcb_client_message_event_t event = {
-		.response_type = XCB_CLIENT_MESSAGE,
-		.format   = 32,
-		.sequence = 0,
-		.window   = _win_leader,
-		.type     = _atom_isig,
-		.data     = {{0}}};
+	if (!event)
+	{
+		return false;
+	}
 
-	xc = xcb_send_event_checked(_connection, 0, _win_leader, XCB_EVENT_MASK_NO_EVENT, (char*)&event),
+	/* dispatch raw event to handlers to convert it into a CGUI event */
+
+	switch (event->response_type & ~ 0x80)
+	{
+		// TODO
+		
+		default:
+			_event_unknown(event);
+			break;
+	}
+
+	/* end */
+
+	free(event);
+
 	xcb_flush(_connection);
 
-	_failed = !_test_cookie(xc);
+	return true;
 }
 
 /************************************************************************************************************/
 /* _ ********************************************************************************************************/
 /************************************************************************************************************/
+
+static void
+_event_unknown(xcb_generic_event_t *xcb_event)
+{
+	cgui_event_t cgui_event;
+
+	cgui_event.kind      = CGUI_EVENT_UNKNOWN_XCB;
+	cgui_event.xcb_event = xcb_event;
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static xcb_atom_t
 _get_atom(const char *name)

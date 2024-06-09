@@ -18,13 +18,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_H
-#define CGUI_H
-
-#include <stdbool.h>
-#include <stdlib.h>
-
-#include <xcb/xcb.h>
+#ifndef CGUI_EVENT_H
+#define CGUI_EVENT_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,69 +29,29 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-/* init dependent headers */
+enum cgui_event_kind_t
+{
+	CGUI_EVENT_NONE = 0,
+	CGUI_EVENT_UNKNOWN_XCB,
+};
 
-#include "cgui-cell.h"
-#include "cgui-clipboard.h"
-#include "cgui-grid.h"
-#include "cgui-window.h"
-
-/* init independent headers */
-
-#include "cgui-config.h"
-#include "cgui-event.h"
-#include "cgui-input-tracker.h"
-#include "cgui-input-swap.h"
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-#define CGUI_VERSION "0.2.0"
+typedef enum cgui_event_kind_t cgui_event_kind_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void cgui_init(int argc, char **argv);
+struct cgui_event_t
+{
+	cgui_event_kind_t kind;
+	union
+	{
+		/* CGUI_EVENT_UNKNOWN_XCB */
+		xcb_generic_event_t *xcb_event;
+		/* CGUI_EVENT_NONE */
+		/* no fields for these events */
+	};
+};
 
-void cgui_reset(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void cgui_setup_app_class(const char *class_name);
-
-void cgui_setup_app_name(const char *name);
-
-void cgui_setup_x11_connection(xcb_connection_t *connection);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void cgui_allow_user_exit(void);
-
-void cgui_block_user_exit(void);
-
-void cgui_exit(void);
-
-void cgui_lock(void);
-
-void cgui_reconfig(void);
-
-void cgui_run(void);
-
-void cgui_set_callback_events(void (*fn)(cgui_event_t *event));
-
-void cgui_unlock(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-xcb_connection_t *cgui_get_x11_connection(void);
-
-xcb_window_t cgui_get_x11_leader_window(void);
-
-bool cgui_has_failed(void);
-
-bool cgui_is_init(void);
-
-bool cgui_is_running(void);
+typedef struct cgui_event_t cgui_event_t;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -106,4 +61,4 @@ bool cgui_is_running(void);
 }
 #endif
 
-#endif /* CGUI_H */
+#endif /* CGUI_EVENT_H */

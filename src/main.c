@@ -44,7 +44,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _dummy_callback_event    (xcb_generic_event_t *event);
+static void _dummy_callback_event    (cgui_event_t *event);
 static bool _is_any_window_activated (void);
 
 /************************************************************************************************************/
@@ -73,7 +73,7 @@ static bool _failed   = true;
 
 /* callbacks */
 
-static void (*_fn_event) (xcb_generic_event_t *event) = _dummy_callback_event;
+static void (*_fn_event) (cgui_event_t *event) = _dummy_callback_event;
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -167,6 +167,8 @@ cgui_init(int argc, char **argv)
 	_failed |= !mutex_init();
 
 	_init = true;
+
+	cgui_lock();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -266,15 +268,16 @@ cgui_reset(void)
 	mutex_reset();
 
 	_ext_connection = NULL;
-	_app_class    = NULL;
-	_app_name     = NULL;
+	_app_class      = NULL;
+	_app_name       = NULL;
+	_usr_exit       = true;
+	_failed         = true;
+	_running        = false;
+	_fn_event       = _dummy_callback_event;
 
-	_usr_exit = true;
-	_failed   = true;
-	_running  = false;
-	_init     = false;
-
-	_fn_event = _dummy_callback_event;
+	cgui_unlock();
+	
+	_init = false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -282,7 +285,7 @@ cgui_reset(void)
 void
 cgui_run(void)
 {
-	xcb_generic_event_t event;
+	bool fail = false;
 
 	assert(_init);
 
@@ -293,59 +296,23 @@ cgui_run(void)
 
 	_running = true;
 
-	while (_init && _running && _is_any_window_activated())
+	while (_init && _running && _is_any_window_activated() && !fail)
 	{
-		/*****/
-
-		event = x11_get_next_event();
-		
-		cgui_lock();
-
-		/*****/
-
-		if (event.response_type == 0)
-		{
-			_failed = true;
-		}
-
-		_fn_event(&event);
-		event_process(&event);
-
-		/*****/
-
-		cobj_tracker_reset_iterator(_windows);
-		while (cobj_tracker_increment_iterator(_windows))
-		{
-			window_present((cgui_window_t*)cobj_tracker_get_iteration(_windows));
-			window_destroy((cgui_window_t*)cobj_tracker_get_iteration(_windows));
-		}
-
-		cobj_tracker_reset_iterator(_grids);
-		while (cobj_tracker_increment_iterator(_grids))
-		{
-			grid_destroy((cgui_grid_t*)cobj_tracker_get_iteration(_grids));
-		}
-
-		cobj_tracker_reset_iterator(_cells);
-		while (cobj_tracker_increment_iterator(_cells))
-		{
-			cell_destroy((cgui_cell_t*)cobj_tracker_get_iteration(_cells));
-		}
-
-		/*****/
-
-		xcb_flush(x11_get_connection());
-		
 		cgui_unlock();
+
+		fail = !x11_update();
+
+		cgui_lock();
 	}
 
+	_failed |= fail;
 	_running = false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_set_callback_x11_events(void (*fn)(xcb_generic_event_t *event))
+cgui_set_callback_events(void (*fn)(cgui_event_t *event))
 {
 	assert(_init);
 
@@ -418,12 +385,44 @@ main_get_windows(void)
 	return _windows ? _windows : cobj_tracker_get_placeholder();
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+main_update(cgui_event_t *event)
+{
+	cgui_lock();
+
+	_fn_event(event);
+	event_process(event);
+
+	cobj_tracker_reset_iterator(_windows);
+	while (cobj_tracker_increment_iterator(_windows))
+	{
+		window_present((cgui_window_t*)cobj_tracker_get_iteration(_windows));
+		window_destroy((cgui_window_t*)cobj_tracker_get_iteration(_windows));
+	}
+
+	cobj_tracker_reset_iterator(_grids);
+	while (cobj_tracker_increment_iterator(_grids))
+	{
+		grid_destroy((cgui_grid_t*)cobj_tracker_get_iteration(_grids));
+	}
+
+	cobj_tracker_reset_iterator(_cells);
+	while (cobj_tracker_increment_iterator(_cells))
+	{
+		cell_destroy((cgui_cell_t*)cobj_tracker_get_iteration(_cells));
+	}
+	
+	cgui_unlock();
+}
+
 /************************************************************************************************************/
 /* _ ********************************************************************************************************/
 /************************************************************************************************************/
 
 static void
-_dummy_callback_event(xcb_generic_event_t *event)
+_dummy_callback_event(cgui_event_t *event)
 {
 	(void)event;
 }

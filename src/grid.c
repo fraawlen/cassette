@@ -142,12 +142,12 @@ cgui_grid_create(size_t n_cols, size_t n_rows)
 		return &_err_grid;
 	}
 
-	if (n_cols > INT_MAX || n_rows > INT_MAX)
+	if (n_cols > INT_MAX || n_cols > SIZE_MAX / sizeof(grid_line_t))
 	{
 		return &_err_grid;
 	}
 
-	if (n_cols > SIZE_MAX / sizeof(grid_line_t) || n_rows > SIZE_MAX / sizeof(grid_line_t))
+	if (n_rows > INT_MAX || n_rows > SIZE_MAX / sizeof(grid_line_t))
 	{
 		return &_err_grid;
 	}

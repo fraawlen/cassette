@@ -33,14 +33,17 @@
 /************************************************************************************************************/
 
 void
-event_process(xcb_generic_event_t *event)
+event_process(cgui_event_t *event)
 {
-	switch (event->response_type & ~0x80)
+	switch (event->kind)
 	{
+		case CGUI_EVENT_NONE:
+			break;
+
 		// TODO
 
 		default:
-			return;
+			break;
 	}
 }
 
