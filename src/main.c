@@ -42,7 +42,6 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _dummy_callback_event    (cgui_event_t *event);
 static bool _is_any_window_activated (void);
 
 /************************************************************************************************************/
@@ -68,10 +67,6 @@ static bool _init     = false;
 static bool _running  = false;
 static bool _usr_exit = true;
 static bool _failed   = true;
-
-/* callbacks */
-
-static void (*_fn_event) (cgui_event_t *event) = _dummy_callback_event;
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -271,7 +266,6 @@ cgui_reset(void)
 	_usr_exit       = true;
 	_failed         = true;
 	_running        = false;
-	_fn_event       = _dummy_callback_event;
 
 	cgui_unlock();
 	
@@ -305,16 +299,6 @@ cgui_run(void)
 
 	_failed |= fail;
 	_running = false;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_set_callback_events(void (*fn)(cgui_event_t *event))
-{
-	assert(_init);
-
-	_fn_event = fn ? fn : _dummy_callback_event;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -390,7 +374,6 @@ main_update(cgui_event_t *event)
 {
 	cgui_lock();
 
-	_fn_event(event);
 	event_process(event);
 
 	cobj_tracker_reset_iterator(_windows);
@@ -418,14 +401,6 @@ main_update(cgui_event_t *event)
 /************************************************************************************************************/
 /* _ ********************************************************************************************************/
 /************************************************************************************************************/
-
-static void
-_dummy_callback_event(cgui_event_t *event)
-{
-	(void)event;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
 _is_any_window_activated(void)
