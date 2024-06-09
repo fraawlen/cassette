@@ -27,7 +27,12 @@
 #include <string.h>
 #include <unistd.h>
 #include <xcb/xcb.h>
+#include <xcb/xcb_icccm.h>
 #include <xcb/xcb_keysyms.h>
+#include <xcb/present.h>
+#include <xcb/randr.h>
+#include <xcb/xinput.h>
+#include <xkbcommon/xkbcommon.h>
 
 #include "main.h"
 #include "x11.h"
@@ -64,7 +69,23 @@ static bool       _test_cookie          (xcb_void_cookie_t xc);
 
 /* event handlers */
 
-static void _event_unknown (xcb_generic_event_t *xcb_event);
+static void _event_client_message    (xcb_client_message_event_t *x_ev);
+static void _event_configure         (xcb_configure_notify_event_t *x_ev);
+static void _event_core_input        (xcb_key_press_event_t *x_ev);
+static void _event_expose            (xcb_expose_event_t *x_ev);
+static void _event_focus_in          (xcb_focus_in_event_t *x_ev);
+static void _event_focus_out         (xcb_focus_in_event_t *x_ev);
+static void _event_keymap            (xcb_mapping_notify_event_t *x_ev);
+static void _event_leave             (xcb_leave_notify_event_t *x_ev);
+static void _event_map               (xcb_map_notify_event_t *x_ev);
+static void _event_motion            (xcb_motion_notify_event_t *x_ev);
+static void _event_present           (xcb_present_generic_event_t *x_ev);
+static void _event_selection_clear   (xcb_selection_clear_event_t *x_ev);
+static void _event_selection_request (xcb_selection_request_event_t *x_ev);
+static void _event_unknown           (xcb_generic_event_t *xcb_event);
+static void _event_unmap             (xcb_unmap_notify_event_t *x_ev);
+static void _event_visibility        (xcb_visibility_notify_event_t *x_ev);
+static void _event_xinput_touch      (xcb_input_touch_begin_event_t *x_ev);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -462,8 +483,78 @@ x11_update(void)
 
 	switch (event->response_type & ~ 0x80)
 	{
-		// TODO
-		
+		/* can mix key and button_press events because their structs have the same fields */
+
+		case XCB_BUTTON_PRESS:
+		case XCB_BUTTON_RELEASE:
+		case XCB_KEY_PRESS:
+		case XCB_KEY_RELEASE:
+			_event_core_input((xcb_key_press_event_t*)event);
+			break;
+
+		case XCB_LEAVE_NOTIFY:
+			_event_leave((xcb_leave_notify_event_t*)event);
+			break;
+
+		case XCB_UNMAP_NOTIFY:
+			_event_unmap((xcb_unmap_notify_event_t*)event);
+			break;
+
+		case XCB_MAP_NOTIFY:
+			_event_map((xcb_map_notify_event_t*)event);
+			break;
+
+		case XCB_EXPOSE:
+			_event_expose((xcb_expose_event_t*)event);
+			break;
+
+		case XCB_MOTION_NOTIFY:
+			_event_motion((xcb_motion_notify_event_t*)event);
+			break;
+
+		case XCB_FOCUS_IN:
+			_event_focus_in((xcb_focus_in_event_t*)event);
+			break;
+
+		case XCB_FOCUS_OUT:
+			_event_focus_out((xcb_focus_in_event_t*)event);
+			break;
+
+		case XCB_CLIENT_MESSAGE:
+			_event_client_message((xcb_client_message_event_t*)event);
+			break;
+
+		case XCB_CONFIGURE_NOTIFY:
+			_event_configure((xcb_configure_notify_event_t*)event);
+			break;
+
+		case XCB_VISIBILITY_NOTIFY:
+			_event_visibility((xcb_visibility_notify_event_t*)event);
+			break;
+
+		case XCB_MAPPING_NOTIFY:
+			_event_keymap((xcb_mapping_notify_event_t*)event);
+			break;
+
+		case XCB_SELECTION_CLEAR:
+			_event_selection_clear((xcb_selection_clear_event_t*)event);
+			break;
+
+		case XCB_SELECTION_REQUEST:
+			_event_selection_request((xcb_selection_request_event_t*)event);
+			break;
+
+		case XCB_GE_GENERIC:
+			if (((xcb_ge_generic_event_t*)event)->extension == _opcode_present)
+			{
+				_event_present((xcb_present_generic_event_t*)event);
+			}
+			else if (((xcb_ge_generic_event_t*)event)->extension == _opcode_xinput)
+			{
+				_event_xinput_touch((xcb_input_touch_begin_event_t*)event);
+			}
+			break;
+
 		default:
 			_event_unknown(event);
 			break;
@@ -472,7 +563,6 @@ x11_update(void)
 	/* end */
 
 	free(event);
-
 	xcb_flush(_connection);
 
 	return true;
@@ -483,12 +573,200 @@ x11_update(void)
 /************************************************************************************************************/
 
 static void
+_event_client_message(xcb_client_message_event_t *xcb_event)
+{
+	cgui_event_t cgui_event = {0};
+
+	(void)xcb_event; // TODO
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_event_configure(xcb_configure_notify_event_t *xcb_event)
+{
+	cgui_event_t cgui_event = {0};
+
+	(void)xcb_event; // TODO
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_event_core_input(xcb_key_press_event_t *xcb_event)
+{
+	cgui_event_t cgui_event = {0};
+
+	(void)xcb_event; // TODO
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_event_expose(xcb_expose_event_t *xcb_event)
+{
+	cgui_event_t cgui_event = {0};
+
+	(void)xcb_event; // TODO
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_event_focus_in(xcb_focus_in_event_t *xcb_event)
+{
+	cgui_event_t cgui_event = {0};
+
+	(void)xcb_event; // TODO
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_event_focus_out(xcb_focus_in_event_t *xcb_event)
+{
+	cgui_event_t cgui_event = {0};
+
+	(void)xcb_event; // TODO
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_event_keymap(xcb_mapping_notify_event_t *xcb_event)
+{
+	xcb_refresh_keyboard_mapping(_keysyms, xcb_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_event_leave(xcb_leave_notify_event_t *xcb_event)
+{
+	cgui_event_t cgui_event = {0};
+
+	(void)xcb_event; // TODO
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_event_map(xcb_map_notify_event_t *xcb_event)
+{
+	cgui_event_t cgui_event = {0};
+
+	(void)xcb_event; // TODO
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_event_motion(xcb_motion_notify_event_t *xcb_event)
+{
+	cgui_event_t cgui_event = {0};
+
+	(void)xcb_event; // TODO
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_event_present(xcb_present_generic_event_t *xcb_event)
+{
+	cgui_event_t cgui_event = {0};
+
+	(void)xcb_event; // TODO
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_event_selection_clear(xcb_selection_clear_event_t *xcb_event)
+{
+	cgui_event_t cgui_event = {0};
+
+	(void)xcb_event; // TODO
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_event_selection_request(xcb_selection_request_event_t *xcb_event)
+{
+	cgui_event_t cgui_event = {0};
+
+	(void)xcb_event; // TODO
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 _event_unknown(xcb_generic_event_t *xcb_event)
 {
-	cgui_event_t cgui_event;
+	cgui_event_t cgui_event = {0};
 
 	cgui_event.kind      = CGUI_EVENT_UNKNOWN_XCB;
 	cgui_event.xcb_event = xcb_event;
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_event_unmap(xcb_unmap_notify_event_t *xcb_event)
+{
+	cgui_event_t cgui_event = {0};
+
+	(void)xcb_event; // TODO
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_event_visibility(xcb_visibility_notify_event_t *xcb_event)
+{
+	cgui_event_t cgui_event = {0};
+
+	(void)xcb_event; // TODO
+
+	main_update(&cgui_event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_event_xinput_touch(xcb_input_touch_begin_event_t *xcb_event)
+{
+	cgui_event_t cgui_event = {0};
+
+	(void)xcb_event; // TODO
 
 	main_update(&cgui_event);
 }
