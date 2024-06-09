@@ -18,8 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_EVENT_H
-#define CGUI_EVENT_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,5 +59,3 @@ typedef struct cgui_event_t cgui_event_t;
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* CGUI_EVENT_H */

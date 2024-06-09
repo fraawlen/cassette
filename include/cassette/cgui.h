@@ -18,35 +18,24 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_H
-#define CGUI_H
+#pragma once
 
 #include <stdbool.h>
 #include <stdlib.h>
-
 #include <xcb/xcb.h>
+
+#include "cgui-cell.h"
+#include "cgui-clipboard.h"
+#include "cgui-config.h"
+#include "cgui-event.h"
+#include "cgui-grid.h"
+#include "cgui-input-tracker.h"
+#include "cgui-input-swap.h"
+#include "cgui-window.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-/* init dependent headers */
-
-#include "cgui-cell.h"
-#include "cgui-clipboard.h"
-#include "cgui-grid.h"
-#include "cgui-window.h"
-
-/* init independent headers */
-
-#include "cgui-config.h"
-#include "cgui-event.h"
-#include "cgui-input-tracker.h"
-#include "cgui-input-swap.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -82,8 +71,6 @@ void cgui_reconfig(void);
 
 void cgui_run(void);
 
-void cgui_set_callback_events(void (*fn)(cgui_event_t *event));
-
 void cgui_unlock(void);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -105,5 +92,3 @@ bool cgui_is_running(void);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* CGUI_H */

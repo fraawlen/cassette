@@ -18,18 +18,16 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <cassette/cgui.h>
+#include <cassette/cobj.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h>
-
-#include <cassette/cgui.h>
-#include <cassette/cobj.h>
 
 #include "main.h"
 #include "x11.h"

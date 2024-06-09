@@ -19,11 +19,10 @@
 /************************************************************************************************************/
 
 #include <assert.h>
-#include <stdbool.h>
-#include <stdlib.h>
-
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
 #include "cell.h"
 #include "main.h"

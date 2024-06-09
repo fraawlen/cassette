@@ -19,6 +19,10 @@
 /************************************************************************************************************/
 
 #include <assert.h>
+#include <cairo/cairo.h>
+#include <cassette/ccfg.h>
+#include <cassette/cgui.h>
+#include <cassette/cobj.h>
 #include <float.h>
 #include <limits.h>
 #include <pwd.h>
@@ -26,12 +30,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-
-#include <cairo/cairo.h>
-
-#include <cassette/ccfg.h>
-#include <cassette/cgui.h>
-#include <cassette/cobj.h>
 
 #include "config.h"
 #include "config-default.h"

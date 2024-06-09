@@ -18,8 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_INPUT_TRACKER_H
-#define CGUI_INPUT_TRACKER_H
+#pragma once
 
 #include <stdlib.h>
 
@@ -92,5 +91,3 @@ bool cgui_input_tracker_has_failed(const cgui_input_tracker_t *inputs);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* CGUI_INPUT_TRACKER_H */

@@ -18,8 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_INPUT_SWAP_H
-#define CGUI_INPUT_SWAP_H
+#pragma once
 
 #include <stdint.h>
 
@@ -114,5 +113,3 @@ typedef struct cgui_input_swap_t cgui_input_swap_t;
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* CGUI_INPUT_SWAP_H */

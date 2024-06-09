@@ -18,14 +18,12 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_CONFIG_H
-#define CGUI_CONFIG_H
-
-#include <stdbool.h>
-#include <stdlib.h>
+#pragma once
 
 #include <cassette/ccfg.h>
 #include <cassette/cobj.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
 #include "cgui-input-swap.h"
 
@@ -184,5 +182,3 @@ ccfg_t *cgui_config_get_parser(void);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* CGUI_CONFIG_H */

@@ -18,8 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_WINDOW_H
-#define CGUI_WINDOW_H
+#pragma once
 
 #include <stdbool.h>
 
@@ -68,5 +67,3 @@ bool cgui_window_has_failed(const cgui_window_t *window);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* CGUI_WINDOW_H */

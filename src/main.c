@@ -19,15 +19,13 @@
 /************************************************************************************************************/
 
 #include <assert.h>
-#include <stdbool.h>
-#include <stdlib.h>
-
 #include <cairo/cairo.h>
-#include <fontconfig/fontconfig.h>
-#include <xcb/xcb.h>
-
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
+#include <fontconfig/fontconfig.h>
+#include <xcb/xcb.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
 #include "cell.h"
 #include "config.h"

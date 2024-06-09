@@ -18,12 +18,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_CELL_H
-#define CGUI_CELL_H
-
-#include <stdbool.h>
+#pragma once
 
 #include <cassette/cobj.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -135,5 +133,3 @@ bool cgui_cell_has_failed(const cgui_cell_t *cell);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* CGUI_CELL_H */

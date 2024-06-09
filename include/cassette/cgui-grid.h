@@ -18,8 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CGUI_GRID_H
-#define CGUI_GRID_H
+#pragma once
 
 #include <stdbool.h>
 
@@ -66,5 +65,3 @@ bool cgui_grid_has_failed(const cgui_grid_t *grid);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* CGUI_GRID_H */
