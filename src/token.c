@@ -58,6 +58,7 @@ token_dictionary_create(void)
 	cobj_dictionary_write(dict, ">=",     0, TOKEN_IF_MORE_EQ);
 	cobj_dictionary_write(dict, "==",     0, TOKEN_IF_EQ);
 	cobj_dictionary_write(dict, "!=",     0, TOKEN_IF_EQ_NOT);
+	cobj_dictionary_write(dict, "STREQ",  0, TOKEN_IF_STR_EQ);
 	
 	cobj_dictionary_write(dict, "TIME",   0, TOKEN_TIMESTAMP);
 	cobj_dictionary_write(dict, "PI",     0, TOKEN_CONST_PI);

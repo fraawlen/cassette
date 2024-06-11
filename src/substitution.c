@@ -100,6 +100,7 @@ substitution_apply(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], doubl
 		case TOKEN_IF_MORE_EQ:
 		case TOKEN_IF_EQ:
 		case TOKEN_IF_EQ_NOT:
+		case TOKEN_IF_STR_EQ:
 			type = _if(ctx, token, math_result, type);
 			break;
 
@@ -216,8 +217,8 @@ _if(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result,
 
 	/* get values to compare */
 
-	if (context_get_token_numeral(ctx, token, &a) == TOKEN_INVALID ||
-	    context_get_token_numeral(ctx, token, &b) == TOKEN_INVALID)
+	if (context_get_token_numeral(ctx, token,   &a) == TOKEN_INVALID ||
+	    context_get_token_numeral(ctx, token_2, &b) == TOKEN_INVALID)
 	{
 		return TOKEN_INVALID;	
 	}
@@ -248,6 +249,10 @@ _if(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result,
 
 		case TOKEN_IF_EQ_NOT:
 			result = a != b;
+			break;
+
+		case TOKEN_IF_STR_EQ:
+			result = !strcmp(token, token_2);
 			break;
 
 		default:
