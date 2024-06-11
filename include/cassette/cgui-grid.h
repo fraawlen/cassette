@@ -34,6 +34,28 @@ typedef struct grid_t cgui_grid_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+enum cgui_grid_compare_size_t
+{
+	CGUI_SIZE_SAME,
+	CGUI_SIZE_BIGGER,
+	CGUI_SIZE_SMALLER,
+	CGUI_SIZE_UNDEFINED,
+};
+
+typedef enum cgui_grid_compare_size_t cgui_grid_compare_size_t;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+enum cgui_grid_compare_flex_t
+{
+	CGUI_FLEX_SAME,
+	CGUI_FLEX_DIFFERENT,
+};
+
+typedef enum cgui_grid_compare_size_t cgui_grid_compare_flex_t;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 cgui_grid_t *cgui_grid_clone(cgui_grid_t *grid);
 
 cgui_grid_t *cgui_grid_create(size_t n_cols, size_t n_rows);
@@ -55,6 +77,18 @@ void cgui_grid_set_row_flex(cgui_grid_t *grid, size_t row, double flex);
 void cgui_grid_set_row_height(cgui_grid_t *grid, size_t row, int height);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cgui_grid_compare_size_t cgui_grid_compare_flex(const cgui_grid_t *grid_1, const cgui_grid_t *grid_2);
+
+cgui_grid_compare_size_t cgui_grid_compare_size(const cgui_grid_t *grid_1, const cgui_grid_t *grid_2);
+
+int cgui_grid_get_width(const cgui_grid_t *grid);
+
+int cgui_grid_get_height(const cgui_grid_t *grid);
+
+double cgui_grid_get_flex_vertical(const cgui_grid_t *grid);
+
+double cgui_grid_get_flex_horizontal(const cgui_grid_t *grid);
 
 bool cgui_grid_has_failed(const cgui_grid_t *grid);
 

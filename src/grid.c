@@ -129,6 +129,32 @@ cgui_grid_clone(cgui_grid_t *grid)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+cgui_grid_compare_flex_t
+cgui_grid_compare_flex(const cgui_grid_t *grid_1, const cgui_grid_t *grid_2)
+{
+	(void)grid_1;
+	(void)grid_2;
+
+	// TODO
+
+	return true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cgui_grid_compare_size_t
+cgui_grid_compare_size(const cgui_grid_t *grid_1, const cgui_grid_t *grid_2)
+{
+	(void)grid_1;
+	(void)grid_2;
+
+	// TODO
+
+	return true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 cgui_grid_t *
 cgui_grid_create(size_t n_cols, size_t n_rows)
 {
@@ -214,6 +240,60 @@ cgui_grid_destroy(cgui_grid_t **grid)
 	}
 
 	*grid = &_err_grid;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+int
+cgui_grid_get_width(const cgui_grid_t *grid)
+{
+	(void)grid;
+
+	// TODO
+
+	return 0;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+int
+cgui_grid_get_height(const cgui_grid_t *grid)
+{
+	(void)grid;
+
+	// TODO
+
+	return 0;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+double
+cgui_grid_get_flex_vertical(const cgui_grid_t *grid)
+{
+	assert(grid);
+
+	if (grid->failed)
+	{
+		return 0.0;
+	}
+
+	return grid->total_row_flex;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+double
+cgui_grid_get_flex_horizontal(const cgui_grid_t *grid)
+{
+	assert(grid);
+
+	if (grid->failed)
+	{
+		return 0.0;
+	}
+
+	return grid->total_col_flex;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
