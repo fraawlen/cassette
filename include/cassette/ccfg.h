@@ -48,7 +48,7 @@ typedef struct ccfg_t ccfg_t;
 
 /**
  * Allocates memory and initializes a CCFG configuration instance.
- * This function always returns a valid and safe-to-use or destroy object instance. Even in case of memory
+ * This function always returns a valid and safe-to-use or destroy object instance. Even in the case of memory
  * allocation failure, the returned value points to an internal static Configuration instance set in a failed
  * state. Therefore, checking for a NULL returned value is useless, instead, use ccfg_has_failed(). Never 
  * free() an object obtained with this function, instead use ccfg_destroy().
@@ -69,7 +69,7 @@ ccfg_t *ccfg_get_placeholder(void);
 /**
  * Destroy a given instance and free allocated memory. The pointed value is then replaced by a placeholder
  * value that points to an internal static configuration instance set in a failed state to avoid leaving
- * behind a dandling pointer. Hence, it is safe to call this function multiple times.
+ * behind a dangling pointer. Hence, it is safe to call this function multiple times.
  *
  * @param cfg Configuration instance to interact with
  */
