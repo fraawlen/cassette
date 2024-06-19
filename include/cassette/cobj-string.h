@@ -18,8 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef COBJ_STRING_H
-#define COBJ_STRING_H
+#pragma once
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -113,5 +112,3 @@ size_t cobj_string_test_wrap(const cobj_string_t *str, size_t max_cols);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* COBJ_STRING_H */

@@ -92,9 +92,9 @@ cobj_book_clear(cobj_book_t *book)
 cobj_book_t *
 cobj_book_create(size_t n_alloc, size_t word_n)
 {
-	assert(word_n > 0);
-
 	cobj_book_t *book;
+
+	assert(word_n > 0);
 
 	if (!(book = malloc(sizeof(cobj_book_t))))
 	{
@@ -370,7 +370,7 @@ cobj_book_increment_iterator(cobj_book_t *book)
 	}
 
 	book->iterator_word++;
-	
+		
 	return true;
 }
 
@@ -446,6 +446,11 @@ cobj_book_rewrite_word(cobj_book_t *book, const char *str, size_t group_index, s
 	assert(book);
 
 	if (book->failed)
+	{
+		return;
+	}
+
+	if (!str)
 	{
 		return;
 	}

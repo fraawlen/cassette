@@ -18,8 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef COBJ_RAND_H
-#define COBJ_RAND_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,6 +45,3 @@ double cobj_rand_get(cobj_rand_t *r, double lim_1, double lim_2);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* COBJ_RAND_H */
-

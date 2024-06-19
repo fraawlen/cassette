@@ -18,8 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef COBJ_DICTIONARY_H
-#define COBJ_DICTIONARY_H
+#pragma once
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -72,6 +71,3 @@ bool cobj_dictionary_has_failed(const cobj_dictionary_t *dict);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* COBJ_DICTIONARY_H */
-

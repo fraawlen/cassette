@@ -102,9 +102,11 @@ cobj_string_clear(cobj_string_t *str)
 cobj_string_t *
 cobj_string_clone(const cobj_string_t *str)
 {
+	cobj_string_t *str_dup;
+
 	assert(str);
 
-	cobj_string_t *str_dup = cobj_string_create();
+	str_dup = cobj_string_create();
 
 	cobj_string_set(str_dup, str);
 

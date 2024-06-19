@@ -18,8 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef COBJ_TRACKER_H
-#define COBJ_TRACKER_H
+#pragma once
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -87,5 +86,3 @@ bool cobj_tracker_has_failed(const cobj_tracker_t *tracker);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* COBJ_TRACKER_H */

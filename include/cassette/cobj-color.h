@@ -18,8 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef COBJ_COLOR_H
-#define COBJ_COLOR_H
+#pragma once
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -77,6 +76,3 @@ uint32_t cobj_color_get_argb_uint(cobj_color_t cl);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* COBJ_COLOR_H */
-

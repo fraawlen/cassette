@@ -18,8 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef COBJ_RECT_H
-#define COBJ_RECT_H
+#pragma once
 
 #include <stdbool.h>
 
@@ -68,5 +67,3 @@ bool cobj_rect_test_bounds(cobj_rect_t rect, int x, int y);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* COBJ_RECT_H */
