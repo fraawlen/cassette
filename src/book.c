@@ -19,12 +19,11 @@
 /************************************************************************************************************/
 
 #include <assert.h>
+#include <cassette/cobj.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <cassette/cobj.h>
 
 #include "safe.h"
 
