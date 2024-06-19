@@ -18,6 +18,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <cassette/ccfg.h>
+#include <cassette/cobj.h>
 #include <libgen.h>
 #include <limits.h>
 #include <stdbool.h>
@@ -26,9 +28,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
-#include <cassette/ccfg.h>
-#include <cassette/cobj.h>
 
 #include "context.h"
 #include "main.h"

@@ -18,8 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CCFG_H
-#define CCFG_H
+#pragma once
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -38,10 +37,10 @@ extern "C" {
 
 /**
  * Opaque configuration instance object that holds all parsed resources.
- * This object holds an internal fail state boolean that can be checked with ccfg_has_failed(). If
- * happens to be put in a failure state due to a memory failure, any function that take this object as
- * argument will return early with no side effects and default return values. The only 2 functions that are
- * an exception to this rule are ccfg_destroy() and ccfg_has_failed().
+ * This object holds an internal fail state boolean that can be checked with ccfg_has_failed(). If it happens
+ * to be put in a failure state due to a memory failure, any function that take this object as argument will
+ * exit early with no side effects and return default values. The only 2 functions that are an exception to
+ * this rule are ccfg_destroy() and ccfg_has_failed().
  */
 typedef struct ccfg_t ccfg_t;
 
@@ -50,9 +49,9 @@ typedef struct ccfg_t ccfg_t;
 /**
  * Allocates memory and initializes a CCFG configuration instance.
  * This function always returns a valid and safe-to-use or destroy object instance. Even in case of memory
- * allocation failure, the returned value points to an internal static Configuration instanceuration object
- * instance set in a failed state. Therefore, checking for a NULL returned value is useless, instead, use
- * ccfg_has_failed().
+ * allocation failure, the returned value points to an internal static Configuration instance set in a failed
+ * state. Therefore, checking for a NULL returned value is useless, instead, use ccfg_has_failed(). Never 
+ * free() an object obtained with this function, instead use ccfg_destroy().
  *
  * @return Created config instance object
  */
@@ -60,7 +59,8 @@ ccfg_t *ccfg_create(void);
 
 /**
  * Gets a valid pointer to an internal configuration instance set in a failed state. To be used to avoid
- * leaving around uninitialised configuration instance pointers.
+ * leaving around uninitialised configuration instance pointers. Never free() an object obtained with this
+ * function, instead use ccfg_destroy().
  *
  * @return Placeholder config instance object
  */
@@ -68,8 +68,8 @@ ccfg_t *ccfg_get_placeholder(void);
 
 /**
  * Destroy a given instance and free allocated memory. The pointed value is then replaced by a placeholder
- * value that points to an internal static configuration instance set in a failed state. Hence, it is safe
- * to call this function multiple times.
+ * value that points to an internal static configuration instance set in a failed state to avoid leaving
+ * behind a dandling pointer. Hence, it is safe to call this function multiple times.
  *
  * @param cfg Configuration instance to interact with
  */
@@ -230,5 +230,6 @@ const char *ccfg_test_sources(const ccfg_t *cfg);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#endif /* CCFG_H */
-
+#ifdef __cplusplus
+}
+#endif

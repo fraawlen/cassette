@@ -19,13 +19,12 @@
 /************************************************************************************************************/
 
 #include <assert.h>
+#include <cassette/ccfg.h>
+#include <cassette/cobj.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <cassette/ccfg.h>
-#include <cassette/cobj.h>
 
 #include "context.h"
 #include "substitution.h"
@@ -44,8 +43,6 @@ static bool _read_word (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]);
 token_kind_t
 context_get_token(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result)
 {
-	assert(ctx);
-
 	if (context_get_token_raw(ctx, token) == TOKEN_INVALID)
 	{
 		return TOKEN_INVALID;
@@ -60,8 +57,6 @@ token_kind_t
 context_get_token_numeral(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result)
 {
 	bool err = false;
-
-	assert(ctx && math_result);
 
 	switch (context_get_token(ctx, token, math_result))
 	{
@@ -93,8 +88,6 @@ context_get_token_numeral(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]
 token_kind_t
 context_get_token_raw(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES])
 {
-	assert(ctx);
-
 	if (cobj_book_increment_iterator(ctx->variables))
 	{
 		snprintf(token, CCFG_MAX_WORD_BYTES, "%s", cobj_book_get_iteration(ctx->variables));
@@ -116,8 +109,6 @@ context_get_token_raw(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES])
 void
 context_goto_eol(context_t *ctx)
 {
-	assert(ctx);
-
 	while (!ctx->eol_reached)
 	{
 		switch (fgetc(ctx->file))

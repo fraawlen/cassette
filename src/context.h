@@ -18,17 +18,15 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef CONTEXT_H
-#define CONTEXT_H
+#pragma once
 
+#include <cassette/ccfg.h>
+#include <cassette/cobj.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
-
-#include <cassette/ccfg.h>
-#include <cassette/cobj.h>
 
 #include "token.h"
 
@@ -85,10 +83,3 @@ token_kind_t context_get_token_numeral(context_t *ctx, char token[static CCFG_MA
 token_kind_t context_get_token_raw(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]);
 
 void context_goto_eol(context_t *ctx);
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-#endif /* CONTEXT_H */
-

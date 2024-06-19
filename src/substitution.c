@@ -18,14 +18,13 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <cassette/ccfg.h>
+#include <cassette/cobj.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
-#include <cassette/ccfg.h>
-#include <cassette/cobj.h>
 
 #include "context.h"
 #include "token.h"
