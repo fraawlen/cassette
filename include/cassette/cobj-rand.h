@@ -28,15 +28,33 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+/**
+ * Keeper value that keeps track of the LCG (rand48-based) state.
+ */
 typedef unsigned long long cobj_rand_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void cobj_rand_seed(cobj_rand_t *r, unsigned long long seed);
+/**
+ * Sets the initial value of the keeper.
+ *
+ * @param rand Keeper value to interact with
+ * @param seed Initial value to apply
+ */
+void cobj_rand_seed(cobj_rand_t *rand, unsigned long long seed);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-double cobj_rand_get(cobj_rand_t *r, double lim_1, double lim_2);
+/**
+ * Gets the next random value bound between lim_1 and lim_2 for the given keeper.
+ *
+ * @param rand Keeper value to interact with
+ * @param lim_1 First bound of the possible returned value
+ * @param lim_2 Second bound of the posiible returned value
+ *
+ * @return Generated random value
+ */
+double cobj_rand_get(cobj_rand_t *rand, double lim_1, double lim_2);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

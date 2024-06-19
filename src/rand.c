@@ -32,25 +32,25 @@
 /************************************************************************************************************/
 
 double
-cobj_rand_get(cobj_rand_t *r, double lim_1, double lim_2)
+cobj_rand_get(cobj_rand_t *rand, double lim_1, double lim_2)
 {
 	const unsigned long long m = 140737488355328ULL;
 	const unsigned long long a = 25214903917ULL;
 	const unsigned long long c = 11ULL;
 
-	assert(r);
+	assert(rand);
 
-	*r = (a * (*r) + c) % m;
+	*rand = (a * (*rand) + c) % m;
 
-	return lim_1 + (*r) / _MAX * (lim_2 - lim_1);
+	return lim_1 + (*rand) / _MAX * (lim_2 - lim_1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cobj_rand_seed(cobj_rand_t *r, unsigned long long seed)
+cobj_rand_seed(cobj_rand_t *rand, unsigned long long seed)
 {
-	assert(r);
+	assert(rand);
 
-	*r = cobj_rand_get(&seed, 0, _MAX);
+	*rand = cobj_rand_get(&seed, 0, _MAX);
 }
