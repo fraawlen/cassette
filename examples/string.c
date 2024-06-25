@@ -126,8 +126,6 @@ _insert_2d(const char *text, size_t row, size_t col)
 	size_t offset_wrap;
 
 	offset_wrap = cstr_coords_offset(_str_wrap, row, col);
-
-	printf(">> %zu\n", offset_wrap);
 	offset_ref  = cstr_unwrapped_offset(_str_ref, _str_wrap, offset_wrap);
 
 	cstr_insert(_str_ref, text, offset_ref);	
