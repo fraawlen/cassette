@@ -18,7 +18,6 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <assert.h>
 #include <cassette/cobj.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -28,101 +27,181 @@
 
 #include "safe.h"
 
+#if __GNUC__ > 4
+	#define CSTR_CONST __attribute__((const))
+#else
+	#define CSTR_CONST
+#endif
+
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-struct _string_t
+struct cstr
 {
 	char *chars;
 	size_t n_rows;
 	size_t n_cols;
 	size_t n_bytes;
+	size_t n_alloc;
 	size_t n_codepoints;
-	bool failed;
+	size_t tab_width;
+	int digits;
+	enum cstr_err err;
 };
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static size_t       _convert_to_byte_offset (const cobj_string_t *str, size_t offset);
-static const char * _get_next_codepoint     (const char *codepoint);
-static bool         _is_end_byte            (char c);
-static void         _update_n_values        (cobj_string_t *str);
+static size_t      _byte_offset     (const cstr *str, size_t offset) CSTR_NONNULL(1) CSTR_PURE;
+static bool        _is_end_byte     (char c)                         CSTR_CONST;
+static const char *_next_codepoint  (const char *codepoint)          CSTR_NONNULL(1) CSTR_PURE;
+static void        _update_n_values (cstr *str)                      CSTR_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static cobj_string_t _err_str =
+cstr cstr_placeholder_instance =
 {
 	.chars        = NULL,
 	.n_rows       = 0,
 	.n_cols       = 0,
 	.n_bytes      = 0,
+	.n_alloc      = 0,
 	.n_codepoints = 0,
-	.failed       = true,
+	.tab_width    = 0,
+	.digits       = 0,
+	.err          = CSTR_INVALID,
 };
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-void
-cobj_string_append(cobj_string_t *str, const cobj_string_t *str_src)
+size_t
+cstr_alloc_length(const cstr *str)
 {
-	assert(str && str_src);
+	if (str->err)
+	{
+		return 0;
+	}
 
-	cobj_string_insert(str, str_src, SIZE_MAX);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cobj_string_append_raw(cobj_string_t *str, const char *c_str)
-{
-	assert(str);
-
-	cobj_string_insert_raw(str, c_str, SIZE_MAX);
-}
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cobj_string_clear(cobj_string_t *str)
-{
-	assert(str);
-
-	cobj_string_set_raw(str, "");
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-cobj_string_t *
-cobj_string_clone(const cobj_string_t *str)
-{
-	cobj_string_t *str_dup;
-
-	assert(str);
-
-	str_dup = cobj_string_create();
-
-	cobj_string_set(str_dup, str);
-
-	return str_dup;
+	return str->n_alloc;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-cobj_string_convert_coords_to_offset(const cobj_string_t *str, size_t row, size_t col)
+cstr_byte_length(const cstr *str)
+{
+	if (str->err)
+	{
+		return 0;
+	}
+
+	return str->n_bytes;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+cstr_byte_offset(const cstr *str, size_t offset)
+{
+	if (str->err)
+	{
+		return 0;
+	}
+
+	return _byte_offset(str, offset);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+const char *
+cstr_chars(const cstr *str)
+{
+	if (str->err)
+	{
+		return "";
+	}
+
+	return str->chars;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+const char *
+cstr_chars_at_coords(const cstr *str, size_t row, size_t col)
+{
+	if (str->err)
+	{
+		return "";
+	}
+
+	return str->chars + _byte_offset(str, cstr_coords_offset(str, row, col));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+const char *
+cstr_chars_at_offset(const cstr *str, size_t offset)
+{
+	if (str->err)
+	{
+		return "";
+	}
+
+	return str->chars + _byte_offset(str, offset);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cstr_clear(cstr *str)
+{
+	if (str->err)
+	{
+		return;
+	}
+
+	memset(str->chars, '\0', str->n_alloc);
+
+	_update_n_values(str);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cstr *
+cstr_clone(const cstr *str)
+{
+	cstr *str_new;
+
+	if (str->err)
+	{
+		return CSTR_PLACEHOLDER;
+	}
+
+	str_new = cstr_create();
+
+	str_new->tab_width = str->tab_width;
+	str_new->digits    = str->digits;
+
+	cstr_insert_raw(str_new, str->chars, 0);
+
+	return str_new;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+cstr_coords_offset(const cstr *str, size_t row, size_t col)
 {
 	const char *codepoint;
 	size_t offset = 0;
 
-	assert(str);
-
-	if (str->failed)
+	if (str->err)
 	{
 		return 0;
 	}
@@ -147,7 +226,7 @@ cobj_string_convert_coords_to_offset(const cobj_string_t *str, size_t row, size_
 		{
 			row--;
 		}
-		codepoint = _get_next_codepoint(codepoint);
+		codepoint = _next_codepoint(codepoint);
 		offset++;
 	}
 
@@ -161,12 +240,16 @@ cobj_string_convert_coords_to_offset(const cobj_string_t *str, size_t row, size_
 			case '\n':
 				return offset;
 
+			case '\t':
+				col -= col >= str->tab_width ? str->tab_width : col;
+				break;
+
 			default:
+				col--;
 				break;
 		}
-		codepoint = _get_next_codepoint(codepoint);
+		codepoint = _next_codepoint(codepoint);
 		offset++;
-		col--;
 	}
 
 	return offset;
@@ -174,82 +257,29 @@ cobj_string_convert_coords_to_offset(const cobj_string_t *str, size_t row, size_
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-size_t
-cobj_string_convert_wrapped_offset(const cobj_string_t *str, const cobj_string_t *str_wrap, size_t offset)
+cstr *
+cstr_create(void)
 {
-	const char *codepoint_1;
-	const char *codepoint_2;
-	size_t diff = 0;
+	cstr *str;
 
-	assert(str && str_wrap);
-
-	if (str->failed || str_wrap->failed)
+	if (!(str = malloc(sizeof(cstr))))
 	{
-		return 0;
+		return CSTR_PLACEHOLDER;
 	}
 
-	if (offset >= str_wrap->n_codepoints)
+	if (!(str->chars = malloc(1)))
 	{
-		return str->n_codepoints;
+		free(str);
+		return CSTR_PLACEHOLDER;
 	}
 
-	codepoint_1 = str->chars;
-	codepoint_2 = str_wrap->chars;
-
-	for (size_t i = 0; i < offset; i++)
-	{
-		if (*codepoint_1 != '\n' && *codepoint_2 == '\n')
-		{
-			diff++;
-		}
-		else
-		{
-			codepoint_1 = _get_next_codepoint(codepoint_1);
-		}
-
-		codepoint_2 = _get_next_codepoint(codepoint_2);
-	}
-
-	return offset - diff;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-cobj_string_t *
-cobj_string_create(void)
-{
-	cobj_string_t *str;
-
-	if (!(str = malloc(sizeof(cobj_string_t))))
-	{
-		return &_err_str;
-	}
-
-	str->chars        = NULL;
-	str->n_rows       = 0;
-	str->n_cols       = 0;
-	str->n_bytes      = 0;
-	str->n_codepoints = 0;
-	str->failed       = false;
-
-	cobj_string_clear(str);
-
-	return str;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-cobj_string_t *
-cobj_string_create_double(double d, int precision)
-{
-	cobj_string_t *str;
-
-	char tmp[25];
-
-	snprintf(tmp, 25, "%.*f", precision, d);
-
-	str = cobj_string_create();
-	cobj_string_set_raw(str, tmp);
+	str->chars[0]  = '\0';
+	str->n_alloc   = 1;
+	str->tab_width = 1;
+	str->digits    = 0;
+	str->err       = CSTR_OK;
+	
+	_update_n_values(str);
 
 	return str;
 }
@@ -257,29 +287,22 @@ cobj_string_create_double(double d, int precision)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cobj_string_cut(cobj_string_t *str, size_t offset, size_t n_codepoints)
+cstr_cut(cstr *str, size_t offset, size_t length)
 {
 	size_t offset_2;
 
-	assert(str);
-
-	if (str->failed)
+	if (str->err || offset >= str->n_codepoints || length == 0)
 	{
 		return;
 	}
 
-	if (offset >= str->n_codepoints || n_codepoints == 0)
+	if (length > str->n_codepoints - offset)
 	{
-		return;
+		length = str->n_codepoints - offset;
 	}
 
-	if (n_codepoints > str->n_codepoints - offset)
-	{
-		n_codepoints = str->n_codepoints - offset;
-	}
-
-	offset_2 = _convert_to_byte_offset(str, offset + n_codepoints);
-	offset   = _convert_to_byte_offset(str, offset);
+	offset_2 = _byte_offset(str, offset + length);
+	offset   = _byte_offset(str, offset);
 
 	memmove(str->chars + offset, str->chars + offset_2, str->n_bytes - offset_2);
 
@@ -289,89 +312,31 @@ cobj_string_cut(cobj_string_t *str, size_t offset, size_t n_codepoints)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cobj_string_destroy(cobj_string_t **str)
+cstr_destroy(cstr *str)
 {
-	assert(str && *str);
-
-	if (*str == &_err_str)
+	if (str == CSTR_PLACEHOLDER)
 	{
 		return;
 	}
 
-	free((*str)->chars);
-	free(*str);
+	free(str->chars);
+	free(str);
+}
 
-	*str = &_err_str;
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+enum cstr_err
+cstr_error(const cstr *str)
+{
+	return str->err;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-cobj_string_get_alloc_size(const cobj_string_t *str)
+cstr_height(const cstr *str)
 {
-	assert(str);
-
-	if (str->failed)
-	{
-		return 0;
-	}
-
-	return str->n_bytes;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-const char *
-cobj_string_get_chars(const cobj_string_t *str)
-{
-	assert(str);
-
-	if (str->failed)
-	{
-		return "";
-	}
-
-	return str->chars;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-const char *
-cobj_string_get_chars_at_coords(const cobj_string_t *str, size_t row, size_t col)
-{
-	assert(str);
-
-	if (str->failed)
-	{
-		return "";
-	}
-
-	return str->chars + _convert_to_byte_offset(str, cobj_string_convert_coords_to_offset(str, row, col));
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-const char *
-cobj_string_get_chars_at_offset(const cobj_string_t *str, size_t offset)
-{
-	assert(str);
-
-	if (str->failed)
-	{
-		return "";
-	}
-
-	return str->chars + _convert_to_byte_offset(str, offset);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-size_t
-cobj_string_get_height(const cobj_string_t *str)
-{
-	assert(str);
-
-	if (str->failed)
+	if (str->err)
 	{
 		return 0;
 	}
@@ -381,12 +346,115 @@ cobj_string_get_height(const cobj_string_t *str)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-size_t
-cobj_string_get_length(const cobj_string_t *str)
+void
+cstr_insert_cstr(cstr *str, const cstr *str_src, size_t offset)
 {
-	assert(str);
+	if (str->err || str_src->err)
+	{
+		return;
+	}
 
-	if (str->failed)
+	cstr_insert_raw(str, str_src->chars, offset);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cstr_insert_double(cstr *str, long double d, size_t offset)
+{
+	char tmp[64];
+
+	if (str->err)
+	{
+		return;
+	}
+
+	snprintf(tmp, 64, "%.*Lf", str->digits, d);
+
+	cstr_insert_raw(str, tmp, offset);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cstr_insert_long(cstr *str, long long int l, size_t offset)
+{
+	char tmp[64];
+
+	if (str->err)
+	{
+		return;
+	}
+
+	snprintf(tmp, 64, "%lli", l);
+
+	cstr_insert_raw(str, tmp, offset);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cstr_insert_raw(cstr *str, const char *raw_str, size_t offset)
+{
+	size_t n;
+	size_t m;
+	char *tmp_dst;
+	char *tmp_src = NULL;
+
+	if (str->err)
+	{
+		return;
+	}
+
+	if (!safe_add(&m, n = strlen(raw_str), str->n_bytes))
+	{
+		str->err |= CSTR_OVERFLOW;
+		return;
+	}
+	
+	/* detect overlapping memory areas */
+
+	if (raw_str >= str->chars && raw_str <= str->chars + str->n_alloc)
+	{
+		if (!(tmp_src = strdup(raw_str)))
+		{
+			str->err |= CSTR_MEMORY;
+			return;
+		}
+		raw_str = tmp_src;
+	}
+
+	/* extend allocated memory if needed */
+
+	if (m > str->n_alloc)
+	{
+		if (!(tmp_dst = realloc(str->chars, m)))
+		{
+			str->err |= CSTR_MEMORY;
+			free(tmp_src);
+			return;
+		}
+		str->chars   = tmp_dst;
+		str->n_alloc = m;
+	}
+
+	/* insert */
+
+	offset = _byte_offset(str, offset);
+
+	memmove(str->chars + offset + n, str->chars + offset, str->n_bytes - offset);
+	memcpy(str->chars + offset, raw_str, n);
+	free(tmp_src);
+	
+	_update_n_values(str);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+cstr_length(const cstr *str)
+{
+	if (str->err)
 	{
 		return 0;
 	}
@@ -396,148 +464,50 @@ cobj_string_get_length(const cobj_string_t *str)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cobj_string_t *
-cobj_string_get_placeholder(void)
-{
-	return &_err_str;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-size_t
-cobj_string_get_width(const cobj_string_t *str)
-{
-	assert(str);
-
-	if (str->failed)
-	{
-		return 0;
-	}
-
-	return str->n_cols;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-cobj_string_has_failed(const cobj_string_t *str)
-{
-	assert(str);
-
-	return str->failed;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 void
-cobj_string_insert(cobj_string_t *str, const cobj_string_t *str_src, size_t offset)
-{
-	assert(str && str_src);
-
-	if (str_src->failed)
-	{
-		return;
-	}
-
-	cobj_string_insert_raw(str, str_src->chars, offset);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cobj_string_insert_raw(cobj_string_t *str, const char *c_str, size_t offset)
-{
-	size_t n;
-	char *tmp;
-
-	assert(str);
-
-	if (str->failed)
-	{
-		return;
-	}
-
-	if (!c_str)
-	{
-		return;
-	}
-
-	if (!safe_add(NULL, n = strlen(c_str), str->n_bytes))
-	{
-		str->failed = true;
-		return;
-	}
-
-	if (!(tmp = malloc(str->n_bytes + n)))
-	{
-		str->failed = true;
-		return;
-	}
-
-	offset = _convert_to_byte_offset(str, offset);
-
-	memcpy(tmp,              str->chars,          offset);
-	memcpy(tmp + offset,     c_str,               n);
-	memcpy(tmp + offset + n, str->chars + offset, str->n_bytes - offset);
-
-	free(str->chars);
-	str->chars = tmp;
-	_update_n_values(str);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cobj_string_pad(cobj_string_t *str, const char *pattern, size_t offset, size_t n_codepoints_target)
+cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 {
 	size_t pad_n_bytes;
-	size_t n_codepoint_diff;
+	size_t length_diff;
 	size_t n;
-	char  *tmp;
-	bool   safe = true;
+	char *tmp;
+	bool safe = true;
 
-	assert(str);
-
-	if (str->failed)
+	if (str->err || length_target <= str->n_codepoints)
 	{
 		return;
 	}
 
-	if (n_codepoints_target <= str->n_codepoints)
-	{
-		return;
-	}
-
-	pad_n_bytes      = strlen(pattern);
-	n_codepoint_diff = n_codepoints_target - str->n_codepoints;
+	pad_n_bytes = strlen(pattern);
+	length_diff = length_target - str->n_codepoints;
 
 	/* create padding string */
 
-	safe &= safe_mul(&n, pad_n_bytes, n_codepoint_diff);
-	safe &= safe_add (&n, n, 1);
+	safe &= safe_mul(&n, pad_n_bytes, length_diff);
+	safe &= safe_add(&n, n, 1);
 
 	if (!safe)
 	{
-		str->failed = true;
+		str->err |= CSTR_OVERFLOW;
 		return;
 	}
 
 	if (!(tmp = malloc(n)))
 	{
-		str->failed = true;
+		str->err |= CSTR_MEMORY;
 		return;
 	}
 
-	for (size_t i = 0; i < n_codepoint_diff; i++)
+	for (size_t i = 0; i < length_diff; i++)
 	{
 		memcpy(tmp + i * pad_n_bytes, pattern, pad_n_bytes);
 	}
 
-	tmp[pad_n_bytes * n_codepoint_diff] = '\0';
+	tmp[pad_n_bytes * length_diff] = '\0';
 
 	/* insert it */
 
-	cobj_string_insert_raw(str, tmp, offset);
+	cstr_insert_raw(str, tmp, offset);
 
 	free(tmp);
 }
@@ -545,170 +515,95 @@ cobj_string_pad(cobj_string_t *str, const char *pattern, size_t offset, size_t n
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cobj_string_prepend(cobj_string_t *str, const cobj_string_t *str_src)
+cstr_repair(cstr *str)
 {
-	assert(str && str_src);
-
-	cobj_string_insert(str, str_src, 0);
+	str->err &= CSTR_INVALID;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cobj_string_prepend_raw(cobj_string_t *str, const char *c_str)
+cstr_set_double_digits(cstr *str, int digits)
 {
-	assert(str);
+	if (str->err)
+	{
+		return;
+	}
 
-	cobj_string_insert_raw(str, c_str, 0);
+	str->digits = digits;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cobj_string_realloc(cobj_string_t *str)
+cstr_set_tab_width(cstr *str, size_t width)
 {
-	char *tmp;
-
-	assert(str);
-
-	if (str->failed)
+	if (str->err)
 	{
 		return;
 	}
 
-	if (!(tmp = realloc(str->chars, str->n_bytes)))
-	{
-		str->failed = true;
-		return;
-	}
-
-	str->chars = tmp;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-const char *
-cobj_string_seek_next_codepoint(const char *codepoint)
-{
-	if (!codepoint)
-	{
-		return "";
-	}
-
-	return _get_next_codepoint(codepoint);
+	str->tab_width = width;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cobj_string_set(cobj_string_t *str, const cobj_string_t *str_src)
+cstr_slice(cstr *str, size_t offset, size_t length)
 {
-	assert(str && str_src);
-
-	if (str_src->failed)
+	if (str->err)
 	{
 		return;
 	}
 
-	cobj_string_set_raw(str, str_src->chars);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cobj_string_set_raw(cobj_string_t *str, const char *c_str)
-{
-	char *tmp;
-
-	assert(str);
-
-	if (str->failed)
+	if (offset >= str->n_codepoints || length == 0)
 	{
+		cstr_clear(str);
 		return;
 	}
 
-	if (!c_str)
+	if (length < str->n_codepoints - offset)
 	{
-		c_str = "";
+		cstr_cut(str, offset + length, SIZE_MAX);
 	}
 
-	if (!(tmp = malloc(strlen(c_str) + 1)))
-	{
-		str->failed = true;
-		return;
-	}
-
-	strcpy(tmp, c_str);
-
-	free(str->chars);
-	str->chars = tmp;
-	_update_n_values(str);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cobj_string_slice(cobj_string_t *str, size_t offset, size_t n_codepoints)
-{
-	assert(str);
-
-	if (str->failed)
-	{
-		return;
-	}
-
-	if (offset >= str->n_codepoints || n_codepoints == 0)
-	{
-		cobj_string_clear(str);
-	}
-
-	if (n_codepoints < str->n_codepoints - offset)
-	{
-		cobj_string_cut(str, offset + n_codepoints, SIZE_MAX);
-	}
-	
-	cobj_string_cut(str, 0, offset);
+	cstr_cut(str, 0, offset);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-cobj_string_test_wrap(const cobj_string_t *str, size_t max_cols)
+cstr_test_wrap(const cstr *str, size_t max_width)
 {
 	size_t row = 1;
 	size_t col = 0;
-	size_t n   = 0;
 
-	assert(str && max_cols > 0);
-
-	if (str->failed)
+	if (str->err || max_width == 0)
 	{
 		return 0;
 	}
 
-	if (max_cols >= str->n_cols)
+	if (max_width >= str->n_cols)
 	{
 		return str->n_rows;
 	}
 
-	for (const char *codepoint = str->chars; *codepoint != '\0'; n++)
+	for (const char *codepoint = str->chars; *codepoint != '\0'; codepoint = _next_codepoint(codepoint))
 	{
 		if (*codepoint == '\n')
 		{
 			col = 0;
 			row++;
 		}
-		else if (col == max_cols)
+		else if (col == max_width)
 		{
 			col = 1;
 			row++;
 		}
 		else
 		{
-			col++;
+			col += *codepoint == '\t' ? str->tab_width : 1;
 		}
-
-		codepoint = _get_next_codepoint(codepoint);
 	}
 
 	return row;
@@ -717,11 +612,31 @@ cobj_string_test_wrap(const cobj_string_t *str, size_t max_cols)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cobj_string_trim(cobj_string_t *str)
+cstr_trim_memory(cstr *str)
 {
-	assert(str);
+	char *tmp;
 
-	if (str->failed)
+	if (str->err)
+	{
+		return;
+	}
+
+	if (!(tmp = realloc(str->chars, str->n_bytes)))
+	{
+		str->err |= CSTR_MEMORY;
+		return;
+	}
+
+	str->chars   = tmp;
+	str->n_alloc = str->n_bytes;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cstr_trim_whitespaces(cstr *str)
+{
+	if (str->err)
 	{
 		return;
 	}
@@ -738,7 +653,7 @@ cobj_string_trim(cobj_string_t *str)
 				break;
 
 			default:
-				cobj_string_cut(str, 0, i);
+				cstr_cut(str, 0, i);
 				goto exit_lead;
 		}
 	}
@@ -762,32 +677,78 @@ exit_lead:
 				break;
 
 			default:
-				cobj_string_cut(str, i + 1, SIZE_MAX);
+				cstr_cut(str, i + 1, SIZE_MAX);
 				return;
 		}
 	}
+
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+cstr_unwrapped_offset(const cstr *str, const cstr *str_wrap, size_t offset)
+{
+	const char *codepoint_1;
+	const char *codepoint_2;
+	size_t diff = 0;
+
+	if (str->err || str_wrap->err)
+	{
+		return 0;
+	}
+
+	if (offset >= str_wrap->n_codepoints)
+	{
+		return str->n_codepoints;
+	}
+
+	codepoint_1 = str->chars;
+	codepoint_2 = str_wrap->chars;
+
+	for (size_t i = 0; i < offset; i++)
+	{
+		if (*codepoint_1 != '\n' && *codepoint_2 == '\n')
+		{
+			diff++;
+		}
+		else
+		{
+			codepoint_1 = _next_codepoint(codepoint_1);
+		}
+
+		codepoint_2 = _next_codepoint(codepoint_2);
+	}
+
+	return offset - diff;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+cstr_width(const cstr *str)
+{
+	if (str->err)
+	{
+		return 0;
+	}
+
+	return str->n_cols;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cobj_string_wrap(cobj_string_t *str, size_t max_cols)
+cstr_wrap(cstr *str, size_t max_width)
 {
 	size_t max_slots;
 	size_t max_rows;
 	size_t max_bytes;
 	size_t col;
-	char  *tmp;
-	bool   safe = true;
+	char *tmp;
+	bool safe = true;
 
-	assert(str && max_cols > 0);
-
-	if (str->failed)
-	{
-		return;
-	}
-
-	if (max_cols > str->n_cols)
+	if (str->err || max_width == 0 || max_width >= str->n_cols)
 	{
 		return;
 	}
@@ -795,31 +756,31 @@ cobj_string_wrap(cobj_string_t *str, size_t max_cols)
 	/* calculate (with overflow protection) max required memory to host wrapped string */
 
 	safe &= safe_mul(&max_slots, str->n_cols, str->n_rows);
-
-	safe &= safe_div(&max_rows,  max_slots, max_cols);
-	safe &= safe_add(&max_rows,  max_rows,  max_slots % max_cols > 0 ? 1 : 0);
-
-	safe &= safe_mul(&max_bytes, max_cols,  4);
+	safe &= safe_div(&max_rows,  max_slots, max_width);
+	safe &= safe_add(&max_rows,  max_rows, max_slots % max_width > 0 ? 1 : 0);
+	safe &= safe_mul(&max_bytes, max_width, 4);
 	safe &= safe_add(&max_bytes, max_bytes, 1);
 	safe &= safe_mul(&max_bytes, max_bytes, max_rows);
 
 	if (!safe)
 	{
-		str->failed = true;
+		str->err |= CSTR_OVERFLOW;
 		return;
 	}
 
 	/* alloc memory */
 
-	if (!(tmp = malloc(max_bytes)))
+	if (!(tmp = calloc(max_bytes, 1)))
 	{
-		str->failed = true;
+		str->err |= CSTR_MEMORY;
 		return;
 	}
 
+	str->n_alloc = max_bytes;
+
 	/* wrap string */
 
-	str->n_cols       = max_cols;
+	str->n_cols       = max_width;
 	str->n_rows       = 1;
 	str->n_bytes      = 0;
 	str->n_codepoints = 0;
@@ -840,15 +801,17 @@ cobj_string_wrap(cobj_string_t *str, size_t max_cols)
 				str->n_rows++;
 				col = 0;
 			}
-			else if (col == max_cols)
+			else if (col >= max_width)
 			{
-				tmp[str->n_bytes++] = '\n';
+				tmp[str->n_bytes] = '\n';
+				str->n_codepoints++;
 				str->n_rows++;
+				str->n_bytes++;
 				col = 1;
 			}
 			else
 			{
-				col++;
+				col += str->chars[i] == '\t' ? str->tab_width : 1;
 			}
 			str->n_codepoints++;
 		}
@@ -864,7 +827,7 @@ cobj_string_wrap(cobj_string_t *str, size_t max_cols)
 /************************************************************************************************************/
 
 static size_t
-_convert_to_byte_offset(const cobj_string_t *str, size_t offset)
+_byte_offset(const cstr *str, size_t offset)
 {
 	size_t i = 0;
 
@@ -887,8 +850,16 @@ _convert_to_byte_offset(const cobj_string_t *str, size_t offset)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+static bool
+_is_end_byte(char c)
+{
+	return !!(((uint8_t)c >> 6) ^ 0x02); /* bitmask = 10xxxxxx */
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 static const char *
-_get_next_codepoint(const char *codepoint)
+_next_codepoint(const char *codepoint)
 {
 	if (*codepoint != '\0')
 	{
@@ -904,16 +875,8 @@ _get_next_codepoint(const char *codepoint)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static bool
-_is_end_byte(char c)
-{
-	return !!(((uint8_t)c >> 6) ^ 0x02); /* bitmask = 10xxxxxx */
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 static void
-_update_n_values(cobj_string_t *str)
+_update_n_values(cstr *str)
 {
 	size_t col = 0;
 
@@ -922,12 +885,13 @@ _update_n_values(cobj_string_t *str)
 	str->n_bytes      = 0;
 	str->n_codepoints = 0;
 	
-	for (;;)
+	for (;; str->n_bytes++)
 	{
-		switch (str->chars[str->n_bytes++])
+		switch (str->chars[str->n_bytes])
 		{
 			case '\0':
 				str->n_cols = col > str->n_cols ? col : str->n_cols;
+				str->n_bytes++;
 				return;
 
 			case '\n':
@@ -935,6 +899,11 @@ _update_n_values(cobj_string_t *str)
 				str->n_rows++;
 				str->n_codepoints++;
 				col = 0;
+				break;
+
+			case '\t':
+				str->n_codepoints++;
+				col += str->tab_width;
 				break;
 
 			default:
@@ -952,7 +921,7 @@ _update_n_values(cobj_string_t *str)
 
 /*
 static const char *
-_get_prev_codepoint(const char *codepoint, const cobj_string_t *str)
+_prev_codepoint(const char *codepoint, const cstr *str)
 {
 	if (codepoint == str->chars)
 	{

@@ -23,6 +23,16 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#if __GNUC__ > 4
+	#define CSTR_NONNULL_RETURN __attribute__((returns_nonnull))
+	#define CSTR_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
+	#define CSTR_PURE           __attribute__((pure))
+#else
+	#define CSTR_NONNULL_RETURN
+	#define CSTR_NONNULL(...)
+	#define CSTR_PURE
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,79 +41,528 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-typedef struct _string_t cobj_string_t;
+/**
+ * Opaque string object instance.
+ * This object holds an internal error bitfield that can be checked with cstr_error(). Some functions, upon
+ * failure, can trigger specific error bits and will exit early without side effects. If the error bitfield is
+ * set to anything else than CSTR_OK, any function that takes this object as an argument will return earl
+ * with no side effects and default return values. It is possible to repair the object to get rid of errors.
+ * See cstr_repair() for more details.
+ */
+typedef struct cstr cstr;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cobj_string_t *cobj_string_clone(const cobj_string_t *str);
+/**
+ * Error types.
+ */
+enum cstr_err
+{
+	CSTR_OK       = 0,
+	CSTR_INVALID  = 1,
+	CSTR_MEMORY   = 1 << 1,
+	CSTR_OVERFLOW = 1 << 2,
+};
 
-cobj_string_t *cobj_string_create(void);
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
 
-cobj_string_t *cobj_string_create_double(double d, int precision);
+/**
+ * Create a string instance and deep copy the contents of another string instance into it.
+ *
+ * @param str : String to copy contents from
+ *
+ * @return     : New string instance
+ * @return_err : CSTR_PLACEHOLDER
+ */
+cstr *
+cstr_clone(const cstr *str)
+CSTR_NONNULL_RETURN
+CSTR_NONNULL(1);
 
-cobj_string_t *cobj_string_get_placeholder(void);
+/**
+ * Creates an empty string instance.
+ *
+ * @return     : New string instance
+ * @return_err : CSTR_PLACEHOLDER
+ */
+cstr *
+cstr_create(void)
+CSTR_NONNULL_RETURN;
 
-void cobj_string_destroy(cobj_string_t **str);
+/**
+ * Destroys the given string and frees memory.
+ *
+ * @param str : String to interact with
+ */
+void
+cstr_destroy(cstr *str)
+CSTR_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void cobj_string_cut(cobj_string_t *str, size_t offset, size_t n_codepoints);
+/**
+ * Convenience generic wrapper to insert new data at the end of a string.
+ */
+#define cstr_append(DST, SRC) \
+	_Generic (SRC, \
+		cstr *       : cstr_insert_cstr,   \
+		char *       : cstr_insert_raw,    \
+		const char * : cstr_insert_raw,    \
+		float        : cstr_insert_double, \
+		double       : cstr_insert_double, \
+		long double  : cstr_insert_double, \
+		default      : cstr_insert_long    \
+	)(DST, SRC, SIZE_MAX)
 
-void cobj_string_insert(cobj_string_t *str, const cobj_string_t *str_src, size_t offset);
+/**
+ * Convenience generic wrapper to insert new data at a specific UTF-8 character offset.
+ */
+#define cstr_insert(DST, SRC, OFFSET) \
+	_Generic (SRC, \
+		cstr *       : cstr_insert_cstr,   \
+		char *       : cstr_insert_raw,    \
+		const char * : cstr_insert_raw,    \
+		float        : cstr_insert_double, \
+		double       : cstr_insert_double, \
+		long double  : cstr_insert_double, \
+		default      : cstr_insert_long    \
+	)(DST, SRC, OFFSET)
 
-void cobj_string_set(cobj_string_t *str, const cobj_string_t *str_src);
-
-void cobj_string_wrap(cobj_string_t *str, size_t max_cols);
-
-void cobj_string_realloc(cobj_string_t *str);
+/**
+ * Convenience generic wrapper to insert new data at the beginning of a string.
+ */
+#define cstr_prepend(DST, SRC) \
+	_Generic (SRC, \
+		cstr *       : cstr_insert_cstr,   \
+		char *       : cstr_insert_raw,    \
+		const char * : cstr_insert_raw,    \
+		float        : cstr_insert_double, \
+		double       : cstr_insert_double, \
+		long double  : cstr_insert_double, \
+		default      : cstr_insert_long    \
+	)(DST, SRC, 0)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void cobj_string_append(cobj_string_t *str, const cobj_string_t *str_src);
+/**
+ * Clears the contents of a given string by zero-ing it. Allocated memory is not freed, use cstr_destroy() or
+ * cstr_trim_memory() for that.
+ *
+ * @param str : String to interact with
+ */
+void
+cstr_clear(cstr *str)
+CSTR_NONNULL(1);
 
-void cobj_string_append_raw(cobj_string_t *str, const char *c_str);
+/**
+ * Removes a set amount of UTF-8 characters at a specific offset.
+ * This function is bounds-protected, meaning that offset + length parameters will be capped at the string's
+ * length, even if a SIZE_MAX value is supplied.
+ *
+ * @param str    : String to interact with
+ * @param offset : UTF-8 character position to start cutting from
+ * @param length : amount of UTF-8 characters to remove
+ */
+void
+cstr_cut(cstr *str, size_t offset, size_t length)
+CSTR_NONNULL(1);
 
-void cobj_string_clear(cobj_string_t *str);
+/**
+ * Insert the contents of str_src at a specific offset.
+ * The string's allocated memory will be automatically extended if needed to accommodate the inserted data.
+ * This function comes with overlap detection, so a raw_str obtained from cstr_char*() can be used. This
+ * function is bounds-protected, so the offset parameter is capped at the string's length, even if a SIZE_MAX
+ * value is supplied.
+ *
+ * @param str     : String to insert new data to
+ * @param str_src : String to ger new data from
+ * @param offset  : UTF-8 character position to insert the new data at
+ *
+ * @error CSTR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
+ * @error CSTR_MEMORY   : Failed memory allocation
+ */
+void
+cstr_insert_cstr(cstr *str, const cstr *str_src, size_t offset)
+CSTR_NONNULL(1, 2);
 
-void cobj_string_insert_raw(cobj_string_t *str, const char *c_str, size_t offset);
+/**
+ * Converts a double into a character array then inserts it at a specific offset. The double digits amount is
+ * controlled with cstr_set_double_digits().
+ * The string's allocated memory will be automatically extended if needed to accommodate the inserted data.
+ * This function comes with overlap detection, so a raw_str obtained from cstr_char*() can be used. This
+ * function is bounds-protected, so the offset parameter is capped at the string's length, even if a SIZE_MAX
+ * value is supplied.
+ *
+ * @param str     : String to insert new data to
+ * @param d       : Double value to insert
+ * @param offset  : UTF-8 character position to insert the new data at
+ *
+ * @error CSTR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
+ * @error CSTR_MEMORY   : Failed memory allocation
+ */
+void
+cstr_insert_double(cstr *str, long double d, size_t offset)
+CSTR_NONNULL(1);
 
-void cobj_string_pad(cobj_string_t *str, const char *pattern, size_t offset, size_t n_codepoints_target);
+/**
+ * Converts a long into a character array then inserts it at a specific offset.
+ * The string's allocated memory will be automatically extended if needed to accommodate the inserted data.
+ * This function comes with overlap detection, so a raw_str obtained from cstr_char*() can be used. This
+ * function is bounds-protected, so the offset parameter is capped at the string's length, even if a SIZE_MAX
+ * value is supplied.
+ *
+ * @param str     : String to insert new data to
+ * @param l       : Long value to insert
+ * @param offset  : UTF-8 character position to insert the new data at
+ *
+ * @error CSTR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
+ * @error CSTR_MEMORY   : Failed memory allocation
+ */
+void
+cstr_insert_long(cstr *str, long long int l, size_t offset)
+CSTR_NONNULL(1);
 
-void cobj_string_prepend(cobj_string_t *str, const cobj_string_t *str_src);
+/**
+ * Insert a raw C string at a specific offset.
+ * The string's allocated memory will be automatically extended if needed to accommodate the inserted data.
+ * This function comes with overlap detection, so a raw_str obtained from cstr_char*() can be used. This
+ * function is bounds-protected, so the offset parameter is capped at the string's length, even if a SIZE_MAX
+ * value is supplied.
+ *
+ * @param str     : String to insert new data to
+ * @param raw_str : Raw C string to insert
+ * @param offset  : UTF-8 character position to insert the new data at
+ *
+ * @error CSTR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
+ * @error CSTR_MEMORY   : Failed memory allocation
+ */
+void
+cstr_insert_raw(cstr *str, const char *raw_str, size_t offset)
+CSTR_NONNULL(1, 2);
 
-void cobj_string_prepend_raw(cobj_string_t *str, const char *c_str);
+/**
+ * Pads a string with a repeated sequence of characters set by pattern so that its length matches
+ * length_target. The sequence of padding characters will be inserted at the given offset. This function is
+ * bounds-protected, so the offset parameter is capped at the string's length, even if a SIZE_MAX value is
+ * supplied. The pattern parameter is of a raw C string type and not char to account for UTF-8 multi-byte
+ * characters. However, it should not be used with multiple UTF-8 characters/codepoints, as it will yield
+ * bigger than-expected character sequences. This function has no effects if the string's length is bigger
+ * than the target length.
+ *
+ * Example :
+ *
+ *	cstr_clear(str);
+ *	cstr_append(str, "test");
+ *	cstr_pad(str, "_", 1, 8);
+ *	printf("%s\n", cstr_chars(str));
+ *
+ *	--> t____est
+ *
+ * @param str           : String to interact with
+ * @param pattern       : UTF-8 character to use as padding
+ * @param offset        : UTF-8 character position to insert the padded sequence at
+ * @param length_target : Resulting string length that should be reached
+ *
+ * @error CSTR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
+ * @error CSTR_MEMORY   : Failed memory allocation
+ */
+void
+cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
+CSTR_NONNULL(1, 2);
 
-void cobj_string_set_raw(cobj_string_t *str, const char *c_str);
+/** 
+ * Clears errors and puts the string back into a usable state. The only unrecoverable error is CSTR_INVALID.
+ *
+ * @param str : String to interact with
+ */
+void
+cstr_repair(cstr *str)
+CSTR_NONNULL(1);
 
-void cobj_string_slice(cobj_string_t *str, size_t offset, size_t n_codepoints);
+/**
+ * Sets the amount of digits to show when a double value gets inserted. The effects of the int values are
+ * limited by the printf's "%.*Lf" operator.
+ *
+ * @param str    : String to interact with
+ * @param digits : Amount of decimal digits
+ */
+void
+cstr_set_double_digits(cstr *str, int digits)
+CSTR_NONNULL(1);
 
-void cobj_string_trim(cobj_string_t *str);
+/**
+ * Sets the width of a '\t' character. This will affect the results of 2d functions like cstr_coords_offset(),
+ * cstr_test_wrap(), cstr_width() and, cstr_wrap().
+ *
+ * @param str   : String to interact with
+ * @param width : Tab width
+ */
+void
+cstr_set_tab_width(cstr *str, size_t width)
+CSTR_NONNULL(1);
+
+/**
+ * Slices out a set amount of UTF-8 characters at a specific offset and discards the rest.
+ *
+ * @param str    : String to interact with
+ * @param offset : UTF-8 character position to start slicing from
+ * @param length : amount of UTF-8 characters to slice out
+ */
+void
+cstr_slice(cstr *str, size_t offset, size_t length)
+CSTR_NONNULL(1);
+
+/**
+ * All operations that increase the string's length will automatically reallocate the memory needed, but
+ * operations that reduce the string's length do not. Thus, this function removes the excess of allocated
+ * memory left by cstr_clear(), cstr_cut(), cstr_slice(), cstr_trim_whitespaces() and cstr_wrap().
+ *
+ * @param str : String to interact with
+ *
+ * @error CSTR_MEMORY : Failed memory realloc
+ */
+void
+cstr_trim_memory(cstr *str)
+CSTR_NONNULL(1);
+
+/**
+ * Removes extra leading and trailing whitespaces (space and tab characters).
+ *
+ * @param str : String to interact with
+ */
+void
+cstr_trim_whitespaces(cstr *str)
+CSTR_NONNULL(1);
+
+/**
+ * Wraps a string by adding newlines to rows that are longer than max_width. Old newlines are also kept.
+ * This function has no effects if max_width is bigger than the string's width or is = 0.
+ *
+ * @param str       : String to interact with
+ * @param max_width : Width after which a newline is added to the string
+ *
+ * @error CSTR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
+ * @error CSTR_MEMORY   : Failed memory allocation
+ */
+void
+cstr_wrap(cstr *str, size_t max_width)
+CSTR_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-size_t cobj_string_convert_coords_to_offset(const cobj_string_t *str, size_t row, size_t col);
+/**
+ * Gets the number of allocated bytes.
+ *
+ * @param str : String to interact with
+ *
+ * @return     : Number of bytes
+ * @return_err : 0
+ */
+size_t
+cstr_alloc_length(const cstr *str)
+CSTR_NONNULL(1)
+CSTR_PURE;
 
-size_t cobj_string_convert_wrapped_offset(const cobj_string_t *str, const cobj_string_t *str_wrap, size_t offset);
+/**
+ * Gets the string's length in bytes, including the NULL terminator.
+ *
+ * @param str : String to interact with
+ *
+ * @return     : Number of bytes
+ * @return_err : 0
+ */
+size_t
+cstr_byte_length(const cstr *str)
+CSTR_NONNULL(1)
+CSTR_PURE;
 
-size_t cobj_string_get_alloc_size(const cobj_string_t *str);
+/**
+ * Converts the given UTF-8 character offset into a byte offset.
+ * This function is bounds-protected, so the offset parameter is capped at the string's length, even if
+ * a SIZE_MAX value is supplied.
+ *
+ * @param str    : String to interact with
+ * @param offset : UTF-8 character offset
+ *
+ * @return     : Converted offset in bytes
+ * @return_err : 0
+ */
+size_t
+cstr_byte_offset(const cstr *str, size_t offset)
+CSTR_NONNULL(1)
+CSTR_PURE;
 
-const char *cobj_string_get_chars(const cobj_string_t *str);
+/**
+ * Gets the raw null terminated C string.
+ *
+ * @param str : String to interact with
+ *
+ * @return     : Raw C string
+ * @return_err : "\0"
+ */
+const char *
+cstr_chars(const cstr *str)
+CSTR_NONNULL_RETURN
+CSTR_NONNULL(1)
+CSTR_PURE;
 
-const char *cobj_string_get_chars_at_coords(const cobj_string_t *str, size_t row, size_t col);
+/**
+ * Gets the raw null terminated C string offseted by 2d coordinates.
+ * This function is bounds-protected, so the row and col parameter are capped at the string's height and
+ * width respectively, even if SIZE_MAX values are supplied.
+ *
+ * @param str : String to interact with
+ * @param row : Row index
+ * @param col : Columns index
+ *
+ * @return     : Raw C string
+ * @return_err : "\0"
+ */
+const char *
+cstr_chars_at_coords(const cstr *str, size_t row, size_t col)
+CSTR_NONNULL_RETURN
+CSTR_NONNULL(1)
+CSTR_PURE;
 
-const char *cobj_string_get_chars_at_offset(const cobj_string_t *str, size_t offset);
+/**
+ * Gets the raw null terminated C string offseted by an specific amount of UTF-8 characters.
+ * This function is bounds-protected, so the offset parameter is capped at the string's length, even if
+ * a SIZE_MAX value is supplied.
+ *
+ * @param str    : String to interact with
+ * @param offset : UTF-8 character offset
+ *
+ * @return     : Raw C string
+ * @return_err : "\0"
+ */
+const char *
+cstr_chars_at_offset(const cstr *str, size_t offset)
+CSTR_NONNULL_RETURN
+CSTR_NONNULL(1)
+CSTR_PURE;
 
-size_t cobj_string_get_height(const cobj_string_t *str);
+/**
+ * Converts the given 2d coordinates into a UTF-8 character offset.
+ * This function is bounds-protected, so the row and col parameter are capped at the string's height and
+ * width respectively, even if SIZE_MAX values are supplied.
+ *
+ * @param str : String to interact with
+ * @param row : Row index
+ * @param col : Columns index
+ *
+ * @return     : Converted offset in number of UTF-8 characters
+ * @return_err : 0
+ */
+size_t
+cstr_coords_offset(const cstr *str, size_t row, size_t col)
+CSTR_NONNULL(1)
+CSTR_PURE;
 
-size_t cobj_string_get_length(const cobj_string_t *str);
+/**
+ * Gets the error state.
+ *
+ * @param str : String to interact with
+ *
+ * @return : Error bitfield
+ */
+enum cstr_err
+cstr_error(const cstr *str)
+CSTR_NONNULL(1)
+CSTR_PURE;
 
-size_t cobj_string_get_width(const cobj_string_t *str);
+/**
+ * Get the number of rows.
+ *
+ * @param str : String to interact with
+ *
+ * @return     : Number of rows
+ * @return_err : 0
+ */
+size_t
+cstr_height(const cstr *str)
+CSTR_NONNULL(1)
+CSTR_PURE;
 
-bool cobj_string_has_failed(const cobj_string_t *str);
+/**
+ * Gets the number of UTF-8 characters a string is made of. Unlike cstr_byte_length(), the NULL terminator is
+ * not included.
+ *
+ * @param str : String to interact with
+ *
+ * @return     : Number of UTF-8 characters
+ * @return_err : 0
+ */
+size_t
+cstr_length(const cstr *str)
+CSTR_NONNULL(1)
+CSTR_PURE;
 
-const char *cobj_string_seek_next_codepoint(const char *codepoint);
+/**
+ * Calculates the amount of rows a string wrapped with max_width will have. But unlike cstr_wrap() the string
+ * is not modified.
+ *
+ * @param str       : String to interact with
+ * @param max_width : Width after which a newline is added to the string
+ *
+ * @return     : Number of rows
+ * @return_err : 0
+ */
+size_t
+cstr_test_wrap(const cstr *str, size_t max_width)
+CSTR_NONNULL(1)
+CSTR_PURE;
 
-size_t cobj_string_test_wrap(const cobj_string_t *str, size_t max_cols);
+/**
+ * Converts the UTF-8 character offset of a wrapped string into an offset that matches the character position
+ * of the unwrapped string. It is assumed the difference between str_wrap and str is a single cstr_wrap()
+ * operation and that the tab width of both strings is equal. Check out the provided example for more
+ * details about this function use case.
+ * This function is bounds-protected, so the offset parameter is capped at the string's length, even if
+ * a SIZE_MAX value is supplied.
+ *
+ * @param str      : Reference string
+ * @param str_wrap : Wrapped string
+ * @param offset   : UTF-8 character offset
+ *
+ * @return     : Converted offset in number of UTF-8 characters
+ * @return_err : 0
+ */
+size_t
+cstr_unwrapped_offset(const cstr *str, const cstr *str_wrap, size_t offset)
+CSTR_NONNULL(1, 2)
+CSTR_PURE;
+
+/**
+ * Gets the number of columns. The NULL terminator and newline characters are not included.
+ *
+ * @param str : String to interact with
+ *
+ * @return     : Number of columns
+ * @return_err : 0
+ */
+size_t
+cstr_width(const cstr *str)
+CSTR_NONNULL(1)
+CSTR_PURE;
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ * A macro that gives uninitialized string objects a non-NULL value that is safe to use with the string's
+ * related functions. However, any function called with a handle set to this value will return early and
+ * without any side effects.
+ */
+#define CSTR_PLACEHOLDER &cstr_placeholder_instance
+
+/**
+ * Global string object instance with the error state set to CSTR_INVALID. This instance is only made
+ * available to allow the static initialization of string object pointers with the macro CSTR_PLACEHOLDER.
+ */
+extern cstr cstr_placeholder_instance;
 
 /************************************************************************************************************/
 /************************************************************************************************************/

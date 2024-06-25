@@ -18,86 +18,91 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <cassette/cobj.h>
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
 
-#include <cassette/cobj.h>
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+static void _insert_2d   (const char *text, size_t row, size_t col);
+static void _update_wrap (void);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _print_str(cobj_string_t *str, const char *comment);
+static cstr *_str_ref  = CSTR_PLACEHOLDER;
+static cstr *_str_wrap = CSTR_PLACEHOLDER;
+
+static size_t columns = 10; /* size of a supposed widget */
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
+
+/**
+ * This example demonstrates the use of the cstr string objects in an interactable pseudo GUI widget that
+ * displays text in monospace. The text is wrapped automatically to fit the width of the widget.
+ * For this, two strings are needed. The first one, _str_ref, will hold the text data in its original form,
+ * as input by an end-user or set by the application developer without any extra newlines. The second string,
+ * _str_wrap, will be a wrapped version of the first string that can fit inside the widget. The first string
+ * gets updated only when its content changes, while the second one updates when either the contents of the
+ * first one change or if the widget gets resized.
+ *
+ *
+ *       original text                   widget text
+ *        (_str_ref)                     (_str_wrap)
+ *
+ *                                      ┏━━━━━━━━━━━┓
+ *                                      ┃ Hello Wor ┃
+ *       "Hello World!"       -->       ┃ ld!       ┃ 
+ *                                      ┃           ┃
+ *                                      ┗━━━━━━━━━━━┛
+ */
 
 int
 main(void)
 {
-	cobj_string_t *str;
+	/* Setup */
 
-	const char *codepoint;
-	size_t i = 0;
+	_str_ref  = cstr_create();
+	_str_wrap = cstr_create();
 
-	/* init */
+	cstr_append(_str_ref, "This is a loooooooooooooooooooooooooooooooooooong line of text!");
 
-	str = cobj_string_create();
+	_update_wrap();
 
-	/* operations */
+	/* We assume the end-user wrote 'NEW' into the widget at the 3rd row and 6th column          */
+	/* (index 2 and 5). Once the new text has been added to the reference string, the wrapped    */
+	/* string is updated to display the changes.                                                 */
 
-	cobj_string_set_raw(str, "t↑↑t\ntest\ntest");
-	_print_str(str, "set initial value");
+	_insert_2d("NEW", 2, 5);
 
-	cobj_string_insert_raw(str, "insertion\n", 5);
-	_print_str(str, "insertion at codepoint offset 5");
+	_update_wrap();
 
-	cobj_string_cut(str, 0, 5);
-	_print_str(str, "cut 5 codepoints at offset 0");
+	/* We now assume that the widget's width changes. The reference string is unchanged, but the */
+	/* wrapped string needs to be updated to use of all the new available space.                 */
 
-	cobj_string_wrap(str, 4);
-	_print_str(str, "wrapped to 4 columns");
+	columns = 25;
 
-	cobj_string_append_raw(str, "\nok");
-	_print_str(str, "append");
+	_update_wrap();
 
-	cobj_string_slice(str, 5, 6);
-	_print_str(str, "slice with offset 4 and length 6");
+	/* End */
 
-	cobj_string_prepend_raw(str, "    \t\t");
-	_print_str(str, "appended whitespace");
-
-	cobj_string_trim(str);
-	_print_str(str, "trimmed whitespaces");
-
-	cobj_string_pad(str, "→", 0, 10);
-	_print_str(str, "padded beginning of string with dots to reach a length of 10");
-
-	cobj_string_realloc(str);
-	_print_str(str, "reallocted memory to get rid off excess unused space");
-
-	/* manual iteration */
-
-	codepoint = cobj_string_get_chars(str);
-	while (*codepoint != '\0')
+	if (cstr_error(_str_ref))
 	{
-		i++;
-		codepoint = cobj_string_seek_next_codepoint(codepoint);
+		printf("Reference string errored during operation\n");
 	}
 
-	printf("\t-> counted %zu codepoints manually\n", i);
-
-	/* end */
-
-	if (cobj_string_has_failed(str))
+	if (cstr_error(_str_wrap))
 	{
-		printf("\t->string failed during operation\n");
+		printf("Wrapped string errored during operation\n");
 	}
 
-	cobj_string_destroy(&str);
-	cobj_string_destroy(&str); /* api is safe against double destructions */
+	cstr_destroy(_str_ref);
+	cstr_destroy(_str_wrap);
 
 	return 0;
 }
@@ -106,15 +111,43 @@ main(void)
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+/**
+ * Because the wrapped string is shown to the end-user, it's also the one being interacted with. This
+ * function will first get the codepoint offset that matches the insertion point at the given coordinates of
+ * the wrapped string. Then, this offset gets converted into an 'unwrapped' offset that can be used with the
+ * reference string. New data can then be added to the reference string that will match the 2d coordinates of
+ * the wrapped string.
+ */
+
 static void
-_print_str(cobj_string_t *str, const char *comment)
+_insert_2d(const char *text, size_t row, size_t col)
 {
+	size_t offset_ref;
+	size_t offset_wrap;
+
+	offset_wrap = cstr_coords_offset(_str_wrap, row, col);
+
+	printf(">> %zu\n", offset_wrap);
+	offset_ref  = cstr_unwrapped_offset(_str_ref, _str_wrap, offset_wrap);
+
+	cstr_insert(_str_ref, text, offset_ref);	
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_update_wrap()
+{
+	cstr_clear(_str_wrap);
+	cstr_append(_str_wrap, _str_ref);
+	cstr_wrap(_str_wrap, columns);
+
 	printf(
-		"%s\n\t-> %zux%zu / %zu / %zu (%s)\n",
-		cobj_string_get_chars(str),
-		cobj_string_get_height(str),
-		cobj_string_get_width(str),
-		cobj_string_get_length(str),
-		cobj_string_get_alloc_size(str),
-		comment);
+		"%s\n\t-> %zu rows x %zu cols / %zu utf8-characters / %zu bytes used / %zu bytes allocated\n\n",
+		cstr_chars(_str_wrap),
+		cstr_height(_str_wrap),
+		cstr_width(_str_wrap),
+		cstr_length(_str_wrap),
+		cstr_byte_length(_str_wrap),
+		cstr_alloc_length(_str_wrap));
 }
