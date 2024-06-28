@@ -178,18 +178,28 @@ cstr_clone(const cstr *str)
 {
 	cstr *str_new;
 
-	if (str->err)
+	if (str->err || !(str_new = malloc(sizeof(cstr))))
 	{
 		return CSTR_PLACEHOLDER;
 	}
 
-	str_new = cstr_create();
+	if (!(str_new->chars = malloc(str->n_alloc)))
+	{
+		free(str_new);
+		return CSTR_PLACEHOLDER;
+	}
 
-	str_new->tab_width = str->tab_width;
-	str_new->digits    = str->digits;
+	memcpy(str_new->chars, str->chars, str->n_alloc);
 
-	cstr_insert_raw(str_new, str->chars, 0);
-
+	str_new->n_rows       = str->n_rows;
+	str_new->n_cols       = str->n_cols;
+	str_new->n_bytes      = str->n_bytes;
+	str_new->n_codepoints = str->n_codepoints;
+	str_new->n_alloc      = str->n_alloc;
+	str_new->tab_width    = str->tab_width;
+	str_new->digits       = str->digits;
+	str_new->err          = CSTR_OK;
+	
 	return str_new;
 }
 
