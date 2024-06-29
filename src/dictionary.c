@@ -26,12 +26,6 @@
 
 #include "safe.h"
 
-#if __GNUC__ > 4
-	#define CDICT_CONST __attribute__((const))
-#else
-	#define CDICT_CONST
-#endif
-
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -75,7 +69,7 @@ struct cdict
 
 static struct _slot *_find (const cdict *dict, uint64_t hash, enum _state state_cutoff) CDICT_NONNULL(1) CDICT_PURE;
 static bool          _grow (cdict *dict, size_t n)                                      CDICT_NONNULL(1);
-static uint64_t      _hash (const char *str, unsigned int group)                        CDICT_NONNULL(1) CDICT_CONST;
+static uint64_t      _hash (const char *str, unsigned int group)                        CDICT_NONNULL(1) CDICT_PURE;
 
 /************************************************************************************************************/
 /************************************************************************************************************/

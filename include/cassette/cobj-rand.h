@@ -24,6 +24,12 @@
 extern "C" {
 #endif
 
+#if __GNUC__ > 4
+	#define CRAND_NONNULL(...) __attribute__((nonnull (__VA_ARGS__)))
+#else
+	#define CRAND_NONNULL(...)
+#endif
+
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -31,30 +37,34 @@ extern "C" {
 /**
  * Keeper value that keeps track of the LCG (rand48-based) state.
  */
-typedef unsigned long long cobj_rand_t;
+typedef unsigned long long crand;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Sets the initial value of the keeper.
  *
- * @param rand Keeper value to interact with
- * @param seed Initial value to apply
+ * @param rand : Keeper value to interact with
+ * @param seed : Initial value to apply
  */
-void cobj_rand_seed(cobj_rand_t *rand, unsigned long long seed);
+void
+crand_seed(crand *rand, unsigned long long seed)
+CRAND_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Gets the next random value bound between lim_1 and lim_2 for the given keeper.
  *
- * @param rand Keeper value to interact with
- * @param lim_1 First bound of the possible returned value
- * @param lim_2 Second bound of the posiible returned value
+ * @param rand  : Keeper value to interact with
+ * @param lim_1 : First bound 
+ * @param lim_2 : Second bound
  *
- * @return Generated random value
+ * @return : Generated random value
  */
-double cobj_rand_get(cobj_rand_t *rand, double lim_1, double lim_2);
+double
+crand_get(crand *rand, double lim_1, double lim_2)
+CRAND_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
