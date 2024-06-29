@@ -525,6 +525,28 @@ cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cstr_prealloc(cstr *str, size_t byte_length)
+{
+	char *tmp;
+
+	if (str->err || byte_length <= str->n_alloc)
+	{
+		return;
+	}
+
+	if (!(tmp = realloc(str->chars, byte_length)))
+	{
+		str->err |= CSTR_MEMORY;
+		return;
+	}
+
+	str->chars   = tmp;
+	str->n_alloc = byte_length;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cstr_repair(cstr *str)
 {
 	str->err &= CSTR_INVALID;

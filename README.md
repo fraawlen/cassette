@@ -1,25 +1,25 @@
 <p align=center><img src="./extras/banner.svg"></p>
 
-Cassette Objects (COBJ) is a little collection self-contained data structures. Its API is written in a (somewhat) safe C style in which all structures that depend on dynamic memory allocation are opaque and their handler functions are designed to minimize the return of null pointer values. In other words, save for a few explicit exceptions, functions including constructors always return valid values or pointers, even in case of memory allocation failure. Moreover, destructor functions are also protected from double-free and dandling pointers.
+Cassette Objects (COBJ) is a little collection self-contained data structures. Its API is written in a (somewhat) safe C style in which all structures that depend on dynamic memory allocation are opaque and their handler functions are designed to minimize the return of null pointer values. In other words, save for a few explicit exceptions, functions including constructors always return valid values or pointers, even in case of memory allocation failure. 
 
 The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems, and except for the compiler and build system, is not dependent on third-party software.
 
 Features
 --------
 
-- Book : a dynamic array/vector for c-strings with grouping features
+- Book       : a dynamic array/vector for c-strings with grouping features
 - Dictionary : an hashmap with string + group keys, FNV-1A hashing and linear probing
-- Tracker : a hybrid vector/stack or pointers used to keep track of instanced components.
-- String : UTF-8 strings with 2D (rows and columns) information and manipulation functions
-- Color : RGBA color representation, manipulation and conversion
-- Rand : a re-implementation of POSIX's rand48 functions with a slightly more convenient API
+- Tracker    : a hybrid vector/stack or pointers used to keep track of instanced components.
+- String     : UTF-8 strings with 2D (rows and columns) information and manipulation functions
+- Color      : RGBA color representation, manipulation and conversion
+- Rand       : a re-implementation of POSIX's rand48 functions with a slightly more convenient API
 
 Dependencies
 ------------
 
 - Tools :
 
-	- C99 compiler with a stdlib + POSIX 200809L
+	- C11 compiler with a stdlib + POSIX 200809L
 	- Make
 
 Installation

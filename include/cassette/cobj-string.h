@@ -273,7 +273,21 @@ cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 CSTR_NONNULL(1, 2);
 
 /** 
- * Clears errors and puts the string back into a usable state. The only unrecoverable error is CSTR_INVALID.
+ * Preallocates a set amount of bytes to avoid triggering multiple automatic reallocs when adding data to the
+ * string. This function has no effect if the requested amount of bytes is smaller than the previously
+ * allocated amount.
+ *
+ * @param str         : String to interact with
+ * @param byte_length : Number of bytes
+ *
+ * @error CSTR_MEMORY : Failed memory allocation
+ */
+void
+cstr_prealloc(cstr *str, size_t byte_length)
+CSTR_NONNULL(1);
+
+/** 
+ * Clears errors and puts the string back into an usable state. The only unrecoverable error is CSTR_INVALID.
  *
  * @param str : String to interact with
  */

@@ -18,18 +18,22 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <cassette/cobj.h>
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
 
-#include <cassette/cobj.h>
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+static void _print_stats (void);
+static void _print_value (const char *key, unsigned int group);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _print_info (cobj_dictionary_t *dict, const char *comment);
-static void _test_key   (cobj_dictionary_t *dict, const char *key, uint8_t group);
+static cdict *_dict = CDICT_PLACEHOLDER;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -38,63 +42,36 @@ static void _test_key   (cobj_dictionary_t *dict, const char *key, uint8_t group
 int
 main(void)
 {
-	cobj_dictionary_t *dict;
+	/* Setup */
 
-	/* init */
+	_dict = cdict_create();
 
-	dict = cobj_dictionary_create(0, 0.6);
-	
-	/* operations */
+	/* Operations */
 
-	cobj_dictionary_write(dict, "key_A", 0, 10);
-	cobj_dictionary_write(dict, "key_B", 0, 34);
-	cobj_dictionary_write(dict, "key_C", 0, 86);
-	cobj_dictionary_write(dict, "key_D", 0, 54);
-	cobj_dictionary_write(dict, "key_D", 1, 72);
-	cobj_dictionary_write(dict, "key_D", 2, 99);
-	_print_info(dict, "dictionary initialised with 6 initial values and a max load factor of 0.6");
+	cdict_write(_dict, "test", 0, 12);
+	cdict_write(_dict, "test", 1, 32);
+	cdict_write(_dict, "test", 1, 44);
+	cdict_write(_dict, "AAAA", 0, 99);
+	cdict_write(_dict, "ASXC", 0, 56);
 
-	_test_key(dict, "key_A", 0);
-	_test_key(dict, "key_B", 0);
-	_test_key(dict, "key_C", 0);
-	_test_key(dict, "key_D", 0);
-	_test_key(dict, "key_D", 1);
-	_test_key(dict, "key_D", 2);
+	cdict_erase(_dict, "AAAA", 0);
+	cdict_clear_group(_dict, 0);
 
-	_test_key(dict, "key_A", 7);
-	_test_key(dict, "key_C", 1);
-	_test_key(dict, "sdfbb", 0);
-	_test_key(dict,  NULL,   0);
+	_print_stats();
 
-	cobj_dictionary_write(dict, "key_D", 2, 9999);
-	_print_info(dict, "overwrote value of \"key_D\" in group 2");
+	_print_value("test", 0);
+	_print_value("test", 1);
+	_print_value("AAAA", 0);
+	_print_value("ASXC", 0);
 
-	_test_key(dict, "key_D", 2);
+	/* End */
 
-	cobj_dictionary_erase(dict, "key_C", 0);
-	cobj_dictionary_erase(dict, "key_C", 1);
-	_print_info(dict, "erased \"key_C\" in groups 0 & 1");
-
-	_test_key(dict, "key_C", 0);
-	_test_key(dict, "key_C", 1);
-	
-	cobj_dictionary_clear_group(dict, 0);
-	_print_info(dict, "cleared all keys from group 0");
-
-	_test_key(dict, "key_B", 0);
-
-	cobj_dictionary_clear(dict);
-	_print_info(dict, "dictionary fully cleared");
-
-	/* end */
-
-	if (cobj_dictionary_has_failed(dict))
+	if (cdict_error(_dict))
 	{
-		printf("Dictionary has failed during operation.\n");
+		printf("Dictionary errored during operation\n");	
 	}
 
-	cobj_dictionary_destroy(&dict);
-	cobj_dictionary_destroy(&dict); /* api is safe against double destructions */
+	cdict_destroy(_dict);
 
 	return 0;
 }
@@ -104,30 +81,24 @@ main(void)
 /************************************************************************************************************/
 
 static void
-_print_info(cobj_dictionary_t *dict, const char *comment)
+_print_stats(void)
 {
-	printf("\n\t-> %zu / %zu = %f (%s)\n\n",
-		cobj_dictionary_get_load(dict),
-		cobj_dictionary_get_alloc_size(dict),
-		cobj_dictionary_get_load_factor(dict),
-		comment);
+	printf(
+		"%zu used slots (%f load factor) / %zu allocated slots\n",
+		cdict_load(_dict),
+		cdict_load_factor(_dict),
+		cdict_allocated_slots(_dict));	
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_test_key(cobj_dictionary_t *dict, const char *key, uint8_t group)
+_print_value(const char *key, unsigned int group)
 {
-	size_t tmp;
+	size_t value = 0;
 
-//	printf("test\n");
-
-	if (cobj_dictionary_find(dict, key, group, &tmp))
+	if (cdict_find(_dict, key, group, &value))
 	{
-		printf("key \"%s\" in group %u was found and has a value of %zu\n", key, group, tmp);
-	}
-	else
-	{
-		printf("key \"%s\" in group %u was not found\n", key ? key : "NULL", group);
+		printf("%s\t%u\t%zu\n", key, group, value);
 	}
 }
