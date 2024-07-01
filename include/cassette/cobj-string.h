@@ -45,7 +45,7 @@ extern "C" {
  * Opaque string object instance.
  * This object holds an internal error bitfield that can be checked with cstr_error(). Some functions, upon
  * failure, can trigger specific error bits and will exit early without side effects. If the error bitfield is
- * set to anything else than CSTR_OK, any function that takes this object as an argument will return earl
+ * set to anything else than CSTR_OK, any function that takes this object as an argument will return early
  * with no side effects and default return values. It is possible to repair the object to get rid of errors.
  * See cstr_repair() for more details.
  */
@@ -147,8 +147,7 @@ CSTR_NONNULL(1);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Clears the contents of a given string by zero-ing it. Allocated memory is not freed, use cstr_destroy() or
- * cstr_trim_memory() for that.
+ * Clears the contents of a given string. Allocated memory is not freed, use cstr_destroy() for that.
  *
  * @param str : String to interact with
  */
@@ -157,13 +156,13 @@ cstr_clear(cstr *str)
 CSTR_NONNULL(1);
 
 /**
- * Removes a set amount of UTF-8 characters at a specific offset.
+ * Removes a set number of UTF-8 characters at a specific offset.
  * This function is bounds-protected, meaning that offset + length parameters will be capped at the string's
  * length, even if a SIZE_MAX value is supplied.
  *
  * @param str    : String to interact with
  * @param offset : UTF-8 character position to start cutting from
- * @param length : amount of UTF-8 characters to remove
+ * @param length : number of UTF-8 characters to remove
  */
 void
 cstr_cut(cstr *str, size_t offset, size_t length)
@@ -188,7 +187,7 @@ cstr_insert_cstr(cstr *str, const cstr *str_src, size_t offset)
 CSTR_NONNULL(1, 2);
 
 /**
- * Converts a double into a character array then inserts it at a specific offset. The double digits amount is
+ * Converts a double into a character array then inserts it at a specific offset. The double digits number is
  * controlled with cstr_set_double_digits().
  * The string's allocated memory will be automatically extended if needed to accommodate the inserted data.
  * This function comes with overlap detection, so a raw_str obtained from cstr_char*() can be used. This
@@ -273,9 +272,9 @@ cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 CSTR_NONNULL(1, 2);
 
 /** 
- * Preallocates a set amount of bytes to avoid triggering multiple automatic reallocs when adding data to the
- * string. This function has no effect if the requested amount of bytes is smaller than the previously
- * allocated amount.
+ * Preallocates a set number of bytes to avoid triggering multiple automatic reallocs when adding data to the
+ * string. This function has no effect if the requested number of bytes is smaller than the previously
+ * allocated number.
  *
  * @param str         : String to interact with
  * @param byte_length : Number of bytes
@@ -296,11 +295,11 @@ cstr_repair(cstr *str)
 CSTR_NONNULL(1);
 
 /**
- * Sets the amount of digits to show when a double value gets inserted. The effects of the int values are
+ * Sets the number of digits to show when a double value gets inserted. The effects of the int values are
  * limited by the printf's "%.*Lf" operator.
  *
  * @param str    : String to interact with
- * @param digits : Amount of decimal digits
+ * @param digits : Number of decimal digits
  */
 void
 cstr_set_double_digits(cstr *str, int digits)
@@ -318,27 +317,14 @@ cstr_set_tab_width(cstr *str, size_t width)
 CSTR_NONNULL(1);
 
 /**
- * Slices out a set amount of UTF-8 characters at a specific offset and discards the rest.
+ * Slices out a set number of UTF-8 characters at a specific offset and discards the rest.
  *
  * @param str    : String to interact with
  * @param offset : UTF-8 character position to start slicing from
- * @param length : amount of UTF-8 characters to slice out
+ * @param length : number of UTF-8 characters to slice out
  */
 void
 cstr_slice(cstr *str, size_t offset, size_t length)
-CSTR_NONNULL(1);
-
-/**
- * All operations that increase the string's length will automatically reallocate the memory needed, but
- * operations that reduce the string's length do not. Thus, this function removes the excess of allocated
- * memory left by cstr_clear(), cstr_cut(), cstr_slice(), cstr_trim_whitespaces() and cstr_wrap().
- *
- * @param str : String to interact with
- *
- * @error CSTR_MEMORY : Failed memory realloc
- */
-void
-cstr_trim_memory(cstr *str)
 CSTR_NONNULL(1);
 
 /**
@@ -347,7 +333,7 @@ CSTR_NONNULL(1);
  * @param str : String to interact with
  */
 void
-cstr_trim_whitespaces(cstr *str)
+cstr_trim(cstr *str)
 CSTR_NONNULL(1);
 
 /**
@@ -364,20 +350,16 @@ void
 cstr_wrap(cstr *str, size_t max_width)
 CSTR_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
- * Gets the number of allocated bytes.
+ * Similar to cstr_clear() but all of the allocated memory is also zeroed.
  *
  * @param str : String to interact with
- *
- * @return     : Number of bytes
- * @return_err : 0
  */
-size_t
-cstr_alloc_length(const cstr *str)
-CSTR_NONNULL(1)
-CSTR_PURE;
+void
+cstr_zero(cstr *str)
+CSTR_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Gets the string's length in bytes, including the NULL terminator.
@@ -441,7 +423,7 @@ CSTR_NONNULL(1)
 CSTR_PURE;
 
 /**
- * Gets the raw null terminated C string offseted by an specific amount of UTF-8 characters.
+ * Gets the raw null terminated C string offseted by an specific number of UTF-8 characters.
  * This function is bounds-protected, so the offset parameter is capped at the string's length, even if
  * a SIZE_MAX value is supplied.
  *
@@ -514,7 +496,7 @@ CSTR_NONNULL(1)
 CSTR_PURE;
 
 /**
- * Calculates the amount of rows a string wrapped with max_width will have. But unlike cstr_wrap() the string
+ * Calculates the number of rows a string wrapped with max_width will have. But unlike cstr_wrap() the string
  * is not modified.
  *
  * @param str       : String to interact with

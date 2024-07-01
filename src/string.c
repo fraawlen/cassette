@@ -42,7 +42,7 @@ struct cstr
 	char *chars;
 	size_t n_rows;
 	size_t n_cols;
-	size_t n_bytes;
+	size_t n_chars;
 	size_t n_alloc;
 	size_t n_codepoints;
 	size_t tab_width;
@@ -68,7 +68,7 @@ cstr cstr_placeholder_instance =
 	.chars        = NULL,
 	.n_rows       = 0,
 	.n_cols       = 0,
-	.n_bytes      = 0,
+	.n_chars      = 0,
 	.n_alloc      = 0,
 	.n_codepoints = 0,
 	.tab_width    = 0,
@@ -81,19 +81,6 @@ cstr cstr_placeholder_instance =
 /************************************************************************************************************/
 
 size_t
-cstr_alloc_length(const cstr *str)
-{
-	if (str->err)
-	{
-		return 0;
-	}
-
-	return str->n_alloc;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-size_t
 cstr_byte_length(const cstr *str)
 {
 	if (str->err)
@@ -101,7 +88,7 @@ cstr_byte_length(const cstr *str)
 		return 0;
 	}
 
-	return str->n_bytes;
+	return str->n_chars;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -166,7 +153,7 @@ cstr_clear(cstr *str)
 		return;
 	}
 
-	memset(str->chars, '\0', str->n_alloc);
+	str->chars[0] = '\0';
 
 	_update_n_values(str);
 }
@@ -189,11 +176,11 @@ cstr_clone(const cstr *str)
 		return CSTR_PLACEHOLDER;
 	}
 
-	memcpy(str_new->chars, str->chars, str->n_alloc);
+	memcpy(str_new->chars, str->chars, str->n_chars);
 
 	str_new->n_rows       = str->n_rows;
 	str_new->n_cols       = str->n_cols;
-	str_new->n_bytes      = str->n_bytes;
+	str_new->n_chars      = str->n_chars;
 	str_new->n_codepoints = str->n_codepoints;
 	str_new->n_alloc      = str->n_alloc;
 	str_new->tab_width    = str->tab_width;
@@ -314,7 +301,7 @@ cstr_cut(cstr *str, size_t offset, size_t length)
 	offset_2 = _byte_offset(str, offset + length);
 	offset   = _byte_offset(str, offset);
 
-	memmove(str->chars + offset, str->chars + offset_2, str->n_bytes - offset_2);
+	memmove(str->chars + offset, str->chars + offset_2, str->n_chars - offset_2);
 
 	_update_n_values(str);
 }
@@ -416,7 +403,7 @@ cstr_insert_raw(cstr *str, const char *raw_str, size_t offset)
 		return;
 	}
 
-	if (!safe_add(&m, n = strlen(raw_str), str->n_bytes))
+	if (!safe_add(&m, n = strlen(raw_str), str->n_chars))
 	{
 		str->err |= CSTR_OVERFLOW;
 		return;
@@ -452,7 +439,7 @@ cstr_insert_raw(cstr *str, const char *raw_str, size_t offset)
 
 	offset = _byte_offset(str, offset);
 
-	memmove(str->chars + offset + n, str->chars + offset, str->n_bytes - offset);
+	memmove(str->chars + offset + n, str->chars + offset, str->n_chars - offset);
 	memcpy(str->chars + offset, raw_str, n);
 	free(tmp_src);
 	
@@ -477,26 +464,23 @@ cstr_length(const cstr *str)
 void
 cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 {
-	size_t pad_n_bytes;
+	size_t pad_n_chars;
 	size_t length_diff;
 	size_t n;
 	char *tmp;
-	bool safe = true;
 
 	if (str->err || length_target <= str->n_codepoints)
 	{
 		return;
 	}
 
-	pad_n_bytes = strlen(pattern);
+	pad_n_chars = strlen(pattern);
 	length_diff = length_target - str->n_codepoints;
 
 	/* create padding string */
 
-	safe &= safe_mul(&n, pad_n_bytes, length_diff);
-	safe &= safe_add(&n, n, 1);
-
-	if (!safe)
+	if (!safe_mul(&n, pad_n_chars, length_diff)
+	 || !safe_add(&n, n, 1))
 	{
 		str->err |= CSTR_OVERFLOW;
 		return;
@@ -510,10 +494,10 @@ cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 
 	for (size_t i = 0; i < length_diff; i++)
 	{
-		memcpy(tmp + i * pad_n_bytes, pattern, pad_n_bytes);
+		memcpy(tmp + i * pad_n_chars, pattern, pad_n_chars);
 	}
 
-	tmp[pad_n_bytes * length_diff] = '\0';
+	tmp[pad_n_chars * length_diff] = '\0';
 
 	/* insert it */
 
@@ -644,29 +628,7 @@ cstr_test_wrap(const cstr *str, size_t max_width)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cstr_trim_memory(cstr *str)
-{
-	char *tmp;
-
-	if (str->err)
-	{
-		return;
-	}
-
-	if (!(tmp = realloc(str->chars, str->n_bytes)))
-	{
-		str->err |= CSTR_MEMORY;
-		return;
-	}
-
-	str->chars   = tmp;
-	str->n_alloc = str->n_bytes;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cstr_trim_whitespaces(cstr *str)
+cstr_trim(cstr *str)
 {
 	if (str->err)
 	{
@@ -694,12 +656,12 @@ exit_lead:
 
 	/* trailing whitespaces */
 
-	if (str->n_bytes < 2)
+	if (str->n_chars < 2)
 	{
 		return;
 	}
 
-	for (size_t i = str->n_bytes - 2;; i--)
+	for (size_t i = str->n_chars - 2;; i--)
 	{
 		switch (str->chars[i])
 		{
@@ -778,7 +740,6 @@ cstr_wrap(cstr *str, size_t max_width)
 	size_t max_bytes;
 	size_t col;
 	char *tmp;
-	bool safe = true;
 
 	if (str->err || max_width == 0 || max_width >= str->n_cols)
 	{
@@ -787,14 +748,12 @@ cstr_wrap(cstr *str, size_t max_width)
 
 	/* calculate (with overflow protection) max required memory to host wrapped string */
 
-	safe &= safe_mul(&max_slots, str->n_cols, str->n_rows);
-	safe &= safe_div(&max_rows,  max_slots, max_width);
-	safe &= safe_add(&max_rows,  max_rows, max_slots % max_width > 0 ? 1 : 0);
-	safe &= safe_mul(&max_bytes, max_width, 4);
-	safe &= safe_add(&max_bytes, max_bytes, 1);
-	safe &= safe_mul(&max_bytes, max_bytes, max_rows);
-
-	if (!safe)
+	if (!safe_mul(&max_slots, str->n_cols, str->n_rows)
+	 || !safe_div(&max_rows,  max_slots, max_width)
+	 || !safe_add(&max_rows,  max_rows, max_slots % max_width > 0 ? 1 : 0)
+	 || !safe_mul(&max_bytes, max_width, 4)
+	 || !safe_add(&max_bytes, max_bytes, 1)
+	 || !safe_mul(&max_bytes, max_bytes, max_rows))
 	{
 		str->err |= CSTR_OVERFLOW;
 		return;
@@ -802,7 +761,7 @@ cstr_wrap(cstr *str, size_t max_width)
 
 	/* alloc memory */
 
-	if (!(tmp = calloc(max_bytes, 1)))
+	if (!(tmp = malloc(max_bytes)))
 	{
 		str->err |= CSTR_MEMORY;
 		return;
@@ -814,7 +773,7 @@ cstr_wrap(cstr *str, size_t max_width)
 
 	str->n_cols       = max_width;
 	str->n_rows       = 1;
-	str->n_bytes      = 0;
+	str->n_chars      = 0;
 	str->n_codepoints = 0;
 
 	col = 0;
@@ -825,7 +784,7 @@ cstr_wrap(cstr *str, size_t max_width)
 		{
 			if (str->chars[i] == '\0')
 			{
-				tmp[str->n_bytes++] = str->chars[i];
+				tmp[str->n_chars++] = str->chars[i];
 				break;
 			}
 			else if (str->chars[i] == '\n')
@@ -835,10 +794,10 @@ cstr_wrap(cstr *str, size_t max_width)
 			}
 			else if (col >= max_width)
 			{
-				tmp[str->n_bytes] = '\n';
+				tmp[str->n_chars] = '\n';
 				str->n_codepoints++;
 				str->n_rows++;
-				str->n_bytes++;
+				str->n_chars++;
 				col = 1;
 			}
 			else
@@ -847,11 +806,26 @@ cstr_wrap(cstr *str, size_t max_width)
 			}
 			str->n_codepoints++;
 		}
-		tmp[str->n_bytes++] = str->chars[i];
+		tmp[str->n_chars++] = str->chars[i];
 	}
 
 	free(str->chars);
 	str->chars = tmp;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cstr_zero(cstr *str)
+{
+	if (str->err)
+	{
+		return;
+	}
+
+	memset(str->chars, '\0', str->n_alloc);
+
+	_update_n_values(str);
 }
 
 /************************************************************************************************************/
@@ -865,7 +839,7 @@ _byte_offset(const cstr *str, size_t offset)
 
 	if (offset >= str->n_codepoints)
 	{
-		return str->n_bytes - 1;
+		return str->n_chars - 1;
 	}
 
 	while (offset > 0)
@@ -914,16 +888,16 @@ _update_n_values(cstr *str)
 
 	str->n_rows       = 1;
 	str->n_cols       = 0;
-	str->n_bytes      = 0;
+	str->n_chars      = 0;
 	str->n_codepoints = 0;
 	
-	for (;; str->n_bytes++)
+	for (;; str->n_chars++)
 	{
-		switch (str->chars[str->n_bytes])
+		switch (str->chars[str->n_chars])
 		{
 			case '\0':
 				str->n_cols = col > str->n_cols ? col : str->n_cols;
-				str->n_bytes++;
+				str->n_chars++;
 				return;
 
 			case '\n':
@@ -939,7 +913,7 @@ _update_n_values(cstr *str)
 				break;
 
 			default:
-				if (_is_end_byte(str->chars[str->n_bytes]))
+				if (_is_end_byte(str->chars[str->n_chars]))
 				{
 					str->n_codepoints++;
 					col++;

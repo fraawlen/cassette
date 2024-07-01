@@ -46,7 +46,7 @@ extern "C" {
  * linear probing for collision resolution.
  * This object holds an internal error bitfield that can be checked with cdict_error(). Some functions, upon
  * failure, can trigger specific error bits and will exit early without side effects. If the error bitfield is
- * set to anything else than CDICT_OK, any function that takes this object as an argument will return earl
+ * set to anything else than CDICT_OK, any function that takes this object as an argument will return early
  * with no side effects and default return values. It is possible to repair the object to get rid of errors.
  * See cdict_repair() for more details.
  */
@@ -79,7 +79,7 @@ enum cdict_err
  * @return_err : CDICT_PLACEHOLDER
  */
 cdict *
-cdict_clone(cdict *dict)
+cdict_clone(const cdict *dict)
 CDICT_NONNULL_RETURN
 CDICT_NONNULL(1);
 
@@ -138,17 +138,17 @@ CDICT_NONNULL(1, 2);
 /** 
  * Preallocates a set amount of slots to avoid triggering multiple automatic reallocs and rehashes when adding
  * data to the dictionary. To stay under the set maximum load factor (default = 0.6), the actual amount of
- * allocated hashtable slots is slot_amount / max_load_factor. This function has no effect if the requested
+ * allocated hashtable slots is slot_number / max_load_factor. This function has no effect if the requested
  * number of slots is smaller than the previously allocated amount.
  *
  * @param dict         : Dictionary to interact with
- * @param slots_maount : Number of slots
+ * @param slots_number : Number of slots
  *
  * @error CDICT_OVERFLOW : The size of the resulting dictionary will be > SIZE_MAX
  * @error CDICT_MEMORY   : Failed memory allocation
  */
 void
-cdict_prealloc(cdict *dict, size_t slots_amount)
+cdict_prealloc(cdict *dict, size_t slots_number)
 CDICT_NONNULL(1);
 
 /**
@@ -195,19 +195,6 @@ cdict_write(cdict *dict, const char *key, unsigned int group, size_t value)
 CDICT_NONNULL(1, 2);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Gets the number of total allocated slots.
- *
- * @param dict : Dictionary to interact with
- *
- * @return     : Number of slots
- * @return_err : 0
- */
-size_t
-cdict_allocated_slots(const cdict *dict)
-CDICT_NONNULL(1)
-CDICT_PURE;
 
 /**
  * Gets the error state.

@@ -23,6 +23,16 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#if __GNUC__ > 4
+	#define CBOOK_NONNULL_RETURN __attribute__((returns_nonnull))
+	#define CBOOK_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
+	#define CBOOK_PURE           __attribute__((pure))
+#else
+	#define CBOOK_NONNULL_RETURN
+	#define CBOOK_NONNULL(...)
+	#define CBOOK_PURE
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -32,319 +42,405 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Opaque book instance object. A book is a fancy dynamic string array / vector that can autoresize itself to
- * accomodate more words (aka C-strings). Words can be grouped to create sub-string-arrays. All words are
- * stored in a single continuous block of memory. There can't be more groups than words.
- * This object holds an internal fail state boolean that can be checked with cobj_book_has_failed(). If it
- * happens to be put in a failure state due to a memory failure, any function that take this object as
- * argument will exit early with no side effects and return default values. The only 2 functions that are an
- * exception to this rule are cobj_book_destroy() and cobj_book_has_failed().
+ * Opaque book object instance. It stores an automatically extensible stack of strings. Strings can be
+ * grouped.
+ * This object holds an internal error bitfield that can be checked with cbook_error(). Some functions, upon
+ * failure, can trigger specific error bits and will exit early without side effects that affect the contents
+ * of the book (but the amount of allocated memory may be modified). If the error bitfield is set to anything
+ * else than CBOOK_OK, any function that takes this object as an argument will return early with no side
+ * effects and default return values. It is possible to repair the object to get rid of errors. See
+ * cbook_repair() for more details.
  */
-typedef struct _book_t cobj_book_t;
+typedef struct cbook cbook;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * When a new word gets appended to a given book, the following enumeration values determines if said word
- * will be part of a new group, or be added to the last active word group.
+ * Error types.
  */
-enum cobj_book_group_mode_t
+enum cbook_err
 {
-	COBJ_BOOK_OLD_GROUP = false,
-	COBJ_BOOK_NEW_GROUP = true,
+	CBOOK_OK       = 0,
+	CBOOK_INVALID  = 1,
+	CBOOK_OVERFLOW = 1 << 1,
+	CBOOK_MEMORY   = 1 << 2,
 };
 
-typedef enum cobj_book_group_mode_t cobj_book_group_mode_t;
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * String to group addition mode.
+ */
+enum cbook_group
+{
+	CBOOK_OLD = false,
+	CBOOK_NEW = true,
+};
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ * Create a book instance and deep copy the contents of another book instance into it.
+ *
+ * @param book : Book to copy contents from
+ *
+ * @return     : New book instance
+ * @return_err : CBOOK_PLACEHOLDER
+ */
+cbook *
+cbook_clone(const cbook *book)
+CBOOK_NONNULL_RETURN
+CBOOK_NONNULL(1);
+
+/**
+ * Creates an empty book instance.
+ *
+ * @return     : New book instance
+ * @return_err : CBOOK_PLACEHOLDER
+ */
+cbook *
+cbook_create(void)
+CBOOK_NONNULL_RETURN;
+
+/**
+ * Destroys the given book and frees memory.
+ *
+ * @param book : Book to interact with
+ */
+void
+cbook_destroy(cbook *book)
+CBOOK_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Allocates memory and initializes a book instance.
- * This function always returns a valid and safe-to-use or destroy object instance. Even in the case of memory
- * allocation failure, the returned value points to an internal static book instance set in a failed state.
- * Therefore, checking for a NULL returned value is useless, instead, use cobj_book_has_failed(). Never free()
- * an object obtained with this function, instead use cobj_book_destroy().
+ * Clears the contents of a given book. Allocated memory is not freed, use cbook_destroy() for that.
  *
- * @param n_alloc Number of word slots to preallocate inside the newly created book, can be 0, since the book
- *                can auto-extend its size as needed.
- * @param word_n Maximum byte size of an individual word
- *
- * @return Created book instance object
+ * @param book : Book to interact with
  */
-cobj_book_t *cobj_book_create(size_t n_alloc, size_t word_n);
+void
+cbook_clear(cbook *book)
+CBOOK_NONNULL(1);
 
 /**
- * Gets a valid pointer to an internal book instance set in a failed state. To be used to avoid
- * leaving around uninitialized book instance pointers. Never free() an object obtained with this
- * function, instead use cobj_book_destroy().
- *
- * @return Placeholder book instance object
+ * Deletes the last group of words. Allocated memory is not freed, use cbook_destroy() or cbook_trim() for
+ * that.
+ * 
+ * @param book : Book to interact with
  */
-cobj_book_t *cobj_book_get_placeholder(void);
+void
+cbook_pop_group(cbook *book)
+CBOOK_NONNULL(1);
 
 /**
- * Destroys a given instance and free allocated memory. The pointed value is then replaced by a placeholder
- * value that points to an internal static configuration instance set in a failed state to avoid leaving
- * behind a dangling pointer. Hence, it is safe to call this function multiple times.
- *
- * @param book Book instance to interact with
+ * Deletes the last word. Allocated memory is not freed, use cbook_destroy() or cbook_trim() for that.
+ * 
+ * @param book : Book to interact with
  */
-void cobj_book_destroy(cobj_book_t **book);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+void
+cbook_pop_word(cbook *book)
+CBOOK_NONNULL(1);
 
 /**
- * Clears the contents of a given book. However no memory is freed, use cobj_book_destroy() for that.
- *
- * @param book Book instance to interact with
- */
-void cobj_book_clear(cobj_book_t *book);
-
-/**
- * Removes the last group and words associated with it.
- *
- * @param book Book instance to interact with
- */
-void cobj_book_erase_last_group(cobj_book_t *book);
-
-/**
- * Removes the last word. If that word was the first in its group, the group will be deleted too.
- *
- * @param book Book instance to interact with
- */
-void cobj_book_erase_last_word(cobj_book_t *book);
-
-/**
- * After the book's iterator has been reset with cobj_book_reset_iterator(), the words returned by
- * cobj_book_get_iteration() are not accessible until this function is called at least once. Each subsequent
- * call to this function will move an internal iterator forward to the next word until the end of the group is
- * reached. If the iterator has been locked with cobj_book_lock_iterator() this function has no effect.
- * Iterator-related functions are intended to replace for-loops as they protect against out-of-bound errors
- * and can adjust the iterator position automatically when an element gets removed.
+ * Puts the iterator at the beginning of a group. Before accessing a word from the said group with
+ * cbook_iteration(), cbook_iterate() should be called at least once. If the group_index parameter is
+ * out-of-bounds, then this function behaves like cbook_lock_iterator(). Iterator-related functions are
+ * intended to replace for-loops as they protect against out-of-bound errors and can adjust the iterator
+ * position automatically when an element gets removed. They also maintain their own index internally, thus
+ * dispensing the end-user from keeping and passing it around across multiple functions.
  *
  * Usage example :
  *
- *	cobj_book_reset_iterator(book, group_index);
- *	while (cobj_book_increment_iterator(book))
+ *	cbook_init_iterator(book, group_index);
+ *	while (cbook_iterate(book))
  *	{
- *		printf("%s\n", cobj_book_get_iteration(book));
+ *		printf("%s\n", cbook_iteration(book));
  *	}
- *
- * @param book Book instance to interact with
- *
- * @return True if the iterator could be incremented and the next word accessed, false otherwise
+ * 
+ * @param book        : Book to interact with
+ * @param group_index : Group index within book
  */
-bool cobj_book_increment_iterator(cobj_book_t *book);
+void
+cbook_init_iterator(cbook *book, size_t group_index)
+CBOOK_NONNULL(1);
 
 /**
- * Blocks the internal iterator so that cobj_book_increment_iterator() will fail and return false until the
- * iterator is reset with cobj_book_reset_iterator().
- * Iterator-related functions are intended to replace for-loops as they protect against out-of-bound errors
- * and can adjust the iterator position automatically when an element gets removed.
+ * Increments the iterator's offset and makes available the next word returned by cbook_iteration(). This
+ * function exits early and returns false if the iterator cannot be incremented because it has already reached
+ * the end of the group it's set at or because the book has an error. Iterator-related functions are intended
+ * to replace for-loops as they protect against out-of-bound errors and can adjust the iterator position
+ * automatically when an element gets removed. They also maintain their own index internally, thus dispensing
+ * the end-user from keeping and passing it around across multiple functions.
+ * 
+ * @param book : Book to interact with
  *
- * @param book Book instance to interact with
+ * @return     : True if next word is accessible, false otherwhise
+ * @return_err : False
  */
-void cobj_book_lock_iterator(cobj_book_t *book);
+bool
+cbook_iterate(cbook *book)
+CBOOK_NONNULL(1);
+
+/**
+ * Blocks the internal iterator so that cbook_iterate() will fail and return false until the iterator is reset
+ * with cbook_reset_iterator(). Iterator-related functions are intended to replace for-loops as they protect
+ * against out-of-bound errors and can adjust the iterator position automatically when an element gets
+ * removed. They also maintain their own index internally, thus dispensing the end-user from keeping and
+ * passing it around across multiple functions.
+ * 
+ * @param book : Book to interact with
+ */
+void
+cbook_lock_iterator(cbook *book)
+CBOOK_NONNULL(1);
+
+/**
+ * Preallocates a set number of characters, words, references, and groups to avoid triggering multiple
+ * automatic reallocs when adding data to the book. This function has no effect if the requested numbers
+ * are smaller than the previously allocated amounts.
+ *
+ * @param book          : Book to interact with
+ * @param bytes_number  : Total number of bytes across all words
+ * @param words_number  : Total number of words across all groups
+ * @param groups_number : Total number of groups
+ *
+ * @error CBOOK_OVERFLOW : The size of the resulting book will be > SIZE_MAX
+ * @error CBOOK_MEMORY   : Failed memory allocation
+ */
+void
+cbook_prealloc(cbook *book, size_t bytes_number, size_t words_number, size_t groups_number)
+CBOOK_NONNULL(1);
 
 /**
  * Increments the book word count (and possibly group count) by 1 and returns the start position of a buffer
- * to write to. The size of the returned buffer is defined by the value of the word_n parameter when the book
- * instance is created with cobj_book_create(). This function is intended to be used instead of cobj_book
- * write_new_word() when reading bytes from a stream to avoid needing extra read / write operations.
- * Exceptionally, in case of failure (due to a memory issue or if the given book was already in a failed
- * state, NULL can be returned. It is also the responsibility of the caller to respect the buffer's size when
- * writing to it.
+ * to write to. The value of the length parameter defines the size of the returned buffer. The total char
+ * count also gets incremented by the given length regardless of the buffer's usage. This function is
+ * intended to be used instead of cbook_write() when reading bytes from a stream to avoid needing extra read
+ * and write operations. Exceptionally, in case of failure (due to a memory issue or if the given book already
+ * had an error, this function can return NULL. The caller is responsible for respecting the buffer's size
+ * when writing to it.
  *
  * Example, instead of this :
  *
- *	cobj_book_t *book = cobj_book_create(1, 128);
- *	char buf[128] = {0};
- *	fgets(buf, 128, stream);
- *    cobj_book_write_new_word(book, buf, COBJ_BOOK_NEW_GROUP);
+ *	char buf[128];
+ *	if (fgets(buf, 128, stream))
+ *	{
+ *    	cbook_write(book, buf, CBOOK_NEW);
+ *	}
  *
  * Do this :
  *
- *	cobj_book_t *book = cobj_book_create(1, 128);
- *	char *buf = cobj_book_prepare_new_word(book, COBJ_BOOK_NEW_GROUP);
- *	if (buf)
+ *	char *buf;
+ *	if ((buf = cbook_prepare_word(book, 128, CBOOK_NEW)))
  *	{
  *		fgets(buf, 128, stream);
  *	}
- *	
- * @param book Book instance to interact with
- * @param group_mode Put the new word in a new group or not
+ * 
+ * @param book       : Book to interact with
+ * @param length     : Number of bytes to allocate to buffer
+ * @param group_mode : Create (or not) a group for the new word
  *
- * @return Pointer to begining of the char buffer to write to.
+ * @return     : Pointer to string buffer of size 'length'
+ * @return_err : NULL
+ *
+ * @error CBOOK_OVERFLOW : The size of the resulting book will be > SIZE_MAX
+ * @error CBOOK_MEMORY   : Failed memory allocation
  */
-char *cobj_book_prepare_new_word(cobj_book_t *book, cobj_book_group_mode_t group_mode);
+char *
+cbook_prepare_word(cbook *book, size_t length, enum cbook_group group_mode)
+CBOOK_NONNULL(1);
 
 /**
- * Resets an internal word iterator to the beginning of a given group. Before accessing a word,
- * cobj_book_increment_iterator() should be called at least once.
- * Iterator-related functions are intended to replace for-loops as they protect against out-of-bound errors
- * and can adjust the iterator position automatically when an element gets removed.
+ * Clears errors and puts the book back into an usable state. The only unrecoverable error is CBOOK_INVALID.
  *
- * Usage example :
+ * @param book : Book to interact with
  *
- *	cobj_book_reset_iterator(book, group_index);
- *	while (cobj_book_increment_iterator(book))
- *	{
- *		printf("%s\n", cobj_book_get_iteration(book));
- *	}
- *
- * @param book Book instance to interact with
- * @param group_index Group to position the iterator at
  */
-void cobj_book_reset_iterator(cobj_book_t *book, size_t group_index);
+void
+cbook_repair(cbook *book)
+CBOOK_NONNULL(1);
 
 /**
- * Replaces the n-th word value from the n-th group with a new C-string value. If str is NULL, or the given
- * indexes are out of bound, then this function has no effect.
+ * Appends a new string (called 'word') to the book and increments the book word count (and possibly group
+ * count) by 1 as well as the character count by the string's length (NULL terminator included). The book will
+ * automatically extend its allocated memory to accommodate the new word.
+ * 
+ * @param book       : Book to interact with
+ * @param raw_str    : C string
+ * @param group_mode : Create (or not) a group for the new word
  *
- * @param book Book instance to interact with
- * @param str C-string to set the new value to
- * @param group_index Group position within the book
- * @param word_index Word position within the group
+ * @error CBOOK_OVERFLOW : The size of the resulting book will be > SIZE_MAX
+ * @error CBOOK_MEMORY   : Failed memory allocation
  */
-void cobj_book_rewrite_word(cobj_book_t *book, const char *str, size_t group_index, size_t word_index);
+void
+cbook_write(cbook *book, const char *str, enum cbook_group group_mode)
+CBOOK_NONNULL(1, 2);
 
 /**
- * Removes the excess of trailing allocated memory inside the book.
- *
- * @param book Book instance to interact with
+ * Similar to cbook_clear() but all of the allocated memory is also zeroed.
+ * 
+ * @param book : Book to interact with
  */
-void cobj_book_trim(cobj_book_t *book);
-
-/**
- * Adds a new word to the book and increments the book word count (and possibly group count) by 1. If str is
- * NULL, this function has no effect. The book's allocated memory is automatically increased if needed to
- * accommodate the new word. If str is longer than the maximum word size set during the book's creation, it
- * will be truncated to fit it in (the NULL terminator is included in the resulting string).
- *
- * @param book Book instance to interact with
- * @param str C-string to write into the book
- * @param group_mode Put the new word in a new group or not
- */
-void cobj_book_write_new_word(cobj_book_t *book, const char *str, cobj_book_group_mode_t group_mode);
+void
+cbook_zero(cbook *book)
+CBOOK_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Gets the number of allocated word slots across all groups within the book.
- * If the given book is in an error state, 0 will be returned.
+ * Gets the total length of the book (all NULL terminators included).
  *
- * @param book Book instance to interact with
+ * @param book : Book to interact with
  *
- * @return Total allocated word slots
+ * @return     : Number of bytes
+ * @return_err : 0
  */
-size_t cobj_book_get_alloc_words(const cobj_book_t *book);
+size_t
+cbook_byte_length(const cbook *book)
+CBOOK_NONNULL(1)
+CBOOK_PURE;
 
 /**
- * Gets the number of words a given group has.
- * If the given book is in an error state, 0 will be returned.
+ * Gets the errror state.
  *
- * @param book Book instance to interact with
- * @param group_index Group position within the book
+ * @param book : Book to interact with
  *
- * @return Word number in group
+ * @return : Error bitfield
  */
-size_t cobj_book_get_group_size(const cobj_book_t *book, size_t group_index);
+enum cbook_err
+cbook_error(const cbook *book)
+CBOOK_NONNULL(1)
+CBOOK_PURE;
 
 /**
- * Accesses the word pointed to by the internal iterator after it has been reset and then incremented at least
- * once. This function never returns NULL. Instead, in case of failure, an empty string consisting of a single
- * '\0' character is returned instead.
- * Iterator-related functions are intended to replace for-loops as they protect against out-of-bound errors
- * and can adjust the iterator position automatically when an element gets removed.
+ * Gets a group's word count.
+ * 
+ * @param book        : Book to interact with
+ * @param group_index : Group index within book
  *
- * Usage example :
- *
- *	cobj_book_reset_iterator(book, group_index);
- *	while (cobj_book_increment_iterator(book))
- *	{
- *		printf("%s\n", cobj_book_get_iteration(book));
- *	}
- *
- * @param book Book instance to interact with
- *
- * @return C-string pointed by the iterator
+ * @return     : Number of words
+ * @return_err : 0
  */
-const char *cobj_book_get_iteration(const cobj_book_t *book);
+size_t
+cbook_group_length(const cbook *book, size_t group_index)
+CBOOK_NONNULL(1)
+CBOOK_PURE;
 
 /**
- * Gets the group the iterator is currently set at.
- * If the given book is in an error state or the iterator has been locked, SIZE_MAX will be returned (because
- * group 0 refers to the 1st group of the book).
+ * Gets the total number of groups
+ * 
+ * @param book : Book to interact with
  *
- * @param book Book instance to interact with
- *
- * @return Group index the Iterator is currently set at.
+ * @return     : Number of groups
+ * @return_err : 0
  */
-size_t cobj_book_get_iterator_group(const cobj_book_t *book);
+size_t
+cbook_groups_number(const cbook *book)
+CBOOK_NONNULL(1)
+CBOOK_PURE;
 
 /**
- * Gets the word offset the iterator is currently set at (starts at 1 for the first word of the group).
- * If the given book is in an error state, the iterator has been locked or the iterator has not been
- * incremented after a reset, 0 will be returned.
+ * Gets the word the iterator points to.
+ * 
+ * @param book : Book to interact with
  *
- * @param book Book instance to interact with
- *
- * @return Iterator offset
+ * @return     : C string
+ * @return_err : "\0"
  */
-size_t cobj_book_get_iterator_offset(const cobj_book_t *book);
+const char *
+cbook_iteration(const cbook *book)
+CBOOK_NONNULL_RETURN
+CBOOK_NONNULL(1)
+CBOOK_PURE;
 
 /**
- * Gets the number of groups within the book.
- * If the given book is in an error state, 0 will be returned.
+ * Gets the group the iterator is set to.
+ * 
+ * @param book : Book to interact with
  *
- * @param book Book instance to interact with
- *
- * @return Total number of groups
+ * @return     : Group index
+ * @return_err : SIZE_MAX
  */
-size_t cobj_book_get_number_groups(const cobj_book_t *book);
+size_t
+cbook_iterator_group(const cbook *book)
+CBOOK_NONNULL(1)
+CBOOK_PURE;
 
 /**
- * Gets the total number of words across all groups.
- * If the given book is in an error state, 0 will be returned.
+ * Gets the number of time the iterator has been incremented since its last initialisation.
+ * 
+ * @param book : Book to interact with
  *
- * @param book Book instance to interact with
- *
- * @return Total number of words
+ * @return     : Word offset (starts at 1)
+ * @return_err : 0
  */
-size_t cobj_book_get_number_words(const cobj_book_t *book);
+size_t
+cbook_iterator_offset(const cbook *book)
+CBOOK_NONNULL(1)
+CBOOK_PURE;
 
 /**
- * Accesses the n-th word from the n-th group.
- * This function never returns NULL. Instead, in case of failure, an empty string consisting of a single
- * '\0' character is returned instead.
+ * Gets a word.
+ * 
+ * @param book       : Book to interact with
+ * @param word_index : Word index in book across all groups
  *
- * @param book Book instance to interact with
- * @param group_index Group position within the book
- * @param word_index Word position within the group
- *
- * @return Word C-string value at the given indexes
+ * @return     : C string
+ * @return_err : "\0"
  */
-const char *cobj_book_get_word(const cobj_book_t *book, size_t group_index, size_t word_index);
+const char *
+cbook_word(const cbook *book, size_t word_index)
+CBOOK_NONNULL_RETURN
+CBOOK_NONNULL(1)
+CBOOK_PURE;
 
 /**
- * Gets the maximum length of a word slot in the given book. This value is set during the book's creation by 
- * the word_n parameter in cobj_book_create().
- * If the given book is in an error state, 0 will be returned.
+ * Gets a word from a specific group.
+ * 
+ * @param book        : Book to interact with
+ * @param group_index : Group index within book
+ * @param word_index  : Word index within group
  *
- * @param book Book instance to interact with
- *
- * @return Max word byte length
+ * @return     : C string
+ * @return_err : "\0"
  */
-size_t cobj_book_get_word_max_size(const cobj_book_t *book);
+const char *
+cbook_word_in_group(const cbook *book, size_t group_index, size_t word_index)
+CBOOK_NONNULL_RETURN
+CBOOK_NONNULL(1)
+CBOOK_PURE;
 
 /**
- * Checks if the book is in a failure state due to memory issues.
+ * Gets the total number of words.
+ * 
+ * @param book : Book to interact with
  *
- * @param book Book instance to interact with
- *
- * @return Book instance error state
+ * @return     : Total number of words across all groups
+ * @return_err : 0
  */
-bool cobj_book_has_failed(const cobj_book_t *book);
+size_t
+cbook_words_number(const cbook *book)
+CBOOK_NONNULL(1)
+CBOOK_PURE;
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ * A macro that gives uninitialized books a non-NULL value that is safe to use with the book's related
+ * functions. However, any function called with a handle set to this value will return early and without any
+ * side effects.
+ */
+#define CBOOK_PLACEHOLDER &cbook_placeholder_instance
+
+/**
+ * Global book instance with the error state set to CBOOK_INVALID. This instance is only made available
+ * to allow the static initialization of book pointers with the macro CBOOK_PLACEHOLDER.
+ */
+extern cbook cbook_placeholder_instance;
 
 /************************************************************************************************************/
 /************************************************************************************************************/

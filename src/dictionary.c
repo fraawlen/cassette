@@ -88,19 +88,6 @@ cdict cdict_placeholder_instance =
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-size_t
-cdict_allocated_slots(const cdict *dict)
-{
-	if (dict->err)
-	{
-		return 0;
-	}
-
-	return dict->n_alloc;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 void
 cdict_clear(cdict *dict)
 {
@@ -136,7 +123,7 @@ cdict_clear_group(cdict *dict, unsigned int group)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 cdict *
-cdict_clone(cdict *dict)
+cdict_clone(const cdict *dict)
 {
 	cdict *dict_new;
 
@@ -158,7 +145,7 @@ cdict_clone(cdict *dict)
 	dict_new->max_load = dict->max_load;
 	dict_new->err      = CDICT_OK;
 
-	return dict;
+	return dict_new;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -277,20 +264,20 @@ cdict_load_factor(const cdict *dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cdict_prealloc(cdict *dict, size_t slots_amount)
+cdict_prealloc(cdict *dict, size_t slots_number)
 {
 	if (dict->err)
 	{
 		return;
 	}
 
-	if (slots_amount > SIZE_MAX * dict->max_load)
+	if (slots_number > SIZE_MAX * dict->max_load)
 	{
 		dict->err |= CDICT_OVERFLOW;
 		return;
 	}
 
-	_grow(dict, slots_amount / dict->max_load);
+	_grow(dict, slots_number / dict->max_load);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -346,7 +333,7 @@ cdict_write(cdict *dict, const char *key, unsigned int group, size_t value)
 
 	if (dict->n >= dict->n_alloc * dict->max_load)
 	{
-		if (dict->n_alloc > SIZE_MAX / 2)
+		if (!safe_mul(NULL, dict->n_alloc, 2))
 		{
 			dict->err |= CDICT_OVERFLOW;
 			return;
@@ -428,7 +415,7 @@ _grow(cdict *dict, size_t n)
 		return true;
 	}
 
-	if (n > SIZE_MAX / sizeof(struct _slot))
+	if (!safe_mul(NULL, n, sizeof(struct _slot)))
 	{
 		dict->err |= CDICT_OVERFLOW;
 		return false;

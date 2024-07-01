@@ -141,11 +141,10 @@ _update_wrap()
 	cstr_wrap(_str_wrap, columns);
 
 	printf(
-		"%s\n\t-> %zu rows x %zu cols / %zu utf8-characters / %zu bytes used / %zu bytes allocated\n\n",
+		"%s\n\t-> %zu rows x %zu cols / %zu utf8-characters / %zu bytes\n\n",
 		cstr_chars(_str_wrap),
 		cstr_height(_str_wrap),
 		cstr_width(_str_wrap),
 		cstr_length(_str_wrap),
-		cstr_byte_length(_str_wrap),
-		cstr_alloc_length(_str_wrap));
+		cstr_byte_length(_str_wrap));
 }
