@@ -23,6 +23,16 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#if __GNUC__ > 4
+	#define CREF_NONNULL_RETURN __attribute__((returns_nonnull))
+	#define CREF_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
+	#define CREF_PURE           __attribute__((pure))
+#else
+	#define CREF_NONNULL_RETURN
+	#define CREF_NONNULL(...)
+	#define CREF_PURE
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,53 +41,226 @@ extern "C" {
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-typedef struct _tracker_t cobj_tracker_t;
+/**
+ *
+ */
+typedef struct cref cref;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cobj_tracker_t *cobj_tracker_create(size_t n_alloc);
+/**
+ * Error types.
+ */
+enum cref_err
+{
+	CREF_OK       = 0,
+	CREF_INVALID  = 1,
+	CREF_OVERFLOW = 1 << 1,
+	CREF_MEMORY   = 1 << 2,
+};
 
-cobj_tracker_t *cobj_tracker_get_placeholder(void);
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
 
-void cobj_tracker_destroy(cobj_tracker_t **tracker);
+/**
+ *
+ */
+cref *
+cref_clone(cref *ref)
+CREF_NONNULL_RETURN
+CREF_NONNULL(1);
+
+/**
+ *
+ */
+cref *
+cref_create(void)
+CREF_NONNULL_RETURN;
+
+/**
+ *
+ */
+void
+cref_destroy(cref *ref)
+CREF_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void cobj_tracker_clear(cobj_tracker_t *tracker);
+#define cref_pull(REF, VAL) \
+	_Generic (VAL, \
+		int     : cref_pull_index, \
+		size_t  : cref_pull_index, \
+		default : cref_pull_ptr    \
+	)(REF, VAL)
 
-bool cobj_tracker_increment_iterator(cobj_tracker_t *tracker);
-
-void cobj_tracker_lock_iterator(cobj_tracker_t *tracker);
-
-void cobj_tracker_pull_index(cobj_tracker_t *tracker, size_t index);
-
-void cobj_tracker_pull_pointer(cobj_tracker_t *tracker, const void *ptr, size_t index);
-
-void cobj_tracker_push(cobj_tracker_t *tracker, const void *ptr, size_t *index);
-
-void cobj_tracker_reset_iterator(cobj_tracker_t *tracker);
-
-void cobj_tracker_trim(cobj_tracker_t *tracker);
+#define cref_purge(REF, VAL) \
+	_Generic (VAL, \
+		int     : cref_purge_index, \
+		size_t  : cref_purge_index, \
+		default : cref_purge_ptr    \
+	)(REF, VAL)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-unsigned long cobj_tracker_find(const cobj_tracker_t *tracker, const void *ptr, size_t *index);
+/**
+ *
+ */
+void
+cref_clear(cref *ref)
+CREF_NONNULL(1);
 
-size_t cobj_tracker_get_alloc_size(const cobj_tracker_t *tracker);
+/**
+ *
+ */
+void
+cref_init_iterator(cref *ref)
+CREF_NONNULL(1);
 
-const void *cobj_tracker_get_index(const cobj_tracker_t *tracker, size_t index);
+/**
+ *
+ */
+bool
+cref_iterate(cref *ref)
+CREF_NONNULL(1);
 
-unsigned long cobj_tracker_get_index_n_ref(const cobj_tracker_t *tracker, size_t index);
+/**
+ *
+ */
+void
+cref_lock_iterator(cref *ref)
+CREF_NONNULL(1);
 
-const void *cobj_tracker_get_iteration(const cobj_tracker_t *tracker);
+/**
+ *
+ */
+void
+cref_prealloc(cref *ref, size_t slots_number)
+CREF_NONNULL(1);
 
-size_t cobj_tracker_get_iterator_offset(const cobj_tracker_t *tracker);
+/**
+ *
+ */
+void
+cref_pull_index(cref *ref, size_t index)
+CREF_NONNULL(1);
 
-unsigned long cobj_tracker_get_iteration_n_ref(const cobj_tracker_t *tracker);
+/**
+ *
+ */
+void
+cref_pull_ptr(cref *ref, const void *ptr)
+CREF_NONNULL(1, 2);
 
-size_t cobj_tracker_get_size(const cobj_tracker_t *tracker);
+/**
+ *
+ */
+void
+cref_purge_index(cref *ref, size_t index)
+CREF_NONNULL(1);
 
-bool cobj_tracker_has_failed(const cobj_tracker_t *tracker);
+/**
+ *
+ */
+void
+cref_purge_ptr(cref *ref, const void *ptr)
+CREF_NONNULL(1, 2);
+
+/**
+ *
+ */
+void
+cref_push(cref *ref, const void *ptr)
+CREF_NONNULL(1, 2);
+
+/**
+ *
+ */
+void
+cref_repair(cref *ref)
+CREF_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ */
+const void *
+cref_at_index(const cref *ref, size_t index)
+CREF_NONNULL(1)
+CREF_PURE;
+
+/**
+ *
+ */
+unsigned int
+cref_at_index_count(const cref *ref, size_t index)
+CREF_NONNULL(1)
+CREF_PURE;
+
+/**
+ *
+ */
+enum cref_err
+cref_error(const cref *ref)
+CREF_NONNULL(1)
+CREF_PURE;
+
+/**
+ *
+ */
+unsigned int
+cref_find(const cref *ref, const void *ptr, size_t *index)
+CREF_NONNULL(1, 2);
+
+/**
+ *
+ */
+const void *
+cref_iteration(const cref *ref)
+CREF_NONNULL(1)
+CREF_PURE;
+
+/**
+ *
+ */
+unsigned int
+cref_iteration_count(const cref *ref)
+CREF_NONNULL(1)
+CREF_PURE;
+
+/**
+ *
+ */
+size_t
+cref_iterator_offset(const cref *ref)
+CREF_NONNULL(1)
+CREF_PURE;
+
+/**
+ *
+ */
+size_t
+cref_length(const cref *ref)
+CREF_NONNULL(1)
+CREF_PURE;
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ * A macro that gives uninitialized reference trackers a non-NULL value that is safe to use with the
+ * reference tracker's related functions. However, any function called with a handle set to this value will
+ * return early and without any side effects.
+ */
+#define CREF_PLACEHOLDER &cref_placeholder_instance
+
+/**
+ * Global reference tracker instance with the error state set to CBOOK_INVALID. This instance is only made
+ * available to allow the static initialization of reference tracker pointers with the macro CREF_PLACEHOLDER.
+ */
+extern cref cref_placeholder_instance;
 
 /************************************************************************************************************/
 /************************************************************************************************************/

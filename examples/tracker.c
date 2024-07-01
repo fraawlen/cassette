@@ -27,7 +27,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _print_contents (cobj_tracker_t *tracker, const char *header);
+cref *_refs = CREF_PLACEHOLDER;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -36,94 +36,59 @@ static void _print_contents (cobj_tracker_t *tracker, const char *header);
 int
 main(void)
 {
-	cobj_tracker_t *tracker;
+	unsigned int n;
+	size_t i = 0;
 
-	size_t i;
-
-	/* Variables to track, can be anything, including arrays or structures */
-	/* It is expected however to use a single data-type in a given tracker */
-	
-	int a = 1;
+	int a = 10;
 	int b = 20;
-	int c = 3;
-	int d = 65;
-	int e = 234;
+	int c = 30;
+	int d = 40;
+	int e = 50;
+	int f = 60;
 
-	/* Init */
+	/* Setup */
 
-	tracker = cobj_tracker_create(0);
+	_refs = cref_create();
 
-	cobj_tracker_push(tracker, &a, NULL);
-	cobj_tracker_push(tracker, &b, NULL);
-	cobj_tracker_push(tracker, &c, NULL);
-	cobj_tracker_push(tracker, &d, NULL);
-	cobj_tracker_push(tracker, &e, NULL);
-	cobj_tracker_push(tracker, &e, NULL); /* duplicate, increments reference counter */
+	/* Operation */
 
-	_print_contents(tracker, "tracker initialised with");
+	cref_push(_refs, &a);
+	cref_push(_refs, &b);
+	cref_push(_refs, &b);
+	cref_push(_refs, &b);
+	cref_push(_refs, &c);
+	cref_push(_refs, &c);
+	cref_push(_refs, &d);
+	cref_push(_refs, &e);
+	cref_push(_refs, &f);
 
-	/* Remove some components */
-
-	cobj_tracker_pull_index(tracker, 0);
-	cobj_tracker_pull_pointer(tracker, &e, 0);
-	cobj_tracker_pull_pointer(tracker, &d, 0);
-	cobj_tracker_pull_pointer(tracker, &d, 0); /* no effect because the pointer has already been removed */
-
-	_print_contents(tracker, "a few components have been removed");
-
-	/* Print info & trim allocated memory */
-
-	printf(
-		"size / allocated slots : %zu / %zu\n",
-		cobj_tracker_get_size(tracker), 
-		cobj_tracker_get_alloc_size(tracker));
-
-	cobj_tracker_trim(tracker);
-
-	printf(
-		"size / allocated slots : %zu / %zu (after trimming)\n\n",
-		cobj_tracker_get_size(tracker), 
-		cobj_tracker_get_alloc_size(tracker));
-
-	/* Re-add previously removed element */
-	
-	cobj_tracker_push(tracker, &d, NULL);
-	
-	_print_contents(tracker, "previously removed component has been re-added");
-
-	/*
-	 * Check if a pointer is tracked
-	 * the parameter i, while optional, should be initialised if given because it acts both as the
-	 * container to store an index if the element was found but also as a starting point for the internal
-	 * array scan. Usefull if you need to often check if a specific element is present.
-	 */
-
-	i = 0;
-
-	if (cobj_tracker_find(tracker, &a, &i))
+	if ((n = cref_find(_refs, &b, &i)) > 0)
 	{
-		printf("component with value %i was found at index %zu\n\n", a, i);
-	}
-	else
-	{
-		printf("component with value %i was not found\n\n", a);
+		printf("Ref B was found at index %zu with %u counts\n", i, n);
 	}
 
-	/* Untrack all values */
+	cref_purge(_refs, &b);
+	cref_pull(_refs, &c);
+	cref_pull(_refs, 0);
 
-	cobj_tracker_clear(tracker);
-
-	_print_contents(tracker, "tracker has been cleared");
-
-	/* end */
-	
-	if (cobj_tracker_has_failed(tracker))
+	cref_init_iterator(_refs);
+	while (cref_iterate(_refs))
 	{
-		printf("Tracker has failed during operation.\n");
+		printf(
+			"%i / %u refs / %p\n",
+			*(int*)cref_iteration(_refs),
+			cref_iteration_count(_refs),
+			cref_iteration(_refs));
+	}
+
+	/* End */
+	
+	if (cref_error(_refs))
+	{
+		printf("Reference tracker has failed during operation.\n");
 	}
 	
-	cobj_tracker_destroy(&tracker);
-	cobj_tracker_destroy(&tracker); /* api is safe against double destructions */
+	cref_destroy(_refs);
 
 	return 0;
 }
@@ -132,31 +97,4 @@ main(void)
 /* _ ********************************************************************************************************/
 /************************************************************************************************************/
 
-static void
-_print_contents(cobj_tracker_t *tracker, const char *header)
-{
-	printf("%s :\n", header);
 
-	/* Check the number of tracked pointers. */
-
-	if (cobj_tracker_get_size(tracker) == 0)
-	{
-		printf("\tempty");
-	}
-
-	/* Get each pointer sequencially, cast them to int and print them. */
-	/* Always reset the iterator beforehand.                           */
-
-	cobj_tracker_reset_iterator(tracker);
-
-	while(cobj_tracker_increment_iterator(tracker))
-	{
-		/* safe from NULL values inside this loop */
-		printf(
-			"\t%i(%lu)",
-			*(int*)cobj_tracker_get_iteration(tracker),
-			cobj_tracker_get_iteration_n_ref(tracker));
-	}
-
-	printf("\n\n");
-}

@@ -18,12 +18,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <assert.h>
 #include <cassette/cobj.h>
 #include <limits.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "safe.h"
 
@@ -31,470 +30,399 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-struct _slot_t
+struct _slot
 {
 	const void *ptr;
-	unsigned long n_ref;
+	unsigned int n_ref;
 };
-
-typedef struct _slot_t _slot_t;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-struct _tracker_t
+struct cref
 {
-	_slot_t *slots;
+	struct _slot *slots;
 	size_t n;
 	size_t n_alloc;
-	size_t iterator;
-	bool failed;
+	size_t it;
+	enum cref_err err;
 };
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _resize(cobj_tracker_t *tracker, size_t n, size_t a, size_t b);
+static bool _grow (cref *ref, size_t n) CREF_NONNULL(1);
+static void _pull (cref *ref, size_t i) CREF_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static cobj_tracker_t _err_tracker = 
+cref cref_placeholder_instance = 
 {
-	.slots    = NULL,
-	.n        = 0,
-	.n_alloc  = 0,
-	.iterator = SIZE_MAX,
-	.failed   = false,
+	.slots   = NULL,
+	.n       = 0,
+	.n_alloc = 0,
+	.it      = SIZE_MAX,
+	.err     = CREF_INVALID,
 };
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-void
-cobj_tracker_clear(cobj_tracker_t *tracker)
+const void *
+cref_at_index(const cref *ref, size_t index)
 {
-	assert(tracker);
-
-	if (tracker->failed)
+	if (ref->err || index >= ref->n)
 	{
-		return;
+		return NULL;
 	}
-
-	tracker->n = 0;
+	
+	return ref->slots[index].ptr;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cobj_tracker_t *
-cobj_tracker_create(size_t n_alloc)
+unsigned int
+cref_at_index_count(const cref *ref, size_t index)
 {
-	cobj_tracker_t *tracker;
-
-	if (!(tracker = malloc(sizeof(cobj_tracker_t))))
+	if (ref->err || index >= ref->n)
 	{
-		return &_err_tracker;
+		return 0;
 	}
 
-	tracker->slots    = NULL;
-	tracker->n        = 0;
-	tracker->n_alloc  = 0;
-	tracker->iterator = SIZE_MAX;
-	tracker->failed   = false;
-
-	_resize(tracker, n_alloc, 1, 0);
-
-	return tracker;
+	return ref->slots[index].n_ref;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cobj_tracker_destroy(cobj_tracker_t **tracker)
+cref_clear(cref *ref)
 {
-	assert(tracker && *tracker);
-
-	if (*tracker == &_err_tracker)
+	if (ref->err)
 	{
 		return;
 	}
 
-	free((*tracker)->slots);
-	free(*tracker);
-
-	*tracker = &_err_tracker;
+	ref->n = 0;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-unsigned long
-cobj_tracker_find(const cobj_tracker_t *tracker, const void *ptr, size_t *index)
+cref *
+cref_clone(cref *ref)
 {
-	size_t i0;
-	size_t i;
+	cref *ref_new;
 
-	assert(tracker);
+	if (ref->err || !(ref_new = malloc(sizeof(cref))))
+	{
+		return CREF_PLACEHOLDER;
+	}
 
-	if (tracker->failed)
+	if (!(ref_new->slots = malloc(ref->n_alloc * sizeof(struct _slot))))
+	{
+		free(ref_new);
+		return CREF_PLACEHOLDER;
+	}
+
+	memcpy(ref_new->slots, ref->slots, ref->n * sizeof(struct _slot));
+
+	ref_new->n       = ref->n;
+	ref_new->n_alloc = ref->n_alloc;
+	ref_new->it      = ref->it;
+	ref_new->err     = CREF_OK;
+
+	return ref_new;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cref *
+cref_create(void)
+{
+	cref *ref;
+
+	if (!(ref = malloc(sizeof(cref))))
+	{
+		return CREF_PLACEHOLDER;
+	}
+
+	if (!(ref->slots = malloc(sizeof(struct _slot))))
+	{
+		free(ref);
+		return CREF_PLACEHOLDER;
+	}
+
+	ref->n       = 0;
+	ref->n_alloc = 1;
+	ref->it      = SIZE_MAX;
+	ref->err     = CREF_OK;
+
+	return ref;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cref_destroy(cref *ref)
+{
+	if (ref == CREF_PLACEHOLDER)
+	{
+		return;
+	}
+
+	free(ref->slots);
+	free(ref);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+enum cref_err
+cref_error(const cref *ref)
+{
+	return ref->err;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+unsigned int
+cref_find(const cref *ref, const void *ptr, size_t *index)
+{
+	if (ref->err)
 	{
 		return 0;
 	}
 
-	if (tracker->n == 0 || !ptr)
+	for (size_t i = 0; i < ref->n; i++)
 	{
-		return 0;
-	}
-
-	i0 = index && *index < tracker->n ? *index : tracker->n - 1;
-
-	/* first scan, from i0 to 0 */
-
-	i = i0;
-	do
-	{
-		if (tracker->slots[i].ptr == ptr)
+		if (ref->slots[i].ptr == ptr)
 		{
-			goto found;
+			if (index)
+			{
+				*index = i;
+			}
+			return ref->slots[i].n_ref;
 		}
 	}
-	while (i-- > 0);
-
-	/* second scan, from i0 to n */
-
-	i = i0;
-	while (++i < tracker->n)
-	{
-		if (tracker->slots[i].ptr == ptr)
-		{
-			goto found;
-		}
-	}
-
-	/* end */
 
 	return 0;
-
-found:
-
-	if (index)
-	{
-		*index = i;
-	}
-
-	return tracker->slots[i].n_ref;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-size_t
-cobj_tracker_get_alloc_size(const cobj_tracker_t *tracker)
+void
+cref_init_iterator(cref *ref)
 {
-	assert(tracker);
-
-	if (tracker->failed)
+	if (ref->err)
 	{
-		return 0;
+		return;
 	}
 
-	return tracker->n_alloc;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-const void *
-cobj_tracker_get_index(const cobj_tracker_t *tracker, size_t index)
-{
-	assert(tracker);
-
-	if (tracker->failed)
-	{
-		return NULL;
-	}
-
-	if (index >= tracker->n)
-	{
-		return NULL;
-	}
-
-	return tracker->slots[index].ptr;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-unsigned long
-cobj_tracker_get_index_n_ref(const cobj_tracker_t *tracker, size_t index)
-{
-	assert(tracker);
-
-	if (tracker->failed)
-	{
-		return 0;
-	}
-
-	if (index >= tracker->n)
-	{
-		return 0;
-	}
-
-	return tracker->slots[index].n_ref;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-const void *
-cobj_tracker_get_iteration(const cobj_tracker_t *tracker)
-{
-	assert(tracker);
-
-	if (tracker->failed)
-	{
-		return NULL;
-	}
-
-	if (tracker->iterator == 0 || tracker->iterator > tracker->n)
-	{
-		return NULL;
-	}
-
-	return tracker->slots[tracker->iterator - 1].ptr;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-unsigned long
-cobj_tracker_get_iteration_n_ref(const cobj_tracker_t *tracker)
-{
-	assert(tracker);
-
-	if (tracker->failed)
-	{
-		return 0;
-	}
-
-	if (tracker->iterator == 0 || tracker->iterator > tracker->n)
-	{
-		return 0;
-	}
-
-	return tracker->slots[tracker->iterator - 1].n_ref;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-size_t
-cobj_tracker_get_iterator_offset(const cobj_tracker_t *tracker)
-{
-	assert(tracker);
-
-	if (tracker->failed)
-	{
-		return 0;
-	}
-
-	if (tracker->iterator > tracker->n)
-	{
-		return 0;
-	}
-
-	return tracker->iterator;
-}
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-cobj_tracker_t *
-cobj_tracker_get_placeholder(void)
-{
-	return &_err_tracker;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-size_t
-cobj_tracker_get_size(const cobj_tracker_t *tracker)
-{
-	assert(tracker);
-
-	if (tracker->failed)
-	{
-		return 0;
-	}
-
-	return tracker->n;
+	ref->it = 0;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-cobj_tracker_has_failed(const cobj_tracker_t *tracker)
+cref_iterate(cref *ref)
 {
-	assert(tracker);
-
-	return tracker->failed;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-cobj_tracker_increment_iterator(cobj_tracker_t *tracker)
-{
-	assert(tracker);
-
-	if (tracker->failed)
+	if (ref->err || ref->it >= ref->n)
 	{
 		return false;
 	}
 
-	if (tracker->iterator >= tracker->n)
-	{
-		return false;
-	}
-
-	tracker->iterator++;
+	ref->it++;
 
 	return true;
 }
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-cobj_tracker_lock_iterator(cobj_tracker_t *tracker)
+const void *
+cref_iteration(const cref *ref)
 {
-	assert(tracker);
-
-	if (tracker->failed)
+	if (ref->err || ref->it == 0 || ref->it > ref->n)
 	{
-		return;
+		return NULL;
 	}
 
-	tracker->iterator = SIZE_MAX;
+	return ref->slots[ref->it - 1].ptr;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+unsigned int
+cref_iteration_count(const cref *ref)
+{
+	if (ref->err || ref->it == 0 || ref->it > ref->n)
+	{
+		return 0;
+	}
+
+	return ref->slots[ref->it - 1].n_ref;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+cref_iterator_offset(const cref *ref)
+{
+	if (ref->err || ref->it == 0 || ref->it > ref->n)
+	{
+		return 0;
+	}
+
+	if (ref->it > ref->n)
+	{
+		return ref->n;
+	}
+
+	return ref->it;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+cref_length(const cref *ref)
+{
+	if (ref->err)
+	{
+		return 0;
+	}
+
+	return ref->n;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cobj_tracker_pull_index(cobj_tracker_t *tracker, size_t index)
+cref_lock_iterator(cref *ref)
 {
-	assert(tracker);
-
-	if (tracker->failed)
+	if (ref->err)
 	{
 		return;
 	}
 
-	if (index >= tracker->n)
-	{
-		return;
-	}
-
-	if (tracker->slots[index].n_ref-- > 1)
-	{
-		return;
-	}
-
-	if (index < tracker->iterator)
-	{	
-		tracker->iterator--;
-	}
-
-	for (tracker->n--; index < tracker->n; index++)
-	{
-		tracker->slots[index] = tracker->slots[index + 1];
-	}
+	ref->it = SIZE_MAX;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cobj_tracker_pull_pointer(cobj_tracker_t *tracker, const void *ptr, size_t index)
+cref_prealloc(cref *ref, size_t slots_number)
 {
-	assert(tracker);
-
-	if (cobj_tracker_find(tracker, ptr, &index) > 0)
+	if (ref->err)
 	{
-		cobj_tracker_pull_index(tracker, index);
+		return;
 	}
+
+	_grow(ref, slots_number);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cobj_tracker_push(cobj_tracker_t *tracker, const void *ptr, size_t *index)
+cref_pull_index(cref *ref, size_t index)
+{
+	if (ref->err || index >= ref->n || --ref->slots[index].n_ref > 0)   
+	{
+		return;
+	}
+
+	_pull(ref, index);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cref_pull_ptr(cref *ref, const void *ptr)
 {
 	size_t i = 0;
-	
-	assert(tracker);
 
-	if (tracker->failed)
+	if (cref_find(ref, ptr, &i) > 0)
+	{
+		cref_pull_index(ref, i);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cref_purge_index(cref *ref, size_t index)
+{
+	if (ref->err || index >= ref->n)   
 	{
 		return;
 	}
 
-	if (!ptr)
+	_pull(ref, index);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cref_purge_ptr(cref *ref, const void *ptr)
+{
+	size_t i = 0;
+
+	if (cref_find(ref, ptr, &i) > 0)
+	{
+		cref_purge_index(ref, i);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cref_push(cref *ref, const void *ptr)
+{
+	size_t i = 0;
+
+	if (ref->err)
 	{
 		return;
 	}
 
-	/* check if reference exist, increment the reference counter if it does */
+	/* if found, increment ref counter */
 
-	if (!index)
+	if (cref_find(ref, ptr, &i) > 0)
 	{
-		index = &i;
-	}
-
-	if (cobj_tracker_find(tracker, ptr, index) > 0)
-	{
-		if (tracker->slots[*index].n_ref < ULONG_MAX)
+		if (ref->slots[i].n_ref == UINT_MAX)
 		{
-			tracker->slots[*index].n_ref++;
+			ref->err |= CREF_OVERFLOW;
+			return;
 		}
+		ref->slots[i].n_ref++;
 		return;
 	}
 
-	/* otherwhise add new element, grow array if needed */
+	/* if not, add new ref */
 
-	if (tracker->n >= tracker->n_alloc && !_resize(tracker, tracker->n, 2, 1))
+	if (ref->n >= ref->n_alloc)
 	{
-		return;
+		if (!safe_mul(NULL, ref->n_alloc, 2))
+		{
+			ref->err |= CDICT_OVERFLOW;
+			return;
+		}
+		if (!_grow(ref, ref->n_alloc * 2))
+		{
+			return;
+		}
 	}
 
-	if (index)
-	{
-		*index = tracker->n;
-	}
-
-	tracker->slots[tracker->n].ptr   = ptr;
-	tracker->slots[tracker->n].n_ref = 1;
-	tracker->n++;
+	ref->slots[ref->n].ptr   = ptr;
+	ref->slots[ref->n].n_ref = 1;
+	ref->n++;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cobj_tracker_reset_iterator(cobj_tracker_t *tracker)
+cref_repair(cref *ref)
 {
-	assert(tracker);
-
-	if (tracker->failed)
-	{
-		return;
-	}
-
-	tracker->iterator = 0;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cobj_tracker_trim(cobj_tracker_t *tracker)
-{
-	assert(tracker);
-
-	if (tracker->failed)
-	{
-		return;
-	}
-
-	_resize(tracker, tracker->n, 1, 0);
+	ref->err &= CREF_INVALID;
 }
 
 /************************************************************************************************************/
@@ -502,42 +430,42 @@ cobj_tracker_trim(cobj_tracker_t *tracker)
 /************************************************************************************************************/
 
 static bool
-_resize(cobj_tracker_t *tracker, size_t n, size_t a, size_t b)
+_grow(cref *ref, size_t n)
 {
-	_slot_t *tmp;
-	
-	bool safe = true;
+	struct _slot *tmp;
 
-	/* test for overflow */
-
-	safe &= safe_mul(&n,   n, a);
-	safe &= safe_add(&n,   n, b);
-	safe &= safe_mul(NULL, n, sizeof(_slot_t));
-
-	if (!safe)
+	if (n <= ref->n_alloc)
 	{
-		tracker->failed = true;
+		return true;
+	}
+
+	if (!safe_mul(NULL, n, sizeof(struct _slot)))
+	{
+		ref->err |= CREF_OVERFLOW;
 		return false;
 	}
 
-	/* resize array */
-
-	if (n == 0)
+	if (!(tmp = realloc(ref->slots, n * sizeof(struct _slot))))
 	{
-		free(tracker->slots);
-		tmp = NULL;
-	}
-	else
-	{
-		if (!(tmp = realloc(tracker->slots, n * sizeof(_slot_t))))
-		{
-			tracker->failed = true;
-			return false;
-		}
+		ref->err |= CREF_MEMORY;
+		return false;
 	}
 
-	tracker->slots   = tmp;
-	tracker->n_alloc = n;
+	ref->n_alloc = n;
+	ref->slots   = tmp;
 
 	return true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_pull(cref *ref, size_t i)
+{
+	if (i < ref->it)
+	{
+		ref->it--;
+	}
+
+	memmove(ref->slots + i, ref->slots + i + 1, (--ref->n - i) * sizeof(struct _slot));
 }

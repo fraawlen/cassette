@@ -51,7 +51,7 @@ struct cbook
 /************************************************************************************************************/
 
 static size_t _group_size (const cbook *book, size_t i)                       CBOOK_PURE CBOOK_NONNULL(1);
-static bool   _resize     (cbook *book, size_t n_chars, size_t n_words, size_t n_groups) CBOOK_NONNULL(1);
+static bool   _grow       (cbook *book, size_t n_chars, size_t n_words, size_t n_groups) CBOOK_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -70,7 +70,7 @@ cbook cbook_placeholder_instance =
 	.n_alloc_groups = 0,
 	.it_word        = SIZE_MAX,
 	.it_group       = SIZE_MAX,
-	.err            = CBOOK_OK,
+	.err            = CBOOK_INVALID,
 };
 
 /************************************************************************************************************/
@@ -399,7 +399,7 @@ cbook_prealloc(cbook *book, size_t bytes_number, size_t words_number, size_t gro
 		return;
 	}
 
-	_resize(book, bytes_number, words_number, groups_number);
+	_grow(book, bytes_number, words_number, groups_number);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -429,7 +429,7 @@ cbook_prepare_word(cbook *book, size_t length, enum cbook_group group_mode)
 		}
 	}
 
-	if (!_resize(book, nc, nw, ng))
+	if (!_grow(book, nc, nw, ng))
 	{
 		return NULL;
 	}
@@ -551,7 +551,7 @@ _group_size(const cbook *book, size_t i)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-_resize(cbook *book, size_t n_chars, size_t n_words, size_t n_groups)
+_grow(cbook *book, size_t n_chars, size_t n_words, size_t n_groups)
 {
 	void *tmp;
 
