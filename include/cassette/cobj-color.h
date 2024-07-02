@@ -88,7 +88,7 @@ struct ccolor
  * @return : Color object
  */
 struct ccolor
-ccolor_convert_argb_uint(uint32_t argb)
+ccolor_from_argb_uint(uint32_t argb)
 CCOLOR_CONST;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -104,7 +104,7 @@ CCOLOR_CONST;
  * @return : Color object
  */
 struct ccolor
-ccolor_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+ccolor_from_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 CCOLOR_CONST;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -123,7 +123,7 @@ CCOLOR_CONST;
  * @return : Color object. Check *err to be certain of the return's validity
  */
 struct ccolor
-ccolor_convert_str(const char *str, bool *err)
+ccolor_from_str(const char *str, bool *err)
 CCOLOR_NONNULL(1)
 CCOLOR_PURE;
 
@@ -134,7 +134,7 @@ CCOLOR_PURE;
  *
  * @param color_1 : First  color
  * @param color_2 : Second color
- * @param ratio   : Second / first color ratio used for the interpolation. Values are bounded between 0.0 and 1.0
+ * @param ratio   : Second / first color ratio in the [0.0 1.0] range used for the interpolation.
  *
  * @return : interpolated color
  */
@@ -153,7 +153,7 @@ CCOLOR_CONST;
  * @return : 32-bit argb color value
  */
 uint32_t
-ccolor_get_argb_uint(struct ccolor color)
+ccolor_to_argb_uint(struct ccolor color)
 CCOLOR_CONST;
 
 /************************************************************************************************************/

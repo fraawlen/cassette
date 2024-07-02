@@ -115,12 +115,12 @@ cref_clone(cref *ref)
 {
 	cref *ref_new;
 
-	if (ref->err || !(ref_new = malloc(sizeof(cref))))
+	if (ref->err || !(ref_new = calloc(1, sizeof(cref))))
 	{
 		return CREF_PLACEHOLDER;
 	}
 
-	if (!(ref_new->slots = malloc(ref->n_alloc * sizeof(struct _slot))))
+	if (!_grow(ref_new, ref->n_alloc))
 	{
 		free(ref_new);
 		return CREF_PLACEHOLDER;
@@ -128,10 +128,9 @@ cref_clone(cref *ref)
 
 	memcpy(ref_new->slots, ref->slots, ref->n * sizeof(struct _slot));
 
-	ref_new->n       = ref->n;
-	ref_new->n_alloc = ref->n_alloc;
-	ref_new->it      = ref->it;
-	ref_new->err     = CREF_OK;
+	ref_new->n   = ref->n;
+	ref_new->it  = ref->it;
+	ref_new->err = CREF_OK;
 
 	return ref_new;
 }
@@ -143,21 +142,20 @@ cref_create(void)
 {
 	cref *ref;
 
-	if (!(ref = malloc(sizeof(cref))))
+	if (!(ref = calloc(1, sizeof(cref))))
 	{
 		return CREF_PLACEHOLDER;
 	}
 
-	if (!(ref->slots = malloc(sizeof(struct _slot))))
+	if (!_grow(ref, 1))
 	{
 		free(ref);
 		return CREF_PLACEHOLDER;
 	}
 
-	ref->n       = 0;
-	ref->n_alloc = 1;
-	ref->it      = SIZE_MAX;
-	ref->err     = CREF_OK;
+	ref->n   = 0;
+	ref->it  = SIZE_MAX;
+	ref->err = CREF_OK;
 
 	return ref;
 }

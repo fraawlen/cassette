@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Derelict Utilities (DU) library.
+ * This file is part of the Cassette Objects (COBJ) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -18,54 +18,42 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifndef DU_STATUS_H
-#define DU_STATUS_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <cassette/cobj.h>
+#include <stdio.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-/**
- * Macro function to one-line a condition assertion that if it fails, the target status is set to
- * DU_STATUS_FAILURE and the given action is then executed.
- *
- * @param TARGET    : value to update in case of condition check failure, expected of type du_status_t
- * @param CONDITION : condition to check
- * @param ACTION    : code to exectute in code of condition check failure
- */
-#define du_status_assert(TARGET, CONDITION, ACTION) {if (!CONDITION) {TARGET = DU_STATUS_FAILURE; ACTION;}};
-
-/**
- * Macro function to one-line a status value check, in case of DU_STATUS_FAILURE value, execute the given
- * action.
- *
- * @param TARGET : status value to check, expected of type du_status_t
- * @param ACTION : code to exectute in case the status has a fail value
- */
-#define du_status_test(TARGET, ACTION) {if (TARGET != DU_STATUS_SUCCESS) {ACTION;}};
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Status generic values, there are only 2 values, success for no errors at all or failure otherwise, for
- * simplicity.
- */
-typedef enum {
-	DU_STATUS_NOT_INIT = 0,
-	DU_STATUS_SUCCESS  = 1,
-	DU_STATUS_FAILURE  = 2,
-} du_status_t;
+static void _print (const struct cline line);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifdef __cplusplus
+int
+main(void)
+{
+	struct cline line = CLINE_DEFAULT;
+
+	cline_limit(&line, 20, -20);
+	cline_move(&line, 7);
+	cline_resize(&line, -5);
+	cline_grow(&line, -30);
+	cline_offset(&line, -7);
+
+	_print(line);
+
+	return 0;
 }
-#endif
 
-#endif /* DU_STATUS_H */
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+static void
+_print(const struct cline line)
+{
+	printf("%li <= %li + %li <= %li\n", line.min, line.origin, line.length, line.max);
+}
+

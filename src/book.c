@@ -110,52 +110,32 @@ cbook_clone(const cbook *book)
 {
 	cbook *book_new;
 
-	if (book->err || !(book_new = malloc(sizeof(cbook))))
+	if (book->err || !(book_new = calloc(1, sizeof(cbook))))
 	{
-		goto fail_book;
+		return CBOOK_PLACEHOLDER;
 	}
 
-	if (!(book_new->chars = malloc(book->n_alloc_chars)))
+	if (!_grow(book_new, book->n_alloc_chars, book->n_alloc_words, book->n_alloc_groups))
 	{
-		goto fail_chars;
-	}
-
-	if (!(book_new->words = malloc(book->n_alloc_words * sizeof(size_t))))
-	{
-		goto fail_words;
-	}
-
-	if (!(book_new->groups = malloc(book->n_alloc_groups * sizeof(size_t))))
-	{
-		goto fail_groups;
+		free(book_new->chars);
+		free(book_new->words);
+		free(book_new->groups);
+		free(book_new);
+		return CBOOK_PLACEHOLDER;
 	}
 
 	memcpy(book_new->chars,  book->chars,  book->n_chars);
 	memcpy(book_new->words,  book->words,  book->n_words  * sizeof(size_t));
 	memcpy(book_new->groups, book->groups, book->n_groups * sizeof(size_t));
 
-	book_new->n_chars        = book->n_chars;
-	book_new->n_words        = book->n_words;
-	book_new->n_groups       = book->n_groups;
-	book_new->n_alloc_chars  = book->n_alloc_chars;
-	book_new->n_alloc_words  = book->n_alloc_words;
-	book_new->n_alloc_groups = book->n_alloc_groups;
-	book_new->it_word        = book->it_word;
-	book_new->it_group       = book->it_group;
-	book_new->err            = CBOOK_OK;
+	book_new->n_chars  = book->n_chars;
+	book_new->n_words  = book->n_words;
+	book_new->n_groups = book->n_groups;
+	book_new->it_word  = book->it_word;
+	book_new->it_group = book->it_group;
+	book_new->err      = CBOOK_OK;
 
 	return book_new;
-
-	/* err */
-
-fail_groups:
-	free(book_new->words);
-fail_words:
-	free(book_new->chars);
-fail_chars:
-	free(book_new);
-fail_book:
-	return CBOOK_PLACEHOLDER;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -165,51 +145,28 @@ cbook_create(void)
 {
 	cbook *book;
 
-	if (!(book = malloc(sizeof(cbook))))
+	if (!(book = calloc(1, sizeof(cbook))))
 	{
-		goto fail_book;
+		return CBOOK_PLACEHOLDER;
 	}
 
-	if (!(book->chars = malloc(1)))
+	if (!_grow(book, 1, 1, 1))
 	{
-		goto fail_chars;
+		free(book->chars);
+		free(book->words);
+		free(book->groups);
+		free(book);
+		return CBOOK_PLACEHOLDER;
 	}
 
-	if (!(book->words = malloc(sizeof(size_t))))
-	{
-		goto fail_words;
-	}
-
-	if (!(book->groups = malloc(sizeof(size_t))))
-	{
-		goto fail_groups;
-	}
-
-	book->chars[0]       = '\0';
-	book->words[0]       = 0;
-	book->groups[0]      = 0;
-	book->n_chars        = 0;
-	book->n_words        = 0;
-	book->n_groups       = 0;
-	book->n_alloc_chars  = 1;
-	book->n_alloc_words  = 1;
-	book->n_alloc_groups = 1;
-	book->it_word        = SIZE_MAX;
-	book->it_group       = SIZE_MAX;
-	book->err            = CBOOK_OK;
+	book->n_chars   = 0;
+	book->n_words   = 0;
+	book->n_groups  = 0;
+	book->it_word   = SIZE_MAX;
+	book->it_group  = SIZE_MAX;
+	book->err       = CBOOK_OK;
 
 	return book;
-
-	/* err */
-
-fail_groups:
-	free(book->words);
-fail_words:
-	free(book->chars);
-fail_chars:
-	free(book);
-fail_book:
-	return CBOOK_PLACEHOLDER;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

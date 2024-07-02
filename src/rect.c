@@ -18,165 +18,251 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <assert.h>
 #include <cassette/cobj.h>
-#include <limits.h>
-#include <stdlib.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static int  _add      (int a,   int b);
-static int  _bind_len (int pos, int len);
-static bool _is_in    (int pos, int len, int a);
-static int  _scale    (int a,   double scale);
+static void    _bind_length (struct cline *line)      CLINE_NONNULL(1);
+static void    _bind_origin (struct cline *line)      CLINE_NONNULL(1);
+static int64_t _scale       (int64_t a, double scale) CLINE_CONST;
+static void    _swap_bounds (struct cline *line)      CLINE_NONNULL(1);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 void
-cobj_rect_bind(cobj_rect_t *rect)
+cline_bind(struct cline *line)
 {
-	assert(rect);
-
-	rect->width  = _bind_len(rect->x, rect->width);
-	rect->height = _bind_len(rect->y, rect->height);
+	_swap_bounds(line);
+	_bind_origin(line);
+	_bind_length(line);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cobj_rect_t
-cobj_rect_create(int x, int y, int width, int height)
+void
+cline_grow(struct cline *line, int64_t length)
 {
-	cobj_rect_t rect =
+	if (length > 0)
 	{
-		.x      = x,
-		.y      = y,
-		.width  = _bind_len(x, width),
-		.height = _bind_len(y, height),
-	};
+		line->length = line->length > INT64_MAX - length ? INT64_MAX : line->length + length;
+	}
+	else
+	{
+		line->length = line->length < INT64_MIN - length ? INT64_MIN : line->length + length;
+	}
 
-	return rect;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cobj_rect_grow(cobj_rect_t *rect, int width, int height)
-{
-	assert(rect);
-
-	rect->width  = _bind_len(rect->x, _add(rect->width,  width));
-	rect->height = _bind_len(rect->y, _add(rect->height, height));
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cobj_rect_offset(cobj_rect_t *rect, int x, int y)
-{
-	assert(rect);
-
-	rect->x      = _add(rect->x, x);
-	rect->y      = _add(rect->y, y);
-	rect->width  = _bind_len(rect->x, rect->width);
-	rect->height = _bind_len(rect->y, rect->height);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cobj_rect_pad(cobj_rect_t *rect, int padding)
-{
-	assert(rect);
-
-	rect->x      = _add(rect->x, padding);
-	rect->y      = _add(rect->y, padding);
-	rect->width  = _bind_len(rect->x, _add(rect->width,  _scale(padding, -2.0)));
-	rect->height = _bind_len(rect->y, _add(rect->height, _scale(padding, -2.0)));
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cobj_rect_scale(cobj_rect_t *rect, double scale)
-{
-	assert(rect);
-
-	rect->x      = _scale(rect->x, scale);
-	rect->y      = _scale(rect->y, scale);
-	rect->width  = _bind_len(rect->x, _scale(rect->width,  scale));
-	rect->height = _bind_len(rect->y, _scale(rect->height, scale));
+	_bind_length(line);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-cobj_rect_test_bounds(cobj_rect_t rect, int x, int y)
+cline_is_in(struct cline line, int64_t point)
 {
-	return _is_in(rect.x, rect.width, x) && _is_in(rect.y, rect.height, y);
+	if (line.length > 0)
+	{
+		return point >= line.origin && point <= line.origin + line.length;
+	}
+	else
+	{
+		return point <= line.origin && point >= line.origin + line.length;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cline_limit(struct cline *line, int64_t lim_1, int64_t lim_2)
+{
+	line->min = lim_1;
+	line->max = lim_2;
+
+	_swap_bounds(line);
+	_bind_origin(line);
+	_bind_length(line);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cline_move(struct cline *line, int64_t origin)
+{
+	line->origin = origin;
+
+	_bind_origin(line);
+	_bind_length(line);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cline_offset(struct cline *line, int64_t length)
+{
+	if (length > 0)
+	{
+		line->origin = line->origin > INT64_MAX - length ? INT64_MAX : line->origin + length;
+	}
+	else
+	{
+		line->origin = line->origin < INT64_MIN - length ? INT64_MIN : line->origin + length;
+	}
+	
+	_bind_origin(line);
+	_bind_length(line);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cline_pad(struct cline *line, int64_t length)
+{
+	int64_t len_2;
+
+	if (length > 0)
+	{
+		len_2 = length > INT64_MAX / 2 ? INT64_MAX : length * 2;
+	}	
+	else
+	{
+		len_2 = length < (INT64_MIN + 1) / 2 ? INT64_MIN + 1 : length * 2;
+	}
+
+	cline_offset(line, length);
+	cline_grow(line, -len_2);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cline_resize(struct cline *line, int64_t length)
+{
+	line->length = length;
+
+	_bind_length(line);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cline_scale(struct cline *line, double scale)
+{
+	line->origin = _scale(line->origin, scale);
+	line->length = _scale(line->length, scale);
+
+	_bind_origin(line);
+	_bind_length(line);
 }
 
 /************************************************************************************************************/
 /* _ ********************************************************************************************************/
 /************************************************************************************************************/
 
-static int
-_add(int a, int b)
+static void
+_bind_length(struct cline *line)
 {
-	if (b > 0)
+	if (line->length > 0)
 	{
-		return a > INT_MAX - b ? INT_MAX : a + b;
+		if (line->origin > 0)
+		{
+			if (line->length > line->max - line->origin)
+			{
+				line->length = line->max - line->origin;
+			}
+		}
+		else
+		{
+			if (line->origin + line->length > line->max)
+			{
+				line->length = line->max - line->origin;
+			}
+		}
 	}
 	else
 	{
-		return a < INT_MIN - b ? INT_MIN : a + b;
+		if (line->origin > 0)
+		{
+			if (line->origin + line->length < line->min)
+			{
+				line->length = line->min - line->origin;
+			}
+		}
+		else
+		{
+			if (line->length < line->min - line->origin)
+			{
+				line->length = line->min - line->origin;
+			}
+		}
 	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static int
-_bind_len(int pos, int len)
+static void
+_bind_origin(struct cline *line)
 {
-	if (len > 0)
+	if (line->origin < line->min)
 	{
-		return pos > INT_MAX - len ? INT_MAX - pos : len;
+		line->origin = line->min;
 	}
-	else
+	else if (line->origin > line->max)
 	{
-		return pos < INT_MIN - len ? INT_MIN - pos : len;	
+		line->origin = line->max;
 	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static bool
-_is_in(int pos, int len, int a)
+static int64_t
+_scale(int64_t a, double scale)
 {
-	if (len > 0)
+	if (scale > 1.0)
 	{
-		return a >= pos && a <= pos + len;
+		if (a > 0)
+		{
+			a = a > INT64_MAX / scale ? INT64_MAX : a * scale;
+		}
+		else
+		{
+			a = a < INT64_MIN / scale ? INT64_MIN : a * scale;
+		}
+	}
+	else if (scale < -1.0)
+	{
+		if (a > 0)
+		{
+			a = a > INT64_MIN / scale ? INT64_MIN : a * scale;
+		}
+		else
+		{
+			a = a < INT64_MAX / scale ? INT64_MAX : a * scale;
+		}
 	}
 	else
 	{
-		return a <= pos && a >= pos + len;
+		a *= scale;
 	}
+
+	return a;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static int
-_scale(int a, double scale)
+static void
+_swap_bounds(struct cline *line)
 {
-	if (scale >= -1.0 && scale <= 1.0)
+	int64_t tmp;
+
+	if (line->min > line->max)
 	{
-		return a * scale;
-	}
-	else
-	{
-		return abs(a) > abs((int)(INT_MAX / scale)) ? (a / scale > 0.0 ? INT_MAX : INT_MIN) : a * scale;
+		tmp       = line->min;
+		line->min = line->max;
+		line->max = tmp;
 	}
 }

@@ -30,17 +30,17 @@
 static void          _bind_color    (struct ccolor *color);
 static void          _bind_d        (double *d);
 static uint8_t       _hex_to_int    (char c)                     CCOLOR_CONST; 
-static struct ccolor _convert_hex   (const char *str, bool *err) CCOLOR_NONNULL(1) CCOLOR_PURE;
-static struct ccolor _convert_ulong (const char *str, bool *err) CCOLOR_NONNULL(1) CCOLOR_PURE;
+static struct ccolor _from_hex   (const char *str, bool *err) CCOLOR_NONNULL(1) CCOLOR_PURE;
+static struct ccolor _from_ulong (const char *str, bool *err) CCOLOR_NONNULL(1) CCOLOR_PURE;
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 struct ccolor
-ccolor_convert_argb_uint(uint32_t argb)
+ccolor_from_argb_uint(uint32_t argb)
 {
-	return ccolor_convert_rgba(
+	return ccolor_from_rgba(
 		(argb >> 16) & 0xFF,
 		(argb >>  8) & 0xFF,
 		(argb >>  0) & 0xFF,
@@ -50,7 +50,7 @@ ccolor_convert_argb_uint(uint32_t argb)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct ccolor
-ccolor_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+ccolor_from_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
 	struct ccolor color;
 
@@ -65,13 +65,13 @@ ccolor_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct ccolor
-ccolor_convert_str(const char *str, bool *err)
+ccolor_from_str(const char *str, bool *err)
 {
 	struct ccolor color;
 
 	bool fail = false;
 
-	color = str[0] == '#' ? _convert_hex(str + 1, &fail) : _convert_ulong(str, &fail);
+	color = str[0] == '#' ? _from_hex(str + 1, &fail) : _from_ulong(str, &fail);
 	
 	if (err)
 	{
@@ -79,26 +79,6 @@ ccolor_convert_str(const char *str, bool *err)
 	}
 
 	return color;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-uint32_t
-ccolor_get_argb_uint(struct ccolor color)
-{
-	uint32_t a;
-	uint32_t r;
-	uint32_t g;
-	uint32_t b;
-
-	_bind_color(&color);
-
-	a = color.a * 255;
-	r = color.r * 255;
-	g = color.g * 255;
-	b = color.b * 255;
-
-	return (a << 24) + (r << 16) + (g << 8) + b;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -118,6 +98,26 @@ ccolor_interpolate(struct ccolor color_1, struct ccolor color_2, double ratio)
 	color.a = color_2.a * ratio + color_1.a * (1.0 - ratio);
 
 	return color;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint32_t
+ccolor_to_argb_uint(struct ccolor color)
+{
+	uint32_t a;
+	uint32_t r;
+	uint32_t g;
+	uint32_t b;
+
+	_bind_color(&color);
+
+	a = color.a * 255;
+	r = color.r * 255;
+	g = color.g * 255;
+	b = color.b * 255;
+
+	return (a << 24) + (r << 16) + (g << 8) + b;
 }
 
 /************************************************************************************************************/
@@ -151,7 +151,7 @@ _bind_d(double *d)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct ccolor
-_convert_hex(const char *str, bool *err)
+_from_hex(const char *str, bool *err)
 {
 	uint8_t v[8] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xF, 0xF};
 	size_t  i;
@@ -172,7 +172,7 @@ _convert_hex(const char *str, bool *err)
 
 	/* apply conversion */
 
-	return ccolor_convert_rgba(
+	return ccolor_from_rgba(
 		(v[0] << 4) + v[1],
 		(v[2] << 4) + v[3],
 		(v[4] << 4) + v[5],
@@ -182,7 +182,7 @@ _convert_hex(const char *str, bool *err)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct ccolor
-_convert_ulong(const char *str, bool *err)
+_from_ulong(const char *str, bool *err)
 {
 	char *endptr = NULL;
 	uint32_t u = 0;
@@ -193,7 +193,7 @@ _convert_ulong(const char *str, bool *err)
 		*err = true;
 	}
 
-	return ccolor_convert_argb_uint(u);
+	return ccolor_from_argb_uint(u);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

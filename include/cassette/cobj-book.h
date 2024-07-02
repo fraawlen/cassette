@@ -220,7 +220,7 @@ CBOOK_NONNULL(1);
 
 /**
  * Blocks the internal iterator so that cbook_iterate() will fail and return false until the iterator is reset
- * with cbook_reset_iterator(). Iterator-related functions are intended to replace for-loops as they protect
+ * with cbook_init_iterator(). Iterator-related functions are intended to replace for-loops as they protect
  * against out-of-bound errors and can adjust the iterator position automatically when an element gets
  * removed. They also maintain their own index internally, thus dispensing the end-user from keeping and
  * passing it around across multiple functions.
@@ -366,7 +366,7 @@ CBOOK_PURE;
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Gets a group's word count.
+ * Gets a group's word count. If group_index is out of bounds, the default return_err value is returned.
  * 
  * @param book        : Book to interact with
  * @param group_index : Group index within book
@@ -382,7 +382,7 @@ CBOOK_PURE;
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Gets the total number of groups
+ * Gets the total number of groups.
  * 
  * @param book : Book to interact with
  *
@@ -397,7 +397,8 @@ CBOOK_PURE;
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Gets the word the iterator points to.
+ * Gets the word the iterator points to.  If the iterator is locked, not initialised or hasn't been
+ * incremented once after the last initialisation, return_err is returned.
  * 
  * @param book : Book to interact with
  *
@@ -413,7 +414,8 @@ CBOOK_PURE;
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Gets the group the iterator is set to.
+ * Gets the group the iterator is set to.  If the iterator is locked, not initialised or hasn't been
+ * incremented once after the last initialisation, return_err is returned.
  * 
  * @param book : Book to interact with
  *
@@ -443,7 +445,7 @@ CBOOK_PURE;
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Gets a word.
+ * Gets a word. If word_index is out of bounds, the default return_err value is returned.
  * 
  * @param book       : Book to interact with
  * @param word_index : Word index in book across all groups
@@ -460,7 +462,8 @@ CBOOK_PURE;
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Gets a word from a specific group.
+ * Gets a word from a specific group. If group_index or word_index are out of bounds, the default return_err
+ * value is returned.
  * 
  * @param book        : Book to interact with
  * @param group_index : Group index within book
