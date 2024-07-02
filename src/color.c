@@ -27,20 +27,20 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
  
-static void         _bind_color    (cobj_color_t *color);
-static void         _bind_d        (double *d);
-static uint8_t      _hex_to_int    (char c);
-static cobj_color_t _convert_hex   (const char *str, bool *err);
-static cobj_color_t _convert_ulong (const char *str, bool *err);
+static void          _bind_color    (struct ccolor *color);
+static void          _bind_d        (double *d);
+static uint8_t       _hex_to_int    (char c)                     CCOLOR_CONST; 
+static struct ccolor _convert_hex   (const char *str, bool *err) CCOLOR_NONNULL(1) CCOLOR_PURE;
+static struct ccolor _convert_ulong (const char *str, bool *err) CCOLOR_NONNULL(1) CCOLOR_PURE;
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-cobj_color_t
-cobj_color_convert_argb_uint(uint32_t argb)
+struct ccolor
+ccolor_convert_argb_uint(uint32_t argb)
 {
-	return cobj_color_convert_rgba(
+	return ccolor_convert_rgba(
 		(argb >> 16) & 0xFF,
 		(argb >>  8) & 0xFF,
 		(argb >>  0) & 0xFF,
@@ -49,10 +49,10 @@ cobj_color_convert_argb_uint(uint32_t argb)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cobj_color_t
-cobj_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+struct ccolor
+ccolor_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
-	cobj_color_t color;
+	struct ccolor color;
 
 	color.a = a / 255.0;
 	color.r = r / 255.0;
@@ -64,26 +64,14 @@ cobj_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cobj_color_t
-cobj_color_convert_str(const char *str, bool *err)
+struct ccolor
+ccolor_convert_str(const char *str, bool *err)
 {
-	cobj_color_t color;
+	struct ccolor color;
 
 	bool fail = false;
 
-	if (!str)
-	{
-		fail = true;
-		color = COBJ_COLOR_TRANSPARENT;
-	}
-	else if (str[0] == '#')
-	{
-		color = _convert_hex(str + 1, &fail);
-	}
-	else
-	{
-		color = _convert_ulong(str, &fail);
-	}
+	color = str[0] == '#' ? _convert_hex(str + 1, &fail) : _convert_ulong(str, &fail);
 	
 	if (err)
 	{
@@ -96,7 +84,7 @@ cobj_color_convert_str(const char *str, bool *err)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 uint32_t
-cobj_color_get_argb_uint(cobj_color_t color)
+ccolor_get_argb_uint(struct ccolor color)
 {
 	uint32_t a;
 	uint32_t r;
@@ -115,10 +103,10 @@ cobj_color_get_argb_uint(cobj_color_t color)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cobj_color_t
-cobj_color_interpolate(cobj_color_t color_1, cobj_color_t color_2, double ratio)
+struct ccolor
+ccolor_interpolate(struct ccolor color_1, struct ccolor color_2, double ratio)
 {
-	cobj_color_t color;
+	struct ccolor color;
 
 	_bind_color(&color_1);
 	_bind_color(&color_2);
@@ -137,7 +125,7 @@ cobj_color_interpolate(cobj_color_t color_1, cobj_color_t color_2, double ratio)
 /************************************************************************************************************/
 
 static void
-_bind_color(cobj_color_t *color)
+_bind_color(struct ccolor *color)
 {
 	_bind_d(&color->r);
 	_bind_d(&color->g);
@@ -162,7 +150,7 @@ _bind_d(double *d)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cobj_color_t
+struct ccolor
 _convert_hex(const char *str, bool *err)
 {
 	uint8_t v[8] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xF, 0xF};
@@ -184,7 +172,7 @@ _convert_hex(const char *str, bool *err)
 
 	/* apply conversion */
 
-	return cobj_color_convert_rgba(
+	return ccolor_convert_rgba(
 		(v[0] << 4) + v[1],
 		(v[2] << 4) + v[3],
 		(v[4] << 4) + v[5],
@@ -193,7 +181,7 @@ _convert_hex(const char *str, bool *err)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cobj_color_t
+struct ccolor
 _convert_ulong(const char *str, bool *err)
 {
 	char *endptr = NULL;
@@ -205,7 +193,7 @@ _convert_ulong(const char *str, bool *err)
 		*err = true;
 	}
 
-	return cobj_color_convert_argb_uint(u);
+	return ccolor_convert_argb_uint(u);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

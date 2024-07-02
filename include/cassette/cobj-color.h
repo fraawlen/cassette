@@ -23,39 +23,35 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+
+#if __GNUC__ > 4
+	#define CCOLOR_NONNULL(...) __attribute__((nonnull (__VA_ARGS__)))
+	#define CCOLOR_PURE         __attribute__((pure))
+	#define CCOLOR_CONST        __attribute__((const))
+#else
+	#define CCOLOR_NONNULL(...)
+	#define CCOLOR_PURE
+	#define CCOLOR_CONST
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* TYPES ****************************************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Common color definitions.
- */
-#define COBJ_COLOR_TRANSPARENT (cobj_color_t){0.000, 0.000, 0.000, 0.000}
-#define COBJ_COLOR_WHITE       (cobj_color_t){1.000, 1.000, 1.000, 1.000}
-#define COBJ_COLOR_BLACK       (cobj_color_t){0.000, 0.000, 0.000, 1.000}
-#define COBJ_COLOR_RED         (cobj_color_t){1.000, 0.000, 0.000, 1.000}
-#define COBJ_COLOR_GREEN       (cobj_color_t){0.000, 1.000, 0.000, 1.000}
-#define COBJ_COLOR_BLUE        (cobj_color_t){0.000, 0.000, 1.000, 1.000}
-#define COBJ_COLOR_YELLOW      (cobj_color_t){1.000, 1.000, 0.000, 1.000}
-#define COBJ_COLOR_MAGENTA     (cobj_color_t){1.000, 0.000, 1.000, 1.000}
-#define COBJ_COLOR_CYAN        (cobj_color_t){0.000, 1.000, 1.000, 1.000}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Represention of a RGBA color. Double types bound between 0.0 and 1.0 values are used to pass them to
- * cairo's functions without needing to convert them. 
+ * Represention of a RGBA color. Double types bound inside the [0.0 and 1.0] range are used, so that they
+ * could be passed to cairo's function without conversion.
  *
  * @param r Red   color component
  * @param g Green color component
  * @param b Blue  color component
  * @param a Alpha color component
  */
-struct cobj_color_t
+struct ccolor
 {
 	double r;
 	double g;
@@ -63,54 +59,88 @@ struct cobj_color_t
 	double a;
 };
 
-typedef struct cobj_color_t cobj_color_t;
+/************************************************************************************************************/
+/* GLOBALS **************************************************************************************************/
+/************************************************************************************************************/
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+/**
+ * Basic colors.
+ */
+#define CCOLOR_TRANSPARENT (ccolor){0.000, 0.000, 0.000, 0.000}
+#define CCOLOR_WHITE       (ccolor){1.000, 1.000, 1.000, 1.000}
+#define CCOLOR_BLACK       (ccolor){0.000, 0.000, 0.000, 1.000}
+#define CCOLOR_RED         (ccolor){1.000, 0.000, 0.000, 1.000}
+#define CCOLOR_GREEN       (ccolor){0.000, 1.000, 0.000, 1.000}
+#define CCOLOR_BLUE        (ccolor){0.000, 0.000, 1.000, 1.000}
+#define CCOLOR_YELLOW      (ccolor){1.000, 1.000, 0.000, 1.000}
+#define CCOLOR_MAGENTA     (ccolor){1.000, 0.000, 1.000, 1.000}
+#define CCOLOR_CYAN        (ccolor){0.000, 1.000, 1.000, 1.000}
+
+/************************************************************************************************************/
+/* FUNCTIONS ************************************************************************************************/
+/************************************************************************************************************/
 
 /**
  * Converts a 32-bits ARGB color representation into a color object.
  *
- * @param argb Color uint to convert
+ * @param argb : Color uint to convert
  *
- * @return Color object
+ * @return : Color object
  */
-cobj_color_t cobj_color_convert_argb_uint(uint32_t argb);
+struct ccolor
+ccolor_convert_argb_uint(uint32_t argb)
+CCOLOR_CONST;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Converts a RGBA color representation with channel values bounded between 0 and 255 into a color object.
  *
- * @param r Red   color component
- * @param g Green color component
- * @param b Blue  color component
- * @param a Alpha color component
+ * @param r : Red   color component
+ * @param g : Green color component
+ * @param b : Blue  color component
+ * @param a : Alpha color component
  *
- * @return Color object
+ * @return : Color object
  */
-cobj_color_t cobj_color_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+struct ccolor
+ccolor_convert_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+CCOLOR_CONST;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Converts an RGBA HEX string into a color object. A valid color string should contain either 6 (rrggbb) or
- * 8 (rrggbbaa) valid hex characters. If the alpha parameter is ommited, a default value of 0xFF is assumed.
+ * Converts a C string into a color object. The given string is interpreted as a char representation of an
+ * unsigned 32-bit ARGB value (which will get converted with stroul(); see the documentation of this function
+ * for more information), unless there is a leading '#' character, in which case the string gets interpreted
+ * as a 6-8 digit "#rrggbbaa" hex. In this representation, if the optional alpha parameter is omitted, a 0xFF
+ * value is assumed. If the err parameter is provided, this function will set it to true if the string to
+ * convert is invalid. Otherwise, it's set to false.
  *
- * @param str Source string to convert
- * @param err Optional, set to false if the string was converted with no issue, true otherwhise
+ * @param str : Source string to convert
+ * @param err : Optional, conversion error check
  *
- * @return Color object. Check *err to be certain of the return's validity
+ * @return : Color object. Check *err to be certain of the return's validity
  */
-cobj_color_t cobj_color_convert_str(const char *str, bool *err);
+struct ccolor
+ccolor_convert_str(const char *str, bool *err)
+CCOLOR_NONNULL(1)
+CCOLOR_PURE;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Interpolates a color between two given colors.
  *
- * @param color_1 First  color
- * @param color_2 Second color
- * @param ratio Second / first color ratio used for the interpolation. Values are bounded between 0.0 and 1.0
+ * @param color_1 : First  color
+ * @param color_2 : Second color
+ * @param ratio   : Second / first color ratio used for the interpolation. Values are bounded between 0.0 and 1.0
  *
  * @return : interpolated color
  */
-cobj_color_t cobj_color_interpolate(cobj_color_t color_1, cobj_color_t color_2, double ratio);
+struct ccolor
+ccolor_interpolate(struct ccolor color_1, struct ccolor color_2, double ratio)
+CCOLOR_CONST;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -118,11 +148,13 @@ cobj_color_t cobj_color_interpolate(cobj_color_t color_1, cobj_color_t color_2, 
  * Converts a given color object to its equivalent ARGB representation within a single 32-bit unsigned int.
  * Useful when using colors directly with XCB.
  *
- * @param color Color object to convert
+ * @param color : Color object to convert
  *
- * @return 32-bit argb color value
+ * @return : 32-bit argb color value
  */
-uint32_t cobj_color_get_argb_uint(cobj_color_t color);
+uint32_t
+ccolor_get_argb_uint(struct ccolor color)
+CCOLOR_CONST;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
