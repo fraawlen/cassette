@@ -38,7 +38,7 @@ extern "C" {
 #endif
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* TYPES ****************************************************************************************************/
 /************************************************************************************************************/
 
 /**
@@ -65,7 +65,26 @@ enum cstr_err
 };
 
 /************************************************************************************************************/
+/* GLOBALS **************************************************************************************************/
 /************************************************************************************************************/
+
+/**
+ * A macro that gives uninitialized string objects a non-NULL value that is safe to use with the string's
+ * related functions. However, any function called with a handle set to this value will return early and
+ * without any side effects.
+ */
+#define CSTR_PLACEHOLDER &cstr_placeholder_instance
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * Global string object instance with the error state set to CSTR_INVALID. This instance is only made
+ * available to allow the static initialization of string object pointers with the macro CSTR_PLACEHOLDER.
+ */
+extern cstr cstr_placeholder_instance;
+
+/************************************************************************************************************/
+/* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
 /************************************************************************************************************/
 
 /**
@@ -81,6 +100,8 @@ cstr_clone(const cstr *str)
 CSTR_NONNULL_RETURN
 CSTR_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Creates an empty string instance.
  *
@@ -91,6 +112,8 @@ cstr *
 cstr_create(void)
 CSTR_NONNULL_RETURN;
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Destroys the given string and frees memory.
  *
@@ -100,7 +123,9 @@ void
 cstr_destroy(cstr *str)
 CSTR_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+/************************************************************************************************************/
+/* PROCEDURES ***********************************************************************************************/
+/************************************************************************************************************/
 
 /**
  * Convenience generic wrapper to insert new data at the end of a string.
@@ -116,6 +141,8 @@ CSTR_NONNULL(1);
 		default      : cstr_insert_long    \
 	)(DST, SRC, SIZE_MAX)
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Convenience generic wrapper to insert new data at a specific UTF-8 character offset.
  */
@@ -129,6 +156,8 @@ CSTR_NONNULL(1);
 		long double  : cstr_insert_double, \
 		default      : cstr_insert_long    \
 	)(DST, SRC, OFFSET)
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Convenience generic wrapper to insert new data at the beginning of a string.
@@ -155,6 +184,8 @@ void
 cstr_clear(cstr *str)
 CSTR_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Removes a set number of UTF-8 characters at a specific offset.
  * This function is bounds-protected, meaning that offset + length parameters will be capped at the string's
@@ -167,6 +198,8 @@ CSTR_NONNULL(1);
 void
 cstr_cut(cstr *str, size_t offset, size_t length)
 CSTR_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Insert the contents of str_src at a specific offset.
@@ -185,6 +218,8 @@ CSTR_NONNULL(1);
 void
 cstr_insert_cstr(cstr *str, const cstr *str_src, size_t offset)
 CSTR_NONNULL(1, 2);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Converts a double into a character array then inserts it at a specific offset. The double digits number is
@@ -205,6 +240,8 @@ void
 cstr_insert_double(cstr *str, long double d, size_t offset)
 CSTR_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Converts a long into a character array then inserts it at a specific offset.
  * The string's allocated memory will be automatically extended if needed to accommodate the inserted data.
@@ -223,6 +260,8 @@ void
 cstr_insert_long(cstr *str, long long int l, size_t offset)
 CSTR_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Insert a raw C string at a specific offset.
  * The string's allocated memory will be automatically extended if needed to accommodate the inserted data.
@@ -240,6 +279,8 @@ CSTR_NONNULL(1);
 void
 cstr_insert_raw(cstr *str, const char *raw_str, size_t offset)
 CSTR_NONNULL(1, 2);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Pads a string with a repeated sequence of characters set by pattern so that its length matches
@@ -271,6 +312,8 @@ void
 cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 CSTR_NONNULL(1, 2);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /** 
  * Preallocates a set number of bytes to avoid triggering multiple automatic reallocs when adding data to the
  * string. This function has no effect if the requested number of bytes is smaller than the previously
@@ -285,6 +328,8 @@ void
 cstr_prealloc(cstr *str, size_t byte_length)
 CSTR_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /** 
  * Clears errors and puts the string back into an usable state. The only unrecoverable error is CSTR_INVALID.
  *
@@ -293,6 +338,8 @@ CSTR_NONNULL(1);
 void
 cstr_repair(cstr *str)
 CSTR_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Sets the number of digits to show when a double value gets inserted. The effects of the int values are
@@ -305,6 +352,8 @@ void
 cstr_set_double_digits(cstr *str, int digits)
 CSTR_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Sets the width of a '\t' character. This will affect the results of 2d functions like cstr_coords_offset(),
  * cstr_test_wrap(), cstr_width() and, cstr_wrap().
@@ -315,6 +364,8 @@ CSTR_NONNULL(1);
 void
 cstr_set_tab_width(cstr *str, size_t width)
 CSTR_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Slices out a set number of UTF-8 characters at a specific offset and discards the rest.
@@ -327,6 +378,8 @@ void
 cstr_slice(cstr *str, size_t offset, size_t length)
 CSTR_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Removes extra leading and trailing whitespaces (space and tab characters).
  *
@@ -335,6 +388,8 @@ CSTR_NONNULL(1);
 void
 cstr_trim(cstr *str)
 CSTR_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Wraps a string by adding newlines to rows that are longer than max_width. Old newlines are also kept.
@@ -350,6 +405,8 @@ void
 cstr_wrap(cstr *str, size_t max_width)
 CSTR_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Similar to cstr_clear() but all of the allocated memory is also zeroed.
  *
@@ -359,7 +416,9 @@ void
 cstr_zero(cstr *str)
 CSTR_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+/************************************************************************************************************/
+/* FUNCTIONS ************************************************************************************************/
+/************************************************************************************************************/
 
 /**
  * Gets the string's length in bytes, including the NULL terminator.
@@ -373,6 +432,8 @@ size_t
 cstr_byte_length(const cstr *str)
 CSTR_NONNULL(1)
 CSTR_PURE;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Converts the given UTF-8 character offset into a byte offset.
@@ -390,6 +451,8 @@ cstr_byte_offset(const cstr *str, size_t offset)
 CSTR_NONNULL(1)
 CSTR_PURE;
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Gets the raw null terminated C string.
  *
@@ -403,6 +466,8 @@ cstr_chars(const cstr *str)
 CSTR_NONNULL_RETURN
 CSTR_NONNULL(1)
 CSTR_PURE;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Gets the raw null terminated C string offseted by 2d coordinates.
@@ -422,6 +487,8 @@ CSTR_NONNULL_RETURN
 CSTR_NONNULL(1)
 CSTR_PURE;
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Gets the raw null terminated C string offseted by an specific number of UTF-8 characters.
  * This function is bounds-protected, so the offset parameter is capped at the string's length, even if
@@ -438,6 +505,8 @@ cstr_chars_at_offset(const cstr *str, size_t offset)
 CSTR_NONNULL_RETURN
 CSTR_NONNULL(1)
 CSTR_PURE;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Converts the given 2d coordinates into a UTF-8 character offset.
@@ -456,6 +525,8 @@ cstr_coords_offset(const cstr *str, size_t row, size_t col)
 CSTR_NONNULL(1)
 CSTR_PURE;
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Gets the error state.
  *
@@ -467,6 +538,8 @@ enum cstr_err
 cstr_error(const cstr *str)
 CSTR_NONNULL(1)
 CSTR_PURE;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Get the number of rows.
@@ -480,6 +553,8 @@ size_t
 cstr_height(const cstr *str)
 CSTR_NONNULL(1)
 CSTR_PURE;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Gets the number of UTF-8 characters a string is made of. Unlike cstr_byte_length(), the NULL terminator is
@@ -495,6 +570,8 @@ cstr_length(const cstr *str)
 CSTR_NONNULL(1)
 CSTR_PURE;
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Calculates the number of rows a string wrapped with max_width will have. But unlike cstr_wrap() the string
  * is not modified.
@@ -509,6 +586,8 @@ size_t
 cstr_test_wrap(const cstr *str, size_t max_width)
 CSTR_NONNULL(1)
 CSTR_PURE;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Converts the UTF-8 character offset of a wrapped string into an offset that matches the character position
@@ -530,6 +609,8 @@ cstr_unwrapped_offset(const cstr *str, const cstr *str_wrap, size_t offset)
 CSTR_NONNULL(1, 2)
 CSTR_PURE;
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Gets the number of columns. The NULL terminator and newline characters are not included.
  *
@@ -542,23 +623,6 @@ size_t
 cstr_width(const cstr *str)
 CSTR_NONNULL(1)
 CSTR_PURE;
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-/**
- * A macro that gives uninitialized string objects a non-NULL value that is safe to use with the string's
- * related functions. However, any function called with a handle set to this value will return early and
- * without any side effects.
- */
-#define CSTR_PLACEHOLDER &cstr_placeholder_instance
-
-/**
- * Global string object instance with the error state set to CSTR_INVALID. This instance is only made
- * available to allow the static initialization of string object pointers with the macro CSTR_PLACEHOLDER.
- */
-extern cstr cstr_placeholder_instance;
 
 /************************************************************************************************************/
 /************************************************************************************************************/

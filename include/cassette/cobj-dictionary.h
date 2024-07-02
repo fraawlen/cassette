@@ -38,7 +38,7 @@ extern "C" {
 #endif
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* TYPES ****************************************************************************************************/
 /************************************************************************************************************/
 
 /**
@@ -68,6 +68,26 @@ enum cdict_err
 
 /************************************************************************************************************/
 /************************************************************************************************************/
+/* GLOBALS **************************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ * A macro that gives uninitialized dictionaries a non-NULL value that is safe to use with the dictionary's
+ * related functions. However, any function called with a handle set to this value will return early and
+ * without any side effects.
+ */
+#define CDICT_PLACEHOLDER &cdict_placeholder_instance
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * Global dictionary instance with the error state set to CDICT_INVALID. This instance is only made available
+ * to allow the static initialization of dictionary pointers with the macro CDICT_PLACEHOLDER.
+ */
+extern cdict cdict_placeholder_instance;
+
+/************************************************************************************************************/
+/* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
 /************************************************************************************************************/
 
 /**
@@ -83,6 +103,8 @@ cdict_clone(const cdict *dict)
 CDICT_NONNULL_RETURN
 CDICT_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Creates an empty dictionary instance.
  *
@@ -93,6 +115,8 @@ cdict *
 cdict_create(void)
 CDICT_NONNULL_RETURN;
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Destroys the given dictionary and frees memory.
  *
@@ -102,7 +126,9 @@ void
 cdict_destroy(cdict *dict)
 CDICT_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+/************************************************************************************************************/
+/* PROCEDURES ***********************************************************************************************/
+/************************************************************************************************************/
 
 /**
  * Clears all active slots. Allocated memory is not freed, use cdict_destroy() for that.
@@ -113,6 +139,8 @@ void
 cdict_clear(cdict *dict)
 CDICT_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Clears all active slots of a specific group. Allocated memory is not freed, use cdict_destroy() for that.
  *
@@ -122,6 +150,8 @@ CDICT_NONNULL(1);
 void
 cdict_clear_group(cdict *dict, unsigned int group)
 CDICT_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Deletes the slot that matches the given key and group. This function has no effect if there are no matching
@@ -134,6 +164,8 @@ CDICT_NONNULL(1);
 void
 cdict_erase(cdict *dict, const char *key, unsigned int group)
 CDICT_NONNULL(1, 2);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /** 
  * Preallocates a set amount of slots to avoid triggering multiple automatic reallocs and rehashes when adding
@@ -151,6 +183,8 @@ void
 cdict_prealloc(cdict *dict, size_t slots_number)
 CDICT_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Sets the maximum load factor. To stay under it, the dictionary may automatically extend its number of
  * allocated slots. Default value = 0.6. Values outside of the [0.0 1.0], 0.0 excluded, are illegal.
@@ -166,6 +200,8 @@ void
 cdict_set_max_load(cdict *dict, double load_factor)
 CDICT_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /** 
  * Clears errors and puts the dictionary back into an usable state. The only unrecoverable error is
  * CDICT_INVALID.
@@ -175,6 +211,8 @@ CDICT_NONNULL(1);
 void
 cdict_repair(cdict *dict)
 CDICT_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Activates a slot in the dictionary's hashtable. The given key, group, and values will be associated with
@@ -194,7 +232,9 @@ void
 cdict_write(cdict *dict, const char *key, unsigned int group, size_t value)
 CDICT_NONNULL(1, 2);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+/************************************************************************************************************/
+/* FUNCTIONS ************************************************************************************************/
+/************************************************************************************************************/
 
 /**
  * Gets the error state.
@@ -207,6 +247,8 @@ enum cdict_err
 cdict_error(const cdict *dict)
 CDICT_NONNULL(1)
 CDICT_PURE;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Tries to find a slot that matches the given key and group. If found, true is returned, and if the optional
@@ -224,6 +266,8 @@ bool
 cdict_find(const cdict *dict, const char *key, unsigned int group, size_t *value)
 CDICT_NONNULL(1, 2);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Gets the number of active slots.
  *
@@ -237,6 +281,8 @@ cdict_load(const cdict *dict)
 CDICT_NONNULL(1)
 CDICT_PURE;
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  * Gets a ratio of the number of active slots by the number of allocated slots.
  *
@@ -249,23 +295,6 @@ double
 cdict_load_factor(const cdict *dict)
 CDICT_NONNULL(1)
 CDICT_PURE;
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-/**
- * A macro that gives uninitialized dictionaries a non-NULL value that is safe to use with the dictionary's
- * related functions. However, any function called with a handle set to this value will return early and
- * without any side effects.
- */
-#define CDICT_PLACEHOLDER &cdict_placeholder_instance
-
-/**
- * Global dictionary instance with the error state set to CDICT_INVALID. This instance is only made available
- * to allow the static initialization of dictionary pointers with the macro CDICT_PLACEHOLDER.
- */
-extern cdict cdict_placeholder_instance;
 
 /************************************************************************************************************/
 /************************************************************************************************************/

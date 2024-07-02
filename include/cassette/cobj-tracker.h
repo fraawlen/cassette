@@ -15,7 +15,7 @@
  */
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* TYPES ****************************************************************************************************/
 /************************************************************************************************************/
 
 #pragma once
@@ -60,7 +60,24 @@ enum cref_err
 };
 
 /************************************************************************************************************/
+/* GLOBALS **************************************************************************************************/
 /************************************************************************************************************/
+
+/**
+ * A macro that gives uninitialized reference trackers a non-NULL value that is safe to use with the
+ * reference tracker's related functions. However, any function called with a handle set to this value will
+ * return early and without any side effects.
+ */
+#define CREF_PLACEHOLDER &cref_placeholder_instance
+
+/**
+ * Global reference tracker instance with the error state set to CBOOK_INVALID. This instance is only made
+ * available to allow the static initialization of reference tracker pointers with the macro CREF_PLACEHOLDER.
+ */
+extern cref cref_placeholder_instance;
+
+/************************************************************************************************************/
+/* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
 /************************************************************************************************************/
 
 /**
@@ -71,12 +88,16 @@ cref_clone(cref *ref)
 CREF_NONNULL_RETURN
 CREF_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  *
  */
 cref *
 cref_create(void)
 CREF_NONNULL_RETURN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -85,8 +106,13 @@ void
 cref_destroy(cref *ref)
 CREF_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+/************************************************************************************************************/
+/* PROCEDURES ***********************************************************************************************/
+/************************************************************************************************************/
 
+/**
+ *
+ */
 #define cref_pull(REF, VAL) \
 	_Generic (VAL, \
 		int     : cref_pull_index, \
@@ -94,6 +120,11 @@ CREF_NONNULL(1);
 		default : cref_pull_ptr    \
 	)(REF, VAL)
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ */
 #define cref_purge(REF, VAL) \
 	_Generic (VAL, \
 		int     : cref_purge_index, \
@@ -110,12 +141,16 @@ void
 cref_clear(cref *ref)
 CREF_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  *
  */
 void
 cref_init_iterator(cref *ref)
 CREF_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -124,12 +159,16 @@ bool
 cref_iterate(cref *ref)
 CREF_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  *
  */
 void
 cref_lock_iterator(cref *ref)
 CREF_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -138,12 +177,16 @@ void
 cref_prealloc(cref *ref, size_t slots_number)
 CREF_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  *
  */
 void
 cref_pull_index(cref *ref, size_t index)
 CREF_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -152,12 +195,15 @@ void
 cref_pull_ptr(cref *ref, const void *ptr)
 CREF_NONNULL(1, 2);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 /**
  *
  */
 void
 cref_purge_index(cref *ref, size_t index)
 CREF_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -166,12 +212,16 @@ void
 cref_purge_ptr(cref *ref, const void *ptr)
 CREF_NONNULL(1, 2);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  *
  */
 void
 cref_push(cref *ref, const void *ptr)
 CREF_NONNULL(1, 2);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -180,7 +230,9 @@ void
 cref_repair(cref *ref)
 CREF_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+/************************************************************************************************************/
+/* FUNCTIONS ************************************************************************************************/
+/************************************************************************************************************/
 
 /**
  *
@@ -190,6 +242,8 @@ cref_at_index(const cref *ref, size_t index)
 CREF_NONNULL(1)
 CREF_PURE;
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  *
  */
@@ -197,6 +251,8 @@ unsigned int
 cref_at_index_count(const cref *ref, size_t index)
 CREF_NONNULL(1)
 CREF_PURE;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -206,12 +262,16 @@ cref_error(const cref *ref)
 CREF_NONNULL(1)
 CREF_PURE;
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  *
  */
 unsigned int
 cref_find(const cref *ref, const void *ptr, size_t *index)
 CREF_NONNULL(1, 2);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -221,6 +281,8 @@ cref_iteration(const cref *ref)
 CREF_NONNULL(1)
 CREF_PURE;
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  *
  */
@@ -228,6 +290,8 @@ unsigned int
 cref_iteration_count(const cref *ref)
 CREF_NONNULL(1)
 CREF_PURE;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -237,6 +301,8 @@ cref_iterator_offset(const cref *ref)
 CREF_NONNULL(1)
 CREF_PURE;
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 /**
  *
  */
@@ -244,23 +310,6 @@ size_t
 cref_length(const cref *ref)
 CREF_NONNULL(1)
 CREF_PURE;
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-/**
- * A macro that gives uninitialized reference trackers a non-NULL value that is safe to use with the
- * reference tracker's related functions. However, any function called with a handle set to this value will
- * return early and without any side effects.
- */
-#define CREF_PLACEHOLDER &cref_placeholder_instance
-
-/**
- * Global reference tracker instance with the error state set to CBOOK_INVALID. This instance is only made
- * available to allow the static initialization of reference tracker pointers with the macro CREF_PLACEHOLDER.
- */
-extern cref cref_placeholder_instance;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
