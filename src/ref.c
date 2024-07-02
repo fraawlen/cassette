@@ -18,9 +18,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <cassette/cobj.h>
+#include <cassette/cref.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -401,7 +402,7 @@ cref_push(cref *ref, const void *ptr)
 	{
 		if (!safe_mul(NULL, ref->n_alloc, 2))
 		{
-			ref->err |= CDICT_OVERFLOW;
+			ref->err |= CREF_OVERFLOW;
 			return;
 		}
 		if (!_grow(ref, ref->n_alloc * 2))

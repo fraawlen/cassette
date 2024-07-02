@@ -7,12 +7,13 @@ The library is free and open-source software licensed under the [LGPL-2.1](https
 Features
 --------
 
-- Book       : a dynamic array/vector for c-strings with grouping features
-- Dictionary : an hashmap with string + group keys, FNV-1A hashing and linear probing
-- Tracker    : a hybrid vector/stack or pointers used to keep track of instanced components.
-- String     : UTF-8 strings with 2D (rows and columns) information and manipulation functions
-- Color      : RGBA color representation, manipulation and conversion
-- Rand       : a re-implementation of POSIX's rand48 functions with a slightly more convenient API
+- cbook  : dynamic C-strings stack with grouping features
+- cdict  : hashmap with string + group keys, FNV-1A hashing and linear probing
+- ccolor : RGBA color representation, manipulation and conversion
+- cline  : 1D line represenation and manipulation with bound checks and UB prevention
+- crand  : re-implementation of POSIX's rand48 functions with a slightly more convenient API
+- cref   : reference counter used to keep track of instanced components.
+- cstr   : UTF-8 strings with 2D (rows, columns, tabsize, wrapping) features
 
 Dependencies
 ------------
@@ -38,13 +39,25 @@ After these steps, both a shared binary and static archive will be generated and
 Usage
 -----
 
-Add this include to get access to the library functions :
+Add this include to get access to all of the library features :
 
 ```
 #include <cassette/cobj.h>
 ```
 
-As well as this compilation flag :
+If you want to be more explicit, you can include the specific headers you need :
+
+```
+#include <cassette/cbook.h>
+#include <cassette/cdict.h>
+#include <cassette/ccolor.h>
+#include <cassette/cline.h>
+#include <cassette/crand.h>
+#include <cassette/cref.h>
+#include <cassette/cstr.h>
+```
+
+Then, to compile your program, add this flag :
 
 ```
 -lcobj

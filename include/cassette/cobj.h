@@ -20,10 +20,10 @@
 
 #pragma once
 
-#include "cobj-book.h"
-#include "cobj-color.h"
-#include "cobj-dictionary.h"
-#include "cobj-rand.h"
-#include "cobj-rect.h"
-#include "cobj-string.h"
-#include "cobj-tracker.h"
+#include "cbook.h"
+#include "ccolor.h"
+#include "cdict.h"
+#include "cline.h"
+#include "crand.h"
+#include "cref.h"
+#include "cstr.h"
