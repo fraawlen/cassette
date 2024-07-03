@@ -110,7 +110,7 @@ sequence_parse(struct context *ctx)
 			_iterate(ctx, type);
 			break;
 
-		case TOKEN_RAND_SEED:
+		case TOKEN_SEED:
 			_seed(ctx);
 			break;
 

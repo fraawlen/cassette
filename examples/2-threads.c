@@ -18,7 +18,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <pthread.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <cassette/ccfg.h>
 
@@ -29,59 +31,53 @@
 /************************************************************************************************************/
 
 #define _SAMPLE_CONFIG_PATH "/tmp/ccfg_sample"
+#define _N_SIMULATIONS       10
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _generate_source (void);
-static void _print_resource  (ccfg_t *cfg, const char *namespace, const char *property);
+static void  _generate_source   (void);
+static void *_simulation_thread (void *param);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
 /**
- * In this 1st example, a simple resource look-up is done after loading the configuration.
+ * In this 2nd example, a multithreaded software simulator is mimicked. Each simulation, sitting in its own
+ * thread, requires the same kind of variables to work with (in this example, the coordinates of something).
+ * However, each simulation instance also requires randomized coordinate values to create a different output.
+ *
+ * In this scenario, each simulation thread will set up its own configuration and and provide an unique
+ * parameter "sim_id". That parameter will then be used as a LCG seed. Thanks to that, during parsing, 'RAND'
+ * tokens will be substituted to a different values in each thread. The parser opens the source files
+ * exclusively in read-only mode, therefore multithreaded access to the same source is safe.
  */
 
 int
 main(void)
 {
-	ccfg_t *cfg;
+	pthread_t threads[_N_SIMULATIONS];
+
+	unsigned int ids[_N_SIMULATIONS];
 
 	/* init */
 
-	cfg = ccfg_create();
-
 	_generate_source();
 
-	/* operations */
+	/* run pseudo-simulations */
 
-	ccfg_push_source(cfg, _SAMPLE_CONFIG_PATH);
-
-	if (!ccfg_load(cfg))
+	for (unsigned int i = 0; i < _N_SIMULATIONS; i++)
 	{
-		printf("configuration failed to load\n");
+		ids[i] = i;
+		pthread_create(threads + i, NULL, _simulation_thread, ids + i);
 	}
-
-	printf("namespace\tproperty\traw_values\n");
-	printf("---------\t--------\t----------\n");
-
-	_print_resource(cfg, "example-1", "values-1");
-	_print_resource(cfg, "example-1", "values-2");
-	_print_resource(cfg, "example-1", "values-3");
-	_print_resource(cfg, "example-1", "whatever"); /* expected to not be found */
-	_print_resource(cfg, "example-9", "values-1"); /* expected to not be found */
-
-	/* end */
-
-	if (ccfg_has_failed(cfg))
+	
+	for (unsigned int i = 0; i < _N_SIMULATIONS; i++)
 	{
-		printf("configuration has failed during operation.\n");
+		pthread_join(threads[i], NULL);
 	}
-
-	ccfg_destroy(&cfg);
 
 	return 0;
 }
@@ -108,16 +104,41 @@ _generate_source(void)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void
-_print_resource(ccfg_t *cfg, const char *namespace, const char *property)
+static void *
+_simulation_thread(void *param)
 {
-	printf("%s\t%s", namespace, property);
+	ccfg *cfg;
 
-	ccfg_fetch(cfg, namespace, property);
-	while (ccfg_pick_next_value(cfg))
+	unsigned int coords[3] = {0};
+	unsigned int id;
+
+	/* simulation config setup */
+
+	cfg = ccfg_create();
+	id  = *(unsigned int*)param;
+
+	ccfg_push_source(cfg, _SAMPLE_CONFIG_PATH);
+	ccfg_push_param(cfg, "sim_id", id);
+	ccfg_load(cfg);
+
+	ccfg_fetch(cfg, "example-2", "coordinates");
+	for (unsigned int i = 0; i < 3 && ccfg_iterate(cfg); i++)
 	{
-		printf("\t%s", ccfg_get_value(cfg));
+		coords[i] = strtoul(ccfg_resource(cfg), NULL, 0);
 	}
 
-	printf("\n");
+	/* simulation algorithm */
+
+	printf(
+		"sim %u -> x = %u, y = %u, z = %u\n",
+		id,
+		coords[0],
+		coords[1],
+		coords[2]);
+
+	/* simulation end */
+
+	ccfg_destroy(cfg);
+
+	pthread_exit(NULL);
 }

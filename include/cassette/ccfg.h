@@ -42,7 +42,7 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Opaque configuration instance object that holds all parsed resources.
+ * Opaque config instance object that holds all parsed resources.
  * This object holds an internal error bitfield that can be checked with ccfg_error(). Some functions, upon
  * failure, can trigger specific error bits and will exit early without side effects. If the error bitfield is
  * set to anything else than CCFG_OK, any function that takes this object as an argument will return early
@@ -128,18 +128,19 @@ CCFG_NONNULL(1);
 /**
  * Convenience generic wrapper for parameter types.
  */
-#define cstr_push_param(DST, SRC) \
-	_Generic (SRC, \
+#define ccfg_push_param(CFG, NAME, VAL) \
+	_Generic (VAL, \
 		char *       : ccfg_push_param_str,    \
 		const char * : ccfg_push_param_str,    \
 		float        : ccfg_push_param_double, \
 		double       : ccfg_push_param_double, \
 		default      : ccfg_push_param_long    \
-	)(DST, SRC, 0)
+	)(CFG, NAME, VAL)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Removes all parsed resources.
  *
  * @param cfg : Config instance to interact with
  */
@@ -150,6 +151,7 @@ CCFG_NONNULL(1);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Removes all added parameters.
  *
  * @param cfg : Config instance to interact with
  */
@@ -160,6 +162,7 @@ CCFG_NONNULL(1);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Removes all added sources.
  *
  * @param cfg : Config instance to interact with
  */
@@ -170,12 +173,21 @@ CCFG_NONNULL(1);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Looks-up a resource by its namespace and property name. If found, its reference is kept around and the
+ * resource values will become accessible through ccfg_iterate() and ccfg_resource(). To get the number of
+ * values a resource has, use ccfg_resouce_length().
+ *
+ * Usage example :
+ *
+ *	ccfg_fetch(cfg, "something", "something");
+ *	while (ccfg_iterate(cfg))
+ *	{
+ *		printf("%s\n", ccfg_resource(cfg));
+ *	}
  *
  * @param cfg       : Config instance to interact with
  * @param namespace : Resource namespace
  * @param property  : Resource property name
- *
- * @return : True if found, false otherwhise
  */
 void
 ccfg_fetch(ccfg *cfg, const char *namespace, const char *property)
@@ -184,6 +196,10 @@ CCFG_NONNULL(1, 2, 3);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Increments an internal iterator offset and makes available the next value associated to a resource fetched
+ * with ccfg_fetch(). Said value can be accessed with ccfg_resource(). This function exits early and returns
+ * false if the iterator cannot be incremented because it has already reached the last resource value or
+ * because the config has an error.
  *
  * @param cfg Config instance to interact with
  *
@@ -196,22 +212,33 @@ CCFG_NONNULL(1);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Reads the first source file that can be opened, parses it, and stores the resolved resources. Every time
+ * this function is called the previously parsed resources will be cleared first before reading the source.
+ * This function has no effects if no source file can be read. It should be noted that not being able to
+ * open any source files is not considered to be an error by default. If such a check is needed, use
+ * ccfg_can_open_sources().
  *
  * @param cfg : Config instance to interact with
  *
- * @return : Load success
+ * @error CCFG_OVERFLOW : The size of an internal components was about to overflow
+ * @error CCFG_MEMORY   : Failed memory allocation during parsing
  */
-bool
+void
 ccfg_load(ccfg *cfg)
 CCFG_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Adds a double as a config parameter. This parameter's value can then be accessed from a config source
+ * file. Unlike user-defined variables, only one value per parameter can be defined.
  *
  * @param cfg  : Config instance to interact with
- * @param name : Name of the parameter to use in the source configuration
+ * @param name : Name of the parameter to use in the source config
  * @param d    : Value
+ *
+ * @error CCFG_OVERFLOW : The size of an internal components was about to overflow
+ * @error CCFG_MEMORY   : Failed memory allocation during parsing
  */
 void
 ccfg_push_param_double(ccfg *cfg, const char *name, double d)
@@ -220,10 +247,15 @@ CCFG_NONNULL(1, 2);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Adds a long as a config parameter. This parameter's value can then be accessed from a config source file.
+ * Unlike user-defined variables, only one value per parameter can be defined.
  *
  * @param cfg  : Config instance to interact with
- * @param name : Name of the parameter to use in the source configuration
+ * @param name : Name of the parameter to use in the source config
  * @param l    : Value
+ *
+ * @error CCFG_OVERFLOW : The size of an internal components was about to overflow
+ * @error CCFG_MEMORY   : Failed memory allocation during parsing
  */
 void
 ccfg_push_param_long(ccfg *cfg, const char *name, long long l)
@@ -232,10 +264,15 @@ CCFG_NONNULL(1, 2);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Adds a C string as a config parameter. This parameter's value can then be accessed from a config source
+ * file. Unlike user-defined variables, only one value per parameter can be defined.
  *
  * @param cfg  : Config instance to interact with
- * @param name : Name of the parameter to use in the source configuration
+ * @param name : Name of the parameter to use in the source config
  * @param str  : Value
+ *
+ * @error CCFG_OVERFLOW : The size of an internal components was about to overflow
+ * @error CCFG_MEMORY   : Failed memory allocation during parsing
  */
 void
 ccfg_push_param_str(ccfg *cfg, const char *name, const char *str)
@@ -244,9 +281,14 @@ CCFG_NONNULL(1, 2, 3);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Adds a file as a config source. Only the first source that can be opened will be parsed. The remaining
+ * sources act as fallback.
  *
  * @param cfg      : Config instance to interact with
  * @param filename : Full path to the source file
+ *
+ * @error CCFG_OVERFLOW : The size of an internal components was about to overflow
+ * @error CCFG_MEMORY   : Failed memory allocation during parsing
  */
 void
 ccfg_push_source(ccfg *cfg, const char *filename)
@@ -255,7 +297,9 @@ CCFG_NONNULL(1, 2);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Clears errors and puts the config back into an usable state. The only unrecoverable error is CCFG_INVALID.
  *
+ * @param cfg : Config instance to interact with
  */
 void
 ccfg_repair(ccfg *cfg)
@@ -266,10 +310,15 @@ CCFG_NONNULL(1);
 /************************************************************************************************************/
 
 /**
+ * Returns true if any added source file can be opened up and read. Moreover, if index and filename parameters
+ * are provided, this function will write into them the index and name of the first source that was opened.
  *
- * @param cfg : Config instance to interact with
+ * @param cfg      : Config instance to interact with
+ * @param index    : Optional, source rank
+ * @param filename : Optional, source filename
  *
- * @return : 
+ * @return     : Source availability
+ * @return_err : False
  */
 bool
 ccfg_can_open_sources(const ccfg *cfg, size_t *index, const char **filename)
@@ -278,10 +327,11 @@ CCFG_NONNULL(1);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Gets the error state.
  *
  * @param cfg : Config instance to interact with
  *
- * @return : Config instance error state
+ * @return : Error bitfield
  */
 enum ccfg_err
 ccfg_error(const ccfg *cfg)
@@ -291,27 +341,33 @@ CCFG_PURE;
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Gets the resource value an internal iterator is pointing at. The value is returned as a C string. It's the
+ * responsibility of the caller to convert it into the required datatype. If no resource was pre-fetched
+ * or the iterator hasn't been incremented once before this function gets called, return_err will be returned.
  *
  * @param cfg : Config instance to interact with
  *
- * @return : Number of values that can be iterated through
+ * @return     : Resource value
+ * @return_err : "\0";
  */
-size_t
-ccfg_resources_number(const ccfg *cfg)
+const char *
+ccfg_resource(const ccfg *cfg)
+CCFG_NONNULL_RETURN
 CCFG_NONNULL(1)
 CCFG_PURE;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Gets the number of values a pre-fetched resource has.
  *
  * @param cfg : Config instance to interact with
  *
- * @return : Converted value
+ * @return     : Number of values
+ * @return_err : 0
  */
-const char *
-ccfg_resource(const ccfg *cfg)
-CCFG_NONNULL_RETURN
+size_t
+ccfg_resources_length(const ccfg *cfg)
 CCFG_NONNULL(1)
 CCFG_PURE;
 

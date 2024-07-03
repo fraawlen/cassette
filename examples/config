@@ -4,31 +4,24 @@
 
 SECTION Sa
 
-	// resources for example program 3-threads
-	
-	SECTION_ADD Sc
-	
-	example-3 coordinates (RAND 10 90) (RAND 10 90) (RAND 10 90)
+	// resources for example program 1-simple
+
+	LET_ENUM enum 5
+	LET ratio 0.5
+
+	example-1 a TIME
+	example-1 b 45.5
+	example-1 c 50 60 70
+	example-1 d TRUE
+	example-1 e new_value
+	example-1 f ($$ example_param)
+	example-1 g (CITRPL #000000 #ffff8000 ($ ratio))
+	example-1 h ($ enum)
 
 SECTION Sb
 
-	// resources for example program 1-simple
+	// resources for example program 3-threads
 
-	LET_ENUM    enum 6 
-	LET_PREPEND names enum values-
+	SEED ($$ sim_id)
 
-	ITERATE_RAW names example-1 % (RAND 0 100) (RAND 0 100) (RAND 0 100)
-
-SECTION Sc
-
-	// resources for example program 2-callback
-
-	LET ratio 0.5
-
-	example-2 a TIME
-	example-2 b 45.5
-	example-2 c 50 60 70
-	example-2 d TRUE
-	example-2 e new_value
-	example-2 f ($$ internal_param)
-	example-2 g (CITRPL #000000 #ffff8000 ($ ratio))
+	example-2 coordinates (RAND 10 90) (RAND 10 90) (RAND 10 90)

@@ -72,15 +72,15 @@ The following code snippet shows a minimal example of the library usage. When co
 int
 main(void)
 {
-	ccfg_t *cfg = ccfg_create();
+	ccfg *cfg = ccfg_create();
 
 	ccfg_push_source(cfg, "/tmp/ccfg");
 	ccfg_load(cfg);
 
 	ccfg_fetch(cfg, "namespace", "property");
-	while (ccfg_pick_next_value(cfg))
+	while (ccfg_iterate(cfg))
 	{
-		printf("%s\n", ccfg_get_value(cfg));
+		printf("%s\n", ccfg_resource(cfg));
 	}
 
 	return 0;

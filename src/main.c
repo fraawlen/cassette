@@ -243,14 +243,14 @@ ccfg_iterate(ccfg *cfg)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
+void
 ccfg_load(ccfg *cfg)
 {
 	const char *source;
 
 	if (cfg->err || (source = _select_source(cfg, NULL))[0] == '\0')
 	{
-		return false;
+		return;
 	}
 
 	cbook_clear(cfg->sequences);
@@ -258,8 +258,6 @@ ccfg_load(ccfg *cfg)
 	file_parse_root(cfg, source);
 
 	_update_err(cfg);
-
-	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -299,7 +297,7 @@ ccfg_push_param_str(ccfg *cfg, const char *name, const char *str)
 	cbook_write(cfg->params, str, CBOOK_OLD);
 	if (!cbook_error(cfg->params))
 	{
-		cdict_write(cfg->keys_params, name, 0, cbook_words_number(cfg->params));
+		cdict_write(cfg->keys_params, name, 0, cbook_words_number(cfg->params) - 1);
 	}
 
 	_update_err(cfg);
@@ -337,19 +335,6 @@ ccfg_repair(ccfg *cfg)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-size_t
-ccfg_resources_number(const ccfg *cfg)
-{
-	if (cfg->err)
-	{
-		return 0;
-	}
-
-	return cbook_group_length(cfg->sequences, cbook_iterator_group(cfg->sequences));
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 const char *
 ccfg_resource(const ccfg *cfg)
 {
@@ -359,6 +344,19 @@ ccfg_resource(const ccfg *cfg)
 	}
 
 	return cbook_iteration(cfg->sequences);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+ccfg_resources_length(const ccfg *cfg)
+{
+	if (cfg->err)
+	{
+		return 0;
+	}
+
+	return cbook_group_length(cfg->sequences, cbook_iterator_group(cfg->sequences));
 }
 
 /************************************************************************************************************/

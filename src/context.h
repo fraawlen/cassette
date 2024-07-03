@@ -73,7 +73,7 @@ struct context
 
 #define CONTEXT_DICT_VARIABLE 0
 #define CONTEXT_DICT_SECTION  1
-#define CONTEXT_MAX_DEPTH     128
+#define CONTEXT_MAX_DEPTH     32
 
 /************************************************************************************************************/
 /* PROCEDURES ***********************************************************************************************/

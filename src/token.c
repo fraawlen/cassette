@@ -116,7 +116,7 @@ static const struct _slot _map[] =
 	{ "INCLUDE",       TOKEN_INCLUDE          },
 	{ "ITERATE",       TOKEN_ITERATE          },
 	{ "ITERATE_RAW",   TOKEN_ITERATE_RAW      },
-	{ "SEED_OVERRIDE", TOKEN_RAND_SEED        },
+	{ "SEED",          TOKEN_SEED             },
 	{ "DEBUG_PRINT",   TOKEN_PRINT            },
 };
 

@@ -34,6 +34,7 @@
 /************************************************************************************************************/
 
 static void _generate_source (void);
+static void _print_resources (const char *namespace, const char *property);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -54,15 +55,29 @@ main(void)
 {
 	/* Setup */
 
-	_generate_source();
-
 	_cfg = ccfg_create();
 
+	_generate_source();
+
 	ccfg_push_source(_cfg, SAMPLE_CONFIG_PATH);
-	if (!ccfg_load(_cfg))
-	{
-		printf("Couldn't open any source file.\n");
-	}
+	ccfg_push_param(_cfg, "example_param", "value_from_executable");
+
+	/* Operations */
+
+	ccfg_load(_cfg);
+
+	printf("namespace\tprop\traw_values\n");
+	printf("---------\t----\t----------\n");
+
+	_print_resources("example-1", "a");
+	_print_resources("example-1", "b");
+	_print_resources("example-1", "c");
+	_print_resources("example-1", "d");
+	_print_resources("example-1", "e");
+	_print_resources("example-1", "f");
+	_print_resources("example-1", "g");
+	_print_resources("example-1", "h"); /* expected to not be found */
+	_print_resources("example-9", "i"); /* expected to not be found */
 
 	/* End */
 
@@ -91,4 +106,20 @@ _generate_source(void)
 
 	fprintf(f, "%.*s", examples_config_len, examples_config);
 	fclose(f);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_print_resources(const char *namespace, const char *property)
+{
+	printf("%s\t%s", namespace, property);
+
+	ccfg_fetch(_cfg, namespace, property);
+	while (ccfg_iterate(_cfg))
+	{
+		printf("\t%s", ccfg_resource(_cfg));
+	}
+
+	printf("\n");
 }
