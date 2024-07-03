@@ -346,7 +346,7 @@ cstr_height(const cstr *str)
 void
 cstr_insert_cstr(cstr *str, const cstr *str_src, size_t offset)
 {
-	if (str->err || str_src->err)
+	if (str_src->err)
 	{
 		return;
 	}
@@ -361,11 +361,6 @@ cstr_insert_double(cstr *str, double d, size_t offset)
 {
 	char tmp[64];
 
-	if (str->err)
-	{
-		return;
-	}
-
 	snprintf(tmp, 64, "%.*f", str->digits, d);
 
 	cstr_insert_raw(str, tmp, offset);
@@ -377,11 +372,6 @@ void
 cstr_insert_long(cstr *str, long long l, size_t offset)
 {
 	char tmp[64];
-
-	if (str->err)
-	{
-		return;
-	}
 
 	snprintf(tmp, 64, "%lli", l);
 
