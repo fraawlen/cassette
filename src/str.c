@@ -357,7 +357,7 @@ cstr_insert_cstr(cstr *str, const cstr *str_src, size_t offset)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cstr_insert_double(cstr *str, long double d, size_t offset)
+cstr_insert_double(cstr *str, double d, size_t offset)
 {
 	char tmp[64];
 
@@ -366,7 +366,7 @@ cstr_insert_double(cstr *str, long double d, size_t offset)
 		return;
 	}
 
-	snprintf(tmp, 64, "%.*Lf", str->digits, d);
+	snprintf(tmp, 64, "%.*f", str->digits, d);
 
 	cstr_insert_raw(str, tmp, offset);
 }
@@ -374,7 +374,7 @@ cstr_insert_double(cstr *str, long double d, size_t offset)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cstr_insert_long(cstr *str, long long int l, size_t offset)
+cstr_insert_long(cstr *str, long long l, size_t offset)
 {
 	char tmp[64];
 

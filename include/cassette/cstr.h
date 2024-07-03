@@ -137,7 +137,6 @@ CSTR_NONNULL(1);
 		const char * : cstr_insert_raw,    \
 		float        : cstr_insert_double, \
 		double       : cstr_insert_double, \
-		long double  : cstr_insert_double, \
 		default      : cstr_insert_long    \
 	)(DST, SRC, SIZE_MAX)
 
@@ -153,7 +152,6 @@ CSTR_NONNULL(1);
 		const char * : cstr_insert_raw,    \
 		float        : cstr_insert_double, \
 		double       : cstr_insert_double, \
-		long double  : cstr_insert_double, \
 		default      : cstr_insert_long    \
 	)(DST, SRC, OFFSET)
 
@@ -169,7 +167,6 @@ CSTR_NONNULL(1);
 		const char * : cstr_insert_raw,    \
 		float        : cstr_insert_double, \
 		double       : cstr_insert_double, \
-		long double  : cstr_insert_double, \
 		default      : cstr_insert_long    \
 	)(DST, SRC, 0)
 
@@ -237,7 +234,7 @@ CSTR_NONNULL(1, 2);
  * @error CSTR_MEMORY   : Failed memory allocation
  */
 void
-cstr_insert_double(cstr *str, long double d, size_t offset)
+cstr_insert_double(cstr *str, double d, size_t offset)
 CSTR_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -257,7 +254,7 @@ CSTR_NONNULL(1);
  * @error CSTR_MEMORY   : Failed memory allocation
  */
 void
-cstr_insert_long(cstr *str, long long int l, size_t offset)
+cstr_insert_long(cstr *str, long long l, size_t offset)
 CSTR_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
