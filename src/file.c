@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "attributes.h"
 #include "context.h"
 #include "main.h"
 #include "sequence.h"
@@ -38,27 +39,21 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _open_file  (context_t *ctx, const context_t *ctx_parent, const char *filename);
-static void _parse_file (context_t *ctx);
+static bool _open_file  (struct context *ctx, const struct context *ctx_parent, const char *filename) NONNULL(1, 3);
+static void _parse_file (struct context *ctx);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
 void
-file_parse_child(context_t *ctx_parent, const char *filename)
+file_parse_child(struct context *ctx_parent, const char *filename)
 {
-	context_t ctx;
-
+	struct context ctx;
 	size_t var_iter;
 	size_t var_group;
 	
-	if (ctx_parent->depth >= CONTEXT_MAX_DEPTH)
-	{
-		return;
-	}
-
-	if (!_open_file(&ctx, ctx_parent, filename))
+	if (ctx_parent->depth >= CONTEXT_MAX_DEPTH || !_open_file(&ctx, ctx_parent, filename))
 	{
 		return;
 	}
@@ -69,28 +64,28 @@ file_parse_child(context_t *ctx_parent, const char *filename)
 	ctx.depth          = ctx_parent->depth + 1;
 	ctx.params         = ctx_parent->params;
 	ctx.sequences      = ctx_parent->sequences;
-	ctx.variables      = ctx_parent->variables;
-	ctx.iteration      = cobj_book_get_placeholder();
-	ctx.ref_params     = ctx_parent->ref_params;
-	ctx.ref_sequences  = ctx_parent->ref_sequences;
-	ctx.ref_variables  = ctx_parent->ref_variables;
+	ctx.vars           = ctx_parent->vars;
+	ctx.iteration      = CBOOK_PLACEHOLDER;
+	ctx.keys_params    = ctx_parent->keys_params;
+	ctx.keys_sequences = ctx_parent->keys_sequences;
+	ctx.keys_vars      = ctx_parent->keys_vars;
 	ctx.tokens         = ctx_parent->tokens;
 	ctx.parent         = ctx_parent;
 	ctx.rand           = ctx_parent->rand;
 
-	var_iter  = cobj_book_get_iterator_offset(ctx.variables);
-	var_group = cobj_book_get_iterator_group(ctx.variables);
+	var_iter  = cbook_iterator_offset(ctx.vars);
+	var_group = cbook_iterator_group(ctx.vars);
 
-	cobj_book_lock_iterator(ctx.variables);
+	cbook_lock_iterator(ctx.vars);
 
 	_parse_file(&ctx);
 
 	if (var_iter > 0)
 	{
-		cobj_book_reset_iterator(ctx.variables, var_group);
+		cbook_init_iterator(ctx.vars, var_group);
 		for (size_t i = 0; i < var_iter; i++)
 		{
-			cobj_book_increment_iterator(ctx.variables);
+			cbook_iterate(ctx.vars);
 		}
 	}
 
@@ -99,20 +94,20 @@ file_parse_child(context_t *ctx_parent, const char *filename)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
-file_parse_root(ccfg_t *cfg, const char *filename)
+void
+file_parse_root(ccfg *cfg, const char *filename)
 {
-	context_t ctx;
-	cobj_rand_t r;
-
-	bool fail = false;
+	struct context ctx;
+	enum cbook_err book_err = CBOOK_OK;
+	enum cdict_err dict_err = CDICT_OK;
+	crand r = 0;
 
 	if (!_open_file(&ctx, NULL, filename))
 	{
-		return false;
+		return;
 	}
 
-	cobj_rand_seed(&r, cfg->seed);
+	crand_seed(&r, 0);
 
 	ctx.eol_reached    = false;
 	ctx.eof_reached    = false;
@@ -120,26 +115,27 @@ file_parse_root(ccfg_t *cfg, const char *filename)
 	ctx.depth          = 0;
 	ctx.params         = cfg->params;
 	ctx.sequences      = cfg->sequences;
-	ctx.variables      = cobj_book_create(10, CCFG_MAX_WORD_BYTES);
-	ctx.iteration      = cobj_book_get_placeholder();
-	ctx.ref_params     = cfg->ref_params;
-	ctx.ref_sequences  = cfg->ref_sequences;
-	ctx.ref_variables  = cobj_dictionary_create(10, 0.6);
+	ctx.vars           = cbook_create();
+	ctx.iteration      = CBOOK_PLACEHOLDER;
+	ctx.keys_params    = cfg->keys_params;
+	ctx.keys_sequences = cfg->keys_sequences;
+	ctx.keys_vars      = cdict_create();
 	ctx.tokens         = cfg->tokens;
 	ctx.parent         = NULL;
 	ctx.rand           = &r;
 
 	_parse_file(&ctx);
 
-	fail |= cobj_book_has_failed(ctx.variables);
-	fail |= cobj_dictionary_has_failed(ctx.ref_variables);
+	book_err |= cbook_error(cfg->params);
+	dict_err |= cdict_error(cfg->keys_params);
+	cfg->err |= (book_err & CBOOK_OVERFLOW) || (dict_err & CDICT_OVERFLOW) ? CCFG_OVERFLOW : CCFG_OK;
+	cfg->err |= (book_err & CBOOK_MEMORY)   || (dict_err & CDICT_MEMORY)   ? CCFG_MEMORY   : CCFG_OK;
+	cfg->err |= (book_err & CBOOK_INVALID)  || (dict_err & CDICT_INVALID)  ? CCFG_MEMORY   : CCFG_OK;
 
-	cobj_book_destroy(&ctx.variables);
-	cobj_dictionary_destroy(&ctx.ref_variables);
+	cbook_destroy(ctx.vars);
+	cdict_destroy(ctx.keys_vars);
 
 	fclose(ctx.file);
-
-	return !fail;
 }
 
 /************************************************************************************************************/
@@ -147,21 +143,11 @@ file_parse_root(ccfg_t *cfg, const char *filename)
 /************************************************************************************************************/
 
 static bool
-_open_file(context_t *ctx, const context_t *ctx_parent, const char *filename)
+_open_file(struct context *ctx, const struct context *ctx_parent, const char *filename)
 {
 	struct stat fs;
 
-	if (!filename || filename[0] == '\0')
-	{
-		return false;
-	}
-
-	if (!(ctx->file = fopen(filename, "r")))
-	{
-		return false;
-	}
-
-	if (fstat(fileno(ctx->file), &fs) < 0)
+	if (!(ctx->file = fopen(filename, "r")) || fstat(fileno(ctx->file), &fs) < 0)
 	{
 		fclose(ctx->file);
 		return false;
@@ -188,7 +174,7 @@ _open_file(context_t *ctx, const context_t *ctx_parent, const char *filename)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_parse_file(context_t *ctx)
+_parse_file(struct context *ctx)
 {
 	while (!ctx->eof_reached)
 	{

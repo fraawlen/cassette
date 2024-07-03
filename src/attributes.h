@@ -20,20 +20,15 @@
 
 #pragma once
 
-#include <cassette/cobj.h>
-#include <stdbool.h>
+#if __GNUC__ > 4
+	#define NONNULL_RETURN __attribute__((returns_nonnull))
+	#define NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
+	#define PURE           __attribute__((pure))
+	#define CONST          __attribute__((const))
+#else
+	#define NONNULL_RETURN
+	#define NONNULL(...)
+	#define PURE
+	#define CONST
+#endif
 
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-struct ccfg
-{
-	cbook *params;
-	cbook *sequences; 
-	cbook *sources;
-	cdict *keys_params;
-	cdict *keys_sequences;
-	cdict *tokens;
-	enum ccfg_err err;
-};

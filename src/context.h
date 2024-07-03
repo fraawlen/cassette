@@ -28,21 +28,14 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
+#include "attributes.h"
 #include "token.h"
 
 /************************************************************************************************************/
+/* TYPES ****************************************************************************************************/
 /************************************************************************************************************/
-/************************************************************************************************************/
 
-#define CONTEXT_DICT_VARIABLE 0
-#define CONTEXT_DICT_SECTION  1
-#define CONTEXT_MAX_DEPTH     128
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-typedef struct context_t context_t;
-
-struct context_t
+struct context
 {
 	/* file data */
 
@@ -59,27 +52,51 @@ struct context_t
 
 	/* data storage */
 
-	cobj_book_t *params;
-	cobj_book_t *sequences;
-	cobj_book_t *variables;
-	cobj_book_t *iteration;
-	cobj_dictionary_t *ref_params;
-	cobj_dictionary_t *ref_sequences;
-	cobj_dictionary_t *ref_variables;
-	cobj_dictionary_t *tokens;
+	cbook *params;
+	cbook *sequences;
+	cbook *vars;
+	cbook *iteration;
+	cdict *keys_params;
+	cdict *keys_sequences;
+	cdict *keys_vars;
+	cdict *tokens;
 
 	/* misc */
 	
-	context_t *parent;
-	cobj_rand_t *rand;
+	struct context *parent;
+	crand *rand;
 };
+
+/************************************************************************************************************/
+/* GLOBALS **************************************************************************************************/
+/************************************************************************************************************/
+
+#define CONTEXT_DICT_VARIABLE 0
+#define CONTEXT_DICT_SECTION  1
+#define CONTEXT_MAX_DEPTH     128
+
+/************************************************************************************************************/
+/* PROCEDURES ***********************************************************************************************/
+/************************************************************************************************************/
+
+enum token
+context_get_token(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
+NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-token_kind_t context_get_token(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result);
+enum token
+context_get_token_numeral(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
+NONNULL(1);
 
-token_kind_t context_get_token_numeral(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result);
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-token_kind_t context_get_token_raw(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]);
+enum token
+context_get_token_raw(struct context *ctx, char token[static TOKEN_MAX_LEN])
+NONNULL(1);
 
-void context_goto_eol(context_t *ctx);
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+context_goto_eol(struct context *ctx)
+NONNULL(1);

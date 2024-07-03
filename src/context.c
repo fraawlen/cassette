@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "attributes.h"
 #include "context.h"
 #include "substitution.h"
 #include "token.h"
@@ -34,14 +35,14 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _read_word (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]);
+static bool _read_word (struct context *ctx, char token[static TOKEN_MAX_LEN]) NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
-token_kind_t
-context_get_token(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result)
+enum token
+context_get_token(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
 {
 	if (context_get_token_raw(ctx, token) == TOKEN_INVALID)
 	{
@@ -53,8 +54,8 @@ context_get_token(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-token_kind_t
-context_get_token_numeral(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result)
+enum token
+context_get_token_numeral(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
 {
 	bool err = false;
 
@@ -66,7 +67,7 @@ context_get_token_numeral(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]
 		case TOKEN_STRING:
 			if (token[0] == '#')
 			{
-				*math_result = cobj_color_get_argb_uint(cobj_color_convert_str(token, &err));
+				*math_result = ccolor_to_argb_uint(ccolor_from_str(token, &err));
 			}
 			else
 			{
@@ -85,16 +86,16 @@ context_get_token_numeral(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-token_kind_t
-context_get_token_raw(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES])
+enum token
+context_get_token_raw(struct context *ctx, char token[static TOKEN_MAX_LEN])
 {
-	if (cobj_book_increment_iterator(ctx->variables))
+	if (cbook_iterate(ctx->vars))
 	{
-		snprintf(token, CCFG_MAX_WORD_BYTES, "%s", cobj_book_get_iteration(ctx->variables));
+		snprintf(token, TOKEN_MAX_LEN, "%s", cbook_iteration(ctx->vars));
 	}
-	else if (cobj_book_increment_iterator(ctx->iteration))
+	else if (cbook_iterate(ctx->iteration))
 	{
-		snprintf(token, CCFG_MAX_WORD_BYTES, "%s", cobj_book_get_iteration(ctx->iteration));
+		snprintf(token, TOKEN_MAX_LEN, "%s", cbook_iteration(ctx->iteration));
 	}
 	else if (!_read_word(ctx, token))
 	{
@@ -107,7 +108,7 @@ context_get_token_raw(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES])
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-context_goto_eol(context_t *ctx)
+context_goto_eol(struct context *ctx)
 {
 	while (!ctx->eol_reached)
 	{
@@ -126,8 +127,8 @@ context_goto_eol(context_t *ctx)
 		}
 	}
 
-	cobj_book_lock_iterator(ctx->variables);
-	cobj_book_lock_iterator(ctx->iteration);
+	cbook_lock_iterator(ctx->vars);
+	cbook_lock_iterator(ctx->iteration);
 }
 
 /************************************************************************************************************/
@@ -135,7 +136,7 @@ context_goto_eol(context_t *ctx)
 /************************************************************************************************************/
 
 static bool
-_read_word(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES])
+_read_word(struct context *ctx, char token[static TOKEN_MAX_LEN])
 {
 	size_t i = 0;
 	bool quotes_1 = false;
@@ -206,7 +207,7 @@ exit_lead:
 
 			default:
 			char_add:
-				if (i < CCFG_MAX_WORD_BYTES - 1)
+				if (i < TOKEN_MAX_LEN - 1)
 				{
 					token[i++] = (char)c;
 				}

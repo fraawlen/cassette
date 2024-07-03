@@ -23,6 +23,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "attributes.h"
 #include "context.h"
 #include "file.h"
 #include "sequence.h"
@@ -32,43 +33,40 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define _MAX_ITER_INJECTIONS 32
+#define MAX_ITER_INJECTIONS 32
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _combine_var      (context_t *ctx, token_kind_t);
-static void _declare_enum     (context_t *ctx);
-static void _declare_resource (context_t *ctx, const char *namespace);
-static void _declare_variable (context_t *ctx);
-static void _include          (context_t *ctx);
-static void _iterate          (context_t *ctx, token_kind_t type);
-static void _print            (context_t *ctx);
-static void _section_add      (context_t *ctx);
-static void _section_begin    (context_t *ctx);
-static void _section_del      (context_t *ctx);
-static void _seed             (context_t *ctx);
+static void _combine_var      (struct context *ctx, enum token type)       NONNULL(1);
+static void _declare_enum     (struct context *ctx)                        NONNULL(1);
+static void _declare_resource (struct context *ctx, const char *namespace) NONNULL(1);
+static void _declare_variable (struct context *ctx)                        NONNULL(1);
+static void _include          (struct context *ctx)                        NONNULL(1);
+static void _iterate          (struct context *ctx, enum token type)       NONNULL(1);
+static void _print            (struct context *ctx)                        NONNULL(1);
+static void _section_add      (struct context *ctx)                        NONNULL(1);
+static void _section_begin    (struct context *ctx)                        NONNULL(1);
+static void _section_del      (struct context *ctx)                        NONNULL(1);
+static void _seed             (struct context *ctx)                        NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
 void
-sequence_parse(context_t *ctx)
+sequence_parse(struct context *ctx)
 {
-	token_kind_t type;
-
-	char token[CCFG_MAX_WORD_BYTES];
+	enum token type;
+	char token[TOKEN_MAX_LEN];
 
 	if (ctx->depth >= CONTEXT_MAX_DEPTH)
 	{
 		return;
 	}
-	else
-	{
-		ctx->depth++;
-	}
+	
+	ctx->depth++;
 
 	if ((type = context_get_token(ctx, token, NULL)) != TOKEN_SECTION_BEGIN && ctx->skip_sequences)
 	{
@@ -140,36 +138,31 @@ sequence_parse(context_t *ctx)
 /************************************************************************************************************/
 
 static void
-_combine_var(context_t *ctx, token_kind_t type)
+_combine_var(struct context *ctx, enum token type)
 {
-	cobj_book_group_mode_t mode = COBJ_BOOK_NEW_GROUP;
-	cobj_string_t *val;
+	cstr *val;
+	enum cbook_group group = CBOOK_NEW;
+	char name[TOKEN_MAX_LEN];
+	char token_1[TOKEN_MAX_LEN];
+	char token_2[TOKEN_MAX_LEN];
+	size_t i;
+	size_t j;
 
-	char name[CCFG_MAX_WORD_BYTES];
-	char token_1[CCFG_MAX_WORD_BYTES];
-	char token_2[CCFG_MAX_WORD_BYTES];
-	size_t i_var_1;
-	size_t i_var_2;
+	val = cstr_create();
 
-	val = cobj_string_create();
+	/* get vars */
 
-	/* get variables */
-
-	if (context_get_token(ctx, name,    NULL) == TOKEN_INVALID ||
-	    context_get_token(ctx, token_1, NULL) == TOKEN_INVALID ||
-	    context_get_token(ctx, token_2, NULL) == TOKEN_INVALID)
-	{
-		return;
-	}
-
-	if (!cobj_dictionary_find(ctx->ref_variables, token_1, CONTEXT_DICT_VARIABLE, &i_var_1))
+	if (context_get_token(ctx, name,    NULL) == TOKEN_INVALID
+	 || context_get_token(ctx, token_1, NULL) == TOKEN_INVALID
+	 || context_get_token(ctx, token_2, NULL) == TOKEN_INVALID
+	 || !cdict_find(ctx->keys_vars, token_1, CONTEXT_DICT_VARIABLE, &i))
 	{
 		return;
 	}
 
 	if (type == TOKEN_VAR_MERGE)
 	{
-		if (!cobj_dictionary_find(ctx->ref_variables, token_2, CONTEXT_DICT_VARIABLE, &i_var_2))
+		if (!cdict_find(ctx->keys_vars, token_2, CONTEXT_DICT_VARIABLE, &j))
 		{
 			return;
 		}
@@ -177,92 +170,89 @@ _combine_var(context_t *ctx, token_kind_t type)
 
 	/* generate new values and write them into the variable book */
 
-	for (size_t i = 0; i < cobj_book_get_group_size(ctx->variables, i_var_1); i++)
+	for (size_t k = 0; k < cbook_group_length(ctx->vars, i); k++)
 	{
-		cobj_string_set_raw(val, cobj_book_get_word(ctx->variables, i_var_1, i));
+		cstr_clear(val);
+		cstr_append(val, cbook_word_in_group(ctx->vars, i, k));
 		switch (type)
 		{
 			case TOKEN_VAR_APPEND:
-				cobj_string_append_raw(val, token_2);
+				cstr_append(val, token_2);
 				break;
 
 			case TOKEN_VAR_PREPEND:
-				cobj_string_prepend_raw(val, token_2);
+				cstr_prepend(val, token_2);
 				break;
 
 			case TOKEN_VAR_MERGE:
-				cobj_string_append_raw(val, cobj_book_get_word(ctx->variables, i_var_2, i));
+				cstr_append(val, cbook_word_in_group(ctx->vars, j, k));
 				break;
 
 			default:
 				break;
 		}
 
-		cobj_book_write_new_word(ctx->variables, cobj_string_get_chars(val), mode);
-		mode = COBJ_BOOK_OLD_GROUP;
+		cbook_write(ctx->vars, cstr_chars(val), group);
+		group = CBOOK_OLD;
 	}
 
-	if (cobj_book_has_failed(ctx->variables) || cobj_string_has_failed(val))
+	if (cbook_error(ctx->vars) || cstr_error(val))
 	{
-		cobj_string_destroy(&val);
+		cstr_destroy(val);
 		return;
 	}
 
-	/* update variable's reference in the variable dictionary */
+	/* update variable's reference in the variable dict */
 
-	cobj_dictionary_write(
-		ctx->ref_variables,
-		name,
-		CONTEXT_DICT_VARIABLE,
-		cobj_book_get_number_groups(ctx->variables) - 1);
+	cdict_write(ctx->keys_vars, name, CONTEXT_DICT_VARIABLE, cbook_groups_number(ctx->vars) - 1);
 
-	cobj_string_destroy(&val);
+	cstr_destroy(val);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_declare_enum(context_t *ctx)
+_declare_enum(struct context *ctx)
 {
-	cobj_book_group_mode_t mode = COBJ_BOOK_NEW_GROUP;
-
-	char name[CCFG_MAX_WORD_BYTES];
-	char token[CCFG_MAX_WORD_BYTES];
-	char *tmp;
+	enum cbook_group group = CBOOK_NEW;
+	char name[TOKEN_MAX_LEN];
+	char token[TOKEN_MAX_LEN];
 	double min;
 	double max;
 	double steps;
 	double precision;
 	double ratio;
+	int n = 0;
 
-	/* get enum name and parameters */
+	/* get enum name and params, set defaults on missing params */
 
-	if (context_get_token(ctx, name, NULL) == TOKEN_INVALID)
+	n += context_get_token        (ctx, name,  NULL)       != TOKEN_INVALID ? 1 : 0;
+	n += context_get_token_numeral(ctx, token, &min)       != TOKEN_INVALID ? 1 : 0;
+	n += context_get_token_numeral(ctx, token, &max)       != TOKEN_INVALID ? 1 : 0;
+	n += context_get_token_numeral(ctx, token, &steps)     != TOKEN_INVALID ? 1 : 0;
+	n += context_get_token_numeral(ctx, token, &precision) != TOKEN_INVALID ? 1 : 0;
+
+	switch (n)
 	{
-		return;
-	}
+		case 0:
+		case 1:
+			return;
 
-	if (context_get_token_numeral(ctx, token, &min) == TOKEN_INVALID)
-	{
-		return;
-	}
+		case 2:
+			max = min;
+			min = 0.0;
+			/* fallthrough */
 
-	if (context_get_token_numeral(ctx, token, &max) == TOKEN_INVALID)
-	{
-		max = min;
-		min = 0.0;
-	}
+		case 3:
+			steps = max - min;
+			/* fallthrough */
 
-	util_sort_pair(&min, &max);
+		case 4:
+			precision = 0.0;
+			/* fallthrough */
 
-	if (context_get_token_numeral(ctx, token, &steps) == TOKEN_INVALID)
-	{
-		steps = max - min;
-	}
-
-	if (context_get_token_numeral(ctx, token, &precision) == TOKEN_INVALID)
-	{
-		precision = 0.0;
+		default:
+			break;
 	}
 
 	if (steps < 1.0 || steps >= SIZE_MAX || precision < 0.0)
@@ -277,41 +267,36 @@ _declare_enum(context_t *ctx)
 	
 	/* generate enum values and write them into the variable book */
 
+
 	for (size_t i = 0; i <= steps; i++)
 	{
-		if ((tmp = cobj_book_prepare_new_word(ctx->variables, mode)))
-		{
-			mode  = COBJ_BOOK_OLD_GROUP;
-			ratio = util_interpolate(min, max, i / steps);
-			snprintf(tmp, CCFG_MAX_WORD_BYTES, "%.*f", (int)precision, ratio);
-		}
+		ratio = util_interpolate(min, max, i / steps);
+		snprintf(token, TOKEN_MAX_LEN, "%.*f", (int)precision, ratio);
+		cbook_write(ctx->vars, token, group);
+		group = CBOOK_OLD;
 	}
 
-	if (cobj_book_has_failed(ctx->variables))
+	if (cbook_error(ctx->vars))
 	{
 		return;
 	}
 
-	/* update variable's reference in the variable dictionary */
+	/* update variable's reference in the variable dict */
 
-	cobj_dictionary_write(
-		ctx->ref_variables,
-		name,
-		CONTEXT_DICT_VARIABLE,
-		cobj_book_get_number_groups(ctx->variables) - 1);
+	cdict_write(ctx->keys_vars, name, CONTEXT_DICT_VARIABLE, cbook_groups_number(ctx->vars) - 1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_declare_resource(context_t *ctx, const char *namespace)
+_declare_resource(struct context *ctx, const char *namespace)
 {
-	cobj_book_group_mode_t mode = COBJ_BOOK_NEW_GROUP;
+	enum cbook_group group = CBOOK_NEW;
 
+	char name[TOKEN_MAX_LEN];
+	char value[TOKEN_MAX_LEN];
+	size_t i;
 	size_t n = 0;
-	size_t m;
-	char  name[CCFG_MAX_WORD_BYTES];
-	char *tmp;
 
 	/* get resource's name */
 
@@ -320,48 +305,44 @@ _declare_resource(context_t *ctx, const char *namespace)
 		return;
 	}
 
-	/* write resource's values into the variable book */
+	/* write resource's values into the sequence book */
 
-	while ((tmp = cobj_book_prepare_new_word(ctx->sequences, mode)))
+	while (context_get_token(ctx, value, NULL) != TOKEN_INVALID)
 	{
-		if (context_get_token(ctx, tmp, NULL) == TOKEN_INVALID)
-		{
-			cobj_book_erase_last_word(ctx->sequences);
-			break;
-		}
-		mode = COBJ_BOOK_OLD_GROUP;
+		cbook_write(ctx->sequences, value, group);
+		group = CBOOK_OLD;
 		n++;
 	}
 
-	if (n == 0 || cobj_book_has_failed(ctx->sequences))
+	if (n == 0 || cbook_error(ctx->sequences))
 	{
 		return;
 	}
 
-	/* find namespace reference in sequence dictionary. if not found, create it */
+	/* find namespace reference in sequence dict. if not found, create it */
 
-	if (!cobj_dictionary_find(ctx->ref_sequences, namespace, 0, &m))
+	if (!cdict_find(ctx->keys_sequences, namespace, 0, &i))
 	{
-		m = cobj_book_get_number_groups(ctx->sequences);
-		cobj_dictionary_write(ctx->ref_sequences, namespace, 0, m);
+		i = cbook_groups_number(ctx->sequences);
+		cdict_write(ctx->keys_sequences, namespace, 0, i);
 	}
 
-	/* update variable's reference in the variable dictionary   */
-	/* use the namespace's dict value as sequence group (m > 0) */
+	/* update variable's reference in the variable dict         */
+	/* use the namespace's dict value as sequence group (i > 0) */
 
-	cobj_dictionary_write(ctx->ref_sequences, name, m, cobj_book_get_number_groups(ctx->sequences) - 1);
+	cdict_write(ctx->keys_sequences, name, i, cbook_groups_number(ctx->sequences) - 1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_declare_variable(context_t *ctx)
+_declare_variable(struct context *ctx)
 {
-	cobj_book_group_mode_t mode = COBJ_BOOK_NEW_GROUP;
+	enum cbook_group group = CBOOK_NEW;
 
+	char name[TOKEN_MAX_LEN];
+	char value[TOKEN_MAX_LEN];
 	size_t n = 0;
-	char  name[CCFG_MAX_WORD_BYTES];
-	char *tmp;
 
 	/* get variable's name */
 
@@ -372,66 +353,64 @@ _declare_variable(context_t *ctx)
 
 	/* write variable's values into the variable book */
 
-	while ((tmp = cobj_book_prepare_new_word(ctx->variables, mode)))
+	while (context_get_token(ctx, value, NULL) != TOKEN_INVALID)
 	{
-		if (context_get_token(ctx, tmp, NULL) == TOKEN_INVALID)
-		{
-			cobj_book_erase_last_word(ctx->variables);
-			break;
-		}
-		mode = COBJ_BOOK_OLD_GROUP;
+		cbook_write(ctx->vars, value, group);
+		group = CBOOK_OLD;
 		n++;
 	}
 
-	if (n == 0 || cobj_book_has_failed(ctx->variables))
+	if (n == 0 || cbook_error(ctx->sequences))
 	{
 		return;
 	}
 
-	/* update variable's reference in the variable dictionary */
+	/* update variable's reference in the variable dict */
 
-	cobj_dictionary_write(
-		ctx->ref_variables,
-		name,
-		CONTEXT_DICT_VARIABLE,
-		cobj_book_get_number_groups(ctx->variables) - 1);
+	cdict_write(ctx->keys_vars, name, CONTEXT_DICT_VARIABLE, cbook_groups_number(ctx->vars) - 1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_include(context_t *ctx)
+_include(struct context *ctx)
 {
-	cobj_string_t *filename;
+	char token[TOKEN_MAX_LEN];
 
-	char token[CCFG_MAX_WORD_BYTES];
+	cstr *filename;
 
-	filename = cobj_string_create();
+	filename = cstr_create();
 
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
 		if (token[0] != '/')
 		{
-			cobj_string_set_raw(filename, ctx->file_dir);
-			cobj_string_append_raw(filename, "/");
-			cobj_string_append_raw(filename, token);
-			file_parse_child(ctx, cobj_string_get_chars(filename));
-		} else {	
+			cstr_append(filename, ctx->file_dir);
+			cstr_append(filename, "/");
+			cstr_append(filename, token);
+			file_parse_child(ctx, cstr_chars(filename));
+		}
+		else
+		{	
 			file_parse_child(ctx, token);
 		}
 	}
 
-	cobj_string_destroy(&filename);
+	cstr_destroy(filename);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_iterate(context_t *ctx, token_kind_t type)
+_iterate(struct context *ctx, enum token type)
 {
-	cobj_book_t *iteration;
+	(void)ctx;
+	(void)type;
 
-	char token[CCFG_MAX_WORD_BYTES];
+	/*
+	cbook_t *iteration;
+
+	char token[TOKEN_MAX_LEN];
 	char *tmp;
 	bool raw;
 	size_t inject[_MAX_ITER_INJECTIONS];
@@ -442,23 +421,19 @@ _iterate(context_t *ctx, token_kind_t type)
 
 	raw          = type == TOKEN_ITERATE_RAW;
 	n_inject_max = raw ? 1 : _MAX_ITER_INJECTIONS;
-	iteration    = cobj_book_create(10, CCFG_MAX_WORD_BYTES);
+	iteration    = cbook_create();
 
-	/* grab variable to iterate through */
+	* grab variable to iterate through *
 
-	if (context_get_token(ctx, token, NULL) == TOKEN_INVALID)
+	if (context_get_token(ctx, token, NULL) == TOKEN_INVALID
+	 || !cdict_find(ctx->keys_vars, token, CONTEXT_DICT_VARIABLE, &i_var))
 	{
 		return;
 	}
 
-	if (!cobj_dictionary_find(ctx->ref_variables, token, CONTEXT_DICT_VARIABLE, &i_var))
-	{
-		return;
-	}
+	* fill the book with the sequence to iterate and keep the location of iteration variable injections *
 
-	/* fill the book with the sequence to iterate and keep the location of iteration variable injections */
-
-	while ((tmp = cobj_book_prepare_new_word(iteration, COBJ_BOOK_OLD_GROUP)))
+	while ((tmp = cbook_prepare_new_word(iteration, COBJ_BOOK_OLD_GROUP)))
 	{
 		if (raw)
 		{
@@ -471,7 +446,7 @@ _iterate(context_t *ctx, token_kind_t type)
 
 		if (type == TOKEN_INVALID)
 		{
-			cobj_book_erase_last_word(iteration);
+			cbook_erase_last_word(iteration);
 			break;
 		}
 		else if (n_inject < n_inject_max)
@@ -491,37 +466,38 @@ _iterate(context_t *ctx, token_kind_t type)
 		return;
 	}
 
-	/* process each iteration */
+	* process each iteration *
 
-	for (i = 0; i < cobj_book_get_group_size(ctx->variables, i_var); i++)
+	for (i = 0; i < cbook_get_group_size(ctx->vars, i_var); i++)
 	{
 		for (size_t j = 0; j < n_inject; j++)
 		{
-			cobj_book_rewrite_word(
+			cbook_rewrite_word(
 				iteration,
-				cobj_book_get_word(ctx->variables, i_var, i),
+				cbook_get_word(ctx->vars, i_var, i),
 				0,
 				inject[j]);
 		}
 
-		cobj_book_reset_iterator(iteration, 0);
+		cbook_reset_iterator(iteration, 0);
 
 		ctx->iteration = iteration;
 		sequence_parse(ctx);
 	}
 
-	/* end */
+	* end *
 	
-	cobj_book_destroy(&iteration);
-	ctx->iteration = cobj_book_get_placeholder();
+	cbook_destroy(&iteration);
+	ctx->iteration = cbook_get_placeholder();
+	*/
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_print(context_t *ctx)
+_print(struct context *ctx)
 {
-	char token[CCFG_MAX_WORD_BYTES];
+	char token[TOKEN_MAX_LEN];
 	
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
@@ -534,26 +510,26 @@ _print(context_t *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_section_add(context_t *ctx)
+_section_add(struct context *ctx)
 {
-	char token[CCFG_MAX_WORD_BYTES];
+	char token[TOKEN_MAX_LEN];
 
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
-		cobj_dictionary_write(ctx->ref_variables, token, CONTEXT_DICT_SECTION, 0);
+		cdict_write(ctx->keys_vars, token, CONTEXT_DICT_SECTION, 0);
 	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_section_begin(context_t *ctx)
+_section_begin(struct context *ctx)
 {
-	char token[CCFG_MAX_WORD_BYTES];
+	char token[TOKEN_MAX_LEN];
 
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
-		if (!cobj_dictionary_find(ctx->ref_variables, token, CONTEXT_DICT_SECTION, NULL))
+		if (!cdict_find(ctx->keys_vars, token, CONTEXT_DICT_SECTION, NULL))
 		{
 			ctx->skip_sequences = true;
 			return;
@@ -566,26 +542,26 @@ _section_begin(context_t *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_section_del(context_t *ctx)
+_section_del(struct context *ctx)
 {
-	char token[CCFG_MAX_WORD_BYTES];
+	char token[TOKEN_MAX_LEN];
 
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
-		cobj_dictionary_erase(ctx->ref_variables, token, CONTEXT_DICT_SECTION);
+		cdict_erase(ctx->keys_vars, token, CONTEXT_DICT_SECTION);
 	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_seed(context_t *ctx)
+_seed(struct context *ctx)
 {
-	char token[CCFG_MAX_WORD_BYTES];
+	char token[TOKEN_MAX_LEN];
 	double d;
 	
 	if (context_get_token_numeral(ctx, token, &d) != TOKEN_INVALID)
 	{
-		cobj_rand_seed(ctx->rand, d);
+		crand_seed(ctx->rand, d);
 	}
 }

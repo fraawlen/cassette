@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Configuration (CCFG) library.
+ * This file is part of the Cassette Config (CCFG) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -23,208 +23,297 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#if __GNUC__ > 4
+	#define CCFG_NONNULL_RETURN __attribute__((returns_nonnull))
+	#define CCFG_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
+	#define CCFG_PURE           __attribute__((pure))
+#else
+	#define CCFG_NONNULL_RETURN
+	#define CCFG_NONNULL(...)
+	#define CCFG_PURE
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /************************************************************************************************************/
+/* TYPES ****************************************************************************************************/
 /************************************************************************************************************/
-/************************************************************************************************************/
-
-#define CCFG_MAX_WORD_BYTES 32
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Opaque configuration instance object that holds all parsed resources.
- * This object holds an internal fail state boolean that can be checked with ccfg_has_failed(). If it happens
- * to be put in a failure state due to a memory failure, any function that take this object as argument will
- * exit early with no side effects and return default values. The only 2 functions that are an exception to
- * this rule are ccfg_destroy() and ccfg_has_failed().
+ * This object holds an internal error bitfield that can be checked with ccfg_error(). Some functions, upon
+ * failure, can trigger specific error bits and will exit early without side effects. If the error bitfield is
+ * set to anything else than CCFG_OK, any function that takes this object as an argument will return early
+ * with no side effects and default return values. It is possible to repair the object to get rid of errors.
+ * See ccfg_repair() for more details. 
  */
-typedef struct ccfg_t ccfg_t;
+typedef struct ccfg ccfg;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Allocates memory and initializes a CCFG configuration instance.
- * This function always returns a valid and safe-to-use or destroy object instance. Even in the case of memory
- * allocation failure, the returned value points to an internal static Configuration instance set in a failed
- * state. Therefore, checking for a NULL returned value is useless, instead, use ccfg_has_failed(). Never 
- * free() an object obtained with this function, instead use ccfg_destroy().
- *
- * @return Created config instance object
+ * Error types.
  */
-ccfg_t *ccfg_create(void);
+enum ccfg_err
+{
+	CCFG_OK       = 0,
+	CCFG_INVALID  = 1,
+	CCFG_OVERFLOW = 1 << 1,
+	CCFG_MEMORY   = 1 << 2,
+};
+
+/************************************************************************************************************/
+/* GLOBALS **************************************************************************************************/
+/************************************************************************************************************/
 
 /**
- * Gets a valid pointer to an internal configuration instance set in a failed state. To be used to avoid
- * leaving around uninitialised configuration instance pointers. Never free() an object obtained with this
- * function, instead use ccfg_destroy().
- *
- * @return Placeholder config instance object
+ * A macro that gives uninitialized config objects a non-NULL value that is safe to use with the config's
+ * related functions. However, any function called with a handle set to this value will return early without
+ * any side effects.
  */
-ccfg_t *ccfg_get_placeholder(void);
-
-/**
- * Destroy a given instance and free allocated memory. The pointed value is then replaced by a placeholder
- * value that points to an internal static configuration instance set in a failed state to avoid leaving
- * behind a dangling pointer. Hence, it is safe to call this function multiple times.
- *
- * @param cfg Configuration instance to interact with
- */
-void ccfg_destroy(ccfg_t **cfg);
+#define CCFG_PLACEHOLDER &ccfg_placeholder_instance
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Clears the list of callback functions that were added with ccfg_push_callback().
- *
- * @param cfg Configuration instance to interact with
+ * Global string object instance with the error state set to CCFG_INVALID. This instance is only made
+ * available to allow the static initialization of string object pointers with the macro CCFG_PLACEHOLDER.
  */
-void ccfg_clear_callbacks(ccfg_t *cfg);
+extern ccfg ccfg_placeholder_instance;
+
+/************************************************************************************************************/
+/* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
+/************************************************************************************************************/
 
 /**
- * Clears the list of added parameters that were added with ccfg_push_parameter_*().
+ * Creates a config instance and deep copy the contents of another config instance into it.
  *
- * @param cfg Configuration instance to interact with
+ * @return     : Created config instance
+ * @return_err : CCFG_PLACEHOLDER
  */
-void ccfg_clear_parameters(ccfg_t *cfg);
+ccfg *
+ccfg_clone(ccfg *cfg)
+CCFG_NONNULL_RETURN
+CCFG_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Clears the list of source files that were added with ccfg_push_source().
+ * Creates an empty config instance.
  *
- * @param cfg Configuration instance to interact with
+ * @return     : Created config instance
+ * @return_err : CCFG_PLACEHOLDER
  */
-void ccfg_clear_sources(ccfg_t *cfg);
+ccfg *
+ccfg_create(void)
+CCFG_NONNULL_RETURN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Looks-up a resource by its namespace and property name. If found, its reference is kept around and the
- * resource values will become accessible through ccfg_pick_next_value() and ccfg_get_value().
- * functions. Empty or null namespaces or properties are not valid and will make the function return without
- * doing anything.
+ * Destroys the given config and frees memory.
  *
- * @param cfg Configuration instance to interact with
- * @param namespace Resource's namespace
- * @param property Resource property name
- *
- * @return True if found, false otherwhise
+ * @param cfg : Config instance to interact with
  */
-bool ccfg_fetch(ccfg_t *cfg, const char *namespace, const char *property);
+void
+ccfg_destroy(ccfg *cfg)
+CCFG_NONNULL(1);
+
+/************************************************************************************************************/
+/* PROCEDURES ***********************************************************************************************/
+/************************************************************************************************************/
 
 /**
- * Reads the first source file that can be opened, parses it, and stores the resolved resources. Once done,
- * callback functions that were added with ccfg_push_callback() will be called successively in the order
- * they were added. Every time this function is called the saved resources will be cleared first before
- * reading the source. The return value will be set to false if the root source file cannot be opened or if
- * the configuration object has been put in a failure state. Note that if the load fails because no source
- * file could not be opened, the configuration object is not put in a failure state.
- *
- * @param cfg Configuration instance to interact with
- *
- * @return Load success
+ * Convenience generic wrapper for parameter types.
  */
-bool ccfg_load(ccfg_t *cfg);
+#define cstr_push_param(DST, SRC) \
+	_Generic (SRC, \
+		char *       : ccfg_push_param_str,    \
+		const char * : ccfg_push_param_str,    \
+		float        : ccfg_push_param_double, \
+		double       : ccfg_push_param_double, \
+		default      : ccfg_push_param_long    \
+	)(DST, SRC, 0)
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Initially, after a resource has been fetched, its values are not directly accessible by the getter
- * functions. This function will need to be called first at least once. Each subsequent call to this function
- * will move an internal iterator forward to the next resource value. Until the last value is reached after
- * which this function has no more effect and returns false. Said cursor is reset every time a resource is
- * fetched. Because the conversion functions only access one value at a time, use this function to iterate
- * through them. If this function is called before a resource has been successfully pre-fetched, it will have
- * no effect and return false.
  *
- * @param cfg Configuration instance to interact with
+ * @param cfg : Config instance to interact with
+ */
+void
+ccfg_clear_resources(ccfg *cfg)
+CCFG_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ * @param cfg : Config instance to interact with
+ */
+void
+ccfg_clear_params(ccfg *cfg)
+CCFG_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ * @param cfg : Config instance to interact with
+ */
+void
+ccfg_clear_sources(ccfg *cfg)
+CCFG_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ * @param cfg       : Config instance to interact with
+ * @param namespace : Resource namespace
+ * @param property  : Resource property name
+ *
+ * @return : True if found, false otherwhise
+ */
+void
+ccfg_fetch(ccfg *cfg, const char *namespace, const char *property)
+CCFG_NONNULL(1, 2, 3);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ * @param cfg Config instance to interact with
  *
  * @return True is the next value could be picked, false otherwhise.
  */
-bool ccfg_pick_next_value(ccfg_t *cfg);
-
-/**
- * Adds a function to call every time the given configuration object is done loading a source file. The
- * callback parameter load_success is set to the value of the return of ccfg_load(). The ref parameter
- * here is a pointer of arbitrary value. That same value will be passed down to the callback's ref parameter
- * with no side effects. It is therefore the responsibility of the caller to ensure that the ref's value is
- * valid when the callback is triggered.
- *
- * @param cfg Configuration instance to interact with
- * @param fn Callback function
- * @param ref Abitrary pointer value to pass to callback
- */
-void ccfg_push_callback(ccfg_t *cfg, void (*fn)(ccfg_t *cfg, bool load_success, void *ref), void *ref);
-
-/**
- * Adds a configuration parameter in C-string format whose value can be accessed and used from a configuration
- * source file. Unlike user-defined variables, only one value per parameter can be defined.
- *
- * @param cfg Configuration instance to interact with
- * @param name Name of the parameter to use in the source configuration
- * @param value Parameter's value
- */
-void ccfg_push_parameter(ccfg_t *cfg, const char *name, const char *value);
-
-/**
- * Adds a source file to potentially parse. Only the first added source that can be opened will be parsed,
- * the remaining sources act as fallback.
- *
- * @param cfg Configuration instance to interact with
- * @param filename Full path to the source file
- */
-void ccfg_push_source(ccfg_t *cfg, const char *filename);
-
-/**
- * Seeds an internal random function that affects the output of random tokens. The seed only affects the
- * given object's instance, meaning multiple configuration objects can co-exist with different seeds.
- *
- * @param cfg Configuration instance to interact with
- * @param seed Seed value
- */
-void ccfg_seed(ccfg_t *cfg, unsigned long long seed);
+bool
+ccfg_iterate(ccfg *cfg)
+CCFG_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Gets the number of values the last fetched resource has.
- * If the no resource is pre-fetched, or if the configuration object is in an error state, 0 is returned.
  *
- * @param cfg Configuration instance to interact with
+ * @param cfg : Config instance to interact with
  *
- * @return Number of values that can be iterated through
+ * @return : Load success
  */
-size_t ccfg_get_fetch_size(const ccfg_t *cfg);
+bool
+ccfg_load(ccfg *cfg)
+CCFG_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Accesses a single value of a pre-fetched resource and returns it as a string. This function never returns
- * NULL. Instead, if cgui_fetch() and cgui_pick_next_value() weren't called beforehand, an empty string
- * consisting of a single '\0' character is returned instead.
  *
- * @param cfg Configuration instance to interact with
- *
- * @return Converted value
+ * @param cfg  : Config instance to interact with
+ * @param name : Name of the parameter to use in the source configuration
+ * @param d    : Value
  */
-const char *ccfg_get_value(const ccfg_t *cfg);
+void
+ccfg_push_param_double(ccfg *cfg, const char *name, double d)
+CCFG_NONNULL(1, 2);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Checks if the configuration is in a failure state due to memory issues.
  *
- * @param cfg Configuration instance to interact with
- *
- * @return Configuration instance error state
+ * @param cfg  : Config instance to interact with
+ * @param name : Name of the parameter to use in the source configuration
+ * @param l    : Value
  */
-bool ccfg_has_failed(const ccfg_t *cfg);
+void
+ccfg_push_param_long(ccfg *cfg, const char *name, long long l)
+CCFG_NONNULL(1, 2);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Checks which source file will be opened and read through.
- * This function always returns a non-null string pointer. If no source file can be opened, none were added
- * with ccfg_push_source() or the config object has failed an empty null-terminated string is returned
- * instead.
  *
- * @param cfg Configuration instance to interact with
- *
- * @return First source file that can be opened
+ * @param cfg  : Config instance to interact with
+ * @param name : Name of the parameter to use in the source configuration
+ * @param str  : Value
  */
-const char *ccfg_test_sources(const ccfg_t *cfg);
+void
+ccfg_push_param_str(ccfg *cfg, const char *name, const char *str)
+CCFG_NONNULL(1, 2, 3);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ * @param cfg      : Config instance to interact with
+ * @param filename : Full path to the source file
+ */
+void
+ccfg_push_source(ccfg *cfg, const char *filename)
+CCFG_NONNULL(1, 2);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ */
+void
+ccfg_repair(ccfg *cfg)
+CCFG_NONNULL(1);
+
+/************************************************************************************************************/
+/* FUNCTIONS ************************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ *
+ * @param cfg : Config instance to interact with
+ *
+ * @return : 
+ */
+bool
+ccfg_can_open_sources(const ccfg *cfg, size_t *index, const char **filename)
+CCFG_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ * @param cfg : Config instance to interact with
+ *
+ * @return : Config instance error state
+ */
+enum ccfg_err
+ccfg_error(const ccfg *cfg)
+CCFG_NONNULL(1)
+CCFG_PURE;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ * @param cfg : Config instance to interact with
+ *
+ * @return : Number of values that can be iterated through
+ */
+size_t
+ccfg_resources_number(const ccfg *cfg)
+CCFG_NONNULL(1)
+CCFG_PURE;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ * @param cfg : Config instance to interact with
+ *
+ * @return : Converted value
+ */
+const char *
+ccfg_resource(const ccfg *cfg)
+CCFG_NONNULL_RETURN
+CCFG_NONNULL(1)
+CCFG_PURE;
 
 /************************************************************************************************************/
 /************************************************************************************************************/

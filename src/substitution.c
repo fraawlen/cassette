@@ -26,6 +26,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "attributes.h"
 #include "context.h"
 #include "token.h"
 #include "util.h"
@@ -34,34 +35,32 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static token_kind_t _comment  (void);
-static token_kind_t _eof      (context_t *ctx);
-static token_kind_t _escape   (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]);
-static token_kind_t _filler   (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result);
-static token_kind_t _if       (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result, token_kind_t type);
-static token_kind_t _join     (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]);
-static token_kind_t _math     (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result, token_kind_t type, size_t n);
-static token_kind_t _math_cl  (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result, token_kind_t type, size_t n);
-static token_kind_t _param    (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES]);
-static token_kind_t _variable (context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result);
+static enum token _comment  (void);
+static enum token _eof      (struct context *ctx)                                                                                   NONNULL(1);
+static enum token _escape   (struct context *ctx, char token[static TOKEN_MAX_LEN])                                                 NONNULL(1);
+static enum token _filler   (struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)                            NONNULL(1);
+static enum token _if       (struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type)           NONNULL(1);
+static enum token _join     (struct context *ctx, char token[static TOKEN_MAX_LEN])                                                 NONNULL(1);
+static enum token _math     (struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type, size_t n) NONNULL(1);
+static enum token _math_cl  (struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type, size_t n) NONNULL(1);
+static enum token _param    (struct context *ctx, char token[static TOKEN_MAX_LEN])                                                 NONNULL(1);
+static enum token _variable (struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)                            NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
-token_kind_t
-substitution_apply(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result)
+enum token
+substitution_apply(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
 {
-	token_kind_t type;
+	enum token type;
 
 	if (ctx->depth >= CONTEXT_MAX_DEPTH)
 	{
 		return TOKEN_INVALID;
 	}
-	else
-	{
-		ctx->depth++;
-	}
+	
+	ctx->depth++;
 	
 	switch (type = token_match(ctx->tokens, token))
 	{
@@ -169,7 +168,7 @@ substitution_apply(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], doubl
 /* _ ********************************************************************************************************/
 /************************************************************************************************************/
 
-static token_kind_t
+static enum token
 _comment(void)
 {
 	return TOKEN_INVALID;
@@ -177,8 +176,8 @@ _comment(void)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static token_kind_t
-_eof(context_t *ctx)
+static enum token
+_eof(struct context *ctx)
 {
 	ctx->eof_reached = true;
 	ctx->eol_reached = true;
@@ -188,8 +187,8 @@ _eof(context_t *ctx)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static token_kind_t
-_escape(context_t *ctx, char token[CCFG_MAX_WORD_BYTES])
+static enum token
+_escape(struct context *ctx, char token[TOKEN_MAX_LEN])
 {
 	ctx->eol_reached = false;
 
@@ -198,18 +197,18 @@ _escape(context_t *ctx, char token[CCFG_MAX_WORD_BYTES])
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static token_kind_t
-_filler(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result)
+static enum token
+_filler(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
 {
 	return context_get_token(ctx, token, math_result);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static token_kind_t
-_if(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result, token_kind_t type)
+static enum token
+_if(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type)
 {
-	char token_2[CCFG_MAX_WORD_BYTES];
+	char token_2[TOKEN_MAX_LEN];
 	bool result;
 	double a;
 	double b;
@@ -275,19 +274,15 @@ _if(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result,
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static token_kind_t
-_join(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES])
+static enum token
+_join(struct context *ctx, char token[static TOKEN_MAX_LEN])
 {
-	char token_a[CCFG_MAX_WORD_BYTES];
-	char token_b[CCFG_MAX_WORD_BYTES];
+	char token_a[TOKEN_MAX_LEN];
+	char token_b[TOKEN_MAX_LEN];
 
-	if (context_get_token(ctx, token_a, NULL) == TOKEN_INVALID ||
-	    context_get_token(ctx, token_b, NULL) == TOKEN_INVALID)
-	{
-		return TOKEN_INVALID;
-	}
-
-	if (snprintf(token, CCFG_MAX_WORD_BYTES, "%s%s", token_a, token_b) < 0)
+	if (context_get_token(ctx, token_a, NULL) == TOKEN_INVALID
+	 || context_get_token(ctx, token_b, NULL) == TOKEN_INVALID
+	 || snprintf(token, TOKEN_MAX_LEN, "%s%s", token_a, token_b) < 0)
 	{
 		return TOKEN_INVALID;
 	}
@@ -297,8 +292,8 @@ _join(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES])
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static token_kind_t
-_math(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result, token_kind_t type, size_t n)
+static enum token
+_math(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type, size_t n)
 {
 	double result;
 	double d[3] = {0};
@@ -440,7 +435,7 @@ _math(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_resul
 			break;
 
 		case TOKEN_OP_RANDOM:
-			result = cobj_rand_get(ctx->rand, d[0], d[1]);
+			result = crand_get(ctx->rand, d[0], d[1]);
 			break;
 
 		/* 3 parameters */
@@ -467,7 +462,7 @@ _math(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_resul
 	}
 	else
 	{
-		snprintf(token, CCFG_MAX_WORD_BYTES, "%.8f", result);
+		snprintf(token, TOKEN_MAX_LEN, "%.8f", result);
 	}
 
 	return TOKEN_NUMBER;
@@ -475,11 +470,11 @@ _math(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_resul
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static token_kind_t
-_math_cl(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result, token_kind_t type, size_t n)
+static enum token
+_math_cl(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type, size_t n)
 {
-	cobj_color_t result;
-	cobj_color_t cl[4] = {0};
+	struct ccolor result;
+	struct ccolor cl[4] = {0};
 
 	double d[4] = {0};
 
@@ -491,7 +486,7 @@ _math_cl(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_re
 		{
 			return TOKEN_INVALID;
 		}
-		cl[i] = cobj_color_convert_argb_uint(d[i]);
+		cl[i] = ccolor_from_argb_uint(d[i]);
 	}
 
 	/* apply math operation */
@@ -501,17 +496,17 @@ _math_cl(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_re
 		/* 3 parameters */
 
 		case TOKEN_CL_RGB:
-			result = cobj_color_convert_rgba(d[0], d[1], d[2], 255);
+			result = ccolor_from_rgba(d[0], d[1], d[2], 255);
 			break;
 
 		case TOKEN_CL_INTERPOLATE:
-			result = cobj_color_interpolate(cl[0], cl[1], d[2]);
+			result = ccolor_interpolate(cl[0], cl[1], d[2]);
 			break;
 		
 		/* 4 parameters */
 
 		case TOKEN_CL_RGBA:
-			result = cobj_color_convert_rgba(d[0], d[1], d[2], d[3]);
+			result = ccolor_from_rgba(d[0], d[1], d[2], d[3]);
 			break;
 
 		/* other */
@@ -524,11 +519,11 @@ _math_cl(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_re
 
 	if (math_result)
 	{
-		*math_result = cobj_color_get_argb_uint(result);
+		*math_result = ccolor_to_argb_uint(result);
 	}
 	else
 	{
-		snprintf(token, CCFG_MAX_WORD_BYTES, "%u", cobj_color_get_argb_uint(result));
+		snprintf(token, TOKEN_MAX_LEN, "%u", ccolor_to_argb_uint(result));
 	}
 
 	return TOKEN_NUMBER;
@@ -536,44 +531,36 @@ _math_cl(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_re
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static token_kind_t
-_param(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES])
+static enum token
+_param(struct context *ctx, char token[static TOKEN_MAX_LEN])
 {
 	size_t i; 
 
-	if (context_get_token(ctx, token, NULL) == TOKEN_INVALID)
+	if (context_get_token(ctx, token, NULL) == TOKEN_INVALID
+	 || !cdict_find(ctx->keys_params, token, 0, &i))
 	{
 		return TOKEN_INVALID;
 	}
 
-	if (!cobj_dictionary_find(ctx->ref_params, token, 0, &i))
-	{
-		return TOKEN_INVALID;
-	}
-
-	snprintf(token, CCFG_MAX_WORD_BYTES, "%s", cobj_book_get_word(ctx->params, 0, i));
+	snprintf(token, TOKEN_MAX_LEN, "%s", cbook_word(ctx->params, i));
 	
 	return TOKEN_STRING;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static token_kind_t
-_variable(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result)
+static enum token
+_variable(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
 {
 	size_t i;
 
-	if (context_get_token(ctx, token, NULL) == TOKEN_INVALID)
+	if (context_get_token(ctx, token, NULL) == TOKEN_INVALID
+	 || !cdict_find(ctx->keys_vars, token, CONTEXT_DICT_VARIABLE, &i))
 	{
 		return TOKEN_INVALID;
 	}
 
-	if (!cobj_dictionary_find(ctx->ref_variables, token, CONTEXT_DICT_VARIABLE, &i))
-	{
-		return TOKEN_INVALID;
-	}
-
-	cobj_book_reset_iterator(ctx->variables, i);
+	cbook_init_iterator(ctx->vars, i);
 
 	return context_get_token(ctx, token, math_result);
 }

@@ -20,15 +20,23 @@
 
 #pragma once
 
+#include <cassette/ccfg.h>
 #include <stdbool.h>
 
+#include "attributes.h"
 #include "context.h"
 #include "main.h"
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* PROCEDURES ***********************************************************************************************/
 /************************************************************************************************************/
 
-void file_parse_child(context_t *ctx_parent, const char *filename);
+void
+file_parse_child(struct context *ctx_parent, const char *filename)
+NONNULL(1, 2);
 
-bool file_parse_root(ccfg_t *cfg, const char *filename);
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+file_parse_root(ccfg *cfg, const char *filename)
+NONNULL(1, 2);

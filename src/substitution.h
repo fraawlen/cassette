@@ -22,10 +22,12 @@
 
 #include <cassette/ccfg.h>
 
+#include "attributes.h"
 #include "context.h"
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* PROCEDURES ***********************************************************************************************/
 /************************************************************************************************************/
 
-token_kind_t substitution_apply(context_t *ctx, char token[static CCFG_MAX_WORD_BYTES], double *math_result);
+enum token
+substitution_apply(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result);

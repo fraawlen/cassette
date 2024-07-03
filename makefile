@@ -24,7 +24,7 @@ LIST_OBJ   := $(patsubst $(DIR_SRC)/%.c, $(DIR_OBJ)/%.o, $(LIST_SRC))
 LIST_BIN   := $(patsubst $(DIR_DEMOS)/%.c, $(DIR_BIN)/%, $(LIST_DEMOS))
 
 OUTPUT := ccfg
-FLAGS  := -std=c99 -pedantic -Wall -Wextra -O3 -D_POSIX_C_SOURCE=200809L
+FLAGS  := -std=c11 -pedantic -Wall -Wextra -O3 -D_POSIX_C_SOURCE=200809L
 LIBS   := -lcobj -lm -lpthread
 
 #############################################################################################################
@@ -46,7 +46,6 @@ install:
 
 clean:
 	rm -rf $(DEST_BUILD)
-	rm $(DIR_DEMOS)/config.h
 
 force: clean all
 

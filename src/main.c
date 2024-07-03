@@ -18,14 +18,13 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <assert.h>
 #include <cassette/ccfg.h>
 #include <cassette/cobj.h>
-#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "attributes.h"
 #include "file.h"
 #include "main.h"
 #include "token.h"
@@ -34,110 +33,147 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-struct _callback_t
+static const char *  _select_source (const ccfg *cfg, size_t *index) NONNULL_RETURN NONNULL(1);
+static enum ccfg_err _update_err    (ccfg *cfg)                                     NONNULL(1);
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+ccfg ccfg_placeholder_instance =
 {
-	void (*fn)(ccfg_t *cfg, bool load_success, void *ref);
-	void *ref;
-};
-
-typedef struct _callback_t _callback_t;
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-static void        _clear_callbacks (ccfg_t *cfg);
-static const char *_source_select   (const ccfg_t *cfg);
-static bool        _update_status   (ccfg_t *cfg);
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-static ccfg_t _err_cfg =
-{
-	.params        = NULL,
-	.sequences     = NULL,
-	.sources       = NULL,
-	.callbacks     = NULL,
-	.ref_params    = NULL,
-	.ref_sequences = NULL,
-	.tokens        = NULL,
-	.seed          = 0,
-	.failed        = true,
+	.params         = CBOOK_PLACEHOLDER,
+	.sequences      = CBOOK_PLACEHOLDER,
+	.sources        = CBOOK_PLACEHOLDER,
+	.keys_params    = CDICT_PLACEHOLDER,
+	.keys_sequences = CDICT_PLACEHOLDER,
+	.tokens         = CDICT_PLACEHOLDER,
+	.err            = CCFG_INVALID,
 };
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-void
-ccfg_clear_callbacks(ccfg_t *cfg)
+bool
+ccfg_can_open_sources(const ccfg *cfg, size_t *index, const char **filename)
 {
-	assert(cfg);
+	const char *str;
 
-	if (cfg->failed)
+	if (cfg->err || (str = _select_source(cfg, index))[0] == '\0')
 	{
-		return;
+		return false;
 	}
 
-	_clear_callbacks(cfg);
+	if (filename)
+	{
+		*filename = str;
+	}
+
+	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-ccfg_clear_parameters(ccfg_t *cfg)
+ccfg_clear_resources(ccfg *cfg)
 {
-	assert(cfg);
-
-	if (cfg->failed)
+	if (cfg->err)
 	{
 		return;
 	}
+
+	cbook_clear(cfg->sequences);
+	cdict_clear(cfg->keys_sequences);
 	
-	cobj_dictionary_clear(cfg->ref_params);
-	cobj_book_clear(cfg->params);
+	_update_err(cfg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-ccfg_clear_sources(ccfg_t *cfg)
+ccfg_clear_params(ccfg *cfg)
 {
-	assert(cfg);
-
-	if (cfg->failed)
+	if (cfg->err)
 	{
 		return;
 	}
 
-	cobj_book_clear(cfg->sources);
+	cbook_clear(cfg->params);
+	cdict_clear(cfg->keys_params);
+	
+	_update_err(cfg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-ccfg_t *
+void
+ccfg_clear_sources(ccfg *cfg)
+{
+	if (cfg->err)
+	{
+		return;
+	}
+
+	cbook_clear(cfg->sources);
+	
+	_update_err(cfg);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+ccfg *
+ccfg_clone(ccfg *cfg)
+{
+	ccfg *cfg_new;
+
+	if (!(cfg_new = malloc(sizeof(ccfg))))
+	{
+		return CCFG_PLACEHOLDER;
+	}
+
+	cfg_new->params         = cbook_clone(cfg->params);
+	cfg_new->sequences      = cbook_clone(cfg->sequences);
+	cfg_new->sources        = cbook_clone(cfg->sources);
+	cfg_new->keys_params    = cdict_clone(cfg->keys_params);
+	cfg_new->keys_sequences = cdict_clone(cfg->keys_sequences);
+	cfg_new->tokens         = cdict_clone(cfg->tokens);
+	cfg_new->err            = CCFG_OK;
+
+	if (_update_err(cfg_new))
+	{
+		ccfg_destroy(cfg_new);
+		return CCFG_PLACEHOLDER;
+	}
+
+	return cfg_new;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+ccfg *
 ccfg_create(void)
 {
-	ccfg_t *cfg;
+	ccfg *cfg;
 
-	if (!(cfg = malloc(sizeof(ccfg_t))))
+	if (!(cfg = malloc(sizeof(ccfg))))
 	{
-		return &_err_cfg;
+		return CCFG_PLACEHOLDER;
 	}
 
-	cfg->sequences     = cobj_book_create(0, CCFG_MAX_WORD_BYTES);
-	cfg->params        = cobj_book_create(4, CCFG_MAX_WORD_BYTES);
-	cfg->sources       = cobj_book_create(4, PATH_MAX);
-	cfg->callbacks     = cobj_tracker_create(2);
-	cfg->ref_params    = cobj_dictionary_create(4, 0.6);
-	cfg->ref_sequences = cobj_dictionary_create(0, 0.6);
-	cfg->tokens        = token_dictionary_create();
-	cfg->seed          = 0;
-	cfg->failed        = false;
+	cfg->params         = cbook_create();
+	cfg->sequences      = cbook_create();
+	cfg->sources        = cbook_create();
+	cfg->keys_params    = cdict_create();
+	cfg->keys_sequences = cdict_create();
+	cfg->tokens         = token_dict_create();
+	cfg->err            = CCFG_OK;
 
-	_update_status(cfg);
+	if (_update_err(cfg))
+	{
+		ccfg_destroy(cfg);
+		return CCFG_PLACEHOLDER;
+	}
 
 	return cfg;
 }
@@ -145,309 +181,207 @@ ccfg_create(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-ccfg_destroy(ccfg_t **cfg)
+ccfg_destroy(ccfg *cfg)
 {
-	assert(cfg && *cfg);
-
-	if (*cfg == &_err_cfg)
+	if (cfg == CCFG_PLACEHOLDER)
 	{
 		return;
 	}
 
-	_clear_callbacks(*cfg);
+	cbook_destroy(cfg->params);
+	cbook_destroy(cfg->sequences);
+	cbook_destroy(cfg->sources);
+	cdict_destroy(cfg->keys_params);
+	cdict_destroy(cfg->keys_sequences);
+	cdict_destroy(cfg->tokens);
 
-	cobj_book_destroy(&(*cfg)->params);
-	cobj_book_destroy(&(*cfg)->sequences);
-	cobj_book_destroy(&(*cfg)->sources);
-	cobj_tracker_destroy(&(*cfg)->callbacks);
-	cobj_dictionary_destroy(&(*cfg)->ref_params);
-	cobj_dictionary_destroy(&(*cfg)->ref_sequences);
-	cobj_dictionary_destroy(&(*cfg)->tokens);
+	free(cfg);
+}
 
-	free(*cfg);
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-	*cfg = &_err_cfg;
+enum ccfg_err
+ccfg_error(const ccfg *cfg)
+{
+	return cfg->err;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+ccfg_fetch(ccfg *cfg, const char *namespace, const char *property)
+{
+	size_t i;
+	size_t j;
+
+	if (cfg->err)
+	{
+		return;
+	}
+
+	cbook_lock_iterator(cfg->sequences);
+
+	if (cdict_find(cfg->keys_sequences, namespace, 0, &i)
+	 && cdict_find(cfg->keys_sequences, property,  i, &j))
+	{
+		cbook_init_iterator(cfg->sequences, j);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-ccfg_fetch(ccfg_t *cfg, const char *namespace, const char *property)
+ccfg_iterate(ccfg *cfg)
 {
-	size_t i_namespace;
-	size_t i_prop;
-
-	assert(cfg);
-
-	if (cfg->failed)
+	if (cfg->err)
 	{
 		return false;
 	}
 
-	cobj_book_lock_iterator(cfg->sequences);
+	return cbook_iterate(cfg->sequences);
+}
 
-	if (!namespace || namespace[0] == '\0')
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+ccfg_load(ccfg *cfg)
+{
+	const char *source;
+
+	if (cfg->err || (source = _select_source(cfg, NULL))[0] == '\0')
 	{
 		return false;
 	}
 
-	if (!property || property[0] == '\0')
-	{
-		return false;
-	}
+	cbook_clear(cfg->sequences);
+	cdict_clear(cfg->keys_sequences);
+	file_parse_root(cfg, source);
 
-	if (!cobj_dictionary_find(cfg->ref_sequences, namespace, 0, &i_namespace))
-	{
-		return false;
-	}
-
-	if (!cobj_dictionary_find(cfg->ref_sequences, property, i_namespace, &i_prop))
-	{
-		return false;
-	}
-
-	cobj_book_reset_iterator(cfg->sequences, i_prop);
+	_update_err(cfg);
 
 	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-ccfg_t *
-ccfg_get_placeholder(void)
+void
+ccfg_push_param_double(ccfg *cfg, const char *name, double d)
 {
-	return &_err_cfg;
+	char tmp[64];
+
+	snprintf(tmp, 64, "%f", d);
+
+	ccfg_push_param_str(cfg, name, tmp);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+ccfg_push_param_long(ccfg *cfg, const char *name, long long l)
+{
+	char tmp[64];
+
+	snprintf(tmp, 64, "%lli", l);
+
+	ccfg_push_param_str(cfg, name, tmp);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+ccfg_push_param_str(ccfg *cfg, const char *name, const char *str)
+{
+	if (cfg->err)
+	{
+		return;
+	}
+
+	cbook_write(cfg->params, str, CBOOK_OLD);
+	if (!cbook_error(cfg->params))
+	{
+		cdict_write(cfg->keys_params, name, 0, cbook_words_number(cfg->params));
+	}
+
+	_update_err(cfg);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+ccfg_push_source(ccfg *cfg, const char *filename)
+{
+	if (cfg->err)
+	{
+		return;
+	}
+
+	cbook_write(cfg->sources, filename, CBOOK_OLD);
+
+	_update_err(cfg);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+ccfg_repair(ccfg *cfg)
+{
+	cbook_repair(cfg->params);
+	cbook_repair(cfg->sequences);
+	cbook_repair(cfg->sources);
+	cdict_repair(cfg->keys_params);
+	cdict_repair(cfg->keys_sequences);
+	cdict_repair(cfg->tokens);
+	
+	cfg->err &= CCFG_INVALID;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-ccfg_get_resource_size(const ccfg_t *cfg)
+ccfg_resources_number(const ccfg *cfg)
 {
-	assert(cfg);
-
-	if (cfg->failed)
+	if (cfg->err)
 	{
 		return 0;
 	}
 
-	return cobj_book_get_group_size(cfg->sequences, cobj_book_get_iterator_group(cfg->sequences));
+	return cbook_group_length(cfg->sequences, cbook_iterator_group(cfg->sequences));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-ccfg_get_value(const ccfg_t *cfg)
+ccfg_resource(const ccfg *cfg)
 {
-	assert(cfg);
-	
-	if (cfg->failed)
+	if (cfg->err)
 	{
 		return "";
 	}
 
-	return cobj_book_get_iteration(cfg->sequences);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-ccfg_has_failed(const ccfg_t *cfg)
-{
-	assert(cfg);
-
-	return cfg->failed;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-ccfg_load(ccfg_t *cfg)
-{
-	const _callback_t *call;
-
-	bool success = true;
-
-	assert(cfg);
-
-	if (cfg->failed)
-	{
-		return false;
-	}
-
-	cobj_book_clear(cfg->sequences);
-	cobj_dictionary_clear(cfg->ref_sequences);
-
-	success &= file_parse_root(cfg, _source_select(cfg));
-	success &= !_update_status(cfg);
-
-	cobj_tracker_reset_iterator(cfg->callbacks);
-	while (cobj_tracker_increment_iterator(cfg->callbacks))
-	{
-		call = cobj_tracker_get_iteration(cfg->callbacks);
-		call->fn(cfg, success, call->ref);
-	}
-
-	return success;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-ccfg_pick_next_value(ccfg_t *cfg)
-{
-	assert(cfg);
-	
-	if (cfg->failed)
-	{
-		return false;
-	}
-
-	return cobj_book_increment_iterator(cfg->sequences);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-ccfg_push_callback(ccfg_t *cfg, void (*fn)(ccfg_t *cfg, bool load_success, void *ref), void *ref)
-{
-	_callback_t *tmp;
-
-	assert(cfg);
-
-	if (cfg->failed)
-	{
-		return;
-	}
-
-	if (!fn)
-	{
-		return;
-	}
-
-	if (!(tmp = malloc(sizeof(_callback_t))))
-	{
-		cfg->failed = true;
-		return;
-	}
-
-	tmp->fn  = fn;
-	tmp->ref = ref;
-	
-	cobj_tracker_push(cfg->callbacks, tmp, NULL);
-
-	_update_status(cfg);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-ccfg_push_parameter(ccfg_t *cfg, const char *name, const char *value)
-{
-	size_t i;
-
-	assert(cfg);
-
-	if (cfg->failed)
-	{
-		return;
-	}
-
-	if (!name || !value)
-	{
-		return;
-	}
-
-	if (cobj_dictionary_find(cfg->ref_params, name, 0, &i))
-	{
-		cobj_book_rewrite_word(cfg->params, value, 0, i);
-	}
-	else
-	{
-		cobj_dictionary_write(cfg->ref_params, name, 0, cobj_book_get_group_size(cfg->params, 0));
-		cobj_book_write_new_word(cfg->params, value, COBJ_BOOK_OLD_GROUP);
-	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-ccfg_push_source(ccfg_t *cfg, const char *filename)
-{
-	assert(cfg);
-
-	if (cfg->failed)
-	{
-		return;
-	}
-
-	cobj_book_write_new_word(cfg->sources, filename, COBJ_BOOK_OLD_GROUP);
-
-	_update_status(cfg);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-ccfg_seed(ccfg_t *cfg, unsigned long long seed)
-{
-	assert(cfg);
-
-	if (cfg->failed)
-	{
-		return;
-	}
-
-	cfg->seed = seed;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-const char *
-ccfg_test_sources(const ccfg_t *cfg)
-{
-	assert(cfg);
-
-	if (cfg->failed)
-	{
-		return "";
-	}
-
-	return _source_select(cfg);
+	return cbook_iteration(cfg->sequences);
 }
 
 /************************************************************************************************************/
 /* _ ********************************************************************************************************/
 /************************************************************************************************************/
 
-static void
-_clear_callbacks(ccfg_t *cfg)
-{
-	cobj_tracker_reset_iterator(cfg->callbacks);
-	while (cobj_tracker_increment_iterator(cfg->callbacks))
-	{
-		free((void*)cobj_tracker_get_iteration(cfg->callbacks));
-	}
-
-	cobj_tracker_clear(cfg->callbacks);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 static const char *
-_source_select(const ccfg_t *cfg)
+_select_source(const ccfg *cfg, size_t *index)
 {
 	FILE *f;
-	const char *s;
+	const char *str;
 
-	cobj_book_reset_iterator(cfg->sources, 0);
-	while (cobj_book_increment_iterator(cfg->sources))
+	for (size_t i = 0; i < cbook_words_number(cfg->sources); i++)
 	{
-		s = cobj_book_get_iteration(cfg->sources);
-		if ((f = fopen(cobj_book_get_iteration(cfg->sources), "r")))
+		str = cbook_word(cfg->sources, i);
+		if ((f = fopen(str, "r")))
 		{
+			if (index)
+			{
+				*index = i;
+			}
 			fclose(f);
-			return s;
+			return str;
 		}
 	}
 
@@ -456,16 +390,23 @@ _source_select(const ccfg_t *cfg)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static bool
-_update_status(ccfg_t *cfg)
+static enum ccfg_err
+_update_err(ccfg *cfg)
 {
-	cfg->failed |= cobj_book_has_failed(cfg->params);
-	cfg->failed |= cobj_book_has_failed(cfg->sequences);
-	cfg->failed |= cobj_book_has_failed(cfg->sources);
-	cfg->failed |= cobj_tracker_has_failed(cfg->callbacks);
-	cfg->failed |= cobj_dictionary_has_failed(cfg->ref_params);
-	cfg->failed |= cobj_dictionary_has_failed(cfg->ref_sequences);
-	cfg->failed |= cobj_dictionary_has_failed(cfg->tokens);
+	enum cbook_err book_err = CBOOK_OK;
+	enum cdict_err dict_err = CDICT_OK;
 
-	return cfg->failed;
+	book_err |= cbook_error(cfg->params);
+	book_err |= cbook_error(cfg->sequences);
+	book_err |= cbook_error(cfg->sources);
+	
+	dict_err |= cdict_error(cfg->keys_params);
+	dict_err |= cdict_error(cfg->keys_sequences);
+	dict_err |= cdict_error(cfg->tokens);
+
+	cfg->err |= (book_err & CBOOK_OVERFLOW) || (dict_err & CDICT_OVERFLOW) ? CCFG_OVERFLOW : CCFG_OK;
+	cfg->err |= (book_err & CBOOK_MEMORY)   || (dict_err & CDICT_MEMORY)   ? CCFG_MEMORY   : CCFG_OK;
+	cfg->err |= (book_err & CBOOK_INVALID)  || (dict_err & CDICT_INVALID)  ? CCFG_MEMORY   : CCFG_OK;
+
+	return cfg->err;
 }
