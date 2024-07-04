@@ -102,10 +102,10 @@ enum token
 	TOKEN_SECTION_ADD,
 	TOKEN_SECTION_DEL,
 	TOKEN_INCLUDE,
-	TOKEN_ITERATE_RAW,
-	TOKEN_ITERATE,
 	TOKEN_SEED,
 	TOKEN_PRINT,
+	TOKEN_FOR_BEGIN,
+	TOKEN_FOR_END,
 };
 
 /************************************************************************************************************/

@@ -62,10 +62,12 @@ file_parse_child(struct context *ctx_parent, const char *filename)
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
 	ctx.depth          = ctx_parent->depth + 1;
+	ctx.loop_index     = ctx_parent->loop_index;
+	ctx.loop_max       = ctx_parent->loop_max;
 	ctx.params         = ctx_parent->params;
 	ctx.sequences      = ctx_parent->sequences;
 	ctx.vars           = ctx_parent->vars;
-	ctx.iteration      = CBOOK_PLACEHOLDER;
+	ctx.iteration      = ctx_parent->iteration;
 	ctx.keys_params    = ctx_parent->keys_params;
 	ctx.keys_sequences = ctx_parent->keys_sequences;
 	ctx.keys_vars      = ctx_parent->keys_vars;
@@ -113,10 +115,12 @@ file_parse_root(ccfg *cfg, const char *filename)
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
 	ctx.depth          = 0;
+	ctx.loop_index     = 0;
+	ctx.loop_max       = 0;
 	ctx.params         = cfg->params;
 	ctx.sequences      = cfg->sequences;
 	ctx.vars           = cbook_create();
-	ctx.iteration      = CBOOK_PLACEHOLDER;
+	ctx.iteration      = cbook_create();
 	ctx.keys_params    = cfg->keys_params;
 	ctx.keys_sequences = cfg->keys_sequences;
 	ctx.keys_vars      = cdict_create();
@@ -126,8 +130,9 @@ file_parse_root(ccfg *cfg, const char *filename)
 
 	_parse_file(&ctx);
 
-	book_err |= cbook_error(cfg->params);
-	dict_err |= cdict_error(cfg->keys_params);
+	book_err |= cbook_error(ctx.iteration);
+	book_err |= cbook_error(ctx.vars);
+	dict_err |= cdict_error(ctx.keys_vars);
 	cfg->err |= (book_err & CBOOK_OVERFLOW) || (dict_err & CDICT_OVERFLOW) ? CCFG_OVERFLOW : CCFG_OK;
 	cfg->err |= (book_err & CBOOK_MEMORY)   || (dict_err & CDICT_MEMORY)   ? CCFG_MEMORY   : CCFG_OK;
 	cfg->err |= (book_err & CBOOK_INVALID)  || (dict_err & CDICT_INVALID)  ? CCFG_MEMORY   : CCFG_OK;

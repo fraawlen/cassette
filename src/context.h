@@ -46,6 +46,8 @@ struct context
 	/* context states */
 
 	size_t depth;
+	size_t loop_index;
+	size_t loop_max;
 	bool eol_reached;
 	bool eof_reached;
 	bool skip_sequences;
@@ -71,9 +73,10 @@ struct context
 /* GLOBALS **************************************************************************************************/
 /************************************************************************************************************/
 
-#define CONTEXT_DICT_VARIABLE 0
-#define CONTEXT_DICT_SECTION  1
-#define CONTEXT_MAX_DEPTH     32
+#define CONTEXT_DICT_VARIABLE  0
+#define CONTEXT_DICT_SECTION   1
+#define CONTEXT_DICT_ITERATION 2
+#define CONTEXT_MAX_DEPTH      32
 
 /************************************************************************************************************/
 /* PROCEDURES ***********************************************************************************************/

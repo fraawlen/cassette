@@ -44,7 +44,7 @@ static void _declare_enum     (struct context *ctx)                        NONNU
 static void _declare_resource (struct context *ctx, const char *namespace) NONNULL(1);
 static void _declare_variable (struct context *ctx)                        NONNULL(1);
 static void _include          (struct context *ctx)                        NONNULL(1);
-static void _iterate          (struct context *ctx, enum token type)       NONNULL(1);
+static void _iterate          (struct context *ctx)                        NONNULL(1);
 static void _print            (struct context *ctx)                        NONNULL(1);
 static void _section_add      (struct context *ctx)                        NONNULL(1);
 static void _section_begin    (struct context *ctx)                        NONNULL(1);
@@ -105,9 +105,8 @@ sequence_parse(struct context *ctx)
 			_include(ctx);
 			break;
 
-		case TOKEN_ITERATE:
-		case TOKEN_ITERATE_RAW:
-			_iterate(ctx, type);
+		case TOKEN_FOR_BEGIN:
+			_iterate(ctx);
 			break;
 
 		case TOKEN_SEED:
@@ -283,7 +282,7 @@ _declare_enum(struct context *ctx)
 
 	/* update variable's reference in the variable dict */
 
-	cdict_write(ctx->keys_vars, name, CONTEXT_DICT_VARIABLE, cbook_groups_number(ctx->vars) - 1);
+	cdict_write(ctx->keys_vars, name, CONTEXT_DICT_VARIABLE, cbook_groups_number(ctx->vars) - 1);	
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -402,10 +401,86 @@ _include(struct context *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_iterate(struct context *ctx, enum token type)
+_iterate(struct context *ctx)
 {
-	(void)ctx;
-	(void)type;
+	char var[TOKEN_MAX_LEN];
+	char name[TOKEN_MAX_LEN];
+	char token[TOKEN_MAX_LEN];
+	size_t i;
+
+	/* get loop parameters */
+
+	if (context_get_token(ctx, var,  NULL) == TOKEN_INVALID
+	 || context_get_token(ctx, name, NULL) == TOKEN_INVALID
+	 || !cdict_find(ctx->keys_vars, var,  CONTEXT_DICT_VARIABLE,  &i)
+	 ||  cdict_find(ctx->keys_vars, name, CONTEXT_DICT_ITERATION, NULL))
+	{
+		return;
+	}
+
+	context_goto_eol(ctx);
+
+	/* copy sequences into iteration book until a TOKEN_FOR_END at the start of a sequence is found */
+
+	ctx->loop_index = 0;
+	ctx->loop_max   = 0;
+
+	while (!ctx->eof_reached)
+	{
+		ctx->eol_reached = false;
+
+		if (context_get_token_raw(ctx, token) == TOKEN_INVALID)
+		{
+			context_goto_eol(ctx);
+			continue;
+		}
+
+		if (token_match(ctx->tokens, token) == TOKEN_FOR_END)
+		{
+			context_goto_eol(ctx);
+			break;
+		}
+
+		cbook_write(ctx->iteration, token, CBOOK_NEW);
+		while (context_get_token_raw(ctx, token) != TOKEN_INVALID)
+		{
+			cbook_write(ctx->iteration, token, CBOOK_OLD);
+		}
+
+		ctx->loop_max++;
+	}
+
+	/* run iteratated sequences */
+
+	size_t k;
+
+	for (size_t j = 0; j < cbook_group_length(ctx->vars, i); j++)
+	{
+		cdict_write(ctx->keys_vars, name, CONTEXT_DICT_ITERATION, cbook_word_index(ctx->vars, i, j));
+		k = ctx->loop_index;
+		while (k < ctx->loop_max)
+		{
+			cbook_init_iterator(ctx->iteration, k++);
+			sequence_parse(ctx);
+		}
+		printf("\n");
+	}
+	
+	cdict_erase(ctx->keys_vars, name, CONTEXT_DICT_ITERATION);
+	cbook_clear(ctx->iteration);
+
+	/* debug */
+
+/*
+	for (size_t j = 0; j < cbook_groups_number(ctx->iteration); j++)
+	{
+		for (size_t k = 0; k < cbook_group_length(ctx->iteration, j); k++)
+		{
+			printf("%s\t", cbook_word_in_group(ctx->iteration, j, k));
+		}
+		printf("\n");
+	}
+*/
 
 	/*
 	cbook_t *iteration;

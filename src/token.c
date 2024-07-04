@@ -114,10 +114,10 @@ static const struct _slot _map[] =
 	{ "SECTION_ADD",   TOKEN_SECTION_ADD      },
 	{ "SECTION_DEL",   TOKEN_SECTION_DEL      },
 	{ "INCLUDE",       TOKEN_INCLUDE          },
-	{ "ITERATE",       TOKEN_ITERATE          },
-	{ "ITERATE_RAW",   TOKEN_ITERATE_RAW      },
 	{ "SEED",          TOKEN_SEED             },
 	{ "DEBUG_PRINT",   TOKEN_PRINT            },
+	{ "FOR_EACH",      TOKEN_FOR_BEGIN        },
+	{ "FOR_END",       TOKEN_FOR_END          },
 };
 
 /************************************************************************************************************/

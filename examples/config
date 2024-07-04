@@ -25,3 +25,20 @@ SECTION Sb
 	SEED ($$ sim_id)
 
 	example-2 coordinates (RAND 10 90) (RAND 10 90) (RAND 10 90)
+
+	LET vals aB cD eF
+
+	FOR_EACH vals x
+		DEBUG_PRINT test1 a b c % x
+		DEBUG_PRINT test2 0 1 2 % x
+		DEBUG_PRINT test3 9 8 7 % x
+		DEBUG_PRINT test4 x y z % x
+	FOR_END
+
+	FOR_EACH enum x
+		LET y (* (% x) 10)
+		DEBUG_PRINT test1 a b c ($ y)
+		DEBUG_PRINT test2 0 1 2 ($ y)
+		DEBUG_PRINT test3 9 8 7 ($ y)
+		DEBUG_PRINT test4 x y z ($ y)	
+	FOR_END
