@@ -465,16 +465,32 @@ CBOOK_PURE;
  * Gets a word from a specific group. If group_index or word_index are out of bounds, the default return_err
  * value is returned.
  * 
- * @param book        : Book to interact with
- * @param group_index : Group index within book
- * @param word_index  : Word index within group
+ * @param book             : Book to interact with
+ * @param group_index      : Group index within book
+ * @param word_local_index : Word index within group
  *
  * @return     : C string
  * @return_err : "\0"
  */
 const char *
-cbook_word_in_group(const cbook *book, size_t group_index, size_t word_index)
+cbook_word_in_group(const cbook *book, size_t group_index, size_t word_local_index)
 CBOOK_NONNULL_RETURN
+CBOOK_NONNULL(1)
+CBOOK_PURE;
+
+/**
+ * Converts a group + local word indexes to a book-wide word index. If group_index or word_index are out of
+ * bounds, the default return_err value is returned.
+ *
+ * @param book             : Book to interact with
+ * @param group_index      : Group index within book
+ * @param word_local_index : Word index within group
+ * 
+ * @return     : Word index
+ * @return_err : 0
+ */
+size_t
+cbook_word_index(const cbook *book, size_t group_index, size_t word_local_index)
 CBOOK_NONNULL(1)
 CBOOK_PURE;
 

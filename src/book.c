@@ -426,16 +426,31 @@ cbook_word(const cbook *book, size_t word_index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-cbook_word_in_group(const cbook *book, size_t group_index, size_t word_index)
+cbook_word_in_group(const cbook *book, size_t group_index, size_t word_local_index)
 {
 	if (book->err
 	 || _group_size(book, group_index) == 0
-	 || _group_size(book, group_index) <= word_index)
+	 || _group_size(book, group_index) <= word_local_index)
 	{
 		return "";
 	}
 
-	return book->chars + book->words[book->groups[group_index] + word_index];
+	return book->chars + book->words[book->groups[group_index] + word_local_index];
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+cbook_word_index(const cbook *book, size_t group_index, size_t word_local_index)
+{
+	if (book->err
+	 || _group_size(book, group_index) == 0
+	 || _group_size(book, group_index) <= word_local_index)
+	{
+		return 0;
+	}
+
+	return book->groups[group_index] + word_local_index;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
