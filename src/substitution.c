@@ -220,8 +220,8 @@ _if(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, 
 
 	/* get values to compare */
 
-	if (context_get_token_numeral(ctx, token,   &a) == TOKEN_INVALID ||
-	    context_get_token_numeral(ctx, token_2, &b) == TOKEN_INVALID)
+	if (context_get_token_numeral(ctx, token,   &a) == TOKEN_INVALID
+	 || context_get_token_numeral(ctx, token_2, &b) == TOKEN_INVALID)
 	{
 		return TOKEN_INVALID;	
 	}

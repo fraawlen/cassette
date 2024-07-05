@@ -726,7 +726,9 @@ SECTION Theme_dark
 
 SECTION
 
-	ITERATE_RAW widgets % background_color ($ bg_color)
+	FOR_EACH widgets
+		(% widgets) background_color ($ bg_color)
+	FOR_END
 ```
 
 Resolved resources :
@@ -750,10 +752,13 @@ LET_PREPEND nodes_names nodes_ids "n_"
 
 node list ($ nodes_names)
 
-ITERATE     nodes_ids (\ JOIN "n_" %) address %
-ITERATE     nodes_ids (\ JOIN "n_" %) x (\ - (\ * % 10) 10)
-ITERATE     nodes_names % y 0
-ITERATE_RAW nodes_names % range (ROUND (RAND 15 35))
+FOR_EACH nodes_ids id
+	(JOIN "n_" (% id)) address (% id)	
+	(JOIN "n_" (% id)) x       (- (* (% id) 10) 10)	
+	(JOIN "n_" (% id)) y       0	
+	(JOIN "n_" (% id)) range   (ROUND (RAND 15 35))
+FOR_END
+
 ```
 
 Resolved resources :

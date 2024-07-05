@@ -46,8 +46,8 @@ struct context
 	/* context states */
 
 	size_t depth;
-	size_t loop_index;
-	size_t loop_max;
+	size_t it;
+	size_t it_end;
 	bool eol_reached;
 	bool eof_reached;
 	bool skip_sequences;

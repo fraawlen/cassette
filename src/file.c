@@ -62,8 +62,8 @@ file_parse_child(struct context *ctx_parent, const char *filename)
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
 	ctx.depth          = ctx_parent->depth + 1;
-	ctx.loop_index     = ctx_parent->loop_index;
-	ctx.loop_max       = ctx_parent->loop_max;
+	ctx.it             = ctx_parent->it;
+	ctx.it_end         = ctx_parent->it_end;
 	ctx.params         = ctx_parent->params;
 	ctx.sequences      = ctx_parent->sequences;
 	ctx.vars           = ctx_parent->vars;
@@ -115,8 +115,8 @@ file_parse_root(ccfg *cfg, const char *filename)
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
 	ctx.depth          = 0;
-	ctx.loop_index     = 0;
-	ctx.loop_max       = 0;
+	ctx.it             = 0;
+	ctx.it_end         = 0;
 	ctx.params         = cfg->params;
 	ctx.sequences      = cfg->sequences;
 	ctx.vars           = cbook_create();

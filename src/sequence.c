@@ -39,6 +39,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+/* sequences handlers */
+
 static void _combine_var      (struct context *ctx, enum token type)       NONNULL(1);
 static void _declare_enum     (struct context *ctx)                        NONNULL(1);
 static void _declare_resource (struct context *ctx, const char *namespace) NONNULL(1);
@@ -50,6 +52,11 @@ static void _section_add      (struct context *ctx)                        NONNU
 static void _section_begin    (struct context *ctx)                        NONNULL(1);
 static void _section_del      (struct context *ctx)                        NONNULL(1);
 static void _seed             (struct context *ctx)                        NONNULL(1);
+
+/* iteration sequence preprocessing */
+
+static void _preproc_iter_new  (struct context *ctx)               NONNULL(1);
+static void _preproc_iter_nest (struct context *ctx, size_t limit) NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -149,7 +156,7 @@ _combine_var(struct context *ctx, enum token type)
 
 	val = cstr_create();
 
-	/* get vars */
+	/* get params */
 
 	if (context_get_token(ctx, name,    NULL) == TOKEN_INVALID
 	 || context_get_token(ctx, token_1, NULL) == TOKEN_INVALID
@@ -326,7 +333,7 @@ _declare_resource(struct context *ctx, const char *namespace)
 		cdict_write(ctx->keys_sequences, namespace, 0, i);
 	}
 
-	/* update variable's reference in the variable dict         */
+	/* update sequence's reference in the sequence dict         */
 	/* use the namespace's dict value as sequence group (i > 0) */
 
 	cdict_write(ctx->keys_sequences, name, i, cbook_groups_number(ctx->sequences) - 1);
@@ -384,6 +391,7 @@ _include(struct context *ctx)
 	{
 		if (token[0] != '/')
 		{
+			cstr_clear(filename);
 			cstr_append(filename, ctx->file_dir);
 			cstr_append(filename, "/");
 			cstr_append(filename, token);
@@ -403,168 +411,163 @@ _include(struct context *ctx)
 static void
 _iterate(struct context *ctx)
 {
-	char var[TOKEN_MAX_LEN];
 	char name[TOKEN_MAX_LEN];
 	char token[TOKEN_MAX_LEN];
 	size_t i;
+	size_t j;
+	size_t it_parent;
+	size_t it_parent_end;
+	bool nested;
+	bool name_exists = false;
 
-	/* get loop parameters */
+	/* get iteration params and detect if its a nested iteration */
 
-	if (context_get_token(ctx, var,  NULL) == TOKEN_INVALID
-	 || context_get_token(ctx, name, NULL) == TOKEN_INVALID
-	 || !cdict_find(ctx->keys_vars, var,  CONTEXT_DICT_VARIABLE,  &i)
-	 ||  cdict_find(ctx->keys_vars, name, CONTEXT_DICT_ITERATION, NULL))
+	if (context_get_token(ctx, token,  NULL) == TOKEN_INVALID
+	 || !cdict_find(ctx->keys_vars, token, CONTEXT_DICT_VARIABLE, &i))
 	{
 		return;
 	}
 
+	if (context_get_token(ctx, name, NULL) == TOKEN_INVALID)
+	{
+		snprintf(name, TOKEN_MAX_LEN, "%s", token);
+	}
+
+	nested      = ctx->it_end > 0;
+	name_exists = nested && cdict_find(ctx->keys_vars, name, CONTEXT_DICT_ITERATION, &j);
+
+	/* In the case of a new iteration, read the file and write raw sequences into the iteration book,    */
+	/* but do not do that for nested iterations since the data is already written in the iteration book. */
+	/* In both cases, ctx->it_max is set to the end of the iteration block, which is delimited by a      */
+	/* matching TOKEN_FOR_END                                                                            */
+
+	if (nested)
+	{
+		it_parent_end =   ctx->it_end;
+		it_parent     = ++ctx->it;
+		ctx->it_end   =   ctx->it;
+		_preproc_iter_nest(ctx, it_parent_end);
+	}
+	else
+	{
+		it_parent_end = 0;
+		it_parent     = 0;
+		ctx->it_end   = 0;
+		_preproc_iter_new(ctx);
+	}
+
+	/* run iterated sequences */
+
+	for (size_t k = 0; k < cbook_group_length(ctx->vars, i); k++)
+	{
+		cdict_write(ctx->keys_vars, name, CONTEXT_DICT_ITERATION, cbook_word_index(ctx->vars, i, k));
+		for (ctx->it = it_parent; ctx->it < ctx->it_end; ctx->it++)
+		{
+			cbook_init_iterator(ctx->iteration, ctx->it);
+			sequence_parse(ctx);
+		}
+	}
+
+	/* restore iterator state */
+
+	ctx->it_end = it_parent_end;
+
+	if (name_exists)
+	{
+		cdict_write(ctx->keys_vars, name, CONTEXT_DICT_ITERATION, j);
+	}
+	else
+	{
+		cdict_erase(ctx->keys_vars, name, CONTEXT_DICT_ITERATION);
+	}
+
+	if (!nested)
+	{
+		cbook_clear(ctx->iteration);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_preproc_iter_nest(struct context *ctx, size_t limit)
+{
+	char token[TOKEN_MAX_LEN];
+
+	for (size_t n = 0; ctx->it_end < limit; ctx->it_end++)
+	{
+		cbook_init_iterator(ctx->iteration, ctx->it_end);
+		context_get_token_raw(ctx, token);
+
+		/* look for matching TOKEN_FOR_END */
+
+		switch (token_match(ctx->tokens, token))
+		{
+			case TOKEN_FOR_BEGIN:
+				n++;
+				break;
+
+			case TOKEN_FOR_END:
+				if (n == 0)
+				{
+					return;
+				}
+				n--;
+				break;
+
+			default:
+				break;
+		}
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_preproc_iter_new(struct context *ctx)
+{
+	char token[TOKEN_MAX_LEN];
+
 	context_goto_eol(ctx);
 
-	/* copy sequences into iteration book until a TOKEN_FOR_END at the start of a sequence is found */
-
-	ctx->loop_index = 0;
-	ctx->loop_max   = 0;
-
-	while (!ctx->eof_reached)
+	for (size_t n = 0; !ctx->eof_reached; ctx->it_end++)
 	{
 		ctx->eol_reached = false;
+		context_get_token_raw(ctx, token);
 
-		if (context_get_token_raw(ctx, token) == TOKEN_INVALID)
+		/* look for matching TOKEN_FOR_END */
+
+		switch (token_match(ctx->tokens, token))
 		{
-			context_goto_eol(ctx);
-			continue;
+			case TOKEN_FOR_BEGIN:
+				n++;
+				break;
+
+			case TOKEN_FOR_END:
+				if (n == 0)
+				{
+					context_goto_eol(ctx);
+					return;
+				}
+				n--;
+				break;
+
+			case TOKEN_INVALID:
+				context_goto_eol(ctx);
+				continue;
+
+			default:
+				break;
 		}
 
-		if (token_match(ctx->tokens, token) == TOKEN_FOR_END)
-		{
-			context_goto_eol(ctx);
-			break;
-		}
+		/* write down sequences that will be iterated */
 
 		cbook_write(ctx->iteration, token, CBOOK_NEW);
 		while (context_get_token_raw(ctx, token) != TOKEN_INVALID)
 		{
 			cbook_write(ctx->iteration, token, CBOOK_OLD);
 		}
-
-		ctx->loop_max++;
 	}
-
-	/* run iteratated sequences */
-
-	size_t k;
-
-	for (size_t j = 0; j < cbook_group_length(ctx->vars, i); j++)
-	{
-		cdict_write(ctx->keys_vars, name, CONTEXT_DICT_ITERATION, cbook_word_index(ctx->vars, i, j));
-		k = ctx->loop_index;
-		while (k < ctx->loop_max)
-		{
-			cbook_init_iterator(ctx->iteration, k++);
-			sequence_parse(ctx);
-		}
-		printf("\n");
-	}
-	
-	cdict_erase(ctx->keys_vars, name, CONTEXT_DICT_ITERATION);
-	cbook_clear(ctx->iteration);
-
-	/* debug */
-
-/*
-	for (size_t j = 0; j < cbook_groups_number(ctx->iteration); j++)
-	{
-		for (size_t k = 0; k < cbook_group_length(ctx->iteration, j); k++)
-		{
-			printf("%s\t", cbook_word_in_group(ctx->iteration, j, k));
-		}
-		printf("\n");
-	}
-*/
-
-	/*
-	cbook_t *iteration;
-
-	char token[TOKEN_MAX_LEN];
-	char *tmp;
-	bool raw;
-	size_t inject[_MAX_ITER_INJECTIONS];
-	size_t n_inject_max;
-	size_t n_inject = 0;
-	size_t i_var    = 0;
-	size_t i        = 0;
-
-	raw          = type == TOKEN_ITERATE_RAW;
-	n_inject_max = raw ? 1 : _MAX_ITER_INJECTIONS;
-	iteration    = cbook_create();
-
-	* grab variable to iterate through *
-
-	if (context_get_token(ctx, token, NULL) == TOKEN_INVALID
-	 || !cdict_find(ctx->keys_vars, token, CONTEXT_DICT_VARIABLE, &i_var))
-	{
-		return;
-	}
-
-	* fill the book with the sequence to iterate and keep the location of iteration variable injections *
-
-	while ((tmp = cbook_prepare_new_word(iteration, COBJ_BOOK_OLD_GROUP)))
-	{
-		if (raw)
-		{
-			type = context_get_token_raw(ctx, tmp);
-		}
-		else
-		{
-			type = context_get_token(ctx, tmp, NULL);
-		}
-
-		if (type == TOKEN_INVALID)
-		{
-			cbook_erase_last_word(iteration);
-			break;
-		}
-		else if (n_inject < n_inject_max)
-		{
-			type = raw ? token_match(ctx->tokens, tmp) : type;
-			if (type == TOKEN_ITER_INJECTION)
-			{
-				inject[n_inject++] = i;
-			}
-		}
-
-		i++;
-	}
-
-	if (i == 0)
-	{
-		return;
-	}
-
-	* process each iteration *
-
-	for (i = 0; i < cbook_get_group_size(ctx->vars, i_var); i++)
-	{
-		for (size_t j = 0; j < n_inject; j++)
-		{
-			cbook_rewrite_word(
-				iteration,
-				cbook_get_word(ctx->vars, i_var, i),
-				0,
-				inject[j]);
-		}
-
-		cbook_reset_iterator(iteration, 0);
-
-		ctx->iteration = iteration;
-		sequence_parse(ctx);
-	}
-
-	* end *
-	
-	cbook_destroy(&iteration);
-	ctx->iteration = cbook_get_placeholder();
-	*/
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

@@ -45,14 +45,14 @@ static void *_simulation_thread (void *param);
 /************************************************************************************************************/
 
 /**
- * In this 2nd example, a multithreaded software simulator is mimicked. Each simulation, sitting in its own
- * thread, requires the same kind of variables to work with (in this example, the coordinates of something).
- * However, each simulation instance also requires randomized coordinate values to create a different output.
+ * In this 3rd example, we are mimicking a multithreaded software simulator. Each simulation sits in its own
+ * thread and requires the same variables to work with (in this example, the coordinates of something).
+ * However, each simulation instance needs randomized coordinate values to produce a different output.
  *
- * In this scenario, each simulation thread will set up its own configuration and and provide an unique
- * parameter "sim_id". That parameter will then be used as a LCG seed. Thanks to that, during parsing, 'RAND'
- * tokens will be substituted to a different values in each thread. The parser opens the source files
- * exclusively in read-only mode, therefore multithreaded access to the same source is safe.
+ * In this scenario, each simulation thread sets up its own configuration and provides a parameter "sim_id"
+ * with a unique value. This parameter is then used as a LCG seed. Thanks to that, during parsing, 'RAND'
+ * tokens are substituted with different values in each thread. The parser exclusively opens the source files
+ * in read-only mode, making multithreaded access to the same source safe.
  */
 
 int
@@ -62,11 +62,11 @@ main(void)
 
 	unsigned int ids[_N_SIMULATIONS];
 
-	/* init */
+	/* Init */
 
 	_generate_source();
 
-	/* run pseudo-simulations */
+	/* Run pseudo-simulations */
 
 	for (unsigned int i = 0; i < _N_SIMULATIONS; i++)
 	{
@@ -112,7 +112,7 @@ _simulation_thread(void *param)
 	unsigned int coords[3] = {0};
 	unsigned int id;
 
-	/* simulation config setup */
+	/* Simulation config setup */
 
 	cfg = ccfg_create();
 	id  = *(unsigned int*)param;
@@ -121,13 +121,13 @@ _simulation_thread(void *param)
 	ccfg_push_param(cfg, "sim_id", id);
 	ccfg_load(cfg);
 
-	ccfg_fetch(cfg, "example-2", "coordinates");
+	ccfg_fetch(cfg, "example-3", "coordinates");
 	for (unsigned int i = 0; i < 3 && ccfg_iterate(cfg); i++)
 	{
 		coords[i] = strtoul(ccfg_resource(cfg), NULL, 0);
 	}
 
-	/* simulation algorithm */
+	/* Simulator algorithm */
 
 	printf(
 		"sim %u -> x = %u, y = %u, z = %u\n",
@@ -136,7 +136,7 @@ _simulation_thread(void *param)
 		coords[1],
 		coords[2]);
 
-	/* simulation end */
+	/* Simulation end */
 
 	ccfg_destroy(cfg);
 

@@ -47,7 +47,8 @@ static ccfg *_cfg = CCFG_PLACEHOLDER;
 /************************************************************************************************************/
 
 /**
- * In this 1st example, a simple resource look-up is done after loading the configuration.
+ * In this 1st example, a simple resource look-up is done after loading the configuration. If found, the 
+ * values associated with the resource are printed to stdout.
  */
 
 int
