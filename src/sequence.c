@@ -33,12 +33,6 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define MAX_ITER_INJECTIONS 32
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
 /* sequences handlers */
 
 static void _combine_var      (struct context *ctx, enum token type)       NONNULL(1);
@@ -202,12 +196,6 @@ _combine_var(struct context *ctx, enum token type)
 		group = CBOOK_OLD;
 	}
 
-	if (cbook_error(ctx->vars) || cstr_error(val))
-	{
-		cstr_destroy(val);
-		return;
-	}
-
 	/* update variable's reference in the variable dict */
 
 	cdict_write(ctx->keys_vars, name, CONTEXT_DICT_VARIABLE, cbook_groups_number(ctx->vars) - 1);
@@ -273,18 +261,12 @@ _declare_enum(struct context *ctx)
 	
 	/* generate enum values and write them into the variable book */
 
-
 	for (size_t i = 0; i <= steps; i++)
 	{
 		ratio = util_interpolate(min, max, i / steps);
 		snprintf(token, TOKEN_MAX_LEN, "%.*f", (int)precision, ratio);
 		cbook_write(ctx->vars, token, group);
 		group = CBOOK_OLD;
-	}
-
-	if (cbook_error(ctx->vars))
-	{
-		return;
 	}
 
 	/* update variable's reference in the variable dict */
@@ -320,7 +302,7 @@ _declare_resource(struct context *ctx, const char *namespace)
 		n++;
 	}
 
-	if (n == 0 || cbook_error(ctx->sequences))
+	if (n == 0)
 	{
 		return;
 	}
@@ -366,7 +348,7 @@ _declare_variable(struct context *ctx)
 		n++;
 	}
 
-	if (n == 0 || cbook_error(ctx->sequences))
+	if (n == 0)
 	{
 		return;
 	}
@@ -413,14 +395,14 @@ _iterate(struct context *ctx)
 {
 	char name[TOKEN_MAX_LEN];
 	char token[TOKEN_MAX_LEN];
+	size_t it_parent_end;
+	size_t it_parent;
 	size_t i;
 	size_t j;
-	size_t it_parent;
-	size_t it_parent_end;
 	bool nested;
 	bool name_exists = false;
 
-	/* get iteration params and detect if its a nested iteration */
+	/* get iteration params and detect if it's nested */
 
 	if (context_get_token(ctx, token,  NULL) == TOKEN_INVALID
 	 || !cdict_find(ctx->keys_vars, token, CONTEXT_DICT_VARIABLE, &i))
