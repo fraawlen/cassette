@@ -50,7 +50,7 @@ void
 file_parse_child(struct context *ctx_parent, const char *filename)
 {
 	struct context ctx;
-	size_t var_iter;
+	size_t var_i;
 	size_t var_group;
 	
 	if (ctx_parent->depth >= CONTEXT_MAX_DEPTH || !_open_file(&ctx, ctx_parent, filename))
@@ -58,12 +58,17 @@ file_parse_child(struct context *ctx_parent, const char *filename)
 		return;
 	}
 
+	var_i     = ctx_parent->var_i;
+	var_group = ctx_parent->var_group;
+
 	ctx.eol_reached    = false;
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
 	ctx.depth          = ctx_parent->depth + 1;
-	ctx.it             = ctx_parent->it;
-	ctx.it_end         = ctx_parent->it_end;
+	ctx.it_i           = SIZE_MAX;
+	ctx.it_group       = SIZE_MAX;
+	ctx.var_i          = SIZE_MAX;
+	ctx.var_group      = SIZE_MAX;
 	ctx.params         = ctx_parent->params;
 	ctx.sequences      = ctx_parent->sequences;
 	ctx.vars           = ctx_parent->vars;
@@ -75,21 +80,10 @@ file_parse_child(struct context *ctx_parent, const char *filename)
 	ctx.parent         = ctx_parent;
 	ctx.rand           = ctx_parent->rand;
 
-	var_iter  = cbook_iterator_offset(ctx.vars);
-	var_group = cbook_iterator_group(ctx.vars);
-
-	cbook_lock_iterator(ctx.vars);
-
 	_parse_file(&ctx);
 
-	if (var_iter > 0)
-	{
-		cbook_init_iterator(ctx.vars, var_group);
-		for (size_t i = 0; i < var_iter; i++)
-		{
-			cbook_iterate(ctx.vars);
-		}
-	}
+	ctx.var_i     = var_i;
+	ctx.var_group = var_group;
 
 	fclose(ctx.file);
 }
@@ -115,8 +109,10 @@ file_parse_root(ccfg *cfg, const char *filename)
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
 	ctx.depth          = 0;
-	ctx.it             = 0;
-	ctx.it_end         = 0;
+	ctx.it_i           = SIZE_MAX;
+	ctx.it_group       = SIZE_MAX;
+	ctx.var_i          = SIZE_MAX;
+	ctx.var_group      = SIZE_MAX;
 	ctx.params         = cfg->params;
 	ctx.sequences      = cfg->sequences;
 	ctx.vars           = cbook_create();

@@ -367,7 +367,7 @@ CCFG_PURE;
  * @return_err : 0
  */
 size_t
-ccfg_resources_length(const ccfg *cfg)
+ccfg_resource_length(const ccfg *cfg)
 CCFG_NONNULL(1)
 CCFG_PURE;
 

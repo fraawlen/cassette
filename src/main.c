@@ -48,6 +48,8 @@ ccfg ccfg_placeholder_instance =
 	.keys_params    = CDICT_PLACEHOLDER,
 	.keys_sequences = CDICT_PLACEHOLDER,
 	.tokens         = CDICT_PLACEHOLDER,
+	.it_group       = SIZE_MAX,
+	.it             = SIZE_MAX,
 	.err            = CCFG_INVALID,
 };
 
@@ -138,6 +140,8 @@ ccfg_clone(ccfg *cfg)
 	cfg_new->keys_params    = cdict_clone(cfg->keys_params);
 	cfg_new->keys_sequences = cdict_clone(cfg->keys_sequences);
 	cfg_new->tokens         = cdict_clone(cfg->tokens);
+	cfg_new->it_group       = cfg->it_group;
+	cfg_new->it             = cfg->it;
 	cfg_new->err            = CCFG_OK;
 
 	if (_update_err(cfg_new))
@@ -167,6 +171,8 @@ ccfg_create(void)
 	cfg->keys_params    = cdict_create();
 	cfg->keys_sequences = cdict_create();
 	cfg->tokens         = token_dict_create();
+	cfg->it_group       = SIZE_MAX;
+	cfg->it             = SIZE_MAX;
 	cfg->err            = CCFG_OK;
 
 	if (_update_err(cfg))
@@ -212,19 +218,19 @@ void
 ccfg_fetch(ccfg *cfg, const char *namespace, const char *property)
 {
 	size_t i;
-	size_t j;
 
 	if (cfg->err)
 	{
 		return;
 	}
 
-	cbook_lock_iterator(cfg->sequences);
+	cfg->it_group = SIZE_MAX;
+	cfg->it       = SIZE_MAX;
 
 	if (cdict_find(cfg->keys_sequences, namespace, 0, &i)
-	 && cdict_find(cfg->keys_sequences, property,  i, &j))
+	 && cdict_find(cfg->keys_sequences, property,  i, &cfg->it_group))
 	{
-		cbook_init_iterator(cfg->sequences, j);
+		cfg->it = 0;
 	}
 }
 
@@ -233,12 +239,14 @@ ccfg_fetch(ccfg *cfg, const char *namespace, const char *property)
 bool
 ccfg_iterate(ccfg *cfg)
 {
-	if (cfg->err)
+	if (cfg->err || cfg->it >= cbook_group_length(cfg->sequences, cfg->it_group))
 	{
 		return false;
 	}
 
-	return cbook_iterate(cfg->sequences);
+	cfg->it++;
+
+	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -343,20 +351,20 @@ ccfg_resource(const ccfg *cfg)
 		return "";
 	}
 
-	return cbook_iteration(cfg->sequences);
+	return cbook_word_in_group(cfg->sequences, cfg->it_group, cfg->it - 1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-ccfg_resources_length(const ccfg *cfg)
+ccfg_resource_length(const ccfg *cfg)
 {
 	if (cfg->err)
 	{
 		return 0;
 	}
 
-	return cbook_group_length(cfg->sequences, cbook_iterator_group(cfg->sequences));
+	return cbook_group_length(cfg->sequences, cfg->it_group);
 }
 
 /************************************************************************************************************/

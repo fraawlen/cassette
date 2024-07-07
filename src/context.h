@@ -46,11 +46,19 @@ struct context
 	/* context states */
 
 	size_t depth;
-	size_t it;
-	size_t it_end;
 	bool eol_reached;
 	bool eof_reached;
 	bool skip_sequences;
+
+	/* iteration injection */
+
+	size_t it_i;
+	size_t it_group;
+
+	/* variable injection */
+
+	size_t var_i;
+	size_t var_group;
 
 	/* data storage */
 

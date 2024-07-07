@@ -35,5 +35,7 @@ struct ccfg
 	cdict *keys_params;
 	cdict *keys_sequences;
 	cdict *tokens;
+	size_t it_group;
+	size_t it;
 	enum ccfg_err err;
 };

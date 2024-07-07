@@ -11,7 +11,7 @@ SECTION Sa
 	example-1 a TIME
 	example-1 b 45.5
 	example-1 c 50 60 70
-	example-1 d TRUE
+	example-1 d TRUE FALSE
 	example-1 e new_value
 	example-1 f ($$ example_param)
 	example-1 g (CITRPL #000000 #ffff8000 ($ ratio))
@@ -35,8 +35,7 @@ SECTION Sb
 	FOR_EACH widget
 		(% widget) border_width 5
 		(% widget) border_color #050505
-	FOR_END
-	
+	FOR_END	
 
 SECTION Sc
 

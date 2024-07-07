@@ -49,8 +49,8 @@ static void _seed             (struct context *ctx)                        NONNU
 
 /* iteration sequence preprocessing */
 
-static void _preproc_iter_new  (struct context *ctx)               NONNULL(1);
-static void _preproc_iter_nest (struct context *ctx, size_t limit) NONNULL(1);
+static void   _preproc_iter_new  (struct context *ctx)                     NONNULL(1);
+static size_t _preproc_iter_nest (struct context *ctx, size_t start_group) NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -280,7 +280,6 @@ static void
 _declare_resource(struct context *ctx, const char *namespace)
 {
 	enum cbook_group group = CBOOK_NEW;
-
 	char name[TOKEN_MAX_LEN];
 	char value[TOKEN_MAX_LEN];
 	size_t i;
@@ -327,7 +326,6 @@ static void
 _declare_variable(struct context *ctx)
 {
 	enum cbook_group group = CBOOK_NEW;
-
 	char name[TOKEN_MAX_LEN];
 	char value[TOKEN_MAX_LEN];
 	size_t n = 0;
@@ -364,7 +362,6 @@ static void
 _include(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
-
 	cstr *filename;
 
 	filename = cstr_create();
@@ -395,8 +392,8 @@ _iterate(struct context *ctx)
 {
 	char name[TOKEN_MAX_LEN];
 	char token[TOKEN_MAX_LEN];
-	size_t it_parent_end;
-	size_t it_parent;
+	size_t group_start;
+	size_t group_end;
 	size_t i;
 	size_t j;
 	bool nested;
@@ -415,27 +412,24 @@ _iterate(struct context *ctx)
 		snprintf(name, TOKEN_MAX_LEN, "%s", token);
 	}
 
-	nested      = ctx->it_end > 0;
+	nested      = cbook_length(ctx->iteration);
 	name_exists = nested && cdict_find(ctx->keys_vars, name, CONTEXT_DICT_ITERATION, &j);
 
 	/* In the case of a new iteration, read the file and write raw sequences into the iteration book,    */
 	/* but do not do that for nested iterations since the data is already written in the iteration book. */
-	/* In both cases, ctx->it_max is set to the end of the iteration block, which is delimited by a      */
-	/* matching TOKEN_FOR_END                                                                            */
+	/* In both cases, ctx->it_group_max is set to the end of the iteration block, which is delimited by  */
+	/* a matching TOKEN_FOR_END                                                                          */
 
 	if (nested)
 	{
-		it_parent_end =   ctx->it_end;
-		it_parent     = ++ctx->it;
-		ctx->it_end   =   ctx->it;
-		_preproc_iter_nest(ctx, it_parent_end);
+		group_start = ctx->it_group + 1;
+		group_end   = _preproc_iter_nest(ctx, group_start);
 	}
 	else
 	{
-		it_parent_end = 0;
-		it_parent     = 0;
-		ctx->it_end   = 0;
 		_preproc_iter_new(ctx);
+		group_start = 0;
+		group_end   = cbook_groups_number(ctx->iteration);
 	}
 
 	/* run iterated sequences */
@@ -443,16 +437,14 @@ _iterate(struct context *ctx)
 	for (size_t k = 0; k < cbook_group_length(ctx->vars, i); k++)
 	{
 		cdict_write(ctx->keys_vars, name, CONTEXT_DICT_ITERATION, cbook_word_index(ctx->vars, i, k));
-		for (ctx->it = it_parent; ctx->it < ctx->it_end; ctx->it++)
+		for (ctx->it_group = group_start; ctx->it_group < group_end; ctx->it_group++)
 		{
-			cbook_init_iterator(ctx->iteration, ctx->it);
+			ctx->it_i = 0;
 			sequence_parse(ctx);
 		}
 	}
 
 	/* restore iterator state */
-
-	ctx->it_end = it_parent_end;
 
 	if (name_exists)
 	{
@@ -471,14 +463,17 @@ _iterate(struct context *ctx)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void
-_preproc_iter_nest(struct context *ctx, size_t limit)
+static size_t
+_preproc_iter_nest(struct context *ctx, size_t start_group)
 {
 	char token[TOKEN_MAX_LEN];
+	size_t n = 0;
+	size_t i;
 
-	for (size_t n = 0; ctx->it_end < limit; ctx->it_end++)
+	for (i = start_group; i < cbook_groups_number(ctx->iteration); i++)
 	{
-		cbook_init_iterator(ctx->iteration, ctx->it_end);
+		ctx->it_group = i;
+		ctx->it_i     = 0;
 		context_get_token_raw(ctx, token);
 
 		/* look for matching TOKEN_FOR_END */
@@ -492,7 +487,7 @@ _preproc_iter_nest(struct context *ctx, size_t limit)
 			case TOKEN_FOR_END:
 				if (n == 0)
 				{
-					return;
+					return i;
 				}
 				n--;
 				break;
@@ -501,6 +496,8 @@ _preproc_iter_nest(struct context *ctx, size_t limit)
 				break;
 		}
 	}
+
+	return i;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -509,10 +506,11 @@ static void
 _preproc_iter_new(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
+	size_t n = 0;
 
 	context_goto_eol(ctx);
 
-	for (size_t n = 0; !ctx->eof_reached; ctx->it_end++)
+	while (!ctx->eof_reached)
 	{
 		ctx->eol_reached = false;
 		context_get_token_raw(ctx, token);

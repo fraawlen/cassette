@@ -89,13 +89,13 @@ context_get_token_numeral(struct context *ctx, char token[static TOKEN_MAX_LEN],
 enum token
 context_get_token_raw(struct context *ctx, char token[static TOKEN_MAX_LEN])
 {
-	if (cbook_iterate(ctx->vars))
+	if (ctx->var_i < cbook_group_length(ctx->vars, ctx->var_group))
 	{
-		snprintf(token, TOKEN_MAX_LEN, "%s", cbook_iteration(ctx->vars));
+		snprintf(token, TOKEN_MAX_LEN, "%s", cbook_word_in_group(ctx->vars, ctx->var_group, ctx->var_i++));
 	}
-	else if (cbook_iterate(ctx->iteration))
+	else if (ctx->it_i < cbook_group_length(ctx->iteration, ctx->it_group))
 	{
-		snprintf(token, TOKEN_MAX_LEN, "%s", cbook_iteration(ctx->iteration));
+		snprintf(token, TOKEN_MAX_LEN, "%s", cbook_word_in_group(ctx->iteration, ctx->it_group, ctx->it_i++));
 	}
 	else if (!_read_word(ctx, token))
 	{
@@ -127,8 +127,8 @@ context_goto_eol(struct context *ctx)
 		}
 	}
 
-	cbook_lock_iterator(ctx->vars);
-	cbook_lock_iterator(ctx->iteration);
+	ctx->var_i = SIZE_MAX;
+	ctx->it_i  = SIZE_MAX;
 }
 
 /************************************************************************************************************/

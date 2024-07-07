@@ -557,15 +557,13 @@ _param(struct context *ctx, char token[static TOKEN_MAX_LEN])
 static enum token
 _variable(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
 {
-	size_t i;
-
 	if (context_get_token(ctx, token, NULL) == TOKEN_INVALID
-	 || !cdict_find(ctx->keys_vars, token, CONTEXT_DICT_VARIABLE, &i))
+	 || !cdict_find(ctx->keys_vars, token, CONTEXT_DICT_VARIABLE, &ctx->var_group))
 	{
 		return TOKEN_INVALID;
 	}
 
-	cbook_init_iterator(ctx->vars, i);
+	ctx->var_i = 0;
 
 	return context_get_token(ctx, token, math_result);
 }
