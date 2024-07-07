@@ -147,7 +147,7 @@ CDICT_NONNULL(1);
  * @param group : Group to match
  */
 void
-cdict_clear_group(cdict *dict, unsigned int group)
+cdict_clear_group(cdict *dict, size_t group)
 CDICT_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -161,7 +161,7 @@ CDICT_NONNULL(1);
  * @param group : Group to match
  */
 void
-cdict_erase(cdict *dict, const char *key, unsigned int group)
+cdict_erase(cdict *dict, const char *key, size_t group)
 CDICT_NONNULL(1, 2);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -228,7 +228,7 @@ CDICT_NONNULL(1);
  * @error CDICT_MEMORY   : Failed memory allocation
  */
 void
-cdict_write(cdict *dict, const char *key, unsigned int group, size_t value)
+cdict_write(cdict *dict, const char *key, size_t group, size_t value)
 CDICT_NONNULL(1, 2);
 
 /************************************************************************************************************/
@@ -262,7 +262,7 @@ CDICT_PURE;
  * @return_err : false
  */
 bool
-cdict_find(const cdict *dict, const char *key, unsigned int group, size_t *value)
+cdict_find(const cdict *dict, const char *key, size_t group, size_t *value)
 CDICT_NONNULL(1, 2);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

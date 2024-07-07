@@ -48,7 +48,7 @@ struct _slot
 {
 	uint64_t hash;
 	size_t value;
-	unsigned int group;
+	size_t group;
 	enum _state state;
 };
 
@@ -69,7 +69,7 @@ struct cdict
 
 static struct _slot *_find (const cdict *dict, uint64_t hash, enum _state state_cutoff) CDICT_NONNULL(1) CDICT_PURE;
 static bool          _grow (cdict *dict, size_t n)                                      CDICT_NONNULL(1);
-static uint64_t      _hash (const char *str, unsigned int group)                        CDICT_NONNULL(1) CDICT_PURE;
+static uint64_t      _hash (const char *str, size_t group)                              CDICT_NONNULL(1) CDICT_PURE;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -103,7 +103,7 @@ cdict_clear(cdict *dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cdict_clear_group(cdict *dict, unsigned int group)
+cdict_clear_group(cdict *dict, size_t group)
 {
 	if (dict->err)
 	{
@@ -191,7 +191,7 @@ cdict_destroy(cdict *dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cdict_erase(cdict *dict, const char *key, unsigned int group)
+cdict_erase(cdict *dict, const char *key, size_t group)
 {
 	struct _slot *slot;
 
@@ -218,7 +218,7 @@ cdict_error(const cdict *dict)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-cdict_find(const cdict *dict, const char *key, unsigned int group, size_t *value)
+cdict_find(const cdict *dict, const char *key, size_t group, size_t *value)
 {
 	struct _slot *slot;
 
@@ -319,11 +319,10 @@ cdict_set_max_load(cdict *dict, double load_factor)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cdict_write(cdict *dict, const char *key, unsigned int group, size_t value)
+cdict_write(cdict *dict, const char *key, size_t group, size_t value)
 {
 	struct _slot *slot;
 	struct _slot *slot_2;
-
 	uint64_t hash;
 
 	if (dict->err)
@@ -449,7 +448,7 @@ _grow(cdict *dict, size_t n)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static uint64_t
-_hash(const char *str, unsigned int group)
+_hash(const char *str, size_t group)
 {
 	uint64_t h = HASH_OFFSET;
 
