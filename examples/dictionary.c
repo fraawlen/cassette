@@ -67,10 +67,9 @@ main(void)
 	for (size_t i = 0; i < cbook_groups_number(_book); i++)
 	{
 		printf("[ GROUP %zu ]\n", i);
-		cbook_init_iterator(_book, i);
-		while (cbook_iterate(_book))
+		CBOOK_FOR_EACH_REV(_book, i, j)
 		{
-			printf("\t%s\n", cbook_iteration(_book));
+			printf("\t%s\n", cbook_word(_book, j));
 		}
 	}
 
@@ -134,7 +133,7 @@ _print_stats(void)
 		"BOOK\t%zu groups / %zu words / %zu chars\n",
 		cbook_groups_number(_book),
 		cbook_words_number(_book),
-		cbook_byte_length(_book));
+		cbook_length(_book));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

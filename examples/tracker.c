@@ -71,14 +71,13 @@ main(void)
 	cref_pull(_refs, &c);
 	cref_pull(_refs, 0);
 
-	cref_init_iterator(_refs);
-	while (cref_iterate(_refs))
+	CREF_FOR_EACH(_refs, j)
 	{
 		printf(
 			"%i / %u refs / %p\n",
-			*(int*)cref_iteration(_refs),
-			cref_iteration_count(_refs),
-			cref_iteration(_refs));
+			*(int*)cref_ptr(_refs, j),
+			cref_count(_refs, j),
+			cref_ptr(_refs, j));
 	}
 
 	/* End */

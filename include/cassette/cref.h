@@ -128,6 +128,20 @@ CREF_NONNULL(1);
 /************************************************************************************************************/
 
 /**
+ * Convenience for loop wrapper.
+ */
+#define CREF_FOR_EACH(REF, I) for(size_t I = 0; I < cref_length(REF); I++)
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * Convenience inverse for loop wrapper.
+ */
+#define CREF_FOR_EACH_REV(REF, I) for(size_t I = cref_length(REF) - 1; I < SIZE_MAX; I--)
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
  * Convenience generic wrapper to pull a reference.
  */
 #define cref_pull(REF, VAL) \
@@ -159,63 +173,6 @@ CREF_NONNULL(1);
  */
 void
 cref_clear(cref *ref)
-CREF_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Puts the iterator at the beginning of the reference array. Before accessing a reference with
- * cref_iteration(), cref_iterate() should be called at least once. Iterator-related functions are intended
- * intended to replace for-loops as they protect against out-of-bound errors and can adjust the iterator
- * position automatically when a reference gets pulled or purged. They also maintain their own index
- * internally, thus dispensing the end-user from keeping and passing it around across multiple functions.
- *
- * Usage example :
- *
- *	cref_init_iterator(ref);
- *	while (cref_iterate(ref))
- *	{
- *		printf("%p -> %u\n", cref_iteration(ref), cref_iteration_count(ref));
- *	}
- *
- * @param ref : Reference counter to interact with
- */
-void
-cref_init_iterator(cref *ref)
-CREF_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Increments the iterator's offset and makes available the next reference returned by cref_iteration(). This
- * function exits early and returns false if the iterator cannot be incremented because it has already reached
- * the end of the reference array or because the reference counter has an error. Iterator-related functions
- * are intended to replace for-loops as they protect against out-of-bound errors and can adjust the iterator
- * position automatically when a reference gets pulled or purged. They also maintain their own index
- * internally, thus dispensing the end-user from keeping and passing it around across multiple functions.
- *
- * @param ref : Reference counter to interact with
- *
- * @return     : True is the next reference is accessible, false otherwhise
- * @return_err : False
- */
-bool
-cref_iterate(cref *ref)
-CREF_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Blocks the internal iterator so that cref_iterate() will fail and return false until the iterator is reset
- * with cref_init_iterator(). Iterator-related functions are intended to replace for-loops as they protect
- * against out-of-bound errors and can adjust the iterator position automatically when a reference get pulled
- * or purged. They also maintain their own index internally, thus dispensing the end-user from keeping and
- * passing it around across multiple functions.
- *
- * @param ref : Reference counter to interact with
- */
-void
-cref_lock_iterator(cref *ref)
 CREF_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -319,23 +276,6 @@ CREF_NONNULL(1);
 /************************************************************************************************************/
 
 /**
- * Gets the reference pointer at the given index. If index is out of bounds, the default return_err value is
- * returned.
- *
- * @param ref   : Reference counter to interact with
- * @param index : Index within the array
- *
- * @return     : Pointer
- * @return_err : NULL
- */
-const void *
-cref_at_index(const cref *ref, size_t index)
-CREF_NONNULL(1)
-CREF_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
  * Gets the reference count at the given index. If index is out of bounds, the default return_err value is
  * returned.
  *
@@ -346,7 +286,7 @@ CREF_PURE;
  * @return_err : 0
  */
 unsigned int
-cref_at_index_count(const cref *ref, size_t index)
+cref_count(const cref *ref, size_t index)
 CREF_NONNULL(1)
 CREF_PURE;
 
@@ -385,53 +325,6 @@ CREF_NONNULL(1, 2);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Gets the reference pointer the iterator points to. If the iterator is locked, not initialised or hasn't
- * been incremented once after the last initialisation, return_err is returned.
- *
- * @param ref : Reference counter to interact with
- *
- * @return     : Pointer
- * @return_err : NULL
- */
-const void *
-cref_iteration(const cref *ref)
-CREF_NONNULL(1)
-CREF_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Gets the reference count the iterator points to. If the iterator is locked, not initialised or hasn't have
- * been incremented once after the last initialisation, return_err is returned.
- *
- * @param ref : Reference counter to interact with
- *
- * @return     : Reference count
- * @return_err : 0
- */
-unsigned int
-cref_iteration_count(const cref *ref)
-CREF_NONNULL(1)
-CREF_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Gets the number of time the iterator has been incremented since its last initialisation.
- *
- * @param ref : Reference counter to interact with
- *
- * @return     : Reference offset (starts at 1)
- * @return_err : 0
- */
-size_t
-cref_iterator_offset(const cref *ref)
-CREF_NONNULL(1)
-CREF_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
  * Gets the total number of different tracked references.
  *
  * @param ref : Reference counter to interact with
@@ -441,6 +334,23 @@ CREF_PURE;
  */
 size_t
 cref_length(const cref *ref)
+CREF_NONNULL(1)
+CREF_PURE;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * Gets the reference pointer at the given index. If index is out of bounds, the default return_err value is
+ * returned.
+ *
+ * @param ref   : Reference counter to interact with
+ * @param index : Index within the array
+ *
+ * @return     : Pointer
+ * @return_err : NULL
+ */
+const void *
+cref_ptr(const cref *ref, size_t index)
 CREF_NONNULL(1)
 CREF_PURE;
 

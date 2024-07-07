@@ -44,7 +44,6 @@ struct cref
 	struct _slot *slots;
 	size_t n;
 	size_t n_alloc;
-	size_t it;
 	enum cref_err err;
 };
 
@@ -64,39 +63,12 @@ cref cref_placeholder_instance =
 	.slots   = NULL,
 	.n       = 0,
 	.n_alloc = 0,
-	.it      = SIZE_MAX,
 	.err     = CREF_INVALID,
 };
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
-
-const void *
-cref_at_index(const cref *ref, size_t index)
-{
-	if (ref->err || index >= ref->n)
-	{
-		return NULL;
-	}
-	
-	return ref->slots[index].ptr;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-unsigned int
-cref_at_index_count(const cref *ref, size_t index)
-{
-	if (ref->err || index >= ref->n)
-	{
-		return 0;
-	}
-
-	return ref->slots[index].n_ref;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 cref_clear(cref *ref)
@@ -130,10 +102,22 @@ cref_clone(cref *ref)
 	memcpy(ref_new->slots, ref->slots, ref->n * sizeof(struct _slot));
 
 	ref_new->n   = ref->n;
-	ref_new->it  = ref->it;
 	ref_new->err = CREF_OK;
 
 	return ref_new;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+unsigned int
+cref_count(const cref *ref, size_t index)
+{
+	if (ref->err || index >= ref->n)
+	{
+		return 0;
+	}
+
+	return ref->slots[index].n_ref;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -155,7 +139,6 @@ cref_create(void)
 	}
 
 	ref->n   = 0;
-	ref->it  = SIZE_MAX;
 	ref->err = CREF_OK;
 
 	return ref;
@@ -210,78 +193,6 @@ cref_find(const cref *ref, const void *ptr, size_t *index)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-cref_init_iterator(cref *ref)
-{
-	if (ref->err)
-	{
-		return;
-	}
-
-	ref->it = 0;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-cref_iterate(cref *ref)
-{
-	if (ref->err || ref->it >= ref->n)
-	{
-		return false;
-	}
-
-	ref->it++;
-
-	return true;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-const void *
-cref_iteration(const cref *ref)
-{
-	if (ref->err || ref->it == 0 || ref->it > ref->n)
-	{
-		return NULL;
-	}
-
-	return ref->slots[ref->it - 1].ptr;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-unsigned int
-cref_iteration_count(const cref *ref)
-{
-	if (ref->err || ref->it == 0 || ref->it > ref->n)
-	{
-		return 0;
-	}
-
-	return ref->slots[ref->it - 1].n_ref;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-size_t
-cref_iterator_offset(const cref *ref)
-{
-	if (ref->err || ref->it == 0 || ref->it > ref->n)
-	{
-		return 0;
-	}
-
-	if (ref->it > ref->n)
-	{
-		return ref->n;
-	}
-
-	return ref->it;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 size_t
 cref_length(const cref *ref)
 {
@@ -296,19 +207,6 @@ cref_length(const cref *ref)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cref_lock_iterator(cref *ref)
-{
-	if (ref->err)
-	{
-		return;
-	}
-
-	ref->it = SIZE_MAX;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
 cref_prealloc(cref *ref, size_t slots_number)
 {
 	if (ref->err)
@@ -317,6 +215,19 @@ cref_prealloc(cref *ref, size_t slots_number)
 	}
 
 	_grow(ref, slots_number);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+const void *
+cref_ptr(const cref *ref, size_t index)
+{
+	if (ref->err || index >= ref->n)
+	{
+		return NULL;
+	}
+	
+	return ref->slots[index].ptr;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -461,10 +372,5 @@ _grow(cref *ref, size_t n)
 static void
 _pull(cref *ref, size_t i)
 {
-	if (i < ref->it)
-	{
-		ref->it--;
-	}
-
 	memmove(ref->slots + i, ref->slots + i + 1, (--ref->n - i) * sizeof(struct _slot));
 }

@@ -141,6 +141,32 @@ CBOOK_NONNULL(1);
 /************************************************************************************************************/
 
 /**
+ * Convenience for loop wrapper. The I parameter is the global, not local, word index. Therefore, cbook_word()
+ * needs to be used inside the loop instead of cbook_word_in_group().
+ */
+#define CBOOK_FOR_EACH(BOOK, GROUP, I) \
+	for( \
+		size_t I = cbook_word_index(BOOK, GROUP, 0); \
+		I < cbook_word_index(BOOK, GROUP, 0) + cbook_group_length(BOOK, GROUP); \
+		I++)
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * Convenience inverse for loop wrapper. The I parameter is the global, not local, word index. Therefore,
+ * cbook_word() needs to be used inside the loop instead of cbook_word_in_group().
+ */
+#define CBOOK_FOR_EACH_REV(BOOK, GROUP, I) \
+	for( \
+		size_t I = cbook_group_length(BOOK, GROUP) == 0 ? \
+			SIZE_MAX : \
+			cbook_word_index(BOOK, GROUP, cbook_group_length(BOOK, GROUP) - 1); \
+		I - cbook_word_index(BOOK, GROUP, 0) < SIZE_MAX; \
+		I--)
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
  * Clears the contents of a given book. Allocated memory is not freed, use cbook_destroy() for that.
  *
  * @param book : Book to interact with
@@ -170,65 +196,6 @@ CBOOK_NONNULL(1);
  */
 void
 cbook_pop_word(cbook *book)
-CBOOK_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Puts the iterator at the beginning of a group. Before accessing a word from the said group with
- * cbook_iteration(), cbook_iterate() should be called at least once. If the group_index parameter is
- * out-of-bounds, then this function behaves like cbook_lock_iterator(). Iterator-related functions are
- * intended to replace for-loops as they protect against out-of-bound errors and can adjust the iterator
- * position automatically when an element gets removed. They also maintain their own index internally, thus
- * dispensing the end-user from keeping and passing it around across multiple functions.
- *
- * Usage example :
- *
- *	cbook_init_iterator(book, group_index);
- *	while (cbook_iterate(book))
- *	{
- *		printf("%s\n", cbook_iteration(book));
- *	}
- * 
- * @param book        : Book to interact with
- * @param group_index : Group index within book
- */
-void
-cbook_init_iterator(cbook *book, size_t group_index)
-CBOOK_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Increments the iterator's offset and makes available the next word returned by cbook_iteration(). This
- * function exits early and returns false if the iterator cannot be incremented because it has already reached
- * the end of the group it's set at or because the book has an error. Iterator-related functions are intended
- * to replace for-loops as they protect against out-of-bound errors and can adjust the iterator position
- * automatically when an element gets removed. They also maintain their own index internally, thus dispensing
- * the end-user from keeping and passing it around across multiple functions.
- * 
- * @param book : Book to interact with
- *
- * @return     : True if next word is accessible, false otherwhise
- * @return_err : False
- */
-bool
-cbook_iterate(cbook *book)
-CBOOK_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Blocks the internal iterator so that cbook_iterate() will fail and return false until the iterator is reset
- * with cbook_init_iterator(). Iterator-related functions are intended to replace for-loops as they protect
- * against out-of-bound errors and can adjust the iterator position automatically when an element gets
- * removed. They also maintain their own index internally, thus dispensing the end-user from keeping and
- * passing it around across multiple functions.
- * 
- * @param book : Book to interact with
- */
-void
-cbook_lock_iterator(cbook *book)
 CBOOK_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -337,21 +304,6 @@ CBOOK_NONNULL(1);
 /************************************************************************************************************/
 
 /**
- * Gets the total length of the book (all NULL terminators included).
- *
- * @param book : Book to interact with
- *
- * @return     : Number of bytes
- * @return_err : 0
- */
-size_t
-cbook_byte_length(const cbook *book)
-CBOOK_NONNULL(1)
-CBOOK_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
  * Gets the errror state.
  *
  * @param book : Book to interact with
@@ -397,48 +349,15 @@ CBOOK_PURE;
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Gets the word the iterator points to.  If the iterator is locked, not initialised or hasn't been
- * incremented once after the last initialisation, return_err is returned.
- * 
+ * Gets the total length of the book (all NULL terminators included).
+ *
  * @param book : Book to interact with
  *
- * @return     : C string
- * @return_err : "\0"
- */
-const char *
-cbook_iteration(const cbook *book)
-CBOOK_NONNULL_RETURN
-CBOOK_NONNULL(1)
-CBOOK_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Gets the group the iterator is set to.  If the iterator is locked, not initialised or hasn't been
- * incremented once after the last initialisation, return_err is returned.
- * 
- * @param book : Book to interact with
- *
- * @return     : Group index
- * @return_err : SIZE_MAX
- */
-size_t
-cbook_iterator_group(const cbook *book)
-CBOOK_NONNULL(1)
-CBOOK_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Gets the number of time the iterator has been incremented since its last initialisation.
- * 
- * @param book : Book to interact with
- *
- * @return     : Word offset (starts at 1)
+ * @return     : Number of bytes
  * @return_err : 0
  */
 size_t
-cbook_iterator_offset(const cbook *book)
+cbook_length(const cbook *book)
 CBOOK_NONNULL(1)
 CBOOK_PURE;
 
@@ -477,6 +396,8 @@ cbook_word_in_group(const cbook *book, size_t group_index, size_t word_local_ind
 CBOOK_NONNULL_RETURN
 CBOOK_NONNULL(1)
 CBOOK_PURE;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Converts a group + local word indexes to a book-wide word index. If group_index or word_index are out of

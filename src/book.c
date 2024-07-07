@@ -41,8 +41,6 @@ struct cbook
 	size_t n_alloc_chars;
 	size_t n_alloc_words;
 	size_t n_alloc_groups;
-	size_t it_word;
-	size_t it_group;
 	enum cbook_err err;
 };
 
@@ -68,27 +66,12 @@ cbook cbook_placeholder_instance =
 	.n_alloc_chars  = 0,
 	.n_alloc_words  = 0,
 	.n_alloc_groups = 0,
-	.it_word        = SIZE_MAX,
-	.it_group       = SIZE_MAX,
 	.err            = CBOOK_INVALID,
 };
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
-
-size_t
-cbook_byte_length(const cbook *book)
-{
-	if (book->err)
-	{
-		return 0;
-	}
-
-	return book->n_chars;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 cbook_clear(cbook *book)
@@ -131,8 +114,6 @@ cbook_clone(const cbook *book)
 	book_new->n_chars  = book->n_chars;
 	book_new->n_words  = book->n_words;
 	book_new->n_groups = book->n_groups;
-	book_new->it_word  = book->it_word;
-	book_new->it_group = book->it_group;
 	book_new->err      = CBOOK_OK;
 
 	return book_new;
@@ -162,8 +143,6 @@ cbook_create(void)
 	book->n_chars   = 0;
 	book->n_words   = 0;
 	book->n_groups  = 0;
-	book->it_word   = SIZE_MAX;
-	book->it_group  = SIZE_MAX;
 	book->err       = CBOOK_OK;
 
 	return book;
@@ -222,101 +201,6 @@ cbook_groups_number(const cbook *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cbook_init_iterator(cbook *book, size_t group_index)
-{
-	if (book->err)
-	{
-		return;
-	}
-
-	if (group_index >= book->n_groups)
-	{
-		book->it_word  = SIZE_MAX;
-		book->it_group = SIZE_MAX;
-	}
-	else
-	{
-		book->it_word  = 0;
-		book->it_group = group_index;
-	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-cbook_iterate(cbook *book)
-{
-	if (book->err || book->it_word >= _group_size(book, book->it_group))
-	{
-		return false;
-	}
-
-	book->it_word++;
-
-	return true;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-const char *
-cbook_iteration(const cbook *book)
-{
-	if (book->err || book->it_word == 0 || book->it_word > _group_size(book, book->it_group))
-	{
-		return "";
-	}
-
-	return book->chars + book->words[book->groups[book->it_group] + book->it_word - 1];
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-size_t
-cbook_iterator_group(const cbook *book)
-{
-	if (book->err || book->it_group >= book->n_groups)
-	{
-		return SIZE_MAX;
-	}
-
-	return book->it_group;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-size_t
-cbook_iterator_offset(const cbook *book)
-{
-	if (book->err || book->it_group >= book->n_groups)
-	{
-		return 0;
-	}
-
-	if (book->it_word > _group_size(book, book->it_group))
-	{
-		return _group_size(book, book->it_group);
-	}
-
-	return book->it_word;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cbook_lock_iterator(cbook *book)
-{
-	if (book->err)
-	{
-		return;
-	}
-
-	book->it_word  = SIZE_MAX;
-	book->it_group = SIZE_MAX;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
 cbook_pop_group(cbook *book)
 {
 	if (book->err || book->n_groups == 0)
@@ -326,6 +210,19 @@ cbook_pop_group(cbook *book)
 
 	book->n_chars = book->words[book->groups[--book->n_groups]];
 	book->n_words = book->groups[book->n_groups];
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+cbook_length(const cbook *book)
+{
+	if (book->err)
+	{
+		return 0;
+	}
+
+	return book->n_chars;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
