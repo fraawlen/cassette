@@ -155,17 +155,10 @@ _combine_var(struct context *ctx, enum token type)
 	if (context_get_token(ctx, name,    NULL) == TOKEN_INVALID
 	 || context_get_token(ctx, token_1, NULL) == TOKEN_INVALID
 	 || context_get_token(ctx, token_2, NULL) == TOKEN_INVALID
-	 || !cdict_find(ctx->keys_vars, token_1, CONTEXT_DICT_VARIABLE, &i))
+	 || !cdict_find(ctx->keys_vars, token_1, CONTEXT_DICT_VARIABLE, &i)
+	 || (type == TOKEN_VAR_MERGE && !cdict_find(ctx->keys_vars, token_2, CONTEXT_DICT_VARIABLE, &j)))
 	{
 		return;
-	}
-
-	if (type == TOKEN_VAR_MERGE)
-	{
-		if (!cdict_find(ctx->keys_vars, token_2, CONTEXT_DICT_VARIABLE, &j))
-		{
-			return;
-		}
 	}
 
 	/* generate new values and write them into the variable book */
