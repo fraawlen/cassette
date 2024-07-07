@@ -417,8 +417,7 @@ _iterate(struct context *ctx)
 
 	/* In the case of a new iteration, read the file and write raw sequences into the iteration book,    */
 	/* but do not do that for nested iterations since the data is already written in the iteration book. */
-	/* In both cases, ctx->it_group_max is set to the end of the iteration block, which is delimited by  */
-	/* a matching TOKEN_FOR_END                                                                          */
+	/* In both cases, find out which saved sequence marks the end of the iteration block                 */
 
 	if (nested)
 	{
