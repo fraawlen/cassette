@@ -20,25 +20,75 @@
 
 #pragma once
 
-#include <cassette/cgui.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <xcb/xcb.h>
+
+#include "cgui-cell.h"
+#include "cgui-clipboard.h"
+#include "cgui-config.h"
+#include "cgui-event.h"
+#include "cgui-grid.h"
+#include "cgui-input-tracker.h"
+#include "cgui-input-swap.h"
+#include "cgui-window.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /************************************************************************************************************/
-/* INIT / RESET *********************************************************************************************/
+/************************************************************************************************************/
 /************************************************************************************************************/
 
-bool
-config_init(const char *app_name, const char *app_class)
-CGUI_NONNULL(1, 2);
+#define CGUI_VERSION "0.2.0"
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-config_reset(void);
+void cgui_init(int argc, char **argv);
+
+void cgui_reset(void);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void cgui_setup_app_class(const char *class_name);
+
+void cgui_setup_app_name(const char *name);
+
+void cgui_setup_x11_connection(xcb_connection_t *connection);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void cgui_allow_user_exit(void);
+
+void cgui_block_user_exit(void);
+
+void cgui_exit(void);
+
+void cgui_lock(void);
+
+void cgui_reconfig(void);
+
+void cgui_run(void);
+
+void cgui_unlock(void);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+xcb_connection_t *cgui_get_x11_connection(void);
+
+xcb_window_t cgui_get_x11_leader_window(void);
+
+bool cgui_has_failed(void);
+
+bool cgui_is_init(void);
+
+bool cgui_is_running(void);
 
 /************************************************************************************************************/
-/* PROCEDURES ***********************************************************************************************/
+/************************************************************************************************************/
 /************************************************************************************************************/
 
-bool
-config_load(void);
+#ifdef __cplusplus
+}
+#endif

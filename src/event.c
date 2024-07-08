@@ -27,20 +27,20 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _dummy_callback_event (cgui_event_t *event);
+static void _dummy_callback_event (struct cgui_event *event) CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void (*_fn_event) (cgui_event_t *event) = _dummy_callback_event;
+static void (*_fn_event) (struct cgui_event *event) = _dummy_callback_event;
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 void
-cgui_event_set_callback(void (*fn)(cgui_event_t *event))
+cgui_event_set_callback(void (*fn)(struct cgui_event *event))
 {
 	_fn_event = fn ? fn : _dummy_callback_event;
 }
@@ -50,17 +50,15 @@ cgui_event_set_callback(void (*fn)(cgui_event_t *event))
 /************************************************************************************************************/
 
 void
-event_process(cgui_event_t *event)
+event_process(struct cgui_event *event)
 {
 	_fn_event(event);
 
-	switch (event->kind)
+	switch (event->type)
 	{
-		case CGUI_EVENT_NONE:
-			break;
-
 		// TODO
 
+		case CGUI_EVENT_NONE:
 		default:
 			break;
 	}
@@ -71,7 +69,8 @@ event_process(cgui_event_t *event)
 /************************************************************************************************************/
 
 static void
-_dummy_callback_event(cgui_event_t *event)
+_dummy_callback_event(struct cgui_event *event)
 {
 	(void)event;
 }
+

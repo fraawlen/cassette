@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Graphics (CGUI) library.
+ * This file is part of the Cassette Objects (COBJ) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -18,27 +18,78 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#pragma once
-
-#include <cassette/cgui.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#include "safe.h"
 
 /************************************************************************************************************/
-/* INIT / RESET *********************************************************************************************/
+/* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
 bool
-config_init(const char *app_name, const char *app_class)
-CGUI_NONNULL(1, 2);
+safe_add(size_t *result, size_t a, size_t b)
+{
+	bool safe;
+
+	safe = a <= SIZE_MAX - b;
+
+	if (result)
+	{
+		*result = safe ? a + b : a;
+	}
+
+	return safe;
+}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-config_reset(void);
+bool
+safe_div(size_t *result, size_t a, size_t b)
+{
+	bool safe;
 
-/************************************************************************************************************/
-/* PROCEDURES ***********************************************************************************************/
-/************************************************************************************************************/
+	safe = b != 0;
+
+	if (result)
+	{
+		*result = safe ? a / b : a;
+	}
+
+	return safe;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-config_load(void);
+safe_mul(size_t *result, size_t a, size_t b)
+{
+	bool safe;
+
+	safe = b == 0 || a <= SIZE_MAX / b;
+
+	if (result)
+	{
+		*result = safe ? a * b : a;
+	}
+
+	return safe;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+safe_sub(size_t *result, size_t a, size_t b)
+{
+	bool safe;
+
+	safe = a > b;
+
+	if (result)
+	{
+		*result = safe ? a - b : a;
+	}
+
+	return safe;
+}

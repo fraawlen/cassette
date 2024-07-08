@@ -23,57 +23,63 @@
 #include <cassette/ccfg.h>
 #include <cassette/cobj.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 
-#include "cgui-input-swap.h"
+#include "cgui-attributes.h"
+#include "cgui-swap.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* GLOBALS **************************************************************************************************/
 /************************************************************************************************************/
 
+#define CGUI_CONFIG_STR_LEN    64
 #define CGUI_CONFIG_CLIPBOARDS 3
 #define CGUI_CONFIG_ACCELS     12
 #define CGUI_CONFIG_BUTTONS    12
 #define CGUI_CONFIG_KEYS       128
 
-#define CGUI_CONFIG_SWAP_DIRECT 0
-#define CGUI_CONFIG_SWAP_MOD    1
-#define CGUI_CONFIG_SWAP_SHIFT  2
+/************************************************************************************************************/
+/* TYPES ****************************************************************************************************/
+/************************************************************************************************************/
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-enum cgui_config_modkey_t
+/**
+ *
+ */
+enum cgui_config_modkey
 {
-	CGUI_CONFIG_MOD_NONE  = 0,       /* cannor be used as modkey config option */
-	CGUI_CONFIG_MOD_LOCK  = 1U << 1, /* cannot be used as modkey config option */
-	CGUI_CONFIG_MOD_CTRL  = 1U << 2, 
-	CGUI_CONFIG_MOD_1     = 1U << 3, 
-	CGUI_CONFIG_MOD_2     = 1U << 4, /* cannot be used as modkey config option */
-	CGUI_CONFIG_MOD_3     = 1U << 5, /* cannot be used as modkey config option */
-	CGUI_CONFIG_MOD_4     = 1U << 6,
-	CGUI_CONFIG_MOD_5     = 1U << 7, /* cannot be used as modkey config option */
+	CGUI_CONFIG_MOD_NONE  = 0,      /* cannor be used as modkey config option */
+	CGUI_CONFIG_MOD_LOCK  = 1,      /* cannot be used as modkey config option */
+	CGUI_CONFIG_MOD_CTRL  = 1 << 1, 
+	CGUI_CONFIG_MOD_1     = 1 << 2, 
+	CGUI_CONFIG_MOD_2     = 1 << 3, /* cannot be used as modkey config option */
+	CGUI_CONFIG_MOD_3     = 1 << 4, /* cannot be used as modkey config option */
+	CGUI_CONFIG_MOD_4     = 1 << 5,
+	CGUI_CONFIG_MOD_5     = 1 << 6, /* cannot be used as modkey config option */
 };
 
-typedef size_t cgui_config_modkey_t;
-
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cgui_config_font_antialias_t
+/**
+ *
+ */
+enum cgui_config_antialias
 {
 	CGUI_CONFIG_ANTIALIAS_NONE,
 	CGUI_CONFIG_ANTIALIAS_GRAY,
 	CGUI_CONFIG_ANTIALIAS_SUBPIXEL,
 };
 
-typedef size_t cgui_config_font_antialias_t;
-
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cgui_config_font_subpixel_t
+/**
+ *
+ */
+enum cgui_config_subpixel
 {
 	CGUI_CONFIG_SUBPIXEL_RGB,
 	CGUI_CONFIG_SUBPIXEL_BGR,
@@ -81,56 +87,69 @@ enum cgui_config_font_subpixel_t
 	CGUI_CONFIG_SUBPIXEL_VBGR,
 };
 
-typedef size_t cgui_config_font_subpixel_t;
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ */
+enum cgui_config_swap_level
+{
+	CGUI_CONFIG_SWAP_DIRECT = 0,
+	CGUI_CONFIG_SWAP_MOD    = 1,
+	CGUI_CONFIG_SWAP_SHIFT  = 2,
+};
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-struct cgui_config_t
+/**
+ *
+ */
+struct cgui_config
 {
 	bool init;
 	double scale;
-	cgui_config_modkey_t modkey;
+	enum cgui_config_modkey modkey;
 
 	/* font */
 
-	char font_face[CCFG_MAX_WORD_BYTES];
+	char font_face[CGUI_CONFIG_STR_LEN];
 
-	int font_size;
-	int font_width;
-	int font_height;
-	int font_ascent;
-	int font_descent;
-	int font_spacing_horizontal;
-	int font_spacing_vertical;
-	int font_override_width;
-	int font_override_ascent;
-	int font_override_descent;
-	int font_offset_x;
-	int font_offset_y;
+	uint16_t font_size;
+	uint16_t font_width;
+	uint16_t font_height;
+	uint16_t font_ascent;
+	uint16_t font_descent;
+	uint16_t font_spacing_horizontal;
+	uint16_t font_spacing_vertical;
+	uint16_t font_override_width;
+	uint16_t font_override_ascent;
+	uint16_t font_override_descent;
+	 int16_t font_offset_x;
+ 	 int16_t font_offset_y;
 
 	bool font_enable_overrides;
 	bool font_enable_hint_metrics;
-	cgui_config_font_antialias_t font_antialias;
-	cgui_config_font_subpixel_t font_subpixel;
+	enum cgui_config_antialias font_antialias;
+	enum cgui_config_subpixel font_subpixel;
 
 	/* grid */
 
-	int grid_padding;
-	int grid_spacing;
+	uint16_t grid_padding;
+	uint16_t grid_spacing;
 
 	/* window */
 
-	cobj_color_t window_color_background;
-	cobj_color_t window_color_background_disabled;
-	cobj_color_t window_color_background_focused;
-	cobj_color_t window_color_background_locked;
-	cobj_color_t window_color_border;
-	cobj_color_t window_color_border_disabled;
-	cobj_color_t window_color_border_focused;
-	cobj_color_t window_color_border_locked;
+	struct ccolor window_color_background;
+	struct ccolor window_color_background_disabled;
+	struct ccolor window_color_background_focused;
+	struct ccolor window_color_background_locked;
+	struct ccolor window_color_border;
+	struct ccolor window_color_border_disabled;
+	struct ccolor window_color_border_focused;
+	struct ccolor window_color_border_locked;
 
-	int window_border;
-	int window_padding;
+	uint16_t window_border;
+	uint16_t window_padding;
 
 	bool window_enable_disabled;
 	bool window_enable_focused;
@@ -138,17 +157,17 @@ struct cgui_config_t
 	
 	/* popup */
 
-	cobj_color_t popup_color_background;
-	cobj_color_t popup_color_border;
+	struct ccolor popup_color_background;
+	struct ccolor popup_color_border;
 
-	int popup_border;
-	int popup_padding;
-	int popup_max_width;
-	int popup_max_height;
-	int popup_override_width;
-	int popup_override_height;
-	int popup_override_x;
-	int popup_override_y;
+	uint16_t popup_border;
+	uint16_t popup_padding;
+	uint16_t popup_max_width;
+	uint16_t popup_max_height;
+	uint16_t popup_override_width;
+	uint16_t popup_override_height;
+	 int16_t popup_override_x;
+	 int16_t popup_override_y;
 
 	bool popup_enable_override_position;
 	bool popup_enable_override_width;
@@ -163,17 +182,40 @@ struct cgui_config_t
 
 	/* input swaps */
 
-	cgui_input_swap_t    keys[CGUI_CONFIG_KEYS    + 1][3];
-	cgui_input_swap_t buttons[CGUI_CONFIG_BUTTONS + 1][3];
+	struct cgui_swap    keys[CGUI_CONFIG_KEYS    + 1][3];
+	struct cgui_swap buttons[CGUI_CONFIG_BUTTONS + 1][3];
 };
 
-typedef struct cgui_config_t cgui_config_t;
+/************************************************************************************************************/
+/* PROCEDURES ***********************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ *
+ */
+void
+cgui_config_pull_on_load(void (*fn)(ccfg *cfg))
+CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-const cgui_config_t *cgui_config_get(void);
+/**
+ *
+ */
+bool
+cgui_config_push_on_load(void (*fn)(ccfg *cfg))
+CGUI_NONNULL(1);
 
-ccfg_t *cgui_config_get_parser(void);
+/************************************************************************************************************/
+/* FUNCTIONS ************************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ *
+ */
+const struct cgui_config *
+cgui_config_get(void)
+CGUI_NONNULL_RETURN;
 
 /************************************************************************************************************/
 /************************************************************************************************************/

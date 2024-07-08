@@ -26,7 +26,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static const cgui_config_t config_default =
+static const struct cgui_config config_default =
 {
 	.init   = false,
 	.scale  = 1.0,
@@ -73,7 +73,6 @@ static const cgui_config_t config_default =
 
 	/* popup */
 
-
 	.popup_color_background = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
 	.popup_color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
 
@@ -101,45 +100,45 @@ static const cgui_config_t config_default =
 
 	.keys = {{{0}}},
 
-	.keys[ 67][CGUI_CONFIG_SWAP_DIRECT] = { .kind = CGUI_INPUT_SWAP_TO_ACCELERATOR,   .value = 1                                 },
-	.keys[ 68][CGUI_CONFIG_SWAP_DIRECT] = { .kind = CGUI_INPUT_SWAP_TO_ACCELERATOR,   .value = 2                                 },
-	.keys[ 69][CGUI_CONFIG_SWAP_DIRECT] = { .kind = CGUI_INPUT_SWAP_TO_ACCELERATOR,   .value = 3                                 },
-	.keys[ 70][CGUI_CONFIG_SWAP_DIRECT] = { .kind = CGUI_INPUT_SWAP_TO_ACCELERATOR,   .value = 4                                 },
-	.keys[ 71][CGUI_CONFIG_SWAP_DIRECT] = { .kind = CGUI_INPUT_SWAP_TO_ACCELERATOR,   .value = 5                                 },
-	.keys[ 72][CGUI_CONFIG_SWAP_DIRECT] = { .kind = CGUI_INPUT_SWAP_TO_ACCELERATOR,   .value = 6                                 },
-	.keys[ 73][CGUI_CONFIG_SWAP_DIRECT] = { .kind = CGUI_INPUT_SWAP_TO_ACCELERATOR,   .value = 7                                 },
-	.keys[ 74][CGUI_CONFIG_SWAP_DIRECT] = { .kind = CGUI_INPUT_SWAP_TO_ACCELERATOR,   .value = 8                                 },
-	.keys[ 75][CGUI_CONFIG_SWAP_DIRECT] = { .kind = CGUI_INPUT_SWAP_TO_ACCELERATOR,   .value = 9                                 },
-	.keys[ 76][CGUI_CONFIG_SWAP_DIRECT] = { .kind = CGUI_INPUT_SWAP_TO_ACCELERATOR,   .value = 10                                },
-	.keys[ 95][CGUI_CONFIG_SWAP_DIRECT] = { .kind = CGUI_INPUT_SWAP_TO_ACCELERATOR,   .value = 11                                },
-	.keys[ 96][CGUI_CONFIG_SWAP_DIRECT] = { .kind = CGUI_INPUT_SWAP_TO_ACCELERATOR,   .value = 12                                },
+	.keys[ 67][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_INPUT_SWAP_TO_ACCELERATOR,   1                                 },
+	.keys[ 68][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_INPUT_SWAP_TO_ACCELERATOR,   2                                 },
+	.keys[ 69][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_INPUT_SWAP_TO_ACCELERATOR,   3                                 },
+	.keys[ 70][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_INPUT_SWAP_TO_ACCELERATOR,   4                                 },
+	.keys[ 71][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_INPUT_SWAP_TO_ACCELERATOR,   5                                 },
+	.keys[ 72][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_INPUT_SWAP_TO_ACCELERATOR,   6                                 },
+	.keys[ 73][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_INPUT_SWAP_TO_ACCELERATOR,   7                                 },
+	.keys[ 74][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_INPUT_SWAP_TO_ACCELERATOR,   8                                 },
+	.keys[ 75][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_INPUT_SWAP_TO_ACCELERATOR,   9                                 },
+	.keys[ 76][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_INPUT_SWAP_TO_ACCELERATOR,   10                                },
+	.keys[ 95][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_INPUT_SWAP_TO_ACCELERATOR,   11                                },
+	.keys[ 96][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_INPUT_SWAP_TO_ACCELERATOR,   12                                },
 
-	.keys[  9][CGUI_CONFIG_SWAP_MOD   ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  .value = CGUI_INPUT_SWAP_FOCUS_NONE        },
-	.keys[ 23][CGUI_CONFIG_SWAP_MOD   ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  .value = CGUI_INPUT_SWAP_FOCUS_NEXT        },
-	.keys[ 34][CGUI_CONFIG_SWAP_MOD   ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  .value = CGUI_INPUT_SWAP_FOCUS_FIRST       },
-	.keys[ 35][CGUI_CONFIG_SWAP_MOD   ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  .value = CGUI_INPUT_SWAP_FOCUS_LAST        },
-	.keys[113][CGUI_CONFIG_SWAP_MOD   ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  .value = CGUI_INPUT_SWAP_FOCUS_LEFT        },
-	.keys[114][CGUI_CONFIG_SWAP_MOD   ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  .value = CGUI_INPUT_SWAP_FOCUS_RIGHT       },
-	.keys[111][CGUI_CONFIG_SWAP_MOD   ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  .value = CGUI_INPUT_SWAP_FOCUS_UP          },
-	.keys[116][CGUI_CONFIG_SWAP_MOD   ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  .value = CGUI_INPUT_SWAP_FOCUS_DOWN        },
-	.keys[ 23][CGUI_CONFIG_SWAP_SHIFT ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  .value = CGUI_INPUT_SWAP_FOCUS_PREV        },
-	.keys[113][CGUI_CONFIG_SWAP_SHIFT ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  .value = CGUI_INPUT_SWAP_FOCUS_LEFTMOST    },
-	.keys[114][CGUI_CONFIG_SWAP_SHIFT ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  .value = CGUI_INPUT_SWAP_FOCUS_RIGHTMOST   },
-	.keys[111][CGUI_CONFIG_SWAP_SHIFT ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  .value = CGUI_INPUT_SWAP_FOCUS_TOP         },
-	.keys[116][CGUI_CONFIG_SWAP_SHIFT ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  .value = CGUI_INPUT_SWAP_FOCUS_BOTTOM      },
+	.keys[  9][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  CGUI_INPUT_SWAP_FOCUS_NONE        },
+	.keys[ 23][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  CGUI_INPUT_SWAP_FOCUS_NEXT        },
+	.keys[ 34][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  CGUI_INPUT_SWAP_FOCUS_FIRST       },
+	.keys[ 35][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  CGUI_INPUT_SWAP_FOCUS_LAST        },
+	.keys[113][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  CGUI_INPUT_SWAP_FOCUS_LEFT        },
+	.keys[114][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  CGUI_INPUT_SWAP_FOCUS_RIGHT       },
+	.keys[111][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  CGUI_INPUT_SWAP_FOCUS_UP          },
+	.keys[116][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  CGUI_INPUT_SWAP_FOCUS_DOWN        },
+	.keys[ 23][CGUI_CONFIG_SWAP_SHIFT ] = { CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  CGUI_INPUT_SWAP_FOCUS_PREV        },
+	.keys[113][CGUI_CONFIG_SWAP_SHIFT ] = { CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  CGUI_INPUT_SWAP_FOCUS_LEFTMOST    },
+	.keys[114][CGUI_CONFIG_SWAP_SHIFT ] = { CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  CGUI_INPUT_SWAP_FOCUS_RIGHTMOST   },
+	.keys[111][CGUI_CONFIG_SWAP_SHIFT ] = { CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  CGUI_INPUT_SWAP_FOCUS_TOP         },
+	.keys[116][CGUI_CONFIG_SWAP_SHIFT ] = { CGUI_INPUT_SWAP_TO_ACTION_FOCUS,  CGUI_INPUT_SWAP_FOCUS_BOTTOM      },
 
-	.keys[ 22][CGUI_CONFIG_SWAP_MOD   ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_CELL,   .value = CGUI_INPUT_SWAP_CELL_REDRAW       },
-	.keys[ 22][CGUI_CONFIG_SWAP_SHIFT ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_WINDOW, .value = CGUI_INPUT_SWAP_WINDOW_REDRAW     },
-	.keys[ 36][CGUI_CONFIG_SWAP_MOD   ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_WINDOW, .value = CGUI_INPUT_SWAP_WINDOW_LOCK_FOCUS },
-	.keys[ 36][CGUI_CONFIG_SWAP_SHIFT ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_WINDOW, .value = CGUI_INPUT_SWAP_WINDOW_LOCK_GRID  },
+	.keys[ 22][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_INPUT_SWAP_TO_ACTION_CELL,   CGUI_INPUT_SWAP_CELL_REDRAW       },
+	.keys[ 22][CGUI_CONFIG_SWAP_SHIFT ] = { CGUI_INPUT_SWAP_TO_ACTION_WINDOW, CGUI_INPUT_SWAP_WINDOW_REDRAW     },
+	.keys[ 36][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_INPUT_SWAP_TO_ACTION_WINDOW, CGUI_INPUT_SWAP_WINDOW_LOCK_FOCUS },
+	.keys[ 36][CGUI_CONFIG_SWAP_SHIFT ] = { CGUI_INPUT_SWAP_TO_ACTION_WINDOW, CGUI_INPUT_SWAP_WINDOW_LOCK_GRID  },
 
-	.keys[ 27][CGUI_CONFIG_SWAP_MOD   ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_MISC,   .value = CGUI_INPUT_SWAP_RECONFIG          },
-	.keys[ 54][CGUI_CONFIG_SWAP_MOD   ] = { .kind = CGUI_INPUT_SWAP_TO_ACTION_MISC,   .value = CGUI_INPUT_SWAP_EXIT              },
+	.keys[ 27][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_INPUT_SWAP_TO_ACTION_MISC,   CGUI_INPUT_SWAP_RECONFIG          },
+	.keys[ 54][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_INPUT_SWAP_TO_ACTION_MISC,   CGUI_INPUT_SWAP_EXIT              },
 
 	/* buttons */
 	
 	.buttons = {{{0}}},
 
-	.buttons[4][CGUI_CONFIG_SWAP_MOD] = { .kind = CGUI_INPUT_SWAP_TO_VALUE, .value = 6 },
-	.buttons[5][CGUI_CONFIG_SWAP_MOD] = { .kind = CGUI_INPUT_SWAP_TO_VALUE, .value = 7 },
+	.buttons[4][CGUI_CONFIG_SWAP_MOD] = { CGUI_INPUT_SWAP_TO_VALUE, 6 },
+	.buttons[5][CGUI_CONFIG_SWAP_MOD] = { CGUI_INPUT_SWAP_TO_VALUE, 7 },
 };

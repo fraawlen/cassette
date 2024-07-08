@@ -20,21 +20,32 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /************************************************************************************************************/
-/* TYPES ****************************************************************************************************/
+/************************************************************************************************************/
 /************************************************************************************************************/
 
 /**
  *
  */
-enum cgui_event_type
+enum cgui_swap_type
 {
-	CGUI_EVENT_NONE = 0,
-	CGUI_EVENT_UNKNOWN_XCB,
+	CGUI_INPUT_SWAP_TO_DEFAULT = 0,
+	CGUI_INPUT_SWAP_TO_NONE,
+	CGUI_INPUT_SWAP_TO_VALUE,
+	CGUI_INPUT_SWAP_TO_ACCELERATOR,
+	CGUI_INPUT_SWAP_TO_CLIPBOARD_CUT,
+	CGUI_INPUT_SWAP_TO_CLIPBOARD_COPY,
+	CGUI_INPUT_SWAP_TO_CLIPBOARD_PASTE,
+	CGUI_INPUT_SWAP_TO_ACTION_CELL,
+	CGUI_INPUT_SWAP_TO_ACTION_FOCUS,
+	CGUI_INPUT_SWAP_TO_ACTION_WINDOW,
+	CGUI_INPUT_SWAP_TO_ACTION_MISC,
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -42,27 +53,61 @@ enum cgui_event_type
 /**
  *
  */
-struct cgui_event
+enum cgui_swap_action
 {
-	enum cgui_event_type type;
-	union
-	{
-		/* CGUI_EVENT_UNKNOWN_XCB */
-		xcb_generic_event_t *xcb_event;
-		/* CGUI_EVENT_NONE */
-		/* no fields for these events */
-	};
+	CGUI_INPUT_SWAP_NONE = 0,
+	
+	/* cell */
+
+	CGUI_INPUT_SWAP_CELL_REDRAW,
+	CGUI_INPUT_SWAP_CELL_SELECT_LESS,
+	CGUI_INPUT_SWAP_CELL_SELECT_MORE,
+	CGUI_INPUT_SWAP_CELL_SELECT_NONE,
+	CGUI_INPUT_SWAP_CELL_SELECT_ALL,
+	CGUI_INPUT_SWAP_CELL_TRIGGER_1,
+	CGUI_INPUT_SWAP_CELL_TRIGGER_2,
+	CGUI_INPUT_SWAP_CELL_TRIGGER_3,
+	CGUI_INPUT_SWAP_CELL_TRIGGER_4,
+	CGUI_INPUT_SWAP_CELL_TRIGGER_5,
+
+	/* focus */
+
+	CGUI_INPUT_SWAP_FOCUS_LEFT,
+	CGUI_INPUT_SWAP_FOCUS_RIGHT,
+	CGUI_INPUT_SWAP_FOCUS_UP,
+	CGUI_INPUT_SWAP_FOCUS_DOWN,
+	CGUI_INPUT_SWAP_FOCUS_LEFTMOST,
+	CGUI_INPUT_SWAP_FOCUS_RIGHTMOST,
+	CGUI_INPUT_SWAP_FOCUS_TOP,
+	CGUI_INPUT_SWAP_FOCUS_BOTTOM,
+	CGUI_INPUT_SWAP_FOCUS_NEXT,
+	CGUI_INPUT_SWAP_FOCUS_PREV,
+	CGUI_INPUT_SWAP_FOCUS_FIRST,
+	CGUI_INPUT_SWAP_FOCUS_LAST,
+	CGUI_INPUT_SWAP_FOCUS_NONE,
+
+	/* window */
+
+	CGUI_INPUT_SWAP_WINDOW_LOCK_GRID,
+	CGUI_INPUT_SWAP_WINDOW_LOCK_FOCUS,
+	CGUI_INPUT_SWAP_WINDOW_REDRAW,
+
+	/* misc */
+
+	CGUI_INPUT_SWAP_RECONFIG,
+	CGUI_INPUT_SWAP_EXIT,
 };
 
-/************************************************************************************************************/
-/* PROCEDURES ***********************************************************************************************/
-/************************************************************************************************************/
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
  */
-void
-cgui_event_set_callback(void (*fn)(struct cgui_event *event));
+struct cgui_swap
+{
+	uint8_t type;
+	uint8_t value;
+};
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -71,4 +116,3 @@ cgui_event_set_callback(void (*fn)(struct cgui_event *event));
 #ifdef __cplusplus
 }
 #endif
-

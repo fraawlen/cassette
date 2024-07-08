@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Graphics (CGUI) library.
+ * This file is part of the Cassette Configuration (CCFG) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -20,11 +20,16 @@
 
 #pragma once
 
-/************************************************************************************************************/
-/* GLOBALS **************************************************************************************************/
-/************************************************************************************************************/
+#if __GNUC__ > 4
+	#define CGUI_NONNULL_RETURN __attribute__((returns_nonnull))
+	#define CGUI_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
+	#define CGUI_PURE           __attribute__((pure))
+	#define CGUI_CONST          __attribute__((const))
+#else
+	#define CGUI_NONNULL_RETURN
+	#define CGUI_NONNULL(...)
+	#define CGUI_PURE
+	#define CGUI_CONST
+#endif
 
-#define ENV_FORCE_CLEAN "CGUI_FORCE_CLEANUP"
-#define ENV_NO_PARSING  "CGUI_CONFIG_HARDCODED_ONLY"
-#define ENV_CONF_SOURCE "CGUI_CONFIG_SOURCE"
 

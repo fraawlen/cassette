@@ -60,5 +60,3 @@ util_str_to_long(const char *str, long min, long max)
 
 	return l > max ? max : (l < min ? min : l);
 }
-
-

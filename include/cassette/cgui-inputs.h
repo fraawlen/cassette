@@ -20,18 +20,10 @@
 
 #pragma once
 
-#include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
-#include <xcb/xcb.h>
 
 #include "cgui-attributes.h"
-//#include "cgui-cell.h"
-#include "cgui-config.h"
-#include "cgui-event.h"
-//#include "cgui-grid.h"
-#include "cgui-inputs.h"
-#include "cgui-swap.h"
-//#include "cgui-window.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,77 +34,138 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Error types.
+ *
  */
-enum cgui_err
+typedef struct cgui_inputs cgui_inputs;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ */
+enum cgui_inputs_err
 {
-	CGUI_OK       = 0,
-	CGUI_OVERFLOW = 1,
-	CGUI_MEMORY   = 1 << 1,
-	CGUI_XCB      = 1 << 2,
-	CGUI_CAIRO    = 1 << 3,
-	CGUI_MUTEX    = 1 << 4,
-	CGUI_CONFIG   = 1 << 5,
+	CGUI_INPUTS_OK        = 0,
+	CGUI_INPUTS_INVALID   = 1,
+	CGUI_INPUTS_OVERFLOW  = 1 << 1,
+	CGUI_INPUTS_MEMORY    = 1 << 2,
+	CGUI_INPUTS_BAD_INPUT = 1 << 3,
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ */
+struct cgui_input
+{
+	unsigned int id;
+	const void *ref;
+	int16_t x;
+	int16_t y;
 };
 
 /************************************************************************************************************/
 /* GLOBALS **************************************************************************************************/
 /************************************************************************************************************/
 
-#define CGUI_VERSION "0.2.0"
-
-/************************************************************************************************************/
-/* INIT / RESET *********************************************************************************************/
-/************************************************************************************************************/
-
 /**
- *
+ * A macro that gives uninitialized books a non-NULL value that is safe to use with the input tracker's
+ * related functions. However, any function called with a handle set to this value will return early and
+ * without any side effects.
  */
-void
-cgui_init(int argc, char **argv);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-/**
- *
- */
-void
-cgui_reset(void);
-
-/************************************************************************************************************/
-/* PRE-INIT PROCEDURES **************************************************************************************/
-/************************************************************************************************************/
-
-/**
- *
- */
-void
-cgui_setup_app_class(const char *class_name);
+#define CGUI_INPUTS_PLACEHOLDER &cgui_inputs_placeholder_instance
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
+ * Global input tracker instance with the error state set to CGUI_INPUT_INVALID. This instance is only made
+ * available to allow the static initialization of input tracker pointers with the macro
+ * CGUI_INPUT_PLACEHOLDER.
+ */
+extern cgui_inputs cgui_inputs_placeholder_instance;
+
+/************************************************************************************************************/
+/* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
+/************************************************************************************************************/
+
+/** 
  *
  */
-void
-cgui_setup_app_name(const char *name);
+cgui_inputs *
+cgui_inputs_clone(const cgui_inputs *inputs)
+CGUI_NONNULL_RETURN
+CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-/**
+/** 
+ *
+ */
+cgui_inputs *
+cgui_inputs_create(size_t max_inputs)
+CGUI_NONNULL_RETURN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/** 
  *
  */
 void
-cgui_setup_x11_connection(xcb_connection_t *connection);
+cgui_inputs_destroy(cgui_inputs *inputs)
+CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /* PROCEDURES ***********************************************************************************************/
 /************************************************************************************************************/
 
 /**
+ * Convenience for-loop wrapper.
+ */
+#define CGUI_INPUTS_FOR_EACH(INPUTS, I) for(size_t I = 0; I < cgui_inputs_load(INPUTS); I++)
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * Convenience inverse for-loop wrapper.
+ */
+#define CGUI_INPUTS_FOR_EACH_REV(INPUTS, I) for(size_t I = cgui_inputs_load(INPUTS) - 1; I < SIZE_MAX; I--)
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/** 
  *
  */
 void
-cgui_allow_user_exit(void);
+cgui_inputs_clear(cgui_inputs *inputs)
+CGUI_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/** 
+ *
+ */
+void
+cgui_inputs_pull_id(cgui_inputs *inputs, unsigned int id)
+CGUI_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/** 
+ *
+ */
+void
+cgui_inputs_pull_index(cgui_inputs *inputs, size_t index)
+CGUI_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/** 
+ *
+ */
+void
+cgui_inputs_push(cgui_inputs *inputs, unsigned int id, int x, int y, void *ref)
+CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -120,7 +173,8 @@ cgui_allow_user_exit(void);
  *
  */
 void
-cgui_block_user_exit(void);
+cgui_inputs_repair(cgui_inputs *inputs)
+CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -128,81 +182,49 @@ cgui_block_user_exit(void);
  *
  */
 void
-cgui_exit(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
-void
-cgui_lock(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
-void
-cgui_reconfig(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
-void
-cgui_run(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
-void
-cgui_unlock(void);
+cgui_inputs_resize(cgui_inputs *inputs, size_t max_inputs)
+CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /* FUNCTIONS ************************************************************************************************/
 /************************************************************************************************************/
 
-/**
+/** 
  *
  */
-enum cgui_err
-cgui_error(void);
+enum cgui_inputs_err
+cgui_inputs_error(const cgui_inputs *inputs)
+CGUI_NONNULL(1)
+CGUI_PURE;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-/**
+/** 
  *
  */
 bool
-cgui_is_init(void);
+cgui_inputs_find(const cgui_inputs *inputs, unsigned int id, size_t *index)
+CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-/**
+/** 
  *
  */
-bool
-cgui_is_running(void);
+struct cgui_input
+cgui_inputs_get(const cgui_inputs *inputs, size_t index)
+CGUI_NONNULL(1)
+CGUI_PURE;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-/**
+/** 
  *
  */
-xcb_connection_t *
-cgui_x11_connection(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
-xcb_window_t
-cgui_x11_leader_window(void);
+size_t
+cgui_inputs_load(const cgui_inputs *inputs)
+CGUI_NONNULL(1)
+CGUI_PURE;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -211,4 +233,3 @@ cgui_x11_leader_window(void);
 #ifdef __cplusplus
 }
 #endif
-
