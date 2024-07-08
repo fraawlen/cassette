@@ -141,7 +141,7 @@ CBOOK_NONNULL(1);
 /************************************************************************************************************/
 
 /**
- * Convenience for loop wrapper. The I parameter is the global, not local, word index. Therefore, cbook_word()
+ * Convenience for-loop wrapper. The I parameter is the global, not local, word index. Therefore, cbook_word()
  * needs to be used inside the loop instead of cbook_word_in_group().
  */
 #define CBOOK_FOR_EACH(BOOK, GROUP, I) \
@@ -153,7 +153,7 @@ CBOOK_NONNULL(1);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Convenience inverse for loop wrapper. The I parameter is the global, not local, word index. Therefore,
+ * Convenience inverse for-loop wrapper. The I parameter is the global, not local, word index. Therefore,
  * cbook_word() needs to be used inside the loop instead of cbook_word_in_group().
  */
 #define CBOOK_FOR_EACH_REV(BOOK, GROUP, I) \

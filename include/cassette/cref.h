@@ -128,14 +128,14 @@ CREF_NONNULL(1);
 /************************************************************************************************************/
 
 /**
- * Convenience for loop wrapper.
+ * Convenience for-loop wrapper.
  */
 #define CREF_FOR_EACH(REF, I) for(size_t I = 0; I < cref_length(REF); I++)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Convenience inverse for loop wrapper.
+ * Convenience inverse for-loop wrapper.
  */
 #define CREF_FOR_EACH_REV(REF, I) for(size_t I = cref_length(REF) - 1; I < SIZE_MAX; I--)
 
