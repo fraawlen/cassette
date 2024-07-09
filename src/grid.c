@@ -40,6 +40,17 @@ cgui_grid cgui_grid_placeholder_instance =
 	.err        = CGUI_GRID_INVALID,
 };
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static const enum cgui_grid_relative_size _compare_size[4][4] =
+{
+	/* EQUAL                     BIGGER                    SMALLER                   UNDEFINED  */
+	{CGUI_GRID_SIZE_EQUAL,     CGUI_GRID_SIZE_BIGGER,    CGUI_GRID_SIZE_SMALLER,   CGUI_GRID_SIZE_UNDEFINED}, /* EQUAL    */
+	{CGUI_GRID_SIZE_BIGGER,    CGUI_GRID_SIZE_BIGGER,    CGUI_GRID_SIZE_UNDEFINED, CGUI_GRID_SIZE_UNDEFINED}, /* BIGGER   */
+	{CGUI_GRID_SIZE_SMALLER,   CGUI_GRID_SIZE_UNDEFINED, CGUI_GRID_SIZE_SMALLER,   CGUI_GRID_SIZE_UNDEFINED}, /* SMALLER  */
+	{CGUI_GRID_SIZE_UNDEFINED, CGUI_GRID_SIZE_UNDEFINED, CGUI_GRID_SIZE_UNDEFINED, CGUI_GRID_SIZE_UNDEFINED}, /* UNDEFINED*/
+};
+
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
@@ -180,8 +191,8 @@ cgui_grid_compare_flex(const cgui_grid *grid_1, const cgui_grid *grid_2)
 enum cgui_grid_relative_size
 cgui_grid_compare_size(const cgui_grid *grid_1, const cgui_grid *grid_2)
 {
-	enum cgui_grid_relative_size x;
-	enum cgui_grid_relative_size y;
+	enum cgui_grid_relative_size x = CGUI_GRID_SIZE_UNDEFINED;
+	enum cgui_grid_relative_size y = CGUI_GRID_SIZE_UNDEFINED;
 
 	if (grid_1->err || grid_2->err)
 	{
@@ -210,10 +221,6 @@ cgui_grid_compare_size(const cgui_grid *grid_1, const cgui_grid *grid_2)
 	{
 		x = CGUI_GRID_SIZE_SMALLER;
 	}
-	else
-	{
-		x = CGUI_GRID_SIZE_UNDEFINED;
-	}
 
 	/* compare y axis */
 
@@ -237,33 +244,10 @@ cgui_grid_compare_size(const cgui_grid *grid_1, const cgui_grid *grid_2)
 	{
 		y = CGUI_GRID_SIZE_SMALLER;
 	}
-	else
-	{
-		y = CGUI_GRID_SIZE_UNDEFINED;
-	}
 
-	/* returns */
+	/* result */
 
-	if (x == CGUI_GRID_SIZE_EQUAL && y == CGUI_GRID_SIZE_EQUAL)
-	{
-		return CGUI_GRID_SIZE_EQUAL;
-	}
-	
-	if ((x == CGUI_GRID_SIZE_BIGGER && y == CGUI_GRID_SIZE_BIGGER)
-	 || (x == CGUI_GRID_SIZE_BIGGER && y == CGUI_GRID_SIZE_EQUAL)
-	 || (x == CGUI_GRID_SIZE_EQUAL  && y == CGUI_GRID_SIZE_BIGGER))
-	{
-		return CGUI_GRID_SIZE_BIGGER;
-	}
-
-	if ((x == CGUI_GRID_SIZE_SMALLER && y == CGUI_GRID_SIZE_SMALLER)
-	 || (x == CGUI_GRID_SIZE_SMALLER && y == CGUI_GRID_SIZE_EQUAL)
-	 || (x == CGUI_GRID_SIZE_EQUAL   && y == CGUI_GRID_SIZE_SMALLER))
-	{
-		return CGUI_GRID_SIZE_SMALLER;
-	}
-
-	return CGUI_GRID_SIZE_UNDEFINED;
+	return _compare_size[x][y];
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

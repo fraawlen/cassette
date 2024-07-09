@@ -56,11 +56,11 @@ enum cgui_grid_err
  */
 enum cgui_grid_relative_size
 {
-	CGUI_GRID_SIZE_EQUAL,
-	CGUI_GRID_SIZE_BIGGER,
-	CGUI_GRID_SIZE_SMALLER,
-	CGUI_GRID_SIZE_UNDEFINED,
-	CGUI_GRID_SIZE_INVALID,
+	CGUI_GRID_SIZE_EQUAL     = 0,
+	CGUI_GRID_SIZE_BIGGER    = 1,
+	CGUI_GRID_SIZE_SMALLER   = 2,
+	CGUI_GRID_SIZE_UNDEFINED = 3,
+	CGUI_GRID_SIZE_INVALID   = 4,
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
