@@ -18,79 +18,73 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <errno.h>
-#include <pthread.h>
-#include <stdbool.h>
-
-#include "x11.h"
+#include <cassette/cgui.h>
+#include <stdio.h>
+#include <string.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-pthread_mutex_t _mutex;
-
-bool _failed = true;
+#define MSG "Hello World!"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-bool
-mutex_init(void)
-{
-	pthread_mutexattr_t mut_attr;
+static cgui_cell   *_cell   = CGUI_CELL_PLACEHOLDER;
+static cgui_grid   *_grid   = CGUI_GRID_PLACEHOLDER;
+static cgui_window *_window = CGUI_WINDOW_PLACEHOLDER;
 
-	if (pthread_mutexattr_init(&mut_attr) != 0)
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ * Standard hello world example.
+ */
+
+ int
+ main(int argc, char **argv)
+ {
+	/* Setup */
+
+	cgui_init(argc, argv);
+
+	_grid   = cgui_grid_create(1, 1);
+	_cell   = cgui_cell_create();
+	_window = cgui_window_create();
+
+	/* Cell setup */
+
+	/* Grid setup */
+
+	cgui_grid_resize_col(_grid, 0, strlen(MSG));
+	cgui_grid_set_col_flex(_grid, 0, 1.0);
+	cgui_grid_set_row_flex(_grid, 0, 1.0);
+	cgui_grid_assign_cell(_grid, _cell, 0, 0, 1, 1);
+
+	/* Window setup */
+
+	/* Run */
+
+	cgui_run();
+
+	/* End */
+
+	if (cgui_error()
+	 || cgui_window_error(_window)
+	 || cgui_grid_error(_grid)
+	 || cgui_cell_error(_cell))
 	{
-		return false;
+		printf("Gui has failed during operation.\n");
 	}
 
-	if (pthread_mutexattr_settype(&mut_attr, PTHREAD_MUTEX_ERRORCHECK) != 0)
-	{
-		return false;
-	}
-	
-	_failed = pthread_mutex_init(&_mutex, &mut_attr) != 0;
+	cgui_window_destroy(_window);
+	cgui_grid_destroy(_grid);
+	cgui_cell_destroy(_cell);
 
-	pthread_mutexattr_destroy(&mut_attr);
+	cgui_reset();
 
-	return !_failed;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-mutex_lock(void)
-{
-	if (_failed)
-	{
-		return true;
-	}
-
-	return pthread_mutex_lock(&_mutex) != EDEADLK;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-mutex_reset(void)
-{
-	if (!_failed)
-	{
-		pthread_mutex_destroy(&_mutex);
-	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-mutex_unlock(void)
-{
-	if (_failed)
-	{
-		return true;
-	}
-
-	return pthread_mutex_unlock(&_mutex) != EPERM;
-}
+	return 0;
+ }

@@ -20,18 +20,10 @@
 
 #pragma once
 
-#include <stdbool.h>
-#include <stdlib.h>
-#include <xcb/xcb.h>
+#include <cassette/cobj.h>
+#include <stdint.h>
 
 #include "cgui-attributes.h"
-#include "cgui-cell.h"
-#include "cgui-config.h"
-#include "cgui-event.h"
-#include "cgui-grid.h"
-#include "cgui-inputs.h"
-#include "cgui-swap.h"
-#include "cgui-window.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,51 +34,106 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Error types.
+ *
  */
-enum cgui_err
+typedef struct cgui_cell cgui_cell;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ */
+enum cgui_cell_err
 {
-	CGUI_OK       = 0,
-	CGUI_OVERFLOW = 1,
-	CGUI_MEMORY   = 1 << 1,
-	CGUI_XCB      = 1 << 2,
-	CGUI_CAIRO    = 1 << 3,
-	CGUI_MUTEX    = 1 << 4,
-	CGUI_CONFIG   = 1 << 5,
+	CGUI_CELL_OK      = 0,
+	CGUI_CELL_INVALID = 1,
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ */
+enum cgui_cell_event_type
+{
+	CGUI_CELL_EVENT_NONE = 0,
+
+	// TODO
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ */
+struct cgui_cell_event
+{
+	enum cgui_cell_event_type type;
+
+	// TODO
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ */
+struct cgui_cell_context
+{
+	int dummy;
+	
+	// TODO
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ */
+struct cgui_cell_style
+{
+	/* geometry */
+
+	uint16_t thickness_border;
+	uint16_t thickness_outline;
+	 int16_t margin;
+
+	/* colors */
+
+	struct ccolor color_background;
+	struct ccolor color_border;
+	struct ccolor color_outline;
 };
 
 /************************************************************************************************************/
 /* GLOBALS **************************************************************************************************/
 /************************************************************************************************************/
 
-#define CGUI_VERSION "0.2.0"
-
-/************************************************************************************************************/
-/* INIT / RESET *********************************************************************************************/
-/************************************************************************************************************/
-
 /**
- *
+ * A macro that gives uninitialized cell a non-NULL value that is safe to use with the cell's realted
+ * functions. However, any function called with a handle set to this value will return early and without any
+ * side effects.
  */
-void
-cgui_init(int argc, char **argv);
+#define CGUI_CELL_PLACEHOLDER &cgui_cell_placeholder_instance
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * Global cell instance with the error state set to CGUI_CELL_INVALID. This instance is only made available to
+ * allow the static initialization of cell pointers with the macro CGUI_CELL_PLACEHOLDER.
+ */
+extern cgui_cell cgui_cell_placeholder_instance;
+
+/************************************************************************************************************/
+/* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
+/************************************************************************************************************/
+
 /**
  *
  */
-void
-cgui_reset(void);
-
-/************************************************************************************************************/
-/* PRE-INIT PROCEDURES **************************************************************************************/
-/************************************************************************************************************/
-
-/**
- *
- */
-void
-cgui_setup_app_class(const char *class_name);
+cgui_cell *
+cgui_cell_create(void)
+CGUI_NONNULL_RETURN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -94,15 +141,8 @@ cgui_setup_app_class(const char *class_name);
  *
  */
 void
-cgui_setup_app_name(const char *name);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
-void
-cgui_setup_x11_connection(xcb_connection_t *connection);
+cgui_cell_destroy(cgui_cell *cell)
+CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /* PROCEDURES ***********************************************************************************************/
@@ -112,7 +152,8 @@ cgui_setup_x11_connection(xcb_connection_t *connection);
  *
  */
 void
-cgui_allow_user_exit(void);
+cgui_cell_on_destroy(cgui_cell *cell, void (*fn)(cgui_cell *cell))
+CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -120,7 +161,8 @@ cgui_allow_user_exit(void);
  *
  */
 void
-cgui_block_user_exit(void);
+cgui_cell_on_draw(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_context *context))
+CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -128,7 +170,8 @@ cgui_block_user_exit(void);
  *
  */
 void
-cgui_exit(void);
+cgui_cell_on_event(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_event *event))
+CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -136,7 +179,8 @@ cgui_exit(void);
  *
  */
 void
-cgui_lock(void);
+cgui_cell_redraw(cgui_cell *cell)
+CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -144,7 +188,17 @@ cgui_lock(void);
  *
  */
 void
-cgui_reconfig(void);
+cgui_cell_repair(cgui_cell *cell)
+CGUI_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ */
+bool
+cgui_cell_send_custom_event(cgui_cell *cell, int id, void *data, size_t length)
+CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -152,15 +206,8 @@ cgui_reconfig(void);
  *
  */
 void
-cgui_run(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
-void
-cgui_unlock(void);
+cgui_cell_set_data(cgui_cell *cell, void *data)
+CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /* FUNCTIONS ************************************************************************************************/
@@ -169,8 +216,9 @@ cgui_unlock(void);
 /**
  *
  */
-enum cgui_err
-cgui_error(void)
+void *
+cgui_cell_data(const cgui_cell *cell)
+CGUI_NONNULL(1)
 CGUI_PURE;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -178,8 +226,9 @@ CGUI_PURE;
 /**
  *
  */
-bool
-cgui_is_init(void)
+enum cgui_cell_err
+cgui_cell_error(const cgui_cell *cell)
+CGUI_NONNULL(1)
 CGUI_PURE;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -187,8 +236,10 @@ CGUI_PURE;
 /**
  *
  */
-bool
-cgui_is_running(void)
+void
+(*cgui_cell_fn_destroy(cgui_cell *cell))(cgui_cell *cell)
+CGUI_NONNULL_RETURN
+CGUI_NONNULL(1)
 CGUI_PURE;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -196,8 +247,10 @@ CGUI_PURE;
 /**
  *
  */
-xcb_connection_t *
-cgui_x11_connection(void)
+void
+(*cgui_cell_fn_draw(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_context *context)
+CGUI_NONNULL_RETURN
+CGUI_NONNULL(1)
 CGUI_PURE;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -205,8 +258,10 @@ CGUI_PURE;
 /**
  *
  */
-xcb_window_t
-cgui_x11_leader_window(void)
+void
+(*cgui_cell_fn_event(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_event *event)
+CGUI_NONNULL_RETURN
+CGUI_NONNULL(1)
 CGUI_PURE;
 
 /************************************************************************************************************/
@@ -216,4 +271,3 @@ CGUI_PURE;
 #ifdef __cplusplus
 }
 #endif
-

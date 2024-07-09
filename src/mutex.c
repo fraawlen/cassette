@@ -44,7 +44,7 @@ mutex_init(void)
 		return false;
 	}
 	
-	_init = pthread_mutex_init(&_mutex, &mut_attr) != 0;
+	_init = pthread_mutex_init(&_mutex, &mut_attr) == 0;
 
 	pthread_mutexattr_destroy(&mut_attr);
 

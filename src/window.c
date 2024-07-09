@@ -19,30 +19,91 @@
 /************************************************************************************************************/
 
 #include <cassette/cgui.h>
-#include <xcb/xcb.h>
+#include <cassette/cobj.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
-#include "event.h"
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-static void _dummy_callback_event (cgui_event_t *event);
+#include "main.h"
+#include "window.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void (*_fn_event) (cgui_event_t *event) = _dummy_callback_event;
+cgui_window cgui_window_placeholder_instance =
+{
+	.to_destroy = false,
+	.state      = CGUI_WINDOW_INITIAL,
+	.err        = CGUI_WINDOW_INVALID,
+};
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-void
-cgui_event_set_callback(void (*fn)(cgui_event_t *event))
+cgui_window *
+cgui_window_create(void)
 {
-	_fn_event = fn ? fn : _dummy_callback_event;
+	cgui_window *window;
+
+	if (!cgui_is_init() || cgui_error() || !(window = malloc(sizeof(cgui_window))))
+	{
+		return CGUI_WINDOW_PLACEHOLDER;
+	}
+
+	window->to_destroy = false;
+	window->state      = CGUI_WINDOW_INITIAL;
+	window->err        = CGUI_WINDOW_OK;
+
+	cref_push(main_windows(), window);
+
+	return window;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_destroy(cgui_window *window)
+{
+	if (window == CGUI_WINDOW_PLACEHOLDER)
+	{
+		return;
+	}
+
+	window->to_destroy = true;
+	if (!cgui_is_running())
+	{
+		window_destroy(window);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+enum cgui_window_err
+cgui_window_error(const cgui_window *window)
+{
+	return window->err;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_repair(cgui_window *window)
+{
+	window->err &= CGUI_WINDOW_INVALID;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+enum cgui_window_state
+cgui_window_state(const cgui_window *window)
+{
+	if (window->err)
+	{
+		return CGUI_WINDOW_INITIAL;
+	}
+
+	return window->state;
 }
 
 /************************************************************************************************************/
@@ -50,28 +111,21 @@ cgui_event_set_callback(void (*fn)(cgui_event_t *event))
 /************************************************************************************************************/
 
 void
-event_process(cgui_event_t *event)
+window_destroy(cgui_window *window)
 {
-	_fn_event(event);
-
-	switch (event->kind)
+	if (!window->to_destroy)
 	{
-		case CGUI_EVENT_NONE:
-			break;
-
-		// TODO
-
-		default:
-			break;
+		return;
 	}
+
+	cref_pull(main_windows(), window);
+	free(window);
 }
 
-/************************************************************************************************************/
-/* _ ********************************************************************************************************/
-/************************************************************************************************************/
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void
-_dummy_callback_event(cgui_event_t *event)
+void
+window_present(cgui_window *window)
 {
-	(void)event;
+	(void)window;
 }

@@ -206,7 +206,7 @@ cgui_inputs_load(const cgui_inputs *inputs)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_input_tracker_pull_id(cgui_inputs *inputs, unsigned int id)
+cgui_inputs_pull_id(cgui_inputs *inputs, unsigned int id)
 {
 	size_t index;
 
@@ -219,7 +219,7 @@ cgui_input_tracker_pull_id(cgui_inputs *inputs, unsigned int id)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_input_tracker_pull_index(cgui_inputs *inputs, size_t index)
+cgui_inputs_pull_index(cgui_inputs *inputs, size_t index)
 {
 	if (inputs->err || index >= inputs->n)
 	{

@@ -341,7 +341,7 @@ config_init(const char *app_name, const char *app_class)
 	cstr_append(home, util_env_exists("HOME") ? getenv("HOME") : getpwuid(getuid())->pw_dir);
 	cstr_append(home, "/.config/cgui.conf");
 
-	ccfg_push_source(_parser, getenv(ENV_CONF_SOURCE));
+	ccfg_push_source(_parser, util_env_exists(ENV_CONF_SOURCE) ? getenv(ENV_CONF_SOURCE) : "");
 	ccfg_push_source(_parser, cstr_chars(home));
 	ccfg_push_source(_parser, "/usr/share/cgui/cgui.conf");
 	ccfg_push_source(_parser, "/etc/cgui.conf");
@@ -532,7 +532,8 @@ _fill(void)
 
 	c_srf = cairo_image_surface_create(CAIRO_FORMAT_A1, 0, 0);
 	c_ctx = cairo_create(c_srf);
-	if (cairo_surface_status(c_srf) != CAIRO_STATUS_SUCCESS || cairo_status(c_ctx) != CAIRO_STATUS_SUCCESS)
+	if (cairo_surface_status(c_srf) != CAIRO_STATUS_SUCCESS
+	 || cairo_status(c_ctx)         != CAIRO_STATUS_SUCCESS)
 	{
 		failed = true;
 		goto skip_font_setup;

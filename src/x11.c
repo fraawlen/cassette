@@ -61,31 +61,33 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static xcb_atom_t _get_atom             (const char *name);
-static uint8_t    _get_extension_opcode (const char *name);
+/* helpers */
+
+static xcb_atom_t _get_atom             (const char *name) CGUI_NONNULL(1);
+static uint8_t    _get_extension_opcode (const char *name) CGUI_NONNULL(1);
 static bool       _prop_append          (xcb_window_t win, xcb_atom_t prop, xcb_atom_t type, uint32_t data_n, const void *data);
 static bool       _prop_set             (xcb_window_t win, xcb_atom_t prop, xcb_atom_t type, uint32_t data_n, const void *data);
 static bool       _test_cookie          (xcb_void_cookie_t xc);
 
 /* event handlers */
 
-static void _event_client_message    (xcb_client_message_event_t *x_ev);
-static void _event_configure         (xcb_configure_notify_event_t *x_ev);
-static void _event_core_input        (xcb_key_press_event_t *x_ev);
-static void _event_expose            (xcb_expose_event_t *x_ev);
-static void _event_focus_in          (xcb_focus_in_event_t *x_ev);
-static void _event_focus_out         (xcb_focus_in_event_t *x_ev);
-static void _event_keymap            (xcb_mapping_notify_event_t *x_ev);
-static void _event_leave             (xcb_leave_notify_event_t *x_ev);
-static void _event_map               (xcb_map_notify_event_t *x_ev);
-static void _event_motion            (xcb_motion_notify_event_t *x_ev);
-static void _event_present           (xcb_present_generic_event_t *x_ev);
-static void _event_selection_clear   (xcb_selection_clear_event_t *x_ev);
-static void _event_selection_request (xcb_selection_request_event_t *x_ev);
-static void _event_unknown           (xcb_generic_event_t *xcb_event);
-static void _event_unmap             (xcb_unmap_notify_event_t *x_ev);
-static void _event_visibility        (xcb_visibility_notify_event_t *x_ev);
-static void _event_xinput_touch      (xcb_input_touch_begin_event_t *x_ev);
+static void _event_client_message    (xcb_client_message_event_t    *xcb_event) CGUI_NONNULL(1);
+static void _event_configure         (xcb_configure_notify_event_t  *xcb_event) CGUI_NONNULL(1);
+static void _event_core_input        (xcb_key_press_event_t         *xcb_event) CGUI_NONNULL(1);
+static void _event_expose            (xcb_expose_event_t            *xcb_event) CGUI_NONNULL(1);
+static void _event_focus_in          (xcb_focus_in_event_t          *xcb_event) CGUI_NONNULL(1);
+static void _event_focus_out         (xcb_focus_in_event_t          *xcb_event) CGUI_NONNULL(1);
+static void _event_keymap            (xcb_mapping_notify_event_t    *xcb_event) CGUI_NONNULL(1);
+static void _event_leave             (xcb_leave_notify_event_t      *xcb_event) CGUI_NONNULL(1);
+static void _event_map               (xcb_map_notify_event_t        *xcb_event) CGUI_NONNULL(1);
+static void _event_motion            (xcb_motion_notify_event_t     *xcb_event) CGUI_NONNULL(1);
+static void _event_present           (xcb_present_generic_event_t   *xcb_event) CGUI_NONNULL(1);
+static void _event_selection_clear   (xcb_selection_clear_event_t   *xcb_event) CGUI_NONNULL(1);
+static void _event_selection_request (xcb_selection_request_event_t *xcb_event) CGUI_NONNULL(1);
+static void _event_unknown           (xcb_generic_event_t           *xcb_event) CGUI_NONNULL(1);
+static void _event_unmap             (xcb_unmap_notify_event_t      *xcb_event) CGUI_NONNULL(1);
+static void _event_visibility        (xcb_visibility_notify_event_t *xcb_event) CGUI_NONNULL(1);
+static void _event_xinput_touch      (xcb_input_touch_begin_event_t *xcb_event) CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -157,7 +159,7 @@ static uint8_t _opcode_xinput  = 0;
 
 /* events buffer */
 
-static cobj_tracker_t *_events = NULL;
+static cref *_events = CREF_PLACEHOLDER;
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -240,8 +242,7 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 
 	/* init event buffer */
 
-	_events = cobj_tracker_create(0);
-	if (cobj_tracker_has_failed(_events))
+	if ((_events = cref_create()) == CREF_PLACEHOLDER)
 	{
 		goto fail_events;
 	}
@@ -419,7 +420,7 @@ fail_keysyms:
 fail_leader:
 	xcb_free_colormap(_connection, _colormap);
 fail_xserver:
-	cobj_tracker_destroy(&_events);
+	cref_destroy(_events);
 fail_events:
 	_failed = true;
 
@@ -436,12 +437,11 @@ x11_reset(bool kill_connection)
 		return;
 	}
 
-	cobj_tracker_reset_iterator(_events);
-	while (cobj_tracker_increment_iterator(_events))
+	CREF_FOR_EACH(_events, i)
 	{
-		free((void*)cobj_tracker_get_iteration(_events));
+		free((void*)cref_ptr(_events, i));
 	}
-	cobj_tracker_destroy(&_events);
+	cref_destroy(_events);
 
 	xcb_key_symbols_free(_keysyms);
 	xcb_destroy_window(_connection, _win_leader);
@@ -464,10 +464,10 @@ x11_update(void)
 	/* grab next event from stack buffer if any  */
 	/* otherwhise retrieve new event from server */
 
-	if (cobj_tracker_get_size(_events) > 0)
+	if (cref_length(_events) > 0)
 	{
-		event = (xcb_generic_event_t*)cobj_tracker_get_index(_events, 0);
-		cobj_tracker_pull_index(_events, 0);
+		event = (xcb_generic_event_t*)cref_ptr(_events, 0);
+		cref_pull(_events, 0);
 	}
 	else
 	{
@@ -575,11 +575,11 @@ x11_update(void)
 static void
 _event_client_message(xcb_client_message_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
 	(void)xcb_event; // TODO
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -587,11 +587,11 @@ _event_client_message(xcb_client_message_event_t *xcb_event)
 static void
 _event_configure(xcb_configure_notify_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
 	(void)xcb_event; // TODO
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -599,11 +599,11 @@ _event_configure(xcb_configure_notify_event_t *xcb_event)
 static void
 _event_core_input(xcb_key_press_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
 	(void)xcb_event; // TODO
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -611,11 +611,11 @@ _event_core_input(xcb_key_press_event_t *xcb_event)
 static void
 _event_expose(xcb_expose_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
 	(void)xcb_event; // TODO
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -623,11 +623,11 @@ _event_expose(xcb_expose_event_t *xcb_event)
 static void
 _event_focus_in(xcb_focus_in_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
 	(void)xcb_event; // TODO
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -635,11 +635,11 @@ _event_focus_in(xcb_focus_in_event_t *xcb_event)
 static void
 _event_focus_out(xcb_focus_in_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
 	(void)xcb_event; // TODO
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -655,11 +655,11 @@ _event_keymap(xcb_mapping_notify_event_t *xcb_event)
 static void
 _event_leave(xcb_leave_notify_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
 	(void)xcb_event; // TODO
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -667,11 +667,11 @@ _event_leave(xcb_leave_notify_event_t *xcb_event)
 static void
 _event_map(xcb_map_notify_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
 	(void)xcb_event; // TODO
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -679,11 +679,11 @@ _event_map(xcb_map_notify_event_t *xcb_event)
 static void
 _event_motion(xcb_motion_notify_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
 	(void)xcb_event; // TODO
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -691,11 +691,11 @@ _event_motion(xcb_motion_notify_event_t *xcb_event)
 static void
 _event_present(xcb_present_generic_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
 	(void)xcb_event; // TODO
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -703,11 +703,11 @@ _event_present(xcb_present_generic_event_t *xcb_event)
 static void
 _event_selection_clear(xcb_selection_clear_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
 	(void)xcb_event; // TODO
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -715,11 +715,11 @@ _event_selection_clear(xcb_selection_clear_event_t *xcb_event)
 static void
 _event_selection_request(xcb_selection_request_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
 	(void)xcb_event; // TODO
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -727,12 +727,12 @@ _event_selection_request(xcb_selection_request_event_t *xcb_event)
 static void
 _event_unknown(xcb_generic_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
-	cgui_event.kind      = CGUI_EVENT_UNKNOWN_XCB;
-	cgui_event.xcb_event = xcb_event;
+	event.type      = CGUI_EVENT_UNKNOWN_XCB;
+	event.xcb_event = xcb_event;
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -740,11 +740,11 @@ _event_unknown(xcb_generic_event_t *xcb_event)
 static void
 _event_unmap(xcb_unmap_notify_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
 	(void)xcb_event; // TODO
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -752,11 +752,11 @@ _event_unmap(xcb_unmap_notify_event_t *xcb_event)
 static void
 _event_visibility(xcb_visibility_notify_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
 	(void)xcb_event; // TODO
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -764,11 +764,11 @@ _event_visibility(xcb_visibility_notify_event_t *xcb_event)
 static void
 _event_xinput_touch(xcb_input_touch_begin_event_t *xcb_event)
 {
-	cgui_event_t cgui_event = {0};
+	struct cgui_event event = {0};
 
 	(void)xcb_event; // TODO
 
-	main_update(&cgui_event);
+	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

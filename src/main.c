@@ -19,6 +19,7 @@
 /************************************************************************************************************/
 
 #include <assert.h>
+
 #include <cairo/cairo.h>
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
@@ -50,9 +51,9 @@ static bool _is_any_window_activated (void);
 
 /* objects trackers */
 
-static cobj_tracker_t *_cells   = NULL;
-static cobj_tracker_t *_grids   = NULL;
-static cobj_tracker_t *_windows = NULL;
+static cref *_cells   = CREF_PLACEHOLDER;
+static cref *_grids   = CREF_PLACEHOLDER;
+static cref *_windows = CREF_PLACEHOLDER;
 
 /* x11 init args */
 
@@ -92,44 +93,28 @@ cgui_block_user_exit(void)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+enum cgui_err
+cgui_error(void)
+{
+	if (_init)
+	{
+		_failed |= cref_error(_cells);
+		_failed |= cref_error(_grids);
+		_failed |= cref_error(_windows);
+		_failed |= x11_has_failed();
+	}
+
+	return _failed;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 cgui_exit(void)
 {
 	assert(_init);
 
 	_running = false;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-xcb_connection_t *
-cgui_get_xcb_connection(void)
-{
-	return x11_get_connection();
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-xcb_window_t
-cgui_get_xcb_leader_window(void)
-{
-	return  x11_get_leader_window();
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-cgui_has_failed(void)
-{
-	if (_init)
-	{
-		_failed |= cobj_tracker_has_failed(main_get_cells());
-		_failed |= cobj_tracker_has_failed(main_get_grids());
-		_failed |= cobj_tracker_has_failed(main_get_windows());
-		_failed |= x11_has_failed();
-	}
-
-	return _failed;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -149,9 +134,9 @@ cgui_init(int argc, char **argv)
 		_app_name = _app_class;
 	}
 
-	_cells   = cobj_tracker_create(1);
-	_grids   = cobj_tracker_create(1);
-	_windows = cobj_tracker_create(1);
+	_cells   = cref_create();
+	_grids   = cref_create();
+	_windows = cref_create();
 
 	_failed  = false;
 	_failed |= !x11_init(argc, argv, _app_name, _app_class, _ext_connection);
@@ -187,7 +172,7 @@ cgui_lock(void)
 {
 	assert(_init);
 
-	assert(mutex_lock());
+	mutex_lock();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -195,9 +180,12 @@ cgui_lock(void)
 void
 cgui_reconfig(void)
 {
-	cgui_window_t *window;
-//	cgui_grid_t *grid;
-//	cgui_grid_t *grid_min;
+	cgui_window *window;
+	cgui_grid *grid;
+	cgui_grid *grid_min;
+
+	(void)grid;
+	(void)grid_min;
 
 	assert(_init);
 
@@ -208,11 +196,10 @@ cgui_reconfig(void)
 
 	_failed |= !config_load();
 
-	cobj_tracker_reset_iterator(_windows);
-	while (cobj_tracker_increment_iterator(_windows))
+	CREF_FOR_EACH(_windows, i)
 	{
-		window = (cgui_window_t*)cobj_tracker_get_iteration(_windows);
-		if (window->failed)
+		window = (cgui_window*)cref_ptr(_windows, i);
+		if (window->err)
 		{
 			continue;
 		}
@@ -228,22 +215,19 @@ cgui_reset(void)
 {
 	assert(_init);
 
-	cobj_tracker_reset_iterator(_windows);
-	while (cobj_tracker_increment_iterator(_windows))
+	CREF_FOR_EACH(_windows, i)
 	{
-		((cgui_window_t*)cobj_tracker_get_iteration(_windows))->failed = true;
+		((cgui_window*)cref_ptr(_windows, i))->err |= CGUI_WINDOW_INVALID;
 	}
 
-	cobj_tracker_reset_iterator(_grids);
-	while (cobj_tracker_increment_iterator(_grids))
+	CREF_FOR_EACH(_grids, i)
 	{
-		((cgui_grid_t*)cobj_tracker_get_iteration(_grids))->failed = true;
+		((cgui_grid*)cref_ptr(_grids, i))->err |= CGUI_GRID_INVALID;
 	}
 
-	cobj_tracker_reset_iterator(_cells);
-	while (cobj_tracker_increment_iterator(_cells))
+	CREF_FOR_EACH(_cells, i)
 	{
-		((cgui_cell_t*)cobj_tracker_get_iteration(_cells))->failed = true;
+		((cgui_cell*)cref_ptr(_cells, i))->err |= CGUI_CELL_INVALID;
 	}
 
 	if (!_ext_connection || util_env_exists(ENV_FORCE_CLEAN))
@@ -252,13 +236,17 @@ cgui_reset(void)
 		FcFini();
 	}
 
-	cobj_tracker_destroy(&_cells);
-	cobj_tracker_destroy(&_grids);
-	cobj_tracker_destroy(&_windows);
-
 	x11_reset(!_ext_connection);
 	config_reset();
 	mutex_reset();
+
+	cref_destroy(_cells);
+	cref_destroy(_grids);
+	cref_destroy(_windows);
+
+	_cells   = CREF_PLACEHOLDER;
+	_grids   = CREF_PLACEHOLDER;
+	_windows = CREF_PLACEHOLDER;
 
 	_ext_connection = NULL;
 	_app_class      = NULL;
@@ -338,61 +326,74 @@ cgui_unlock(void)
 {
 	assert(_init);
 
-	assert(mutex_unlock());
+	mutex_unlock();
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+xcb_connection_t *
+cgui_x11_connection(void)
+{
+	return x11_get_connection();
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+xcb_window_t
+cgui_x11_leader_window(void)
+{
+	return  x11_get_leader_window();
 }
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
-cobj_tracker_t *
-main_get_cells(void)
+cref *
+main_cells(void)
 {
-	return _cells ? _cells : cobj_tracker_get_placeholder();
+	return _cells;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cobj_tracker_t *
-main_get_grids(void)
+cref *
+main_grids(void)
 {
-	return _grids ? _grids : cobj_tracker_get_placeholder();
+	return _grids;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cobj_tracker_t *
-main_get_windows(void)
+cref *
+main_windows(void)
 {
-	return _windows ? _windows : cobj_tracker_get_placeholder();
+	return _windows;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-main_update(cgui_event_t *event)
+main_update(struct cgui_event *event)
 {
 	cgui_lock();
 
 	event_process(event);
 
-	cobj_tracker_reset_iterator(_windows);
-	while (cobj_tracker_increment_iterator(_windows))
+	CREF_FOR_EACH_REV(_windows, i)
 	{
-		window_present((cgui_window_t*)cobj_tracker_get_iteration(_windows));
-		window_destroy((cgui_window_t*)cobj_tracker_get_iteration(_windows));
+		window_present((cgui_window*)cref_ptr(_windows, i));
+		window_destroy((cgui_window*)cref_ptr(_windows, i));
 	}
 
-	cobj_tracker_reset_iterator(_grids);
-	while (cobj_tracker_increment_iterator(_grids))
+	CREF_FOR_EACH_REV(_grids, i)
 	{
-		grid_destroy((cgui_grid_t*)cobj_tracker_get_iteration(_grids));
+		grid_destroy((cgui_grid*)cref_ptr(_grids, i));
 	}
 
-	cobj_tracker_reset_iterator(_cells);
-	while (cobj_tracker_increment_iterator(_cells))
+	CREF_FOR_EACH_REV(_cells, i)
 	{
-		cell_destroy((cgui_cell_t*)cobj_tracker_get_iteration(_cells));
+		cell_destroy((cgui_cell*)cref_ptr(_cells, i));
 	}
 	
 	cgui_unlock();
@@ -405,10 +406,9 @@ main_update(cgui_event_t *event)
 static bool
 _is_any_window_activated(void)
 {
-	cobj_tracker_reset_iterator(_windows);
-	while (cobj_tracker_increment_iterator(_windows))
+	CREF_FOR_EACH(_windows, i)
 	{
-		if (((cgui_window_t*)cobj_tracker_get_iteration(_windows))->state & CGUI_WINDOW_STATE_ACTIVE)
+		if (((cgui_window*)cref_ptr(_windows, i))->state & CGUI_WINDOW_ACTIVE)
 		{
 			return true;
 		}

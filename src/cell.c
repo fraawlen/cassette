@@ -18,176 +18,68 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <assert.h>
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "cell.h"
 #include "main.h"
+#include "cell.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _dummy_callback_destroy (cgui_cell_t *cell);
-static void _dummy_callback_draw    (cgui_cell_t *cell, cgui_cell_drawing_context_t *context);
-static void _dummy_callback_event   (cgui_cell_t *cell, cgui_cell_event_t *event);
+static void _dummy_fn_destroy (cgui_cell *cell);
+static void _dummy_fn_draw    (cgui_cell *cell, struct cgui_cell_context *context);
+static void _dummy_fn_event   (cgui_cell *cell, struct cgui_cell_event *event);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static cgui_cell_t _err_cell =
+cgui_cell cgui_cell_placeholder_instance =
 {
-	.id         = 0,
-	.data       = NULL,
 	.to_destroy = false,
-	.enabled    = false,
-	.failed     = true,
-	.fn_destroy = _dummy_callback_destroy,
-	.fn_draw    = _dummy_callback_draw,
-	.fn_event   = _dummy_callback_event,
+	.data       = NULL,
+	.fn_destroy = _dummy_fn_destroy,
+	.fn_draw    = _dummy_fn_draw,
+	.fn_event   = _dummy_fn_event,
+	.err        = CGUI_CELL_INVALID,
 };
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-cgui_cell_t *
+cgui_cell *
 cgui_cell_create(void)
 {
-	cgui_cell_t *cell;
+	cgui_cell *cell;
 
-	if (cgui_has_failed())
+	if (!cgui_is_init() || cgui_error() || !(cell = malloc(sizeof(cgui_cell))))
 	{
-		return &_err_cell;
+		return CGUI_CELL_PLACEHOLDER;
 	}
 
-	if (!(cell = malloc(sizeof(cgui_cell_t))))
-	{
-		return &_err_cell;
-	}
-
-	cell->id         = 0;
+	cell->data       = NULL,
+	cell->fn_destroy = _dummy_fn_destroy,
+	cell->fn_draw    = _dummy_fn_draw,
+	cell->fn_event   = _dummy_fn_event,
 	cell->to_destroy = false;
-	cell->failed     = false;
-	cell->enabled    = true;
-	cell->fn_destroy = _dummy_callback_destroy;
-	cell->fn_draw    = _dummy_callback_draw;
-	cell->fn_event   = _dummy_callback_event;
+	cell->err        = CGUI_CELL_OK;
 
-	cobj_tracker_push(main_get_cells(), cell, &cell->id);
+	cref_push(main_cells(), cell);
 
 	return cell;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-cgui_cell_destroy(cgui_cell_t **cell)
-{
-	assert(cell && *cell);
-
-	if (*cell == &_err_cell)
-	{
-		return;
-	}
-
-	(*cell)->to_destroy = true;
-	if (!cgui_is_running())
-	{
-		cell_destroy(*cell);
-	}
-
-	*cell = &_err_cell;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_cell_disable(cgui_cell_t *cell)
-{
-	assert(cell);
-
-	if (cell->failed)
-	{
-		return;
-	}
-
-	cell->enabled = false;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_cell_enable(cgui_cell_t *cell)
-{
-	assert(cell);
-
-	if (cell->failed)
-	{
-		return;
-	}
-
-	cell->enabled = true;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-cgui_cell_callback_destroy_t
-cgui_cell_get_callback_destroy(const cgui_cell_t *cell)
-{
-	assert(cell);
-
-	if (cell->failed)
-	{
-		return _dummy_callback_destroy;
-	}
-
-	return cell->fn_destroy;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-cgui_cell_callback_draw_t
-cgui_cell_get_callback_draw(const cgui_cell_t *cell)
-
-{
-	assert(cell);
-
-	if (cell->failed)
-	{
-		return _dummy_callback_draw;
-	}
-
-	return cell->fn_draw;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-cgui_cell_callback_event_t
-cgui_cell_get_callback_event(const cgui_cell_t *cell)
-{
-	assert(cell);
-
-	if (cell->failed)
-	{
-		return _dummy_callback_event;
-	}
-
-	return cell->fn_event;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 void *
-cgui_cell_get_data(const cgui_cell_t *cell)
+cgui_cell_data(const cgui_cell *cell)
 {
-	assert(cell);
-	
-	if (cell->failed)
+	if (cell->err)
 	{
 		return NULL;
 	}
@@ -197,40 +89,115 @@ cgui_cell_get_data(const cgui_cell_t *cell)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cgui_cell_t *
-cgui_cell_get_placeholder(void)
+void
+cgui_cell_destroy(cgui_cell *cell)
 {
-	return &_err_cell;
+	if (cell == CGUI_CELL_PLACEHOLDER)
+	{
+		return;
+	}
+
+	cell->to_destroy = true;
+	if (!cgui_is_running())
+	{
+		cell_destroy(cell);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
-cgui_cell_is_enabled(const cgui_cell_t *cell)
+enum cgui_cell_err
+cgui_cell_error(const cgui_cell *cell)
 {
-	assert(cell);
-
-	return !cell->failed & cell->enabled;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-cgui_cell_has_failed(const cgui_cell_t *cell)
-{
-	assert(cell);
-
-	return cell->failed;
+	return cell->err;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_cell_redraw(cgui_cell_t *cell)
+(*cgui_cell_fn_destroy(cgui_cell *cell))(cgui_cell *cell)
 {
-	assert(cell);
+	if (cell->err)
+	{
+		return _dummy_fn_destroy;
+	}
 
-	if (cell->failed)
+	return cell->fn_destroy;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+
+void
+(*cgui_cell_fn_draw(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_context *context)
+{
+	if (cell->err)
+	{
+		return _dummy_fn_draw;
+	}
+
+	return cell->fn_draw;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+
+void
+(*cgui_cell_fn_event(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_event *event)
+{
+	if (cell->err)
+	{
+		return _dummy_fn_event;
+	}
+
+	return cell->fn_event;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_cell_on_destroy(cgui_cell *cell, void (*fn)(cgui_cell *cell))
+{
+	if (cell->err)
+	{
+		return;
+	}
+	
+	cell->fn_destroy = fn ? fn : _dummy_fn_destroy;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_cell_on_draw(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_context *context))
+{
+	if (cell->err)
+	{
+		return;
+	}
+
+	cell->fn_draw = fn ? fn : _dummy_fn_draw;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_cell_on_event(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_event *event))
+{
+	if (cell->err)
+	{
+		return;
+	}
+
+	cell->fn_event = fn ? fn : _dummy_fn_event;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_cell_redraw(cgui_cell *cell)
+{
+	if (cell->err)
 	{
 		return;
 	}
@@ -240,19 +207,25 @@ cgui_cell_redraw(cgui_cell_t *cell)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
-cgui_cell_send_custom_event(cgui_cell_t *cell, int id, void *data, size_t data_n)
+void
+cgui_cell_repair(cgui_cell *cell)
 {
-	assert(cell);
+	cell->err &= CGUI_CELL_INVALID;
+}
 
-	if (cell->failed)
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+cgui_cell_send_custom_event(cgui_cell *cell, int id, void *data, size_t length)
+{
+	if (cell->err)
 	{
 		return false;
 	}
 
 	(void)id;
 	(void)data;
-	(void)data_n;
+	(void)length;
 
 	// TODO
 
@@ -262,56 +235,9 @@ cgui_cell_send_custom_event(cgui_cell_t *cell, int id, void *data, size_t data_n
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_cell_set_callback_destroy(cgui_cell_t *cell, cgui_cell_callback_destroy_t fn)
+cgui_cell_set_data(cgui_cell *cell, void *data)
 {
-	assert(cell);
-
-	if (cell->failed)
-	{
-		return;
-	}
-
-	cell->fn_destroy = fn ? fn : _dummy_callback_destroy;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_cell_set_callback_draw(cgui_cell_t *cell, cgui_cell_callback_draw_t fn)
-{
-	assert(cell);
-
-	if (cell->failed)
-	{
-		return;
-	}
-
-	cell->fn_draw = fn ? fn : _dummy_callback_draw;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_cell_set_callback_event(cgui_cell_t *cell, cgui_cell_callback_event_t fn)
-{
-	assert(cell);
-
-	if (cell->failed)
-	{
-		return;
-	}
-
-	cell->fn_event = fn ? fn : _dummy_callback_event;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_cell_set_data(cgui_cell_t *cell, void *data)
-{
-	assert(cell);
-
-	if (cell->failed)
+	if (cell->err)
 	{
 		return;
 	}
@@ -319,51 +245,20 @@ cgui_cell_set_data(cgui_cell_t *cell, void *data)
 	cell->data = data;
 }
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_cell_toggle(cgui_cell_t *cell)
-{
-	assert(cell);
-
-	if (cell->failed)
-	{
-		return;
-	}
-
-	cell->enabled = !cell->enabled;
-}
-
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
 void
-cell_destroy(cgui_cell_t *cell)
+cell_destroy(cgui_cell *cell)
 {
 	if (!cell->to_destroy)
 	{
 		return;
 	}
 
-	cell->fn_destroy(cell);
-
-	cobj_tracker_pull_pointer(main_get_cells(), cell, cell->id);
-
+	cref_pull(main_cells(), cell);
 	free(cell);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-cell_send_windowless_event(cgui_cell_t *cell, cgui_cell_event_t *event)
-{
-	(void)cell;
-	(void)event;
-
-	// TODO
-
-	return true;
 }
 
 /************************************************************************************************************/
@@ -371,7 +266,7 @@ cell_send_windowless_event(cgui_cell_t *cell, cgui_cell_event_t *event)
 /************************************************************************************************************/
 
 static void
-_dummy_callback_destroy(cgui_cell_t *cell)
+_dummy_fn_destroy(cgui_cell *cell)
 {
 	(void)cell;
 }
@@ -379,7 +274,7 @@ _dummy_callback_destroy(cgui_cell_t *cell)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_dummy_callback_draw(cgui_cell_t *cell, cgui_cell_drawing_context_t *context)
+_dummy_fn_draw(cgui_cell *cell, struct cgui_cell_context *context)
 {
 	(void)cell;
 	(void)context;
@@ -388,8 +283,9 @@ _dummy_callback_draw(cgui_cell_t *cell, cgui_cell_drawing_context_t *context)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_dummy_callback_event(cgui_cell_t *cell, cgui_cell_event_t *event)
+_dummy_fn_event(cgui_cell *cell, struct cgui_cell_event *event)
 {
 	(void)cell;
 	(void)event;
 }
+

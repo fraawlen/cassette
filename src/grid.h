@@ -20,19 +20,49 @@
 
 #pragma once
 
-#include <cassette/cobj.h>
+#include <cassette/cgui.h>
+#include <stdbool.h>
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* TYPES ****************************************************************************************************/
 /************************************************************************************************************/
 
-void main_update(cgui_event_t *event);
+struct grid_line
+{
+	int16_t size;
+	double flex;
+};
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cobj_tracker_t *main_get_cells(void);
+struct cgui_grid
+{
+	/* data */
 
-cobj_tracker_t *main_get_grids(void);
+	size_t n_cols;
+	size_t n_rows;
+	double total_col_flex;
+	double total_row_flex;
+	int16_t total_width;
+	int16_t total_width_inv;
+	int16_t total_height;
+	int16_t total_height_inv;
+	struct grid_line *cols;
+	struct grid_line *rows;
+	cref *areas;
+	cgui_grid *ref;
 
-cobj_tracker_t *main_get_windows(void);
+	/* states */
+
+	bool to_destroy;
+	enum cgui_grid_err err;
+};
+
+/************************************************************************************************************/
+/* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
+/************************************************************************************************************/
+
+void
+grid_destroy(cgui_grid *grid)
+CGUI_NONNULL(1);
 
