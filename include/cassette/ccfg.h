@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <cassette/cobj.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -43,26 +44,13 @@ extern "C" {
 
 /**
  * Opaque config instance object that holds all parsed resources.
- * This object holds an internal error bitfield that can be checked with ccfg_error(). Some functions, upon
- * failure, can trigger specific error bits and will exit early without side effects. If the error bitfield is
- * set to anything else than CCFG_OK, any function that takes this object as an argument will return early
- * with no side effects and default return values. It is possible to repair the object to get rid of errors.
- * See ccfg_repair() for more details. 
+ * This object holds an internal error value that can be checked with ccfg_error(). Some functions, upon
+ * failure, can trigger specific error bits and will exit early without side effects. If the error value
+ * is set to anything else than CERR_NONE, any function that takes this object as an argument will return early
+ * early with no side effects and default return values. It is possible to repair the object to get rid of
+ * erros. See ccfg_repair() for more details. 
  */
 typedef struct ccfg ccfg;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Error types.
- */
-enum ccfg_err
-{
-	CCFG_OK       = 0,
-	CCFG_INVALID  = 1,
-	CCFG_OVERFLOW = 1 << 1,
-	CCFG_MEMORY   = 1 << 2,
-};
 
 /************************************************************************************************************/
 /* GLOBALS **************************************************************************************************/
@@ -78,7 +66,7 @@ enum ccfg_err
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Global string object instance with the error state set to CCFG_INVALID. This instance is only made
+ * Global string object instance with the error state set to CERR_INVALID. This instance is only made
  * available to allow the static initialization of string object pointers with the macro CCFG_PLACEHOLDER.
  */
 extern ccfg ccfg_placeholder_instance;
@@ -220,8 +208,8 @@ CCFG_NONNULL(1);
  *
  * @param cfg : Config instance to interact with
  *
- * @error CCFG_OVERFLOW : The size of an internal components was about to overflow
- * @error CCFG_MEMORY   : Failed memory allocation during parsing
+ * @error CERR_OVERFLOW : The size of an internal components was about to overflow
+ * @error CERR_MEMORY   : Failed memory allocation during parsing
  */
 void
 ccfg_load(ccfg *cfg)
@@ -237,8 +225,8 @@ CCFG_NONNULL(1);
  * @param name : Name of the parameter to use in the source config
  * @param d    : Value
  *
- * @error CCFG_OVERFLOW : The size of an internal components was about to overflow
- * @error CCFG_MEMORY   : Failed memory allocation during parsing
+ * @error CERR_OVERFLOW : The size of an internal components was about to overflow
+ * @error CERR_MEMORY   : Failed memory allocation during parsing
  */
 void
 ccfg_push_param_double(ccfg *cfg, const char *name, double d)
@@ -254,8 +242,8 @@ CCFG_NONNULL(1, 2);
  * @param name : Name of the parameter to use in the source config
  * @param l    : Value
  *
- * @error CCFG_OVERFLOW : The size of an internal components was about to overflow
- * @error CCFG_MEMORY   : Failed memory allocation during parsing
+ * @error CERR_OVERFLOW : The size of an internal components was about to overflow
+ * @error CERR_MEMORY   : Failed memory allocation during parsing
  */
 void
 ccfg_push_param_long(ccfg *cfg, const char *name, long long l)
@@ -271,8 +259,8 @@ CCFG_NONNULL(1, 2);
  * @param name : Name of the parameter to use in the source config
  * @param str  : Value
  *
- * @error CCFG_OVERFLOW : The size of an internal components was about to overflow
- * @error CCFG_MEMORY   : Failed memory allocation during parsing
+ * @error CERR_OVERFLOW : The size of an internal components was about to overflow
+ * @error CERR_MEMORY   : Failed memory allocation during parsing
  */
 void
 ccfg_push_param_str(ccfg *cfg, const char *name, const char *str)
@@ -287,8 +275,8 @@ CCFG_NONNULL(1, 2, 3);
  * @param cfg      : Config instance to interact with
  * @param filename : Full path to the source file
  *
- * @error CCFG_OVERFLOW : The size of an internal components was about to overflow
- * @error CCFG_MEMORY   : Failed memory allocation during parsing
+ * @error CERR_OVERFLOW : The size of an internal components was about to overflow
+ * @error CERR_MEMORY   : Failed memory allocation during parsing
  */
 void
 ccfg_push_source(ccfg *cfg, const char *filename)
@@ -331,9 +319,9 @@ CCFG_NONNULL(1);
  *
  * @param cfg : Config instance to interact with
  *
- * @return : Error bitfield
+ * @return : Error value
  */
-enum ccfg_err
+enum cerr
 ccfg_error(const ccfg *cfg)
 CCFG_NONNULL(1)
 CCFG_PURE;

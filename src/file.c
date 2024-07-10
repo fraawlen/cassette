@@ -94,8 +94,6 @@ void
 file_parse_root(ccfg *cfg, const char *filename)
 {
 	struct context ctx;
-	enum cbook_err book_err = CBOOK_OK;
-	enum cdict_err dict_err = CDICT_OK;
 	crand r = 0;
 
 	if (!_open_file(&ctx, NULL, filename))
@@ -124,15 +122,21 @@ file_parse_root(ccfg *cfg, const char *filename)
 	ctx.parent         = NULL;
 	ctx.rand           = &r;
 
+	if (cbook_error(ctx.iteration)
+	 || cbook_error(ctx.vars)
+	 || cdict_error(ctx.keys_vars))
+	{	
+		cfg->err |= CERR_MEMORY;
+		return;
+	}
+
 	_parse_file(&ctx);
 
-	book_err |= cbook_error(ctx.iteration);
-	book_err |= cbook_error(ctx.vars);
-	dict_err |= cdict_error(ctx.keys_vars);
-	cfg->err |= (book_err & CBOOK_OVERFLOW) || (dict_err & CDICT_OVERFLOW) ? CCFG_OVERFLOW : CCFG_OK;
-	cfg->err |= (book_err & CBOOK_MEMORY)   || (dict_err & CDICT_MEMORY)   ? CCFG_MEMORY   : CCFG_OK;
-	cfg->err |= (book_err & CBOOK_INVALID)  || (dict_err & CDICT_INVALID)  ? CCFG_MEMORY   : CCFG_OK;
+	cfg->err |= cbook_error(ctx.iteration);
+	cfg->err |= cbook_error(ctx.vars);
+	cfg->err |= cdict_error(ctx.keys_vars);
 
+	cbook_destroy(ctx.iteration);
 	cbook_destroy(ctx.vars);
 	cdict_destroy(ctx.keys_vars);
 

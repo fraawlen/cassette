@@ -37,5 +37,5 @@ struct ccfg
 	cdict *tokens;
 	size_t it_group;
 	size_t it;
-	enum ccfg_err err;
+	enum cerr err;
 };

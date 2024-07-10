@@ -33,8 +33,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static const char *  _select_source (const ccfg *cfg, size_t *index) NONNULL_RETURN NONNULL(1);
-static enum ccfg_err _update_err    (ccfg *cfg)                                     NONNULL(1);
+static const char * _select_source (const ccfg *cfg, size_t *index) NONNULL_RETURN NONNULL(1);
+static enum cerr    _update_err    (ccfg *cfg)                                     NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -50,7 +50,7 @@ ccfg ccfg_placeholder_instance =
 	.tokens         = CDICT_PLACEHOLDER,
 	.it_group       = SIZE_MAX,
 	.it             = SIZE_MAX,
-	.err            = CCFG_INVALID,
+	.err            = CERR_INVALID,
 };
 
 /************************************************************************************************************/
@@ -142,7 +142,7 @@ ccfg_clone(ccfg *cfg)
 	cfg_new->tokens         = cdict_clone(cfg->tokens);
 	cfg_new->it_group       = cfg->it_group;
 	cfg_new->it             = cfg->it;
-	cfg_new->err            = CCFG_OK;
+	cfg_new->err            = CERR_NONE;
 
 	if (_update_err(cfg_new))
 	{
@@ -173,7 +173,7 @@ ccfg_create(void)
 	cfg->tokens         = token_dict_create();
 	cfg->it_group       = SIZE_MAX;
 	cfg->it             = SIZE_MAX;
-	cfg->err            = CCFG_OK;
+	cfg->err            = CERR_NONE;
 
 	if (_update_err(cfg))
 	{
@@ -206,7 +206,7 @@ ccfg_destroy(ccfg *cfg)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum ccfg_err
+enum cerr
 ccfg_error(const ccfg *cfg)
 {
 	return cfg->err;
@@ -331,6 +331,8 @@ ccfg_push_source(ccfg *cfg, const char *filename)
 void
 ccfg_repair(ccfg *cfg)
 {
+	cfg->err &= CERR_INVALID;
+
 	cbook_repair(cfg->params);
 	cbook_repair(cfg->sequences);
 	cbook_repair(cfg->sources);
@@ -338,7 +340,7 @@ ccfg_repair(ccfg *cfg)
 	cdict_repair(cfg->keys_sequences);
 	cdict_repair(cfg->tokens);
 	
-	cfg->err &= CCFG_INVALID;
+	_update_err(cfg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -396,23 +398,15 @@ _select_source(const ccfg *cfg, size_t *index)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static enum ccfg_err
+static enum cerr
 _update_err(ccfg *cfg)
 {
-	enum cbook_err book_err = CBOOK_OK;
-	enum cdict_err dict_err = CDICT_OK;
-
-	book_err |= cbook_error(cfg->params);
-	book_err |= cbook_error(cfg->sequences);
-	book_err |= cbook_error(cfg->sources);
-	
-	dict_err |= cdict_error(cfg->keys_params);
-	dict_err |= cdict_error(cfg->keys_sequences);
-	dict_err |= cdict_error(cfg->tokens);
-
-	cfg->err |= (book_err & CBOOK_OVERFLOW) || (dict_err & CDICT_OVERFLOW) ? CCFG_OVERFLOW : CCFG_OK;
-	cfg->err |= (book_err & CBOOK_MEMORY)   || (dict_err & CDICT_MEMORY)   ? CCFG_MEMORY   : CCFG_OK;
-	cfg->err |= (book_err & CBOOK_INVALID)  || (dict_err & CDICT_INVALID)  ? CCFG_MEMORY   : CCFG_OK;
+	cfg->err |= cbook_error(cfg->params);
+	cfg->err |= cbook_error(cfg->sequences);
+	cfg->err |= cbook_error(cfg->sources);	
+	cfg->err |= cdict_error(cfg->keys_params);
+	cfg->err |= cdict_error(cfg->keys_sequences);
+	cfg->err |= cdict_error(cfg->tokens);
 
 	return cfg->err;
 }
