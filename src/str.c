@@ -18,7 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <cassette/cstr.h>
+#include <cassette/cobj.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -47,7 +47,7 @@ struct cstr
 	size_t n_codepoints;
 	size_t tab_width;
 	int digits;
-	enum cstr_err err;
+	enum cerr err;
 };
 
 /************************************************************************************************************/
@@ -73,7 +73,7 @@ cstr cstr_placeholder_instance =
 	.n_codepoints = 0,
 	.tab_width    = 0,
 	.digits       = 0,
-	.err          = CSTR_INVALID,
+	.err          = CERR_INVALID,
 };
 
 /************************************************************************************************************/
@@ -185,7 +185,7 @@ cstr_clone(const cstr *str)
 	str_new->n_alloc      = str->n_alloc;
 	str_new->tab_width    = str->tab_width;
 	str_new->digits       = str->digits;
-	str_new->err          = CSTR_OK;
+	str_new->err          = CERR_NONE;
 	
 	return str_new;
 }
@@ -274,7 +274,7 @@ cstr_create(void)
 	str->n_alloc   = 1;
 	str->tab_width = 1;
 	str->digits    = 0;
-	str->err       = CSTR_OK;
+	str->err       = CERR_NONE;
 	
 	_update_n_values(str);
 
@@ -322,7 +322,7 @@ cstr_destroy(cstr *str)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cstr_err
+enum cerr
 cstr_error(const cstr *str)
 {
 	return str->err;
@@ -395,7 +395,7 @@ cstr_insert_raw(cstr *str, const char *raw_str, size_t offset)
 
 	if (!safe_add(&m, n = strlen(raw_str), str->n_chars))
 	{
-		str->err |= CSTR_OVERFLOW;
+		str->err = CERR_OVERFLOW;
 		return;
 	}
 	
@@ -405,7 +405,7 @@ cstr_insert_raw(cstr *str, const char *raw_str, size_t offset)
 	{
 		if (!(tmp_src = strdup(raw_str)))
 		{
-			str->err |= CSTR_MEMORY;
+			str->err = CERR_MEMORY;
 			return;
 		}
 		raw_str = tmp_src;
@@ -417,7 +417,7 @@ cstr_insert_raw(cstr *str, const char *raw_str, size_t offset)
 	{
 		if (!(tmp_dst = realloc(str->chars, m)))
 		{
-			str->err |= CSTR_MEMORY;
+			str->err = CERR_MEMORY;
 			free(tmp_src);
 			return;
 		}
@@ -472,13 +472,13 @@ cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 	if (!safe_mul(&n, pad_n_chars, length_diff)
 	 || !safe_add(&n, n, 1))
 	{
-		str->err |= CSTR_OVERFLOW;
+		str->err = CERR_OVERFLOW;
 		return;
 	}
 
 	if (!(tmp = malloc(n)))
 	{
-		str->err |= CSTR_MEMORY;
+		str->err = CERR_MEMORY;
 		return;
 	}
 
@@ -510,7 +510,7 @@ cstr_prealloc(cstr *str, size_t byte_length)
 
 	if (!(tmp = realloc(str->chars, byte_length)))
 	{
-		str->err |= CSTR_MEMORY;
+		str->err = CERR_MEMORY;
 		return;
 	}
 
@@ -523,7 +523,7 @@ cstr_prealloc(cstr *str, size_t byte_length)
 void
 cstr_repair(cstr *str)
 {
-	str->err &= CSTR_INVALID;
+	str->err &= CERR_INVALID;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -745,7 +745,7 @@ cstr_wrap(cstr *str, size_t max_width)
 	 || !safe_add(&max_bytes, max_bytes, 1)
 	 || !safe_mul(&max_bytes, max_bytes, max_rows))
 	{
-		str->err |= CSTR_OVERFLOW;
+		str->err = CERR_OVERFLOW;
 		return;
 	}
 
@@ -753,7 +753,7 @@ cstr_wrap(cstr *str, size_t max_width)
 
 	if (!(tmp = malloc(max_bytes)))
 	{
-		str->err |= CSTR_MEMORY;
+		str->err = CERR_MEMORY;
 		return;
 	}
 

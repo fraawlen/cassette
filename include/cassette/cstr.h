@@ -23,6 +23,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "cerr.h"
+
 #if __GNUC__ > 4
 	#define CSTR_NONNULL_RETURN __attribute__((returns_nonnull))
 	#define CSTR_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
@@ -43,26 +45,13 @@ extern "C" {
 
 /**
  * Opaque string object instance.
- * This object holds an internal error bitfield that can be checked with cstr_error(). Some functions, upon
- * failure, can trigger specific error bits and will exit early without side effects. If the error bitfield is
- * set to anything else than CSTR_OK, any function that takes this object as an argument will return early
+ * This object holds an internal error value that can be checked with cstr_error(). Some functions, upon
+ * failure, can trigger specific error bits and will exit early without side effects. If the error value is
+ * set to anything else than CERR_NONE, any function that takes this object as an argument will return early
  * with no side effects and default return values. It is possible to repair the object to get rid of errors.
  * See cstr_repair() for more details.
  */
 typedef struct cstr cstr;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Error types.
- */
-enum cstr_err
-{
-	CSTR_OK       = 0,
-	CSTR_INVALID  = 1,
-	CSTR_MEMORY   = 1 << 1,
-	CSTR_OVERFLOW = 1 << 2,
-};
 
 /************************************************************************************************************/
 /* GLOBALS **************************************************************************************************/
@@ -78,7 +67,7 @@ enum cstr_err
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Global string object instance with the error state set to CSTR_INVALID. This instance is only made
+ * Global string object instance with the error state set to CERR_INVALID. This instance is only made
  * available to allow the static initialization of string object pointers with the macro CSTR_PLACEHOLDER.
  */
 extern cstr cstr_placeholder_instance;
@@ -209,8 +198,8 @@ CSTR_NONNULL(1);
  * @param str_src : String to ger new data from
  * @param offset  : UTF-8 character position to insert the new data at
  *
- * @error CSTR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
- * @error CSTR_MEMORY   : Failed memory allocation
+ * @error CERR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
+ * @error CERR_MEMORY   : Failed memory allocation
  */
 void
 cstr_insert_cstr(cstr *str, const cstr *str_src, size_t offset)
@@ -230,8 +219,8 @@ CSTR_NONNULL(1, 2);
  * @param d       : Double value to insert
  * @param offset  : UTF-8 character position to insert the new data at
  *
- * @error CSTR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
- * @error CSTR_MEMORY   : Failed memory allocation
+ * @error CERR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
+ * @error CERR_MEMORY   : Failed memory allocation
  */
 void
 cstr_insert_double(cstr *str, double d, size_t offset)
@@ -250,8 +239,8 @@ CSTR_NONNULL(1);
  * @param l       : Long value to insert
  * @param offset  : UTF-8 character position to insert the new data at
  *
- * @error CSTR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
- * @error CSTR_MEMORY   : Failed memory allocation
+ * @error CERR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
+ * @error CERR_MEMORY   : Failed memory allocation
  */
 void
 cstr_insert_long(cstr *str, long long l, size_t offset)
@@ -270,8 +259,8 @@ CSTR_NONNULL(1);
  * @param raw_str : Raw C string to insert
  * @param offset  : UTF-8 character position to insert the new data at
  *
- * @error CSTR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
- * @error CSTR_MEMORY   : Failed memory allocation
+ * @error CERR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
+ * @error CERR_MEMORY   : Failed memory allocation
  */
 void
 cstr_insert_raw(cstr *str, const char *raw_str, size_t offset)
@@ -302,8 +291,8 @@ CSTR_NONNULL(1, 2);
  * @param offset        : UTF-8 character position to insert the padded sequence at
  * @param length_target : Resulting string length that should be reached
  *
- * @error CSTR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
- * @error CSTR_MEMORY   : Failed memory allocation
+ * @error CERR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
+ * @error CERR_MEMORY   : Failed memory allocation
  */
 void
 cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
@@ -319,7 +308,7 @@ CSTR_NONNULL(1, 2);
  * @param str         : String to interact with
  * @param byte_length : Number of bytes
  *
- * @error CSTR_MEMORY : Failed memory allocation
+ * @error CERR_MEMORY : Failed memory allocation
  */
 void
 cstr_prealloc(cstr *str, size_t byte_length)
@@ -395,8 +384,8 @@ CSTR_NONNULL(1);
  * @param str       : String to interact with
  * @param max_width : Width after which a newline is added to the string
  *
- * @error CSTR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
- * @error CSTR_MEMORY   : Failed memory allocation
+ * @error CERR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
+ * @error CERR_MEMORY   : Failed memory allocation
  */
 void
 cstr_wrap(cstr *str, size_t max_width)
@@ -529,9 +518,9 @@ CSTR_PURE;
  *
  * @param str : String to interact with
  *
- * @return : Error bitfield
+ * @return : Error value
  */
-enum cstr_err
+enum cerr
 cstr_error(const cstr *str)
 CSTR_NONNULL(1)
 CSTR_PURE;

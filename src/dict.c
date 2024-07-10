@@ -18,7 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <cassette/cdict.h>
+#include <cassette/cobj.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -60,7 +60,7 @@ struct cdict
 	size_t n;
 	size_t n_alloc;
 	double max_load;
-	enum cdict_err err;
+	enum cerr err;
 };
 
 /************************************************************************************************************/
@@ -81,7 +81,7 @@ cdict cdict_placeholder_instance =
 	.n        = 0,
 	.n_alloc  = 0,
 	.max_load = 1.0,
-	.err      = CDICT_INVALID,
+	.err      = CERR_INVALID,
 };
 
 /************************************************************************************************************/
@@ -143,7 +143,7 @@ cdict_clone(const cdict *dict)
 	dict_new->n        = dict->n;
 	dict_new->n_alloc  = dict->n_alloc;
 	dict_new->max_load = dict->max_load;
-	dict_new->err      = CDICT_OK;
+	dict_new->err      = CERR_NONE;
 
 	return dict_new;
 }
@@ -169,7 +169,7 @@ cdict_create(void)
 	dict->n        = 0;
 	dict->n_alloc  = 1;
 	dict->max_load = 0.6;
-	dict->err      = CDICT_OK;
+	dict->err      = CERR_NONE;
 
 	return dict;
 }
@@ -209,7 +209,7 @@ cdict_erase(cdict *dict, const char *key, size_t group)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cdict_err
+enum cerr
 cdict_error(const cdict *dict)
 {
 	return dict->err;
@@ -273,7 +273,7 @@ cdict_prealloc(cdict *dict, size_t slots_number)
 
 	if (slots_number > SIZE_MAX * dict->max_load)
 	{
-		dict->err |= CDICT_OVERFLOW;
+		dict->err = CERR_OVERFLOW;
 		return;
 	}
 
@@ -285,7 +285,7 @@ cdict_prealloc(cdict *dict, size_t slots_number)
 void
 cdict_repair(cdict *dict)
 {
-	dict->err &= CDICT_INVALID;
+	dict->err &= CERR_INVALID;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -300,13 +300,13 @@ cdict_set_max_load(cdict *dict, double load_factor)
 
 	if (load_factor <= 0.0 || load_factor > 1.0)
 	{
-		dict->err |= CDICT_BAD_INPUT;
+		dict->err = CERR_INPUT;
 		return;
 	}
 
 	if (dict->n > SIZE_MAX * load_factor)
 	{
-		dict->err |= CDICT_OVERFLOW;
+		dict->err = CERR_OVERFLOW;
 		return;
 	}
 
@@ -334,7 +334,7 @@ cdict_write(cdict *dict, const char *key, size_t group, size_t value)
 	{
 		if (!safe_mul(NULL, dict->n_alloc, 2))
 		{
-			dict->err |= CDICT_OVERFLOW;
+			dict->err = CERR_OVERFLOW;
 			return;
 		}
 		if (!_grow(dict, dict->n_alloc * 2))
@@ -416,13 +416,13 @@ _grow(cdict *dict, size_t n)
 
 	if (!safe_mul(NULL, n, sizeof(struct _slot)))
 	{
-		dict->err |= CDICT_OVERFLOW;
+		dict->err = CERR_OVERFLOW;
 		return false;
 	}
 
 	if (!(tmp = calloc(n, sizeof(struct _slot))))
 	{
-		dict->err |= CDICT_MEMORY;
+		dict->err = CERR_MEMORY;
 		return false;
 	}
 

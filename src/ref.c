@@ -18,7 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <cassette/cref.h>
+#include <cassette/cobj.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -44,7 +44,7 @@ struct cref
 	struct _slot *slots;
 	size_t n;
 	size_t n_alloc;
-	enum cref_err err;
+	enum cerr err;
 };
 
 /************************************************************************************************************/
@@ -63,7 +63,7 @@ cref cref_placeholder_instance =
 	.slots   = NULL,
 	.n       = 0,
 	.n_alloc = 0,
-	.err     = CREF_INVALID,
+	.err     = CERR_INVALID,
 };
 
 /************************************************************************************************************/
@@ -102,7 +102,7 @@ cref_clone(cref *ref)
 	memcpy(ref_new->slots, ref->slots, ref->n * sizeof(struct _slot));
 
 	ref_new->n   = ref->n;
-	ref_new->err = CREF_OK;
+	ref_new->err = CERR_NONE;
 
 	return ref_new;
 }
@@ -139,7 +139,7 @@ cref_create(void)
 	}
 
 	ref->n   = 0;
-	ref->err = CREF_OK;
+	ref->err = CERR_NONE;
 
 	return ref;
 }
@@ -160,7 +160,7 @@ cref_destroy(cref *ref)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cref_err
+enum cerr
 cref_error(const cref *ref)
 {
 	return ref->err;
@@ -300,7 +300,7 @@ cref_push(cref *ref, const void *ptr)
 	{
 		if (ref->slots[i].n_ref == UINT_MAX)
 		{
-			ref->err |= CREF_OVERFLOW;
+			ref->err = CERR_OVERFLOW;
 			return;
 		}
 		ref->slots[i].n_ref++;
@@ -313,7 +313,7 @@ cref_push(cref *ref, const void *ptr)
 	{
 		if (!safe_mul(NULL, ref->n_alloc, 2))
 		{
-			ref->err |= CREF_OVERFLOW;
+			ref->err = CERR_OVERFLOW;
 			return;
 		}
 		if (!_grow(ref, ref->n_alloc * 2))
@@ -332,7 +332,7 @@ cref_push(cref *ref, const void *ptr)
 void
 cref_repair(cref *ref)
 {
-	ref->err &= CREF_INVALID;
+	ref->err &= CERR_INVALID;
 }
 
 /************************************************************************************************************/
@@ -351,13 +351,13 @@ _grow(cref *ref, size_t n)
 
 	if (!safe_mul(NULL, n, sizeof(struct _slot)))
 	{
-		ref->err |= CREF_OVERFLOW;
+		ref->err = CERR_OVERFLOW;
 		return false;
 	}
 
 	if (!(tmp = realloc(ref->slots, n * sizeof(struct _slot))))
 	{
-		ref->err |= CREF_MEMORY;
+		ref->err = CERR_MEMORY;
 		return false;
 	}
 

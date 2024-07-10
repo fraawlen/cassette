@@ -23,6 +23,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "cerr.h"
+
 #if __GNUC__ > 4
 	#define CDICT_NONNULL_RETURN __attribute__((returns_nonnull))
 	#define CDICT_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
@@ -44,27 +46,13 @@ extern "C" {
 /**
  * Opaque dictionary object instance. It uses internally a hashtable with the FNV1-A hash function and uses
  * linear probing for collision resolution.
- * This object holds an internal error bitfield that can be checked with cdict_error(). Some functions, upon
- * failure, can trigger specific error bits and will exit early without side effects. If the error bitfield is
- * set to anything else than CDICT_OK, any function that takes this object as an argument will return early
+ * This object holds an internal error value that can be checked with cdict_error(). Some functions, upon
+ * failure, can trigger specific error bits and will exit early without side effects. If the error value is
+ * set to anything else than CERR_NONE, any function that takes this object as an argument will return early
  * with no side effects and default return values. It is possible to repair the object to get rid of errors.
  * See cdict_repair() for more details.
  */
 typedef struct cdict cdict;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Error types.
- */
-enum cdict_err
-{
-	CDICT_OK        = 0,
-	CDICT_INVALID   = 1,
-	CDICT_MEMORY    = 1 << 1,
-	CDICT_OVERFLOW  = 1 << 2,
-	CDICT_BAD_INPUT = 1 << 3,
-};
 
 /************************************************************************************************************/
 /* GLOBALS **************************************************************************************************/
@@ -80,7 +68,7 @@ enum cdict_err
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Global dictionary instance with the error state set to CDICT_INVALID. This instance is only made available
+ * Global dictionary instance with the error state set to CERR_INVALID. This instance is only made available
  * to allow the static initialization of dictionary pointers with the macro CDICT_PLACEHOLDER.
  */
 extern cdict cdict_placeholder_instance;
@@ -175,8 +163,8 @@ CDICT_NONNULL(1, 2);
  * @param dict         : Dictionary to interact with
  * @param slots_number : Number of slots
  *
- * @error CDICT_OVERFLOW : The size of the resulting dictionary will be > SIZE_MAX
- * @error CDICT_MEMORY   : Failed memory allocation
+ * @error CERR_OVERFLOW : The size of the resulting dictionary will be > SIZE_MAX
+ * @error CERR_MEMORY   : Failed memory allocation
  */
 void
 cdict_prealloc(cdict *dict, size_t slots_number)
@@ -191,9 +179,9 @@ CDICT_NONNULL(1);
  * @param dict        : Dictionary to interact with
  * @param laod_factor : Maximum load factor to set
  *
- * @error CDICT_OVERFLOW  : The size of the resulting dictionary will be > SIZE_MAX
- * @error CDICT_MEMORY    : Failed memory allocation
- * @error CDICT_BAD_INPUT : Illegal load_factor values were given
+ * @error CERR_OVERFLOW : The size of the resulting dictionary will be > SIZE_MAX
+ * @error CERR_MEMORY   : Failed memory allocation
+ * @error CERR_INPUT    : Illegal load_factor values were given
  */
 void
 cdict_set_max_load(cdict *dict, double load_factor)
@@ -224,8 +212,8 @@ CDICT_NONNULL(1);
  * @param group : Group to match
  * @param value : Value to associate with the slot
  *
- * @error CDICT_OVERFLOW : The size of the resulting dictionary will be > SIZE_MAX
- * @error CDICT_MEMORY   : Failed memory allocation
+ * @error CERR_OVERFLOW : The size of the resulting dictionary will be > SIZE_MAX
+ * @error CERR_MEMORY   : Failed memory allocation
  */
 void
 cdict_write(cdict *dict, const char *key, size_t group, size_t value)
@@ -240,9 +228,9 @@ CDICT_NONNULL(1, 2);
  *
  * @param dict : Dictionary to interact with
  *
- * @return : Error bitfield
+ * @return : Error value
  */
-enum cdict_err
+enum cerr
 cdict_error(const cdict *dict)
 CDICT_NONNULL(1)
 CDICT_PURE;

@@ -8,8 +8,9 @@ Features
 --------
 
 - cbook  : dynamic C-strings stack with grouping features
-- cdict  : hashmap with string + group keys, FNV-1A hashing and linear probing
 - ccolor : RGBA color representation, manipulation and conversion
+- cdict  : hashmap with string + group keys, FNV-1A hashing and linear probing
+- cerr   : error codes used by every Cassette component
 - cline  : 1D line represenation and manipulation with bound checks and UB prevention
 - crand  : re-implementation of POSIX's rand48 functions with a slightly more convenient API
 - cref   : reference counter used to keep track of instanced components.
@@ -49,8 +50,9 @@ If you want to be more explicit, you can include the specific headers you need :
 
 ```
 #include <cassette/cbook.h>
-#include <cassette/cdict.h>
 #include <cassette/ccolor.h>
+#include <cassette/cdict.h>
+#include <cassette/cerr.h>
 #include <cassette/cline.h>
 #include <cassette/crand.h>
 #include <cassette/cref.h>

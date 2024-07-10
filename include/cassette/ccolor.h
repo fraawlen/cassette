@@ -23,7 +23,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-
 #if __GNUC__ > 4
 	#define CCOLOR_NONNULL(...) __attribute__((nonnull (__VA_ARGS__)))
 	#define CCOLOR_PURE         __attribute__((pure))

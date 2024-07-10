@@ -23,6 +23,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "cerr.h"
+
 #if __GNUC__ > 4
 	#define CBOOK_NONNULL_RETURN __attribute__((returns_nonnull))
 	#define CBOOK_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
@@ -44,27 +46,14 @@ extern "C" {
 /**
  * Opaque book object instance. It stores an automatically extensible stack of strings. Strings can be
  * grouped.
- * This object holds an internal error bitfield that can be checked with cbook_error(). Some functions, upon
+ * This object holds an internal error value that can be checked with cbook_error(). Some functions, upon
  * failure, can trigger specific error bits and will exit early without side effects that affect the contents
- * of the book (but the amount of allocated memory may be modified). If the error bitfield is set to anything
- * else than CBOOK_OK, any function that takes this object as an argument will return early with no side
+ * of the book (but the amount of allocated memory may be modified). If the error value is set to anything
+ * else than CERR_NONE, any function that takes this object as an argument will return early with no side
  * effects and default return values. It is possible to repair the object to get rid of errors. See
  * cbook_repair() for more details.
  */
 typedef struct cbook cbook;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Error types.
- */
-enum cbook_err
-{
-	CBOOK_OK       = 0,
-	CBOOK_INVALID  = 1,
-	CBOOK_OVERFLOW = 1 << 1,
-	CBOOK_MEMORY   = 1 << 2,
-};
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -91,8 +80,8 @@ enum cbook_group
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Global book instance with the error state set to CBOOK_INVALID. This instance is only made available
- * to allow the static initialization of book pointers with the macro CBOOK_PLACEHOLDER.
+ * Global book instance with the error state set to CERR_INVALID. This instance is only made available to
+ * allow the static initialization of book pointers with the macro CBOOK_PLACEHOLDER.
  */
 extern cbook cbook_placeholder_instance;
 
@@ -210,8 +199,8 @@ CBOOK_NONNULL(1);
  * @param words_number  : Total number of words across all groups
  * @param groups_number : Total number of groups
  *
- * @error CBOOK_OVERFLOW : The size of the resulting book will be > SIZE_MAX
- * @error CBOOK_MEMORY   : Failed memory allocation
+ * @error CERR_OVERFLOW : The size of the resulting book will be > SIZE_MAX
+ * @error CERR_MEMORY   : Failed memory allocation
  */
 void
 cbook_prealloc(cbook *book, size_t bytes_number, size_t words_number, size_t groups_number)
@@ -251,8 +240,8 @@ CBOOK_NONNULL(1);
  * @return     : Pointer to string buffer of size 'length'
  * @return_err : NULL
  *
- * @error CBOOK_OVERFLOW : The size of the resulting book will be > SIZE_MAX
- * @error CBOOK_MEMORY   : Failed memory allocation
+ * @error CERR_OVERFLOW : The size of the resulting book will be > SIZE_MAX
+ * @error CERR_MEMORY   : Failed memory allocation
  */
 char *
 cbook_prepare_word(cbook *book, size_t length, enum cbook_group group_mode)
@@ -281,8 +270,8 @@ CBOOK_NONNULL(1);
  * @param raw_str    : C string
  * @param group_mode : Create (or not) a group for the new word
  *
- * @error CBOOK_OVERFLOW : The size of the resulting book will be > SIZE_MAX
- * @error CBOOK_MEMORY   : Failed memory allocation
+ * @error CERR_OVERFLOW : The size of the resulting book will be > SIZE_MAX
+ * @error CERR_MEMORY   : Failed memory allocation
  */
 void
 cbook_write(cbook *book, const char *str, enum cbook_group group_mode)
@@ -308,9 +297,9 @@ CBOOK_NONNULL(1);
  *
  * @param book : Book to interact with
  *
- * @return : Error bitfield
+ * @return : Error value
  */
-enum cbook_err
+enum cerr
 cbook_error(const cbook *book)
 CBOOK_NONNULL(1)
 CBOOK_PURE;

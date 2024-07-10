@@ -23,6 +23,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "cerr.h"
+
 #if __GNUC__ > 4
 	#define CREF_NONNULL_RETURN __attribute__((returns_nonnull))
 	#define CREF_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
@@ -44,27 +46,13 @@ extern "C" {
 /**
  * Opaque reference counter object instance. This object stores references in an array that gets automatically
  * extended when new references gets added.
- * This object holds an internal error bitfield that can be checked with cref_error(). Some functions, upon
- * failure, can trigger specific error bits and will exit early without side effects. If the error bitfield is
- * set to anything else than CREF_OK, any function that takes this object as an argument will return early
+ * This object holds an internal error value that can be checked with cref_error(). Some functions, upon
+ * failure, can trigger specific error bits and will exit early without side effects. If the error value is
+ * set to anything else than CERR_NONE, any function that takes this object as an argument will return early
  * with no side effects and default return values. It is possible to repair the object to get rid of errors.
  * See cref_repair() for more details.
-
  */
 typedef struct cref cref;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Error types.
- */
-enum cref_err
-{
-	CREF_OK       = 0,
-	CREF_INVALID  = 1,
-	CREF_OVERFLOW = 1 << 1,
-	CREF_MEMORY   = 1 << 2,
-};
 
 /************************************************************************************************************/
 /* GLOBALS **************************************************************************************************/
@@ -78,7 +66,7 @@ enum cref_err
 #define CREF_PLACEHOLDER &cref_placeholder_instance
 
 /**
- * Global reference counter instance with the error state set to CBOOK_INVALID. This instance is only made
+ * Global reference counter instance with the error state set to CERR_INVALID. This instance is only made
  * available to allow the static initialization of reference counter pointers with the macro CREF_PLACEHOLDER.
  */
 extern cref cref_placeholder_instance;
@@ -184,8 +172,8 @@ CREF_NONNULL(1);
  *
  * @param ref : Reference counter to interact with
  *
- * @error CREF_OVERFLOW : The size of the resulting reference array will be > SIZE_MAX
- * @error CREF_INVALID  : Failed memory allocation
+ * @error CERR_OVERFLOW : The size of the resulting reference array will be > SIZE_MAX
+ * @error CERR_INVALID  : Failed memory allocation
  */
 void
 cref_prealloc(cref *ref, size_t slots_number)
@@ -252,8 +240,8 @@ CREF_NONNULL(1, 2);
  *
  * @param ref : Reference counter to interact with
  *
- * @error CREF_OVERFLOW : The size of the resulting reference array will be > SIZE_MAX
- * @error CREF_INVALID  : Failed memory allocation
+ * @error CERR_OVERFLOW : The size of the resulting reference array will be > SIZE_MAX
+ * @error CERR_INVALID  : Failed memory allocation
  */
 void
 cref_push(cref *ref, const void *ptr)
@@ -297,9 +285,9 @@ CREF_PURE;
  *
  * @param ref : Reference counter to interact with
  *
- * @return : Error bitfield
+ * @return : Error value
  */
-enum cref_err
+enum cerr
 cref_error(const cref *ref)
 CREF_NONNULL(1)
 CREF_PURE;

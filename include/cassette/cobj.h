@@ -23,6 +23,7 @@
 #include "cbook.h"
 #include "ccolor.h"
 #include "cdict.h"
+#include "cerr.h"
 #include "cline.h"
 #include "crand.h"
 #include "cref.h"

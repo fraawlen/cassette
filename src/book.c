@@ -18,7 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <cassette/cbook.h>
+#include <cassette/cobj.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -41,7 +41,7 @@ struct cbook
 	size_t n_alloc_chars;
 	size_t n_alloc_words;
 	size_t n_alloc_groups;
-	enum cbook_err err;
+	enum cerr err;
 };
 
 /************************************************************************************************************/
@@ -66,7 +66,7 @@ cbook cbook_placeholder_instance =
 	.n_alloc_chars  = 0,
 	.n_alloc_words  = 0,
 	.n_alloc_groups = 0,
-	.err            = CBOOK_INVALID,
+	.err            = CERR_INVALID,
 };
 
 /************************************************************************************************************/
@@ -114,7 +114,7 @@ cbook_clone(const cbook *book)
 	book_new->n_chars  = book->n_chars;
 	book_new->n_words  = book->n_words;
 	book_new->n_groups = book->n_groups;
-	book_new->err      = CBOOK_OK;
+	book_new->err      = CERR_NONE;
 
 	return book_new;
 }
@@ -143,7 +143,7 @@ cbook_create(void)
 	book->n_chars   = 0;
 	book->n_words   = 0;
 	book->n_groups  = 0;
-	book->err       = CBOOK_OK;
+	book->err       = CERR_NONE;
 
 	return book;
 }
@@ -166,7 +166,7 @@ cbook_destroy(cbook *book)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cbook_err
+enum cerr
 cbook_error(const cbook *book)
 {
 	return book->err;
@@ -278,7 +278,7 @@ cbook_prepare_word(cbook *book, size_t length, enum cbook_group group_mode)
 	{
 		if (!safe_mul(&nc, nc, 2))
 		{
-			book->err |= CBOOK_OVERFLOW;
+			book->err = CERR_OVERFLOW;
 			return NULL;
 		}
 	}
@@ -304,7 +304,7 @@ cbook_prepare_word(cbook *book, size_t length, enum cbook_group group_mode)
 void
 cbook_repair(cbook *book)
 {
-	book->err &= CBOOK_INVALID;
+	book->err &= CERR_INVALID;
 }	
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -427,7 +427,7 @@ _grow(cbook *book, size_t n_chars, size_t n_words, size_t n_groups)
 	if (!safe_mul(NULL, n_words,  sizeof(size_t))
 	 || !safe_mul(NULL, n_groups, sizeof(size_t)))
 	{
-		book->err |= CBOOK_OVERFLOW;
+		book->err = CERR_OVERFLOW;
 		return false;
 	}
 
@@ -437,7 +437,7 @@ _grow(cbook *book, size_t n_chars, size_t n_words, size_t n_groups)
 	{
 		if (!(tmp = realloc(book->chars, n_chars)))
 		{
-			book->err |= CBOOK_MEMORY;
+			book->err = CERR_MEMORY;
 			return false;
 		}
 		book->n_alloc_chars = n_chars;
@@ -450,7 +450,7 @@ _grow(cbook *book, size_t n_chars, size_t n_words, size_t n_groups)
 	{
 		if (!(tmp = realloc(book->words, n_words * sizeof(size_t))))
 		{
-			book->err |= CBOOK_MEMORY;
+			book->err = CERR_MEMORY;
 			return false;
 		}
 		book->n_alloc_words = n_words;
@@ -463,7 +463,7 @@ _grow(cbook *book, size_t n_chars, size_t n_words, size_t n_groups)
 	{
 		if (!(tmp = realloc(book->groups, n_groups * sizeof(size_t))))
 		{
-			book->err |= CBOOK_MEMORY;
+			book->err = CERR_MEMORY;
 			return false;
 		}
 		book->n_alloc_groups = n_groups;
