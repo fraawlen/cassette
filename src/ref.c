@@ -44,6 +44,7 @@ struct cref
 	struct _slot *slots;
 	size_t n;
 	size_t n_alloc;
+	const void *default_ptr;
 	enum cerr err;
 };
 
@@ -60,10 +61,11 @@ static void _pull (cref *ref, size_t i) CREF_NONNULL(1);
 
 cref cref_placeholder_instance = 
 {
-	.slots   = NULL,
-	.n       = 0,
-	.n_alloc = 0,
-	.err     = CERR_INVALID,
+	.slots       = NULL,
+	.n           = 0,
+	.n_alloc     = 0,
+	.default_ptr = NULL,
+	.err         = CERR_INVALID,
 };
 
 /************************************************************************************************************/
@@ -101,8 +103,9 @@ cref_clone(cref *ref)
 
 	memcpy(ref_new->slots, ref->slots, ref->n * sizeof(struct _slot));
 
-	ref_new->n   = ref->n;
-	ref_new->err = CERR_NONE;
+	ref_new->n           = ref->n;
+	ref_new->default_ptr = ref->default_ptr;
+	ref_new->err         = CERR_NONE;
 
 	return ref_new;
 }
@@ -138,8 +141,9 @@ cref_create(void)
 		return CREF_PLACEHOLDER;
 	}
 
-	ref->n   = 0;
-	ref->err = CERR_NONE;
+	ref->n           = 0;
+	ref->default_ptr = NULL;
+	ref->err         = CERR_NONE;
 
 	return ref;
 }
@@ -224,7 +228,7 @@ cref_ptr(const cref *ref, size_t index)
 {
 	if (ref->err || index >= ref->n)
 	{
-		return NULL;
+		return ref->default_ptr;
 	}
 	
 	return ref->slots[index].ptr;
@@ -333,6 +337,19 @@ void
 cref_repair(cref *ref)
 {
 	ref->err &= CERR_INVALID;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cref_set_default_ptr(cref *ref, const void *ptr)
+{
+	if (ref->err)
+	{
+		return;
+	}
+
+	ref->default_ptr = ptr;
 }
 
 /************************************************************************************************************/

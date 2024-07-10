@@ -259,6 +259,17 @@ void
 cref_repair(cref *ref)
 CREF_NONNULL(1);
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * Sets a new default pointer value to return when cref_ptr() cannot return a proper value.
+ *
+ * @param ptr : Pointer
+ */
+void
+cref_set_default_ptr(cref *ref, const void *ptr)
+CREF_NONNULL(1);
+
 /************************************************************************************************************/
 /* FUNCTIONS ************************************************************************************************/
 /************************************************************************************************************/
@@ -335,7 +346,8 @@ CREF_PURE;
  * @param index : Index within the array
  *
  * @return     : Pointer
- * @return_err : NULL
+ * @return_err : Pointer value set with cref_set_default_ptr(). NULL can still be returned if the default
+ *               pointer value was not set or if  CREF_PLACHOLDER is passed as the ref parameter.
  */
 const void *
 cref_ptr(const cref *ref, size_t index)
