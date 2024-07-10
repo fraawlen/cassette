@@ -46,13 +46,14 @@ enum cerr
 {
 	CERR_NONE     = 0,
 	CERR_INVALID  = 1,
-	CERR_OVERFLOW = 1 << 1,
-	CERR_MEMORY   = 1 << 2,
-	CERR_INPUT    = 1 << 3,
-	CERR_CONFIG   = 1 << 4,
-	CERR_XCB      = 1 << 5,
-	CERR_CAIRO    = 1 << 6,
-	CERR_MUTEX    = 1 << 7,
+	CERR_NOT_INIT = 1 << 1,
+	CERR_OVERFLOW = 1 << 2,
+	CERR_MEMORY   = 1 << 3,
+	CERR_INPUT    = 1 << 4,
+	CERR_CONFIG   = 1 << 5,
+	CERR_XCB      = 1 << 6,
+	CERR_CAIRO    = 1 << 7,
+	CERR_MUTEX    = 1 << 8,
 };
 
 /************************************************************************************************************/
