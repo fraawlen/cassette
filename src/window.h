@@ -29,9 +29,18 @@
 
 struct cgui_window
 {
+	/* geometry */
+
+	int16_t x;
+	int16_t y;
+	uint16_t width;
+	uint16_t height;
+
+	/* states */
+
 	bool to_destroy;
 	enum cgui_window_state state;
-	enum cgui_window_err err;
+	enum cerr err;
 };
 
 /************************************************************************************************************/

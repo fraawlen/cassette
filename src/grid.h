@@ -55,7 +55,7 @@ struct cgui_grid
 	/* states */
 
 	bool to_destroy;
-	enum cgui_grid_err err;
+	enum cerr err;
 };
 
 /************************************************************************************************************/

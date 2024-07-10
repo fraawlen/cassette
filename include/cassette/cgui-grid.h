@@ -41,19 +41,6 @@ typedef struct cgui_grid cgui_grid;
 /**
  *
  */
-enum cgui_grid_err
-{
-	CGUI_GRID_OK       = 0,
-	CGUI_GRID_INVALID  = 1,
-	CGUI_GRID_OVERFLOW = 1 << 1,
-	CGUI_GRID_MEMORY   = 1 << 2,
-};
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
 enum cgui_grid_relative_size
 {
 	CGUI_GRID_SIZE_EQUAL     = 0,
@@ -216,7 +203,7 @@ CGUI_PURE;
 /**
  *
  */
-enum cgui_grid_err
+enum cerr
 cgui_grid_error(const cgui_grid *grid)
 CGUI_NONNULL(1)
 CGUI_PURE;

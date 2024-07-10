@@ -93,7 +93,7 @@ cgui_block_user_exit(void)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cgui_err
+enum cerr
 cgui_error(void)
 {
 	if (_init)
@@ -217,17 +217,17 @@ cgui_reset(void)
 
 	CREF_FOR_EACH(_windows, i)
 	{
-		((cgui_window*)cref_ptr(_windows, i))->err |= CGUI_WINDOW_INVALID;
+		((cgui_window*)cref_ptr(_windows, i))->err |= CERR_INVALID;
 	}
 
 	CREF_FOR_EACH(_grids, i)
 	{
-		((cgui_grid*)cref_ptr(_grids, i))->err |= CGUI_GRID_INVALID;
+		((cgui_grid*)cref_ptr(_grids, i))->err |= CERR_INVALID;
 	}
 
 	CREF_FOR_EACH(_cells, i)
 	{
-		((cgui_cell*)cref_ptr(_cells, i))->err |= CGUI_CELL_INVALID;
+		((cgui_cell*)cref_ptr(_cells, i))->err |= CERR_INVALID;
 	}
 
 	if (!_ext_connection || util_env_exists(ENV_FORCE_CLEAN))

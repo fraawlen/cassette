@@ -40,17 +40,6 @@ typedef struct cgui_window cgui_window;
 /**
  *
  */
-enum cgui_window_err
-{
-	CGUI_WINDOW_OK      = 0,
-	CGUI_WINDOW_INVALID = 1,
-};
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
 enum cgui_window_state
 {
 	CGUI_WINDOW_INITIAL      = 0,
@@ -120,7 +109,7 @@ CGUI_NONNULL(1);
 /**
  *
  */
-enum cgui_window_err
+enum cerr
 cgui_window_error(const cgui_window *window)
 CGUI_NONNULL(1)
 CGUI_PURE;

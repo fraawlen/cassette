@@ -37,7 +37,7 @@
 cgui_grid cgui_grid_placeholder_instance =
 {
 	.to_destroy = false,
-	.err        = CGUI_GRID_INVALID,
+	.err        = CERR_INVALID,
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -81,8 +81,7 @@ cgui_grid_assign_cell(cgui_grid *grid, cgui_cell *cell, size_t x, size_t y, size
 
 	cref_push(grid->areas, area);
 
-	grid->err |= cref_error(grid->areas) & CREF_OVERFLOW ? CGUI_GRID_OVERFLOW : CGUI_GRID_OK;
-	grid->err |= cref_error(grid->areas) & CREF_MEMORY   ? CGUI_GRID_MEMORY   : CGUI_GRID_OK;
+	grid->err |= cref_error(grid->areas);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -126,7 +125,7 @@ cgui_grid_clone(const cgui_grid *grid)
 	grid_new->total_height_inv = grid->total_height_inv; 
 	grid_new->ref              = grid->ref;
 	grid_new->to_destroy       = false;
-	grid_new->err              = CGUI_GRID_OK;
+	grid_new->err              = CERR_NONE;
 	
 	cref_push(main_grids(), grid_new);
 
@@ -307,7 +306,7 @@ cgui_grid_create(size_t cols, size_t rows)
 	grid->total_height_inv = 0; 
 	grid->ref              = CGUI_GRID_PLACEHOLDER;
 	grid->to_destroy       = false;
-	grid->err              = CGUI_GRID_OK;
+	grid->err              = CERR_NONE;
 
 	cref_push(main_grids(), grid);
 
@@ -344,7 +343,7 @@ cgui_grid_destroy(cgui_grid *grid)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cgui_grid_err
+enum cerr
 cgui_grid_error(const cgui_grid *grid)
 {
 	return grid->err;
@@ -415,7 +414,7 @@ cgui_grid_min_width(const cgui_grid *grid)
 void
 cgui_grid_repair(cgui_grid *grid)
 {
-	grid->err &= CGUI_GRID_INVALID;
+	grid->err &= CERR_INVALID;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

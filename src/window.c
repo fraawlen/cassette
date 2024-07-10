@@ -25,6 +25,7 @@
 
 #include "main.h"
 #include "window.h"
+#include "x11.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -34,7 +35,7 @@ cgui_window cgui_window_placeholder_instance =
 {
 	.to_destroy = false,
 	.state      = CGUI_WINDOW_INITIAL,
-	.err        = CGUI_WINDOW_INVALID,
+	.err        = CERR_INVALID,
 };
 
 /************************************************************************************************************/
@@ -51,11 +52,16 @@ cgui_window_create(void)
 		return CGUI_WINDOW_PLACEHOLDER;
 	}
 
+	window->x          = 0;
+	window->y          = 0;
+	window->width      = 400;
+	window->height     = 400;
 	window->to_destroy = false;
 	window->state      = CGUI_WINDOW_INITIAL;
-	window->err        = CGUI_WINDOW_OK;
+	window->err        = CERR_NONE;
 
 	cref_push(main_windows(), window);
+	x11_window_create(window);
 
 	return window;
 }
@@ -79,7 +85,7 @@ cgui_window_destroy(cgui_window *window)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cgui_window_err
+enum cerr
 cgui_window_error(const cgui_window *window)
 {
 	return window->err;
@@ -90,7 +96,7 @@ cgui_window_error(const cgui_window *window)
 void
 cgui_window_repair(cgui_window *window)
 {
-	window->err &= CGUI_WINDOW_INVALID;
+	window->err &= CERR_INVALID;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -119,6 +125,7 @@ window_destroy(cgui_window *window)
 	}
 
 	cref_pull(main_windows(), window);
+	x11_window_destroy(window);
 	free(window);
 }
 

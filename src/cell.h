@@ -42,7 +42,7 @@ struct cgui_cell
 	/* states */
 
 	bool to_destroy;
-	enum cgui_cell_err err;
+	enum cerr err;
 };
 
 /************************************************************************************************************/

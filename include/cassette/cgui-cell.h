@@ -43,17 +43,6 @@ typedef struct cgui_cell cgui_cell;
 /**
  *
  */
-enum cgui_cell_err
-{
-	CGUI_CELL_OK      = 0,
-	CGUI_CELL_INVALID = 1,
-};
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
 enum cgui_cell_event_type
 {
 	CGUI_CELL_EVENT_NONE = 0,
@@ -226,7 +215,7 @@ CGUI_PURE;
 /**
  *
  */
-enum cgui_cell_err
+enum cerr
 cgui_cell_error(const cgui_cell *cell)
 CGUI_NONNULL(1)
 CGUI_PURE;

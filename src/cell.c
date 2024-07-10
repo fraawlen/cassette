@@ -45,7 +45,7 @@ cgui_cell cgui_cell_placeholder_instance =
 	.fn_destroy = _dummy_fn_destroy,
 	.fn_draw    = _dummy_fn_draw,
 	.fn_event   = _dummy_fn_event,
-	.err        = CGUI_CELL_INVALID,
+	.err        = CERR_INVALID,
 };
 
 /************************************************************************************************************/
@@ -67,7 +67,7 @@ cgui_cell_create(void)
 	cell->fn_draw    = _dummy_fn_draw,
 	cell->fn_event   = _dummy_fn_event,
 	cell->to_destroy = false;
-	cell->err        = CGUI_CELL_OK;
+	cell->err        = CERR_NONE;
 
 	cref_push(main_cells(), cell);
 
@@ -106,7 +106,7 @@ cgui_cell_destroy(cgui_cell *cell)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cgui_cell_err
+enum cerr
 cgui_cell_error(const cgui_cell *cell)
 {
 	return cell->err;
@@ -210,7 +210,7 @@ cgui_cell_redraw(cgui_cell *cell)
 void
 cgui_cell_repair(cgui_cell *cell)
 {
-	cell->err &= CGUI_CELL_INVALID;
+	cell->err &= CERR_INVALID;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
