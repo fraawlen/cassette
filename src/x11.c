@@ -35,6 +35,7 @@
 #include <xkbcommon/xkbcommon.h>
 
 #include "main.h"
+#include "mutex.h"
 #include "x11.h"
 
 /************************************************************************************************************/
@@ -463,7 +464,9 @@ x11_update(void)
 	}
 	else
 	{
+		mutex_unlock();
 		event = xcb_wait_for_event(_connection);
+		mutex_lock();
 	}
 
 	if (!event)

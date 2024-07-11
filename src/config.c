@@ -381,7 +381,7 @@ config_load(void)
 
 	if (util_env_exists(ENV_NO_PARSING))
 	{
-		goto skip_load;
+		return CERR_NONE;
 	}
 
 	ccfg_load(_parser);
@@ -413,8 +413,6 @@ config_load(void)
 
 	_scale_pos(&_config.font_offset_x);
 	_scale_pos(&_config.font_offset_y);
-
-skip_load:
 
 	if (!_fill() || ccfg_error(_parser))
 	{
@@ -567,6 +565,7 @@ _fill(void)
 		_config.font_face,
 		CAIRO_FONT_SLANT_NORMAL,
 		CAIRO_FONT_WEIGHT_NORMAL);
+	
 
 	cairo_font_extents(c_ctx, &f_e);
 	cairo_text_extents(c_ctx, "A", &t_e);

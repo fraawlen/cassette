@@ -159,7 +159,7 @@ cgui_init(int argc, char **argv)
 		_err |= CERR_NOT_INIT;
 	}
 
-	cgui_lock();
+	mutex_lock();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -261,7 +261,6 @@ cgui_reset(void)
 
 	x11_reset(!_ext_connection);
 	config_reset();
-	mutex_reset();
 
 	cref_destroy(_cells);
 	cref_destroy(_grids);
@@ -274,11 +273,11 @@ cgui_reset(void)
 	_app_class      = NULL;
 	_app_name       = NULL;
 	_usr_exit       = true;
-	_running        = false;
+	_running        = false;	
+	_err            = CERR_NOT_INIT;
 
-	cgui_unlock();
-	
-	_err = CERR_NOT_INIT;
+	mutex_unlock();
+	mutex_reset();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -295,9 +294,7 @@ cgui_run(void)
 
 	while (!_err && _running && _is_any_window_activated())
 	{
-		cgui_unlock();
 		_err |= x11_update();
-		cgui_lock();
 	}
 
 	_running = false;
