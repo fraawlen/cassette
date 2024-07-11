@@ -79,7 +79,7 @@ cgui_grid_assign_cell(cgui_grid *grid, cgui_cell *cell, size_t x, size_t y, size
 	area->height = height;
 	area->cell   = cell;
 
-	cref_push(grid->areas, area);
+	main_push_instance(grid->areas, area);
 
 	grid->err |= cref_error(grid->areas);
 }

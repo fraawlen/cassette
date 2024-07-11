@@ -60,7 +60,7 @@ cgui_window_create(void)
 	window->state      = CGUI_WINDOW_INITIAL;
 	window->err        = CERR_NONE;
 
-	cref_push(main_windows(), window);
+	main_push_instance(main_windows(), window);
 	x11_window_create(window);
 
 	return window;

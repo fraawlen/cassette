@@ -89,9 +89,9 @@ One of the simplest GUI programs, a HelloWorld :
 int
 main(int argc, char **argv)
 {
-	cgui_window_t *window;
-	cgui_grid_t   *grid;
-	cgui_label_t  *label;
+	cgui_window *window;
+	cgui_grid   *grid;
+	cgui_label  *label;
 
 	/* library modules initialisation */
 
@@ -99,17 +99,17 @@ main(int argc, char **argv)
 
 	/* object instantiation */
 
-	window = cgui_window_create_default();
+	window = cgui_window_create();
 	grid   = cgui_grid_create(1, 1);
 	label  = cgui_label_create();
 
 	/* cell configuration */
 
-	cgui_label_set_label(label, "Hello World");
+	cgui_label_set(label, "Hello World");
 	
 	/* grid configuration */
 
-	cgui_grid_set_col_width(grid, 0, 11);
+	cgui_grid_resize_col(grid, 0, 11);
 	cgui_grid_assign_cell(grid, label, 0, 0, 1, 1);
 	
 	/* window configuration */

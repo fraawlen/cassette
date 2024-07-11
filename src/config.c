@@ -324,7 +324,7 @@ cgui_config_push_on_load(void (*fn)(ccfg *cfg))
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
-bool
+enum cerr
 config_init(const char *app_name, const char *app_class)
 {
 	cstr *home;
@@ -361,12 +361,19 @@ config_init(const char *app_name, const char *app_class)
 	
 	/* end */
 
-	return !cref_error(_callbacks) && !ccfg_error(_parser) && !cdict_error(_dict);
+	if (cref_error(_callbacks)
+	 || ccfg_error(_parser)
+	 || cdict_error(_dict))
+	{
+		return CERR_CONFIG;
+	}
+	
+	return CERR_NONE;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
+enum cerr
 config_load(void)
 {
 	_config      = config_default;
@@ -409,7 +416,22 @@ config_load(void)
 
 skip_load:
 
-	return _fill() && !ccfg_error(_parser);
+	if (!_fill() || ccfg_error(_parser))
+	{
+		return CERR_CONFIG;
+	}
+
+	return CERR_NONE;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+config_repair(void)
+{
+	cref_repair(_callbacks);
+	ccfg_repair(_parser);
+	cdict_repair(_dict);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

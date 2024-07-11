@@ -18,6 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <cassette/cobj.h>
 #include <errno.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -27,13 +28,13 @@
 /************************************************************************************************************/
 
 static pthread_mutex_t _mutex;
-static bool _init = false;
+static bool _failed = true;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-bool
+enum cerr
 mutex_init(void)
 {
 	pthread_mutexattr_t mut_attr;
@@ -41,14 +42,17 @@ mutex_init(void)
 	if (pthread_mutexattr_init(&mut_attr) != 0
 	 || pthread_mutexattr_settype(&mut_attr, PTHREAD_MUTEX_ERRORCHECK) != 0)
 	{
-		return false;
+		return CERR_MUTEX;
 	}
 	
-	_init = pthread_mutex_init(&_mutex, &mut_attr) == 0;
+	if ((_failed = pthread_mutex_init(&_mutex, &mut_attr)))
+	{
+		pthread_mutex_destroy(&_mutex);
+	}
 
 	pthread_mutexattr_destroy(&mut_attr);
 
-	return _init;
+	return _failed ? CERR_MUTEX : CERR_NONE;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -56,7 +60,7 @@ mutex_init(void)
 bool
 mutex_lock(void)
 {
-	if (!_init)
+	if (_failed)
 	{
 		return false;
 	}
@@ -69,7 +73,7 @@ mutex_lock(void)
 void
 mutex_reset(void)
 {
-	if (_init)
+	if (!_failed)
 	{
 		pthread_mutex_destroy(&_mutex);
 	}
@@ -80,7 +84,7 @@ mutex_reset(void)
 bool
 mutex_unlock(void)
 {
-	if (!_init)
+	if (_failed)
 	{
 		return false;
 	}

@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cassette/cgui.h>
+#include <cassette/cobj.h>
 #include <stdbool.h>
 #include <xcb/xcb.h>
 
@@ -28,7 +29,7 @@
 /*INIT / RESET **********************************************************************************************/
 /************************************************************************************************************/
 
-bool
+enum cerr
 x11_init(int argc, char **argv, const char *class_name, const char *class_class, xcb_connection_t *connection)
 CGUI_NONNULL(3, 4);
 
@@ -41,7 +42,7 @@ x11_reset(bool kill_connection);
 /* PROCEDURES ***********************************************************************************************/
 /************************************************************************************************************/
 
-bool
+enum cerr
 x11_update(void);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -73,8 +74,3 @@ x11_get_connection(void);
 
 xcb_window_t
 x11_get_leader_window(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-x11_has_failed(void);

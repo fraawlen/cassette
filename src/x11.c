@@ -204,15 +204,7 @@ x11_get_leader_window(void)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
-x11_has_failed(void)
-{
-	return _failed;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
+enum cerr
 x11_init(int argc, char **argv, const char *class_name, const char *class_class, xcb_connection_t *connection)
 {
 	xcb_visualtype_iterator_t visual_it;
@@ -411,7 +403,7 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 
 	_failed = false;
 
-	return true;
+	return CERR_NONE;
 
 	/* errors */
 
@@ -424,7 +416,7 @@ fail_xserver:
 fail_events:
 	_failed = true;
 
-	return false;
+	return CERR_XCB;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -456,7 +448,7 @@ x11_reset(bool kill_connection)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
+enum cerr
 x11_update(void)
 {
 	xcb_generic_event_t *event;
@@ -476,7 +468,7 @@ x11_update(void)
 
 	if (!event)
 	{
-		return false;
+		return CERR_XCB;
 	}
 
 	/* dispatch raw event to handlers to convert it into a CGUI event */
@@ -565,7 +557,7 @@ x11_update(void)
 	free(event);
 	xcb_flush(_connection);
 
-	return true;
+	return CERR_NONE;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

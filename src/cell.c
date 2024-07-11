@@ -69,7 +69,7 @@ cgui_cell_create(void)
 	cell->to_destroy = false;
 	cell->err        = CERR_NONE;
 
-	cref_push(main_cells(), cell);
+	main_push_instance(main_cells(), cell);
 
 	return cell;
 }

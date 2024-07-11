@@ -64,10 +64,9 @@ static const char *_app_class = NULL;
 
 /* session states */
 
-static bool _init     = false;
 static bool _running  = false;
 static bool _usr_exit = true;
-static bool _failed   = true;
+static enum cerr _err = CERR_NOT_INIT;
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -76,7 +75,10 @@ static bool _failed   = true;
 void
 cgui_allow_user_exit(void)
 {
-	assert(_init);
+	if (_err)
+	{
+		return;
+	}
 
 	_usr_exit = true;
 }
@@ -86,7 +88,10 @@ cgui_allow_user_exit(void)
 void
 cgui_block_user_exit(void)
 {
-	assert(_init);
+	if (_err)
+	{
+		return;
+	}
 
 	_usr_exit = false;
 }
@@ -96,15 +101,7 @@ cgui_block_user_exit(void)
 enum cerr
 cgui_error(void)
 {
-	if (_init)
-	{
-		_failed |= cref_error(_cells);
-		_failed |= cref_error(_grids);
-		_failed |= cref_error(_windows);
-		_failed |= x11_has_failed();
-	}
-
-	return _failed;
+	return _err;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -112,7 +109,10 @@ cgui_error(void)
 void
 cgui_exit(void)
 {
-	assert(_init);
+	if (_err)
+	{
+		return;
+	}
 
 	_running = false;
 }
@@ -122,7 +122,10 @@ cgui_exit(void)
 void
 cgui_init(int argc, char **argv)
 {
-	assert(!_init);
+	if (_err != CERR_NOT_INIT)
+	{
+		return;
+	}
 
 	if (!_app_class)
 	{
@@ -138,13 +141,23 @@ cgui_init(int argc, char **argv)
 	_grids   = cref_create();
 	_windows = cref_create();
 
-	_failed  = false;
-	_failed |= !x11_init(argc, argv, _app_name, _app_class, _ext_connection);
-	_failed |= !config_init(_app_name, _app_class);
-	_failed |= !config_load();
-	_failed |= !mutex_init();
+	cref_set_default_ptr(_cells,   CGUI_CELL_PLACEHOLDER);
+	cref_set_default_ptr(_grids,   CGUI_GRID_PLACEHOLDER);
+	cref_set_default_ptr(_windows, CGUI_WINDOW_PLACEHOLDER);
 
-	_init = true;
+	_err  = CERR_NONE;
+	_err |= cref_error(_cells);
+	_err |= cref_error(_grids);
+	_err |= cref_error(_windows);
+	_err |= x11_init(argc, argv, _app_name, _app_class, _ext_connection);
+	_err |= config_init(_app_name, _app_class);
+	_err |= config_load();
+	_err |= mutex_init();
+
+	if (_err)
+	{
+		_err |= CERR_NOT_INIT;
+	}
 
 	cgui_lock();
 }
@@ -154,7 +167,7 @@ cgui_init(int argc, char **argv)
 bool
 cgui_is_init(void)
 {
-	return _init;
+	return !(_err & CERR_NOT_INIT);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -167,12 +180,15 @@ cgui_is_running(void)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
+bool
 cgui_lock(void)
 {
-	assert(_init);
+	if (_err)
+	{
+		return false;
+	}
 
-	mutex_lock();
+	return mutex_lock();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -184,17 +200,10 @@ cgui_reconfig(void)
 	cgui_grid *grid;
 	cgui_grid *grid_min;
 
-	(void)grid;
-	(void)grid_min;
-
-	assert(_init);
-
-	if (_failed)
+	if ((_err |= config_load()))
 	{
 		return;
 	}
-
-	_failed |= !config_load();
 
 	CREF_FOR_EACH(_windows, i)
 	{
@@ -204,6 +213,9 @@ cgui_reconfig(void)
 			continue;
 		}
 
+		(void)grid;
+		(void)grid_min;
+
 		// TODO
 	}
 }
@@ -211,10 +223,21 @@ cgui_reconfig(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cgui_repair(void)
+{
+	cref_repair(_cells);
+	cref_repair(_grids);
+	cref_repair(_windows);
+	config_repair();
+
+	_err &= CERR_NOT_INIT;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cgui_reset(void)
 {
-	assert(_init);
-
 	CREF_FOR_EACH(_windows, i)
 	{
 		((cgui_window*)cref_ptr(_windows, i))->err |= CERR_INVALID;
@@ -244,20 +267,18 @@ cgui_reset(void)
 	cref_destroy(_grids);
 	cref_destroy(_windows);
 
-	_cells   = CREF_PLACEHOLDER;
-	_grids   = CREF_PLACEHOLDER;
-	_windows = CREF_PLACEHOLDER;
-
+	_cells          = CREF_PLACEHOLDER;
+	_grids          = CREF_PLACEHOLDER;
+	_windows        = CREF_PLACEHOLDER;
 	_ext_connection = NULL;
 	_app_class      = NULL;
 	_app_name       = NULL;
 	_usr_exit       = true;
-	_failed         = true;
 	_running        = false;
 
 	cgui_unlock();
 	
-	_init = false;
+	_err = CERR_NOT_INIT;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -265,27 +286,20 @@ cgui_reset(void)
 void
 cgui_run(void)
 {
-	bool fail = false;
-
-	assert(_init);
-
-	if (_failed || _running)
+	if (_running)
 	{
 		return;
 	}
 
 	_running = true;
 
-	while (_init && _running && _is_any_window_activated() && !fail)
+	while (!_err && _running && _is_any_window_activated())
 	{
 		cgui_unlock();
-
-		fail = !x11_update();
-
+		_err |= x11_update();
 		cgui_lock();
 	}
 
-	_failed |= fail;
 	_running = false;
 }
 
@@ -294,7 +308,10 @@ cgui_run(void)
 void
 cgui_setup_app_class(const char *class_name)
 {
-	assert(!_init);
+	if (_err != CERR_NOT_INIT)
+	{
+		return;
+	}
 
 	_app_class = class_name;
 }
@@ -304,7 +321,10 @@ cgui_setup_app_class(const char *class_name)
 void
 cgui_setup_app_name(const char *name)
 {
-	assert(!_init);
+	if (_err != CERR_NOT_INIT)
+	{
+		return;
+	}
 
 	_app_name = name;
 }
@@ -314,19 +334,25 @@ cgui_setup_app_name(const char *name)
 void
 cgui_setup_x11_connection(xcb_connection_t *connection)
 {
-	assert(!_init);
+	if (_err != CERR_NOT_INIT)
+	{
+		return;
+	}
 
 	_ext_connection = connection;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
+bool
 cgui_unlock(void)
 {
-	assert(_init);
+	if (_err)
+	{
+		return false;
+	}
 
-	mutex_unlock();
+	return mutex_unlock();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -361,6 +387,16 @@ cref *
 main_grids(void)
 {
 	return _grids;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+main_push_instance(cref *ref, void *ptr)
+{
+	cref_push(ref, ptr);
+
+	_err |= cref_error(ref);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
