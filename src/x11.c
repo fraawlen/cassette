@@ -35,7 +35,6 @@
 #include <xkbcommon/xkbcommon.h>
 
 #include "main.h"
-#include "mutex.h"
 #include "x11.h"
 
 /************************************************************************************************************/
@@ -193,7 +192,6 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 	xcb_visualtype_iterator_t visual_it;
 	xcb_depth_iterator_t depth_it;
 	xcb_void_cookie_t xc;
-
 	char   host[256] = "";
 	size_t host_n;
 	size_t name_n;
@@ -478,9 +476,9 @@ x11_update(void)
 	}
 	else
 	{
-		mutex_unlock();
+		main_unlock();
 		event = xcb_wait_for_event(_connection);
-		mutex_lock();
+		main_lock();
 	}
 
 	if (!event)

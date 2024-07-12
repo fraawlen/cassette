@@ -18,12 +18,12 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <assert.h>
-
 #include <cairo/cairo.h>
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
+#include <errno.h>
 #include <fontconfig/fontconfig.h>
+#include <pthread.h>
 #include <xcb/xcb.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -34,7 +34,6 @@
 #include "event.h"
 #include "grid.h"
 #include "main.h"
-#include "mutex.h"
 #include "window.h"
 #include "util.h"
 #include "x11.h"
@@ -50,18 +49,18 @@ static void _update_err              (void);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+/* pre-init args */
+
+static xcb_connection_t *_ext_connection = NULL;
+static pthread_mutex_t  *_mutex          = NULL;
+static const char       *_app_name       = NULL;
+static const char       *_app_class      = NULL;
+
 /* objects trackers */
 
 static cref *_cells   = CREF_PLACEHOLDER;
 static cref *_grids   = CREF_PLACEHOLDER;
 static cref *_windows = CREF_PLACEHOLDER;
-
-/* x11 init args */
-
-static xcb_connection_t *_ext_connection = NULL;
-
-static const char *_app_name  = NULL;
-static const char *_app_class = NULL;
 
 /* session states */
 
@@ -150,8 +149,7 @@ cgui_init(int argc, char **argv)
 	x11_init(argc, argv, _app_name, _app_class, _ext_connection);
 	config_init(_app_name, _app_class);
 	config_load();
-	mutex_init();
-	mutex_lock();
+	main_lock();
 
 	_update_err();
 }
@@ -170,20 +168,6 @@ bool
 cgui_is_running(void)
 {
 	return _running;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_lock(void)
-{
-	if (_err)
-	{
-		return;
-	}
-
-	 mutex_lock();
-	_update_err();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -224,19 +208,14 @@ cgui_reconfig(void)
 void
 cgui_repair(void)
 {
-	if (_err & CERR_INVALID)
-	{
-		return;
-	}
+	_err &= CERR_INVALID;
 
 	cref_repair(_cells);
 	cref_repair(_grids);
 	cref_repair(_windows);
 	config_repair();
-	mutex_repair();
 	x11_repair();
 
-	_err = CERR_NONE;
 	_update_err();
 }
 
@@ -271,13 +250,13 @@ cgui_reset(void)
 	cref_destroy(_windows);
 	x11_reset(!_ext_connection);
 	config_reset();
-	mutex_unlock();
-	mutex_reset();
+	main_unlock();
 
 	_cells          = CREF_PLACEHOLDER;
 	_grids          = CREF_PLACEHOLDER;
 	_windows        = CREF_PLACEHOLDER;
 	_ext_connection = NULL;
+	_mutex          = NULL;
 	_app_class      = NULL;
 	_app_name       = NULL;
 	_usr_exit       = true;
@@ -335,6 +314,19 @@ cgui_setup_app_name(const char *name)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cgui_setup_threading(pthread_mutex_t *mutex)
+{
+	if (_err != CERR_INVALID)
+	{
+		return;
+	}
+
+	_mutex = mutex;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cgui_setup_x11_connection(xcb_connection_t *connection)
 {
 	if (_err != CERR_INVALID)
@@ -343,14 +335,6 @@ cgui_setup_x11_connection(xcb_connection_t *connection)
 	}
 
 	_ext_connection = connection;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_unlock(void)
-{
-	mutex_unlock();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -398,6 +382,22 @@ main_push_instance(cref *ref, void *ptr)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void
+main_lock(void)
+{
+	if (!_mutex)
+	{
+		return;
+	}
+
+	if ((pthread_mutex_lock(_mutex) & ~EDEADLK) != 0)
+	{
+		_err |= CERR_MUTEX;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 cref *
 main_windows(void)
 {
@@ -407,10 +407,24 @@ main_windows(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+main_unlock(void)
+{
+	if (!_mutex)
+	{
+		return;
+	}
+	
+	if ((pthread_mutex_unlock(_mutex) & ~EPERM) != 0)
+	{
+		_err |= CERR_MUTEX;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 main_update(struct cgui_event *event)
 {
-	cgui_lock();
-
 	event_process(event);
 
 	CREF_FOR_EACH_REV(_windows, i)
@@ -428,8 +442,6 @@ main_update(struct cgui_event *event)
 	{
 		cell_destroy((cgui_cell*)cref_ptr(_cells, i));
 	}
-	
-	cgui_unlock();
 }
 
 /************************************************************************************************************/
@@ -458,7 +470,6 @@ _update_err(void)
 	_err |= cref_error(_cells);
 	_err |= cref_error(_grids);
 	_err |= cref_error(_windows);
-	_err |= mutex_error();
 	_err |= config_error();
 	_err |= x11_error();
 }

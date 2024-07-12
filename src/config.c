@@ -197,7 +197,6 @@ static const struct _word _words[] =
 static const struct _resource _resources[] =
 {
 	{ "global",   "scale",                       UDOUBLE,   &_config.scale                            },
-
 	{ "global",   "modkey",                      MOD_KEY,   &_config.modkey                           },
 
 	{ "font",     "face",                        STRING,     _config.font_face                        },

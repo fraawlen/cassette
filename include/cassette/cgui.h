@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <pthread.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <xcb/xcb.h>
@@ -29,7 +30,6 @@
 #include "cgui-config.h"
 #include "cgui-event.h"
 #include "cgui-grid.h"
-#include "cgui-inputs.h"
 #include "cgui-swap.h"
 #include "cgui-window.h"
 
@@ -84,6 +84,14 @@ cgui_setup_app_name(const char *name);
  *
  */
 void
+cgui_setup_threading(pthread_mutex_t *mutex);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ */
+void
 cgui_setup_x11_connection(xcb_connection_t *connection);
 
 /************************************************************************************************************/
@@ -118,14 +126,6 @@ cgui_exit(void);
  *
  */
 void
-cgui_lock(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
-void
 cgui_reconfig(void);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -143,14 +143,6 @@ cgui_repair(void);
  */
 void
 cgui_run(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
-void
-cgui_unlock(void);
 
 /************************************************************************************************************/
 /* FUNCTIONS ************************************************************************************************/
