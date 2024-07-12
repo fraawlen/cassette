@@ -87,8 +87,6 @@ ccfg_clear_resources(ccfg *cfg)
 
 	cbook_clear(cfg->sequences);
 	cdict_clear(cfg->keys_sequences);
-	
-	_update_err(cfg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -103,8 +101,6 @@ ccfg_clear_params(ccfg *cfg)
 
 	cbook_clear(cfg->params);
 	cdict_clear(cfg->keys_params);
-	
-	_update_err(cfg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -118,8 +114,6 @@ ccfg_clear_sources(ccfg *cfg)
 	}
 
 	cbook_clear(cfg->sources);
-	
-	_update_err(cfg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
