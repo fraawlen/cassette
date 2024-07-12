@@ -402,11 +402,10 @@ config_repair(void)
 		return;
 	}
 
-	_err = CERR_NONE;
-
 	ccfg_repair(_parser);
 	cdict_repair(_dict);
 
+	_err = CERR_NONE;
 	_update_err();
 }
 

@@ -224,6 +224,11 @@ cgui_reconfig(void)
 void
 cgui_repair(void)
 {
+	if (_err & CERR_INVALID)
+	{
+		return;
+	}
+
 	cref_repair(_cells);
 	cref_repair(_grids);
 	cref_repair(_windows);
@@ -231,6 +236,7 @@ cgui_repair(void)
 	mutex_repair();
 	x11_repair();
 
+	_err = CERR_NONE;
 	_update_err();
 }
 
