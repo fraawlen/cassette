@@ -44,6 +44,7 @@
 /************************************************************************************************************/
 
 static bool _is_any_window_activated (void);
+static void _update_err              (void);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -66,7 +67,7 @@ static const char *_app_class = NULL;
 
 static bool _running  = false;
 static bool _usr_exit = true;
-static enum cerr _err = CERR_NOT_INIT;
+static enum cerr _err = CERR_INVALID;
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -122,7 +123,7 @@ cgui_exit(void)
 void
 cgui_init(int argc, char **argv)
 {
-	if (_err != CERR_NOT_INIT)
+	if (cgui_is_init())
 	{
 		return;
 	}
@@ -140,26 +141,19 @@ cgui_init(int argc, char **argv)
 	_cells   = cref_create();
 	_grids   = cref_create();
 	_windows = cref_create();
+	_err     = CERR_NONE;
 
 	cref_set_default_ptr(_cells,   CGUI_CELL_PLACEHOLDER);
 	cref_set_default_ptr(_grids,   CGUI_GRID_PLACEHOLDER);
 	cref_set_default_ptr(_windows, CGUI_WINDOW_PLACEHOLDER);
 
-	_err  = CERR_NONE;
-	_err |= cref_error(_cells);
-	_err |= cref_error(_grids);
-	_err |= cref_error(_windows);
-	_err |= x11_init(argc, argv, _app_name, _app_class, _ext_connection);
-	_err |= config_init(_app_name, _app_class);
-	_err |= config_load();
-	_err |= mutex_init();
-
-	if (_err)
-	{
-		_err |= CERR_NOT_INIT;
-	}
-
+	x11_init(argc, argv, _app_name, _app_class, _ext_connection);
+	config_init(_app_name, _app_class);
+	config_load();
+	mutex_init();
 	mutex_lock();
+
+	_update_err();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -167,7 +161,7 @@ cgui_init(int argc, char **argv)
 bool
 cgui_is_init(void)
 {
-	return !(_err & CERR_NOT_INIT);
+	return !(_err & CERR_INVALID);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -180,15 +174,16 @@ cgui_is_running(void)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
+void
 cgui_lock(void)
 {
 	if (_err)
 	{
-		return false;
+		return;
 	}
 
-	return mutex_lock();
+	 mutex_lock();
+	_update_err();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -200,10 +195,12 @@ cgui_reconfig(void)
 	cgui_grid *grid;
 	cgui_grid *grid_min;
 
-	if ((_err |= config_load()))
+	if (_err)
 	{
 		return;
 	}
+
+	config_load();
 
 	CREF_FOR_EACH(_windows, i)
 	{
@@ -218,6 +215,8 @@ cgui_reconfig(void)
 
 		// TODO
 	}
+
+	_update_err();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -229,8 +228,10 @@ cgui_repair(void)
 	cref_repair(_grids);
 	cref_repair(_windows);
 	config_repair();
+	mutex_repair();
+	x11_repair();
 
-	_err &= CERR_NOT_INIT;
+	_update_err();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -259,12 +260,13 @@ cgui_reset(void)
 		FcFini();
 	}
 
-	x11_reset(!_ext_connection);
-	config_reset();
-
 	cref_destroy(_cells);
 	cref_destroy(_grids);
 	cref_destroy(_windows);
+	x11_reset(!_ext_connection);
+	config_reset();
+	mutex_unlock();
+	mutex_reset();
 
 	_cells          = CREF_PLACEHOLDER;
 	_grids          = CREF_PLACEHOLDER;
@@ -274,10 +276,7 @@ cgui_reset(void)
 	_app_name       = NULL;
 	_usr_exit       = true;
 	_running        = false;	
-	_err            = CERR_NOT_INIT;
-
-	mutex_unlock();
-	mutex_reset();
+	_err            = CERR_INVALID;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -285,16 +284,17 @@ cgui_reset(void)
 void
 cgui_run(void)
 {
-	if (_running)
+	if (_err || _running)
 	{
 		return;
 	}
 
 	_running = true;
 
-	while (!_err && _running && _is_any_window_activated())
+	while (_running && _is_any_window_activated())
 	{
-		_err |= x11_update();
+		 x11_update();
+		_update_err();
 	}
 
 	_running = false;
@@ -305,7 +305,7 @@ cgui_run(void)
 void
 cgui_setup_app_class(const char *class_name)
 {
-	if (_err != CERR_NOT_INIT)
+	if (_err != CERR_INVALID)
 	{
 		return;
 	}
@@ -318,7 +318,7 @@ cgui_setup_app_class(const char *class_name)
 void
 cgui_setup_app_name(const char *name)
 {
-	if (_err != CERR_NOT_INIT)
+	if (_err != CERR_INVALID)
 	{
 		return;
 	}
@@ -331,7 +331,7 @@ cgui_setup_app_name(const char *name)
 void
 cgui_setup_x11_connection(xcb_connection_t *connection)
 {
-	if (_err != CERR_NOT_INIT)
+	if (_err != CERR_INVALID)
 	{
 		return;
 	}
@@ -341,15 +341,10 @@ cgui_setup_x11_connection(xcb_connection_t *connection)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
+void
 cgui_unlock(void)
 {
-	if (_err)
-	{
-		return false;
-	}
-
-	return mutex_unlock();
+	mutex_unlock();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -357,7 +352,7 @@ cgui_unlock(void)
 xcb_connection_t *
 cgui_x11_connection(void)
 {
-	return x11_get_connection();
+	return x11_connection();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -365,7 +360,7 @@ cgui_x11_connection(void)
 xcb_window_t
 cgui_x11_leader_window(void)
 {
-	return  x11_get_leader_window();
+	return  x11_leader_window();
 }
 
 /************************************************************************************************************/
@@ -391,9 +386,8 @@ main_grids(void)
 void
 main_push_instance(cref *ref, void *ptr)
 {
-	cref_push(ref, ptr);
-
-	_err |= cref_error(ref);
+	 cref_push(ref, ptr);
+	_update_err();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -448,4 +442,17 @@ _is_any_window_activated(void)
 	}
 
 	return false;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_update_err(void)
+{
+	_err |= cref_error(_cells);
+	_err |= cref_error(_grids);
+	_err |= cref_error(_windows);
+	_err |= mutex_error();
+	_err |= config_error();
+	_err |= x11_error();
 }

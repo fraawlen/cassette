@@ -94,7 +94,7 @@ static void _event_xinput_touch      (xcb_input_touch_begin_event_t *xcb_event) 
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _failed = true;
+static enum cerr _err = CERR_INVALID | CERR_XCB;
 
 /* ICCCM properties */
 
@@ -167,9 +167,9 @@ static cref *_events = CREF_PLACEHOLDER;
 /************************************************************************************************************/
 
 xcb_connection_t *
-x11_get_connection(void)
+x11_connection(void)
 {
-	if (_failed)
+	if (_err)
 	{
 		return NULL;
 	}
@@ -179,33 +179,15 @@ x11_get_connection(void)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-xcb_key_symbols_t *
-x11_get_keysyms(void)
-{
-	if (_failed)
-	{
-		return NULL;
-	}
-
-	return _keysyms;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-xcb_window_t
-x11_get_leader_window(void)
-{
-	if (_failed)
-	{
-		return 0;
-	}
-
-	return _win_leader;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 enum cerr
+x11_error(void)
+{
+	return _err;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 x11_init(int argc, char **argv, const char *class_name, const char *class_class, xcb_connection_t *connection)
 {
 	xcb_visualtype_iterator_t visual_it;
@@ -225,6 +207,11 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 		XCB_EVENT_MASK_PROPERTY_CHANGE,
 	};
 
+	if (!(_err & CERR_INVALID))
+	{
+		return;
+	}
+
 	/* setup class and cmd args */
 
 	_argc = argc;
@@ -237,7 +224,7 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 
 	if ((_events = cref_create()) == CREF_PLACEHOLDER)
 	{
-		goto fail_events;
+		return;
 	}
 
 	/* open connection */
@@ -402,9 +389,9 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 	
 	xcb_flush(_connection);
 
-	_failed = false;
+	_err = CERR_NONE;
 
-	return CERR_NONE;
+	return;
 
 	/* errors */
 
@@ -414,10 +401,32 @@ fail_leader:
 	xcb_free_colormap(_connection, _colormap);
 fail_xserver:
 	cref_destroy(_events);
-fail_events:
-	_failed = true;
+}
 
-	return CERR_XCB;
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+xcb_window_t
+x11_leader_window(void)
+{
+	if (_err)
+	{
+		return 0;
+	}
+
+	return _win_leader;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_repair(void)
+{
+	if (_err & CERR_INVALID)
+	{
+		return;
+	}
+
+	_err = cref_error(_events);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -425,7 +434,7 @@ fail_events:
 void
 x11_reset(bool kill_connection)
 {
-	if (_failed)
+	if (_err & CERR_INVALID)
 	{
 		return;
 	}
@@ -444,15 +453,20 @@ x11_reset(bool kill_connection)
 		xcb_disconnect(_connection);
 	}
 	
-	_failed = true;
+	_err = CERR_INVALID | CERR_XCB;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cerr
+void
 x11_update(void)
 {
 	xcb_generic_event_t *event;
+
+	if (_err)
+	{
+		return;
+	}
 
 	/* grab next event from stack buffer if any  */
 	/* otherwhise retrieve new event from server */
@@ -471,7 +485,8 @@ x11_update(void)
 
 	if (!event)
 	{
-		return CERR_XCB;
+		_err |= CERR_XCB;
+		return;
 	}
 
 	/* dispatch raw event to handlers to convert it into a CGUI event */
@@ -559,8 +574,6 @@ x11_update(void)
 
 	free(event);
 	xcb_flush(_connection);
-
-	return CERR_NONE;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

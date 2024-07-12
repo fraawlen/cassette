@@ -107,31 +107,27 @@ struct _resource
 	void *target;
 };
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-struct _callback
-{
-	void (*fn)(ccfg *cfg);
-};
-
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _fetch     (const struct _resource *resource)                         CGUI_NONNULL(1);
-static bool _fill      (void);
-static void _scale_len (uint16_t *val)                                            CGUI_NONNULL(1);
-static void _scale_pos (int16_t  *val)                                            CGUI_NONNULL(1);
-static void _swap      (const char *str, uint8_t limit, struct cgui_swap *target) CGUI_NONNULL(1, 3);
+static void _dummy_fn_load (ccfg *cfg)                                                CGUI_NONNULL(1);
+static void _fetch         (const struct _resource *resource)                         CGUI_NONNULL(1);
+static void _fill          (void);
+static void _scale_len     (uint16_t *val)                                            CGUI_NONNULL(1);
+static void _scale_pos     (int16_t  *val)                                            CGUI_NONNULL(1);
+static void _swap          (const char *str, uint8_t limit, struct cgui_swap *target) CGUI_NONNULL(1, 3);
+static void _update_err    (void);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static struct cgui_config _config = config_default;
-static cref  *_callbacks = CREF_PLACEHOLDER;
-static ccfg  *_parser    = CCFG_PLACEHOLDER;
-static cdict *_dict      = CDICT_PLACEHOLDER;
+static struct cgui_config _config  = config_default;
+static void (*_fn_load)(ccfg *cfg) = _dummy_fn_load;
+static ccfg  *_parser              = CCFG_PLACEHOLDER;
+static cdict *_dict                = CDICT_PLACEHOLDER;
+static enum cerr _err              = CERR_INVALID | CERR_CONFIG;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -285,39 +281,14 @@ cgui_config_get(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_config_pull_on_load(void (*fn)(ccfg *cfg))
+cgui_config_on_load(void (*fn)(ccfg *cfg))
 {
-	CREF_FOR_EACH(_callbacks, i)
+	if (cgui_error())
 	{
-		if (((struct _callback*)cref_ptr(_callbacks, i))->fn == fn)
-		{
-			if (cref_count(_callbacks, i) == 1)
-			{
-				free((void*)cref_ptr(_callbacks, i));
-			}
-			cref_pull(_callbacks, i);
-			return;
-		}
-	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-cgui_config_push_on_load(void (*fn)(ccfg *cfg))
-{
-	struct _callback *tmp;
-
-	if (!(tmp = malloc(sizeof(struct _callback))))
-	{
-		return false;
+		return;
 	}
 
-	tmp->fn = fn;
-
-	cref_push(_callbacks, tmp);
-
-	return !cref_error(_callbacks);
+	_fn_load = fn ? fn : _dummy_fn_load;
 }
 
 /************************************************************************************************************/
@@ -325,16 +296,29 @@ cgui_config_push_on_load(void (*fn)(ccfg *cfg))
 /************************************************************************************************************/
 
 enum cerr
+config_error(void)
+{
+	return _err;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 config_init(const char *app_name, const char *app_class)
 {
 	cstr *home;
 
+	if (!(_err & CERR_INVALID))
+	{
+		return;
+	}
+
 	/* instantiation */
 
-	 home      = cstr_create();
-	_callbacks = cref_create();
-	_parser    = ccfg_create();
-	_dict      = cdict_create();
+	 home   = cstr_create();
+	_parser = ccfg_create();
+	_dict   = cdict_create();
+	_err    = CERR_NONE;
 
 	/* parser setup */
 
@@ -361,19 +345,16 @@ config_init(const char *app_name, const char *app_class)
 	
 	/* end */
 
-	if (cref_error(_callbacks)
-	 || ccfg_error(_parser)
-	 || cdict_error(_dict))
+	_update_err();
+	if (_err)
 	{
-		return CERR_CONFIG;
+		_err |= CERR_CONFIG;
 	}
-	
-	return CERR_NONE;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cerr
+void
 config_load(void)
 {
 	_config      = config_default;
@@ -381,21 +362,13 @@ config_load(void)
 
 	if (util_env_exists(ENV_NO_PARSING))
 	{
-		return CERR_NONE;
+		return;
 	}
 
 	ccfg_load(_parser);
 	for (size_t i = 0; i < sizeof(_resources) / sizeof(struct _resource); i++)
 	{
 		_fetch(_resources + i);
-	}
-
-	CREF_FOR_EACH(_callbacks, i)
-	{
-		if (cref_count(_callbacks, i) > 0)
-		{
-			((struct _callback*)cref_ptr(_callbacks, i))->fn(_parser);
-		}
 	}
 
 	_scale_len(&_config.font_size);
@@ -414,12 +387,9 @@ config_load(void)
 	_scale_pos(&_config.font_offset_x);
 	_scale_pos(&_config.font_offset_y);
 
-	if (!_fill() || ccfg_error(_parser))
-	{
-		return CERR_CONFIG;
-	}
-
-	return CERR_NONE;
+	_fill();
+	_fn_load(_parser);
+	_update_err();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -427,9 +397,17 @@ config_load(void)
 void
 config_repair(void)
 {
-	cref_repair(_callbacks);
+	if (_err & CERR_INVALID)
+	{
+		return;
+	}
+
+	_err = CERR_NONE;
+
 	ccfg_repair(_parser);
 	cdict_repair(_dict);
+
+	_update_err();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -437,19 +415,27 @@ config_repair(void)
 void
 config_reset(void)
 {
-	cref_destroy(_callbacks);
 	ccfg_destroy(_parser);
 	cdict_destroy(_dict);
 
-	_config    = config_default;
-	_callbacks = CREF_PLACEHOLDER;
-	_parser    = CCFG_PLACEHOLDER;
-	_dict      = CDICT_PLACEHOLDER;
+	_fn_load = _dummy_fn_load;
+	_config  = config_default;
+	_parser  = CCFG_PLACEHOLDER;
+	_dict    = CDICT_PLACEHOLDER;
+	_err     = CERR_INVALID | CERR_CONFIG;
 }
 
 /************************************************************************************************************/
 /* _ ********************************************************************************************************/
 /************************************************************************************************************/
+
+static void
+_dummy_fn_load (ccfg *cfg)
+{
+	(void)cfg;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
 _fetch(const struct _resource *resource)
@@ -529,16 +515,14 @@ _fetch(const struct _resource *resource)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static bool
+static void
 _fill(void)
 {
+	struct cline line = { .origin = 0, .length = 0, .min = 0, .max = INT16_MAX};
 	cairo_font_extents_t f_e;
 	cairo_text_extents_t t_e;
 	cairo_surface_t *c_srf;
 	cairo_t *c_ctx;
-
-	struct cline line = { .origin = 0, .length = 0, .min = 0, .max = INT16_MAX};
-	bool failed = false;
 
 	/* get font geometry with cairo */
 
@@ -555,7 +539,7 @@ _fill(void)
 	if (cairo_surface_status(c_srf) != CAIRO_STATUS_SUCCESS
 	 || cairo_status(c_ctx)         != CAIRO_STATUS_SUCCESS)
 	{
-		failed = true;
+		_err |= CERR_CAIRO;
 		goto skip_font_setup;
 	}
 	
@@ -585,10 +569,6 @@ skip_auto_font:
 	cline_grow(&line, _config.font_descent);
 
 	_config.font_height = line.length;
-
-	/* end */
-
-	return !failed;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -596,13 +576,7 @@ skip_auto_font:
 static void
 _scale_len(uint16_t *val)
 {
-	struct cline line =
-	{
-		.origin = 0,
-		.length = *val,
-		.min    = 0,
-		.max    = INT16_MAX
-	};
+	struct cline line = {.origin = 0,.length = *val, .min = 0, .max = INT16_MAX}; 
 
 	cline_scale(&line, _config.scale);
 
@@ -614,13 +588,7 @@ _scale_len(uint16_t *val)
 static void
 _scale_pos(int16_t *val)
 {
-	struct cline line =
-	{
-		.origin = 0,
-		.length = *val,
-		.min    = INT16_MIN,
-		.max    = INT16_MAX
-	};
+	struct cline line = {.origin = 0, .length = *val, .min = INT16_MIN, .max = INT16_MAX};
 
 	cline_scale(&line, _config.scale);
 
@@ -640,6 +608,7 @@ _swap(const char *str, uint8_t limit, struct cgui_swap *target)
 
 	if (!(str_copy = strdup(str)))
 	{
+		_err |= CERR_MEMORY;
 		return;
 	}
 
@@ -686,4 +655,13 @@ _swap(const char *str, uint8_t limit, struct cgui_swap *target)
 	}
 
 	free(str_copy);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_update_err(void)
+{
+	_err |= ccfg_error(_parser);
+	_err |= cdict_error(_dict);
 }

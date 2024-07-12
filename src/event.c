@@ -40,8 +40,13 @@ static void (*_fn_event) (struct cgui_event *event) = _dummy_callback_event;
 /************************************************************************************************************/
 
 void
-cgui_event_set_callback(void (*fn)(struct cgui_event *event))
+cgui_event_on_event(void (*fn)(struct cgui_event *event))
 {
+	if (cgui_error())
+	{
+		return;
+	}
+
 	_fn_event = fn ? fn : _dummy_callback_event;
 }
 

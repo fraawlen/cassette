@@ -28,44 +28,71 @@
 /************************************************************************************************************/
 
 static pthread_mutex_t _mutex;
-static bool _failed = true;
+static bool _err = CERR_INVALID | CERR_MUTEX;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
 enum cerr
-mutex_init(void)
+mutex_error(void)
 {
-	pthread_mutexattr_t mut_attr;
-
-	if (pthread_mutexattr_init(&mut_attr) != 0
-	 || pthread_mutexattr_settype(&mut_attr, PTHREAD_MUTEX_ERRORCHECK) != 0)
-	{
-		return CERR_MUTEX;
-	}
-	
-	if ((_failed = pthread_mutex_init(&_mutex, &mut_attr)))
-	{
-		pthread_mutex_destroy(&_mutex);
-	}
-
-	pthread_mutexattr_destroy(&mut_attr);
-
-	return _failed ? CERR_MUTEX : CERR_NONE;
+	return _err;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
-mutex_lock(void)
+void
+mutex_init(void)
 {
-	if (_failed)
+	pthread_mutexattr_t mut_attr;
+
+	if (!(_err & CERR_INVALID)
+	 || pthread_mutexattr_init(&mut_attr) != 0
+	 || pthread_mutexattr_settype(&mut_attr, PTHREAD_MUTEX_RECURSIVE) != 0)
 	{
-		return false;
+		return;
+	}
+	
+	if (pthread_mutex_init(&_mutex, &mut_attr) != 0)
+	{
+		pthread_mutex_destroy(&_mutex);
+	}
+	else
+	{
+		_err = CERR_NONE;
 	}
 
-	return pthread_mutex_lock(&_mutex) != EDEADLK;
+	pthread_mutexattr_destroy(&mut_attr);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+mutex_lock(void)
+{
+	if (_err)
+	{
+		return;
+	}
+
+	if (pthread_mutex_lock(&_mutex) != 0)
+	{
+		_err |= CERR_MUTEX;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+mutex_repair(void)
+{
+	if (_err & CERR_INVALID)
+	{
+		return;
+	}
+
+	_err = CERR_NONE;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -73,21 +100,25 @@ mutex_lock(void)
 void
 mutex_reset(void)
 {
-	if (!_failed)
+	if (_err & CERR_INVALID)
 	{
-		pthread_mutex_destroy(&_mutex);
+		return;
 	}
+
+	pthread_mutex_destroy(&_mutex);
+
+	_err = CERR_INVALID | CERR_MUTEX;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
+void
 mutex_unlock(void)
 {
-	if (_failed)
+	if (_err & CERR_INVALID)
 	{
-		return false;
+		return;
 	}
 
-	return pthread_mutex_unlock(&_mutex) != EPERM;
+	pthread_mutex_unlock(&_mutex);
 }
