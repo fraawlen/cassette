@@ -72,10 +72,7 @@ static cgui_window *_window = CGUI_WINDOW_PLACEHOLDER;
 
 	/* End */
 
-	if (cgui_error()
-	 || cgui_window_error(_window)
-	 || cgui_grid_error(_grid)
-	 || cgui_cell_error(_cell))
+	if (cgui_error())
 	{
 		printf("Gui has failed during operation.\n");
 	}
