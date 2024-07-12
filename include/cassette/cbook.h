@@ -253,7 +253,6 @@ CBOOK_NONNULL(1);
  * Clears errors and puts the book back into an usable state. The only unrecoverable error is CBOOK_INVALID.
  *
  * @param book : Book to interact with
- *
  */
 void
 cbook_repair(cbook *book)

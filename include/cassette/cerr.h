@@ -20,17 +20,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-#include <stdlib.h>
-
-#if __GNUC__ > 4
-	#define CERR_NONNULL_RETURN __attribute__((returns_nonnull))
-	#define CERR_CONST          __attribute__((const))
-#else
-	#define CERR_NONNULL_RETURN
-	#define CERR_CONST
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -46,14 +35,13 @@ enum cerr
 {
 	CERR_NONE     = 0,
 	CERR_INVALID  = 1,
-	CERR_NOT_INIT = 1 << 1,
-	CERR_OVERFLOW = 1 << 2,
-	CERR_MEMORY   = 1 << 3,
-	CERR_INPUT    = 1 << 4,
-	CERR_CONFIG   = 1 << 5,
-	CERR_XCB      = 1 << 6,
-	CERR_CAIRO    = 1 << 7,
-	CERR_MUTEX    = 1 << 8,
+	CERR_OVERFLOW = 1 << 1,
+	CERR_MEMORY   = 1 << 2,
+	CERR_PARAM    = 1 << 3,
+	CERR_CONFIG   = 1 << 4,
+	CERR_XCB      = 1 << 5,
+	CERR_CAIRO    = 1 << 6,
+	CERR_MUTEX    = 1 << 7,
 };
 
 /************************************************************************************************************/

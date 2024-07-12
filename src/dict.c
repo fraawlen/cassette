@@ -300,7 +300,7 @@ cdict_set_max_load(cdict *dict, double load_factor)
 
 	if (load_factor <= 0.0 || load_factor > 1.0)
 	{
-		dict->err = CERR_INPUT;
+		dict->err = CERR_PARAM;
 		return;
 	}
 

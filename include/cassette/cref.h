@@ -80,8 +80,8 @@ extern cref cref_placeholder_instance;
  *
  * @param ref : Reference counter to copy contents from
  *
- * return     : New reference counter instance
- * return_err : CREF_PLACEHOLDER
+ * @return     : New reference counter instance
+ * @return_err : CREF_PLACEHOLDER
  */
 cref *
 cref_clone(cref *ref)
@@ -93,8 +93,8 @@ CREF_NONNULL(1);
 /**
  * Creates an empty reference counter.
  *
- * return     : New reference counter instance
- * return_err : CREF_PLACEHOLDER
+ * @return     : New reference counter instance
+ * @return_err : CREF_PLACEHOLDER
  */
 cref *
 cref_create(void)
@@ -347,7 +347,7 @@ CREF_PURE;
  *
  * @return     : Pointer
  * @return_err : Pointer value set with cref_set_default_ptr(). NULL can still be returned if the default
- *               pointer value was not set or if  CREF_PLACHOLDER is passed as the ref parameter.
+ *               pointer value was not set or if CREF_PLACHOLDER is passed as the ref parameter.
  */
 const void *
 cref_ptr(const cref *ref, size_t index)

@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Objects (COBJ) library.
+ * This file is part of the Cassette Graphics (CGUI) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -19,9 +19,7 @@
 /************************************************************************************************************/
 
 #include <cassette/cobj.h>
-#include <limits.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -31,17 +29,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-struct _slot
+struct cinputs
 {
-	const void *ptr;
-	unsigned int n_ref;
-};
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-struct cref
-{
-	struct _slot *slots;
+	struct cinputs_input *slots;
 	const void *default_ptr;
 	size_t n;
 	size_t n_alloc;
@@ -52,19 +42,18 @@ struct cref
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _grow (cref *ref, size_t n) CREF_NONNULL(1);
-static void _pull (cref *ref, size_t i) CREF_NONNULL(1);
+static bool _resize (cinputs *inputs, size_t n) CINPUTS_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-cref cref_placeholder_instance = 
+cinputs cinputs_placeholder_instance =
 {
 	.slots       = NULL,
+	.default_ptr = NULL,
 	.n           = 0,
 	.n_alloc     = 0,
-	.default_ptr = NULL,
 	.err         = CERR_INVALID,
 };
 
@@ -73,321 +62,257 @@ cref cref_placeholder_instance =
 /************************************************************************************************************/
 
 void
-cref_clear(cref *ref)
+cinputs_clear(cinputs *inputs)
 {
-	if (ref->err)
+	if (inputs->err)
 	{
 		return;
 	}
 
-	ref->n = 0;
+	inputs->n = 0;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cref *
-cref_clone(cref *ref)
+cinputs *
+cinputs_clone(const cinputs *inputs)
 {
-	cref *ref_new;
+	cinputs *inputs_new;
 
-	if (ref->err || !(ref_new = calloc(1, sizeof(cref))))
+	if (inputs->err || !(inputs_new = calloc(1, sizeof(cinputs))))
 	{
-		return CREF_PLACEHOLDER;
+		return CINPUTS_PLACEHOLDER;
 	}
 
-	if (!_grow(ref_new, ref->n_alloc))
+	if (!_resize(inputs_new, inputs->n_alloc))
 	{
-		free(ref_new);
-		return CREF_PLACEHOLDER;
+		free(inputs_new);
+		return CINPUTS_PLACEHOLDER;
 	}
 
-	memcpy(ref_new->slots, ref->slots, ref->n * sizeof(struct _slot));
+	memcpy(inputs_new->slots, inputs->slots, inputs->n * sizeof(struct cinputs_input));
 
-	ref_new->n           = ref->n;
-	ref_new->default_ptr = ref->default_ptr;
-	ref_new->err         = CERR_NONE;
+	inputs_new->default_ptr = inputs->default_ptr;
+	inputs_new->n           = inputs->n;
+	inputs_new->err         = CERR_NONE;
 
-	return ref_new;
+	return inputs_new;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-unsigned int
-cref_count(const cref *ref, size_t index)
+cinputs *
+cinputs_create(size_t max_inputs)
 {
-	if (ref->err || index >= ref->n)
+	cinputs *inputs;
+
+	if (!(inputs = calloc(1, sizeof(cinputs))))
 	{
-		return 0;
+		return CINPUTS_PLACEHOLDER;
 	}
 
-	return ref->slots[index].n_ref;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-cref *
-cref_create(void)
-{
-	cref *ref;
-
-	if (!(ref = calloc(1, sizeof(cref))))
+	if (!_resize(inputs, max_inputs))
 	{
-		return CREF_PLACEHOLDER;
+		free(inputs);
+		return CINPUTS_PLACEHOLDER;
 	}
 
-	if (!_grow(ref, 1))
-	{
-		free(ref);
-		return CREF_PLACEHOLDER;
-	}
+	inputs->default_ptr = NULL;
+	inputs->n           = 0;
+	inputs->err         = CERR_NONE;
 
-	ref->n           = 0;
-	ref->default_ptr = NULL;
-	ref->err         = CERR_NONE;
-
-	return ref;
+	return inputs;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cref_destroy(cref *ref)
+cinputs_destroy(cinputs *inputs)
 {
-	if (ref == CREF_PLACEHOLDER)
+	if (inputs == CINPUTS_PLACEHOLDER)
 	{
 		return;
 	}
 
-	free(ref->slots);
-	free(ref);
+	free(inputs->slots);
+	free(inputs);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 enum cerr
-cref_error(const cref *ref)
+cinputs_error(const cinputs *inputs)
 {
-	return ref->err;
+	return inputs->err;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-unsigned int
-cref_find(const cref *ref, const void *ptr, size_t *index)
+bool
+cinputs_find(const cinputs *inputs, unsigned int id, size_t *index)
 {
-	if (ref->err)
+	if (inputs->err)
 	{
-		return 0;
+		return false;
 	}
 
-	for (size_t i = 0; i < ref->n; i++)
+	for (size_t i = 0; i < inputs->n; i++)
 	{
-		if (ref->slots[i].ptr == ptr)
+		if (inputs->slots[i].id == id)
 		{
 			if (index)
 			{
 				*index = i;
 			}
-			return ref->slots[i].n_ref;
+			return true;
 		}
 	}
 
-	return 0;
+	return false;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct cinputs_input
+cinputs_get(const cinputs *inputs, size_t index)
+{
+	if (inputs->err || index >= inputs->n)
+	{
+		return (struct cinputs_input){.id = 0, .ptr = inputs->default_ptr, .x = 0, .y = 0};
+	}
+
+	return inputs->slots[index];
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-cref_length(const cref *ref)
+cinputs_load(const cinputs *inputs)
 {
-	if (ref->err)
+	if (inputs->err)
 	{
 		return 0;
 	}
 
-	return ref->n;
+	return inputs->n;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cref_prealloc(cref *ref, size_t slots_number)
+cinputs_pull_id(cinputs *inputs, unsigned int id)
 {
-	if (ref->err)
+	size_t index;
+
+	if (cinputs_find(inputs, id, &index))
+	{
+		cinputs_pull_index(inputs, index);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cinputs_pull_index(cinputs *inputs, size_t index)
+{
+	if (inputs->err || index >= inputs->n)
 	{
 		return;
 	}
 
-	_grow(ref, slots_number);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-const void *
-cref_ptr(const cref *ref, size_t index)
-{
-	if (ref->err || index >= ref->n)
-	{
-		return ref->default_ptr;
-	}
-	
-	return ref->slots[index].ptr;
+	memmove(
+		inputs->slots + index,
+		inputs->slots + index + 1,
+		(--inputs->n - index) * sizeof(struct cinputs_input));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cref_pull_index(cref *ref, size_t index)
+cinputs_push(cinputs *inputs, unsigned int id, int x, int y, const void *ptr)
 {
-	if (ref->err || index >= ref->n || --ref->slots[index].n_ref > 0)   
+	if (inputs->err)
 	{
 		return;
 	}
 
-	_pull(ref, index);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cref_pull_ptr(cref *ref, const void *ptr)
-{
-	size_t i = 0;
-
-	if (cref_find(ref, ptr, &i) > 0)
-	{
-		cref_pull_index(ref, i);
-	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cref_purge_index(cref *ref, size_t index)
-{
-	if (ref->err || index >= ref->n)   
+	cinputs_pull_id(inputs, id);
+	if (inputs->n < inputs->n_alloc)
 	{
 		return;
 	}
 
-	_pull(ref, index);
+	inputs->slots[inputs->n].id  = id;
+	inputs->slots[inputs->n].x   = x;
+	inputs->slots[inputs->n].y   = y;
+	inputs->slots[inputs->n].ptr = ptr;
+	inputs->n++;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cref_purge_ptr(cref *ref, const void *ptr)
+cinputs_repair(cinputs *inputs)
 {
-	size_t i = 0;
-
-	if (cref_find(ref, ptr, &i) > 0)
-	{
-		cref_purge_index(ref, i);
-	}
+	inputs->err &= CERR_INVALID;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cref_push(cref *ref, const void *ptr)
+cinputs_resize(cinputs *inputs, size_t max_inputs)
 {
-	size_t i = 0;
-
-	if (ref->err)
+	if (inputs->err)
 	{
 		return;
 	}
 
-	/* if found, increment ref counter */
-
-	if (cref_find(ref, ptr, &i) > 0)
-	{
-		if (ref->slots[i].n_ref == UINT_MAX)
-		{
-			ref->err = CERR_OVERFLOW;
-			return;
-		}
-		ref->slots[i].n_ref++;
-		return;
-	}
-
-	/* if not, add new ref */
-
-	if (ref->n >= ref->n_alloc)
-	{
-		if (!safe_mul(NULL, ref->n_alloc, 2))
-		{
-			ref->err = CERR_OVERFLOW;
-			return;
-		}
-		if (!_grow(ref, ref->n_alloc * 2))
-		{
-			return;
-		}
-	}
-
-	ref->slots[ref->n].ptr   = ptr;
-	ref->slots[ref->n].n_ref = 1;
-	ref->n++;
+	_resize(inputs, max_inputs);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cref_repair(cref *ref)
+cinputs_set_default_ptr(cinputs *inputs, const void *ptr)
 {
-	ref->err &= CERR_INVALID;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cref_set_default_ptr(cref *ref, const void *ptr)
-{
-	if (ref->err)
+	if (inputs->err)
 	{
 		return;
 	}
 
-	ref->default_ptr = ptr;
+	inputs->default_ptr = ptr;
 }
 
 /************************************************************************************************************/
-/* _ ********************************************************************************************************/
+/************************************************************************************************************/
 /************************************************************************************************************/
 
 static bool
-_grow(cref *ref, size_t n)
+_resize(cinputs *inputs, size_t n)
 {
-	struct _slot *tmp;
+	struct cinputs_input *tmp;
 
-	if (n <= ref->n_alloc)
+	if (n == 0)
 	{
-		return true;
-	}
-
-	if (!safe_mul(NULL, n, sizeof(struct _slot)))
-	{
-		ref->err = CERR_OVERFLOW;
+		inputs->err |= CERR_PARAM;
 		return false;
 	}
 
-	if (!(tmp = realloc(ref->slots, n * sizeof(struct _slot))))
+	if (!safe_mul(NULL, n, sizeof(struct cinputs_input)))
 	{
-		ref->err = CERR_MEMORY;
+		inputs->err |= CERR_OVERFLOW;
 		return false;
 	}
 
-	ref->n_alloc = n;
-	ref->slots   = tmp;
+	if (!(tmp = realloc(inputs->slots, n * sizeof(struct cinputs_input))))
+	{
+		inputs->err |= CERR_MEMORY;
+		return false;
+	}
 
+	inputs->n       = n < inputs->n ? n : inputs->n;
+	inputs->n_alloc = n;
+	inputs->slots   = tmp;
+	
 	return true;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-_pull(cref *ref, size_t i)
-{
-	memmove(ref->slots + i, ref->slots + i + 1, (--ref->n - i) * sizeof(struct _slot));
 }

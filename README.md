@@ -7,14 +7,17 @@ The library is free and open-source software licensed under the [LGPL-2.1](https
 Features
 --------
 
-- cbook  : dynamic C-strings stack with grouping features
-- ccolor : RGBA color representation, manipulation and conversion
-- cdict  : hashmap with string + group keys, FNV-1A hashing and linear probing
-- cerr   : error codes used by every Cassette component
-- cline  : 1D line represenation and manipulation with bound checks and UB prevention
-- crand  : re-implementation of POSIX's rand48 functions with a slightly more convenient API
-- cref   : reference counter used to keep track of instanced components.
-- cstr   : UTF-8 strings with 2D (rows, columns, tabsize, wrapping) features
+| Object  | Description                                                                       |
+| ------- | --------------------------------------------------------------------------------- |
+| cbook   | dynamic C-strings stack with grouping features                                    |
+| ccolor  | RGBA color representation, manipulation and conversion                            |
+| cdict   | hashmap with string + group keys, FNV-1A hashing and linear probing               |
+| cerr    | error codes used by every Cassette component                                      |
+| cinputs | 2D input (screen touches, key / button presses) tracker array                     |
+| cline   | 1D line represenation and manipulation with bound checks and UB prevention        |
+| crand   | re-implementation of POSIX's rand48 functions with a slightly more convenient API |
+| cref    | reference counter used to keep track of instanced components                      |
+| cstr    | UTF-8 strings with 2D (rows, columns, tabsize, wrapping) features                 |
 
 Dependencies
 ------------

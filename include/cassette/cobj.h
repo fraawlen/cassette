@@ -24,6 +24,7 @@
 #include "ccolor.h"
 #include "cdict.h"
 #include "cerr.h"
+#include "cinputs.h"
 #include "cline.h"
 #include "crand.h"
 #include "cref.h"
