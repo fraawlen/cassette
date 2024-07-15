@@ -90,8 +90,6 @@ struct ccolor
 ccolor_from_argb_uint(uint32_t argb)
 CCOLOR_CONST;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Converts a RGBA color representation with channel values bounded between 0 and 255 into a color object.
  *
@@ -105,8 +103,6 @@ CCOLOR_CONST;
 struct ccolor
 ccolor_from_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 CCOLOR_CONST;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Converts a C string into a color object. The given string is interpreted as a char representation of an
@@ -126,8 +122,6 @@ ccolor_from_str(const char *str, bool *err)
 CCOLOR_NONNULL(1)
 CCOLOR_PURE;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Interpolates a color between two given colors.
  *
@@ -140,8 +134,6 @@ CCOLOR_PURE;
 struct ccolor
 ccolor_interpolate(struct ccolor color_1, struct ccolor color_2, double ratio)
 CCOLOR_CONST;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /*
  * Converts a given color object to its equivalent ARGB representation within a single 32-bit unsigned int.

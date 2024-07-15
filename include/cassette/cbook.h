@@ -44,18 +44,15 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Opaque book object instance. It stores an automatically extensible stack of strings. Strings can be
- * grouped.
- * This object holds an internal error value that can be checked with cbook_error(). Some functions, upon
- * failure, can trigger specific error bits and will exit early without side effects that affect the contents
- * of the book (but the amount of allocated memory may be modified). If the error value is set to anything
- * else than CERR_NONE, any function that takes this object as an argument will return early with no side
- * effects and default return values. It is possible to repair the object to get rid of errors. See
- * cbook_repair() for more details.
+ * Opaque book object. It stores an automatically extensible array of chars. Chars are grouped into NULL
+ * terminated words, and words can also be grouped. The book behaves like a stack, words can only be added or
+ * erased from the end of the book.
+ *
+ * Some methods, upon failure, will set an error bit in an internal error bitfield. The error can be checked
+ * with cbook_error(). If any error is set all book methods will exit early with default return values and
+ * no side-effects. It's possible to clear errors with cbook_repair().
  */
 typedef struct cbook cbook;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * String to group addition mode.
@@ -80,8 +77,8 @@ enum cbook_group
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
- * Global book instance with the error state set to CERR_INVALID. This instance is only made available to
- * allow the static initialization of book pointers with the macro CBOOK_PLACEHOLDER.
+ * Global book instance with the error state set to CERR_INVALID. This instance is made available to allow the
+ * static initialization of book pointers with the macro CBOOK_PLACEHOLDER.
  */
 extern cbook cbook_placeholder_instance;
 
@@ -102,8 +99,6 @@ cbook_clone(const cbook *book)
 CBOOK_NONNULL_RETURN
 CBOOK_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Creates an empty book instance.
  *
@@ -113,8 +108,6 @@ CBOOK_NONNULL(1);
 cbook *
 cbook_create(void)
 CBOOK_NONNULL_RETURN;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Destroys the given book and frees memory.
@@ -139,8 +132,6 @@ CBOOK_NONNULL(1);
 		I < cbook_word_index(BOOK, GROUP, 0) + cbook_group_length(BOOK, GROUP); \
 		I++)
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Convenience inverse for-loop wrapper. The I parameter is the global, not local, word index. Therefore,
  * cbook_word() needs to be used inside the loop instead of cbook_word_in_group().
@@ -153,8 +144,6 @@ CBOOK_NONNULL(1);
 		I - cbook_word_index(BOOK, GROUP, 0) < SIZE_MAX; \
 		I--)
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Clears the contents of a given book. Allocated memory is not freed, use cbook_destroy() for that.
  *
@@ -163,8 +152,6 @@ CBOOK_NONNULL(1);
 void
 cbook_clear(cbook *book)
 CBOOK_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Deletes the last group of words. Allocated memory is not freed, use cbook_destroy() or cbook_trim() for
@@ -176,8 +163,6 @@ void
 cbook_pop_group(cbook *book)
 CBOOK_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Deletes the last word. Allocated memory is not freed, use cbook_destroy() or cbook_trim() for that.
  * 
@@ -186,8 +171,6 @@ CBOOK_NONNULL(1);
 void
 cbook_pop_word(cbook *book)
 CBOOK_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Preallocates a set number of characters, words, references, and groups to avoid triggering multiple
@@ -205,8 +188,6 @@ CBOOK_NONNULL(1);
 void
 cbook_prealloc(cbook *book, size_t bytes_number, size_t words_number, size_t groups_number)
 CBOOK_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Increments the book word count (and possibly group count) by 1 and returns the start position of a buffer
@@ -247,8 +228,6 @@ char *
 cbook_prepare_word(cbook *book, size_t length, enum cbook_group group_mode)
 CBOOK_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Clears errors and puts the book back into an usable state. The only unrecoverable error is CBOOK_INVALID.
  *
@@ -257,8 +236,6 @@ CBOOK_NONNULL(1);
 void
 cbook_repair(cbook *book)
 CBOOK_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Appends a new string (called 'word') to the book and increments the book word count (and possibly group
@@ -275,8 +252,6 @@ CBOOK_NONNULL(1);
 void
 cbook_write(cbook *book, const char *str, enum cbook_group group_mode)
 CBOOK_NONNULL(1, 2);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Similar to cbook_clear() but all of the allocated memory is also zeroed.
@@ -303,8 +278,6 @@ cbook_error(const cbook *book)
 CBOOK_NONNULL(1)
 CBOOK_PURE;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Gets a group's word count. If group_index is out of bounds, the default return_err value is returned.
  * 
@@ -319,8 +292,6 @@ cbook_group_length(const cbook *book, size_t group_index)
 CBOOK_NONNULL(1)
 CBOOK_PURE;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Gets the total number of groups.
  * 
@@ -334,8 +305,6 @@ cbook_groups_number(const cbook *book)
 CBOOK_NONNULL(1)
 CBOOK_PURE;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Gets the total length of the book (all NULL terminators included).
  *
@@ -348,8 +317,6 @@ size_t
 cbook_length(const cbook *book)
 CBOOK_NONNULL(1)
 CBOOK_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Gets a word. If word_index is out of bounds, the default return_err value is returned.
@@ -365,8 +332,6 @@ cbook_word(const cbook *book, size_t word_index)
 CBOOK_NONNULL_RETURN
 CBOOK_NONNULL(1)
 CBOOK_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Gets a word from a specific group. If group_index or word_index are out of bounds, the default return_err
@@ -385,8 +350,6 @@ CBOOK_NONNULL_RETURN
 CBOOK_NONNULL(1)
 CBOOK_PURE;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Converts a group + local word indexes to a book-wide word index. If group_index or word_index are out of
  * bounds, the default return_err value is returned.
@@ -402,8 +365,6 @@ size_t
 cbook_word_index(const cbook *book, size_t group_index, size_t word_local_index)
 CBOOK_NONNULL(1)
 CBOOK_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Gets the total number of words.

@@ -44,17 +44,15 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Opaque input tracker instance. This objects store inputs such as screen touches, key or button presses in
- * a fixed size array. If the array is full, new inputs gets ignored.
- * This object holds an internal error value that can be checked with cref_error(). Some functions, upon
- * failure, can trigger specific error bits and will exit early without side effects. If the error value is
- * set to anything else than CERR_NONE, any function that takes this object as an argument will return early
- * with no side effects and default return values. It is possible to repair the object to get rid of errors.
- * See cref_repair() for more details.
+ * Opaque input tracker object. An input tracker stores inputs such as screen touches, key or button presses
+ * in the order they get added. The array that holds them is fixed size. If that array is full, new inputs get
+ * ignored.
+ *
+ * Some methods, upon failure, will set an error bit in an internal error bitfield. The error can be checked
+ * with cinputs_error(). If any error is set all inputs tracke methods will exit early with default return
+ * values and no side-effects. It's possible to clear errors with cinputs_repair().
  */
 typedef struct cinputs cinputs;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Details of an input.
@@ -83,12 +81,9 @@ struct cinputs_input
  */
 #define CINPUTS_PLACEHOLDER &cinputs_placeholder_instance
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
- * Global input tracker instance with the error state set to CERR_INVALID. This instance is only made
- * available to allow the static initialization of input tracker pointers with the macro
- * CINPUTS_PLACEHOLDER.
+ * Global input tracker instance with the error state set to CERR_INVALID. This instance is made available to
+ * allow the static initialization of input tracker pointers with the macro CINPUTS_PLACEHOLDER.
  */
 extern cinputs cinputs_placeholder_instance;
 
@@ -109,8 +104,6 @@ cinputs_clone(const cinputs *inputs)
 CINPUTS_NONNULL_RETURN
 CINPUTS_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /** 
  * Creates an empty input tracker.
  *
@@ -122,8 +115,6 @@ CINPUTS_NONNULL(1);
 cinputs *
 cinputs_create(size_t max_inputs)
 CINPUTS_NONNULL_RETURN;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /** 
  * Destroys the input tracker and frees memory.
@@ -143,14 +134,10 @@ CINPUTS_NONNULL(1);
  */
 #define CINPUTS_FOR_EACH(INPUTS, I) for(size_t I = 0; I < cinputs_load(INPUTS); I++)
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Convenience inverse for-loop wrapper.
  */
 #define CINPUTS_FOR_EACH_REV(INPUTS, I) for(size_t I = cinputs_load(INPUTS) - 1; I < SIZE_MAX; I--)
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Clears the contents of a given input tracker. Allocated memory is not free, use cinputs_destroy() for that.
@@ -160,8 +147,6 @@ CINPUTS_NONNULL(1);
 void
 cinputs_clear(cinputs *inputs)
 CINPUTS_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * If present, untracks an input with the matching id.
@@ -173,8 +158,6 @@ void
 cinputs_pull_id(cinputs *inputs, unsigned int id)
 CINPUTS_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /** 
  * Untracks an input at the given index. This function has no effects if index is out of bounds.
  *
@@ -184,8 +167,6 @@ CINPUTS_NONNULL(1);
 void
 cinputs_pull_index(cinputs *inputs, size_t index)
 CINPUTS_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Adds in input at the end of the input tracking array. If an input with a matching id already exists within
@@ -201,8 +182,6 @@ void
 cinputs_push(cinputs *inputs, unsigned int id, int x, int y, const void *ptr)
 CINPUTS_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Clears errors and puts the input tracker back into an usable state. The only unrecoverable error is
  * CREF_INVALID.
@@ -212,8 +191,6 @@ CINPUTS_NONNULL(1);
 void
 cinputs_repair(cinputs *inputs)
 CINPUTS_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Updates the size of input tracker. If the requested size is smaller than the current load, tailing inputs
@@ -228,8 +205,6 @@ CINPUTS_NONNULL(1);
 void
 cinputs_resize(cinputs *inputs, size_t max_inputs)
 CINPUTS_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Sets a new default pointer value to return when cinputs_get() cannot return a proper value.
@@ -257,8 +232,6 @@ cinputs_error(const cinputs *inputs)
 CINPUTS_NONNULL(1)
 CINPUTS_PURE;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /** 
  * Tries to find an input with the matching id. If found, true is returned, and if the optional index
  * parameter is not NULL, the array index of the found input will be written into it.
@@ -274,8 +247,6 @@ bool
 cinputs_find(const cinputs *inputs, unsigned int id, size_t *index)
 CINPUTS_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /** 
  * Gets the input at the given index. If index is out of bounds, the default return_err value is returned.
  *
@@ -290,8 +261,6 @@ struct cinputs_input
 cinputs_get(const cinputs *inputs, size_t index)
 CINPUTS_NONNULL(1)
 CINPUTS_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /** 
  * Gets the total number of different tracked inputs.

@@ -44,13 +44,13 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Opaque reference counter object instance. This object stores references in an array that gets automatically
- * extended when new references gets added.
- * This object holds an internal error value that can be checked with cref_error(). Some functions, upon
- * failure, can trigger specific error bits and will exit early without side effects. If the error value is
- * set to anything else than CERR_NONE, any function that takes this object as an argument will return early
- * with no side effects and default return values. It is possible to repair the object to get rid of errors.
- * See cref_repair() for more details.
+ * Opaque reference counter object. It stores arbitrary pointers in an automatically extensible array. When
+ * a pointer gets pushed to this object, its reference count gets incremented. A saved pointer only gets 
+ * removed when its counts reaches 0.
+ *
+ * Some methods, upon failure, will set an error bit in an internal error bitfield. The error can be checked
+ * with cref_error(). If any error is set all reference counter methods will exit early with default return
+ * values and no side-effects. It's possible to clear errors with cref_repair().
  */
 typedef struct cref cref;
 
@@ -66,7 +66,7 @@ typedef struct cref cref;
 #define CREF_PLACEHOLDER &cref_placeholder_instance
 
 /**
- * Global reference counter instance with the error state set to CERR_INVALID. This instance is only made
+ * Global reference counter instance with the error state set to CERR_INVALID. This instance is made
  * available to allow the static initialization of reference counter pointers with the macro CREF_PLACEHOLDER.
  */
 extern cref cref_placeholder_instance;
@@ -88,8 +88,6 @@ cref_clone(cref *ref)
 CREF_NONNULL_RETURN
 CREF_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Creates an empty reference counter.
  *
@@ -99,8 +97,6 @@ CREF_NONNULL(1);
 cref *
 cref_create(void)
 CREF_NONNULL_RETURN;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Destroys the reference counter and frees memory.
@@ -120,14 +116,10 @@ CREF_NONNULL(1);
  */
 #define CREF_FOR_EACH(REF, I) for(size_t I = 0; I < cref_length(REF); I++)
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Convenience inverse for-loop wrapper.
  */
 #define CREF_FOR_EACH_REV(REF, I) for(size_t I = cref_length(REF) - 1; I < SIZE_MAX; I--)
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Convenience generic wrapper to pull a reference.
@@ -139,8 +131,6 @@ CREF_NONNULL(1);
 		default : cref_pull_ptr    \
 	)(REF, VAL)
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Convenience generic wrapper to purge a reference.
  */
@@ -151,8 +141,6 @@ CREF_NONNULL(1);
 		default : cref_purge_ptr    \
 	)(REF, VAL)
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Clears the contents of a given reference counter. Allocated memory is not freed, use cref_destroy() for
  * that.
@@ -162,8 +150,6 @@ CREF_NONNULL(1);
 void
 cref_clear(cref *ref)
 CREF_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Preallocates slots for the reference array to avoid triggering multiple automatic reallocs when pushing new
@@ -179,8 +165,6 @@ void
 cref_prealloc(cref *ref, size_t slots_number)
 CREF_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Decrements the counter of a reference at the given index. If the counter reaches 0, the referece gets
  * removed from the reference arrau. This function has no effects if index is out of bounds.
@@ -191,8 +175,6 @@ CREF_NONNULL(1);
 void
 cref_pull_index(cref *ref, size_t index)
 CREF_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Searches for a reference with the matching pointer. If found, it's counter gets decremented. If the counter
@@ -205,8 +187,6 @@ void
 cref_pull_ptr(cref *ref, const void *ptr)
 CREF_NONNULL(1, 2);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Removes a reference at the given index regardless of its count. This function has no effects if index is
  * out of bounds.
@@ -218,8 +198,6 @@ void
 cref_purge_index(cref *ref, size_t index)
 CREF_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Searches for a reference with the matching pointer. If found, the reference gets removed regardless of its
  * count.
@@ -230,8 +208,6 @@ CREF_NONNULL(1);
 void
 cref_purge_ptr(cref *ref, const void *ptr)
 CREF_NONNULL(1, 2);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Searches for a reference with the matching pointer. If found, its counter gets incremented. If not, the
@@ -247,8 +223,6 @@ void
 cref_push(cref *ref, const void *ptr)
 CREF_NONNULL(1, 2);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Clears errors and puts the reference counter back into an usable state. The only unrecoverable error is
  * CREF_INVALID.
@@ -258,8 +232,6 @@ CREF_NONNULL(1, 2);
 void
 cref_repair(cref *ref)
 CREF_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Sets a new default pointer value to return when cref_ptr() cannot return a proper value.
@@ -289,8 +261,6 @@ cref_count(const cref *ref, size_t index)
 CREF_NONNULL(1)
 CREF_PURE;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Gets the error state.
  *
@@ -302,8 +272,6 @@ enum cerr
 cref_error(const cref *ref)
 CREF_NONNULL(1)
 CREF_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Tries to find a reference with the matching pointer value. If found, the reference count is returned (>0),
@@ -321,8 +289,6 @@ unsigned int
 cref_find(const cref *ref, const void *ptr, size_t *index)
 CREF_NONNULL(1, 2);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Gets the total number of different tracked references.
  *
@@ -335,8 +301,6 @@ size_t
 cref_length(const cref *ref)
 CREF_NONNULL(1)
 CREF_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Gets the reference pointer at the given index. If index is out of bounds, the default return_err value is

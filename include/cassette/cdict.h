@@ -44,13 +44,13 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Opaque dictionary object instance. It uses internally a hashtable with the FNV1-A hash function and uses
- * linear probing for collision resolution.
- * This object holds an internal error value that can be checked with cdict_error(). Some functions, upon
- * failure, can trigger specific error bits and will exit early without side effects. If the error value is
- * set to anything else than CERR_NONE, any function that takes this object as an argument will return early
- * with no side effects and default return values. It is possible to repair the object to get rid of errors.
- * See cdict_repair() for more details.
+ * Opawue dictionary object. It's implemented using the FNV1-A hash function and collisions are resolved using
+ * linear probing. A dictionary can automatically grow to maintain a maximum load factor (set by default to
+ * 0.6). Values are retrieved using both a NULL terminated string key and a group value.
+ *
+ * Some methods, upon failure, will set an error bit in an internal error bitfield. The error can be checked
+ * with cdict_error(). If any error is set all dictionary methods will exit early with default return values
+ * and no side-effects. It's possible to clear errors with cdict_repair().
  */
 typedef struct cdict cdict;
 
@@ -65,11 +65,9 @@ typedef struct cdict cdict;
  */
 #define CDICT_PLACEHOLDER &cdict_placeholder_instance
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
- * Global dictionary instance with the error state set to CERR_INVALID. This instance is only made available
- * to allow the static initialization of dictionary pointers with the macro CDICT_PLACEHOLDER.
+ * Global dictionary instance with the error state set to CERR_INVALID. This instance is made available to
+ * allow the static initialization of dictionary pointers with the macro CDICT_PLACEHOLDER.
  */
 extern cdict cdict_placeholder_instance;
 
@@ -90,8 +88,6 @@ cdict_clone(const cdict *dict)
 CDICT_NONNULL_RETURN
 CDICT_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Creates an empty dictionary instance.
  *
@@ -101,8 +97,6 @@ CDICT_NONNULL(1);
 cdict *
 cdict_create(void)
 CDICT_NONNULL_RETURN;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Destroys the given dictionary and frees memory.
@@ -126,8 +120,6 @@ void
 cdict_clear(cdict *dict)
 CDICT_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Clears all active slots of a specific group. Allocated memory is not freed, use cdict_destroy() for that.
  *
@@ -137,8 +129,6 @@ CDICT_NONNULL(1);
 void
 cdict_clear_group(cdict *dict, size_t group)
 CDICT_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Deletes the slot that matches the given key and group. This function has no effect if there are no matching
@@ -151,8 +141,6 @@ CDICT_NONNULL(1);
 void
 cdict_erase(cdict *dict, const char *key, size_t group)
 CDICT_NONNULL(1, 2);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /** 
  * Preallocates a set amount of slots to avoid triggering multiple automatic reallocs and rehashes when adding
@@ -170,8 +158,6 @@ void
 cdict_prealloc(cdict *dict, size_t slots_number)
 CDICT_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Sets the maximum load factor. To stay under it, the dictionary may automatically extend its number of
  * allocated slots. Default value = 0.6. Values outside of the [0.0 1.0], 0.0 excluded, are illegal.
@@ -187,8 +173,6 @@ void
 cdict_set_max_load(cdict *dict, double load_factor)
 CDICT_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /** 
  * Clears errors and puts the dictionary back into an usable state. The only unrecoverable error is
  * CDICT_INVALID.
@@ -198,8 +182,6 @@ CDICT_NONNULL(1);
 void
 cdict_repair(cdict *dict)
 CDICT_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Activates a slot in the dictionary's hashtable. The given key, group, and values will be associated with
@@ -235,8 +217,6 @@ cdict_error(const cdict *dict)
 CDICT_NONNULL(1)
 CDICT_PURE;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Tries to find a slot that matches the given key and group. If found, true is returned, and if the optional
  * value parameter is not NULL, the associated value of the found slot will be written into it.
@@ -253,8 +233,6 @@ bool
 cdict_find(const cdict *dict, const char *key, size_t group, size_t *value)
 CDICT_NONNULL(1, 2);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Gets the number of active slots.
  *
@@ -267,8 +245,6 @@ size_t
 cdict_load(const cdict *dict)
 CDICT_NONNULL(1)
 CDICT_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Gets a ratio of the number of active slots by the number of allocated slots.

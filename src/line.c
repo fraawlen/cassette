@@ -26,10 +26,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void    _bind_length (struct cline *line)      CLINE_NONNULL(1);
-static void    _bind_origin (struct cline *line)      CLINE_NONNULL(1);
-static int64_t _scale       (int64_t a, double scale) CLINE_CONST;
-static void    _swap_bounds (struct cline *line)      CLINE_NONNULL(1);
+static void    _bind_length (struct cline *)    CLINE_NONNULL(1);
+static void    _bind_origin (struct cline *)    CLINE_NONNULL(1);
+static int64_t _scale       (int64_t a, double) CLINE_CONST;
+static void    _swap_bounds (struct cline *)    CLINE_NONNULL(1);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/

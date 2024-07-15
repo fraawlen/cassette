@@ -40,9 +40,9 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Representation of a 1-dimension line defined by a length and an origin. As long as the related procedures
- * are used to manipulate cline's values, the following equation is guaranteed to be true :
- * min <= origin + length <= max. Moreover, all procedures are overflow and underflow protected.
+ * Representation of a 1-dimension line defined by a length and an origin. As long as cline's methods are used
+ * to manipulate cline's values, no overflow or underflow can occur and the following equation is guaranteed
+ * to be true: min <= origin + length <= max.
  */
 struct cline
 {
@@ -74,8 +74,6 @@ void
 cline_bind(struct cline *line)
 CLINE_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Adds a value to the cline's length.
  *
@@ -85,8 +83,6 @@ CLINE_NONNULL(1);
 void
 cline_grow(struct cline *line, int64_t length)
 CLINE_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Sets new limits. The order of lim_1 or lim_2 does not matter. If necessary, origin and length values will
@@ -100,8 +96,6 @@ void
 cline_limit(struct cline *line, int64_t lim_1, int64_t lim_2)
 CLINE_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Sets a new origin. If necessary, the length will also be udpated to respect the limits.
  *
@@ -112,8 +106,6 @@ void
 cline_move(struct cline *line, int64_t origin)
 CLINE_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Add a value to the cline's origin. If necessary, the length will also be udpated to respect the limits.
  *
@@ -123,8 +115,6 @@ CLINE_NONNULL(1);
 void
 cline_offset(struct cline *line, int64_t length)
 CLINE_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Offsets the line by a length value, then decreases its length (stored by the cline) by 2 * length (the
@@ -137,8 +127,6 @@ void
 cline_pad(struct cline *line, int64_t length)
 CLINE_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Sets a new length value.
  *
@@ -148,8 +136,6 @@ CLINE_NONNULL(1);
 void
 cline_resize(struct cline *line, int64_t length)
 CLINE_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Mutilplies the origin and length.

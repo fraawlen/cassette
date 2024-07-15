@@ -54,10 +54,10 @@ struct cstr
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static size_t      _byte_offset     (const cstr *str, size_t offset) CSTR_NONNULL(1) CSTR_PURE;
-static bool        _is_end_byte     (char c)                         CSTR_CONST;
-static const char *_next_codepoint  (const char *codepoint)          CSTR_NONNULL(1) CSTR_PURE;
-static void        _update_n_values (cstr *str)                      CSTR_NONNULL(1);
+static size_t      _byte_offset     (const cstr *, size_t) CSTR_NONNULL(1) CSTR_PURE;
+static bool        _is_end_byte     (char)                 CSTR_CONST;
+static const char *_next_codepoint  (const char *)         CSTR_NONNULL(1) CSTR_PURE;
+static void        _update_n_values (cstr *)               CSTR_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

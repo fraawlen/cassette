@@ -27,11 +27,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
  
-static void          _bind_color    (struct ccolor *color);
-static void          _bind_d        (double *d);
-static uint8_t       _hex_to_int    (char c)                     CCOLOR_CONST; 
-static struct ccolor _from_hex   (const char *str, bool *err) CCOLOR_NONNULL(1) CCOLOR_PURE;
-static struct ccolor _from_ulong (const char *str, bool *err) CCOLOR_NONNULL(1) CCOLOR_PURE;
+static void          _bind_color (struct ccolor *);
+static void          _bind_d     (double *);
+static uint8_t       _hex_to_int (char)                 CCOLOR_CONST; 
+static struct ccolor _from_hex   (const char *, bool *) CCOLOR_NONNULL(1) CCOLOR_PURE;
+static struct ccolor _from_ulong (const char *, bool *) CCOLOR_NONNULL(1) CCOLOR_PURE;
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/

@@ -44,18 +44,6 @@ typedef unsigned long long int crand;
 /************************************************************************************************************/
 
 /**
- * Sets the initial value of the keeper.
- *
- * @param rand : Keeper value to interact with
- * @param seed : Initial value to apply
- */
-void
-crand_seed(crand *rand, unsigned long long int seed)
-CRAND_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
  * Gets the next random value bound between lim_1 and lim_2 for the given keeper.
  *
  * @param rand  : Keeper value to interact with
@@ -66,6 +54,16 @@ CRAND_NONNULL(1);
  */
 double
 crand_get(crand *rand, double lim_1, double lim_2)
+CRAND_NONNULL(1);
+
+/**
+ * Sets the initial value of the keeper.
+ *
+ * @param rand : Keeper value to interact with
+ * @param seed : Initial value to apply
+ */
+void
+crand_seed(crand *rand, unsigned long long int seed)
 CRAND_NONNULL(1);
 
 /************************************************************************************************************/

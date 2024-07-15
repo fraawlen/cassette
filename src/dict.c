@@ -67,9 +67,9 @@ struct cdict
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static struct _slot *_find (const cdict *dict, uint64_t hash, enum _state state_cutoff) CDICT_NONNULL(1) CDICT_PURE;
-static bool          _grow (cdict *dict, size_t n)                                      CDICT_NONNULL(1);
-static uint64_t      _hash (const char *str, size_t group)                              CDICT_NONNULL(1) CDICT_PURE;
+static struct _slot *_find (const cdict *, uint64_t, enum _state) CDICT_NONNULL(1) CDICT_PURE;
+static bool          _grow (cdict *, size_t)                      CDICT_NONNULL(1);
+static uint64_t      _hash (const char *, size_t)                 CDICT_NONNULL(1) CDICT_PURE;
 
 /************************************************************************************************************/
 /************************************************************************************************************/

@@ -48,8 +48,8 @@ struct cbook
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static size_t _group_size (const cbook *book, size_t i)                       CBOOK_PURE CBOOK_NONNULL(1);
-static bool   _grow       (cbook *book, size_t n_chars, size_t n_words, size_t n_groups) CBOOK_NONNULL(1);
+static size_t _group_size (const cbook *, size_t) CBOOK_PURE CBOOK_NONNULL(1);
+static bool   _grow       (cbook *, size_t, size_t, size_t)  CBOOK_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
