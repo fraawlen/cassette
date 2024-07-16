@@ -65,9 +65,9 @@ typedef struct cinputs cinputs;
 struct cinputs_input
 {
 	unsigned int id;
-	const void *ptr;
 	int16_t x;
 	int16_t y;
+	void *ptr;
 };
 
 /************************************************************************************************************/
@@ -179,7 +179,7 @@ CINPUTS_NONNULL(1);
  * @param ptr    : Arbitrary pointer to something related to the input
  */
 void
-cinputs_push(cinputs *inputs, unsigned int id, int x, int y, const void *ptr)
+cinputs_push(cinputs *inputs, unsigned int id, int x, int y, void *ptr)
 CINPUTS_NONNULL(1);
 
 /**
@@ -213,7 +213,7 @@ CINPUTS_NONNULL(1);
  * @param ptr    : Pointer 
  */
 void
-cinputs_set_default_ptr(cinputs *inputs, const void *ptr)
+cinputs_set_default_ptr(cinputs *inputs, void *ptr)
 CINPUTS_NONNULL(1);
 
 /************************************************************************************************************/

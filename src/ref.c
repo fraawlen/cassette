@@ -33,7 +33,7 @@
 
 struct _slot
 {
-	const void *ptr;
+	void *ptr;
 	unsigned int n_ref;
 };
 
@@ -42,9 +42,9 @@ struct _slot
 struct cref
 {
 	struct _slot *slots;
-	const void *default_ptr;
 	size_t n;
 	size_t n_alloc;
+	void *default_ptr;
 	enum cerr err;
 };
 
@@ -173,7 +173,7 @@ cref_error(const cref *ref)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 unsigned int
-cref_find(const cref *ref, const void *ptr, size_t *index)
+cref_find(const cref *ref, void *ptr, size_t *index)
 {
 	if (ref->err)
 	{
@@ -223,7 +223,7 @@ cref_prealloc(cref *ref, size_t slots_number)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-const void *
+void *
 cref_ptr(const cref *ref, size_t index)
 {
 	if (ref->err || index >= ref->n)
@@ -250,7 +250,7 @@ cref_pull_index(cref *ref, size_t index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cref_pull_ptr(cref *ref, const void *ptr)
+cref_pull_ptr(cref *ref, void *ptr)
 {
 	size_t i = 0;
 
@@ -276,7 +276,7 @@ cref_purge_index(cref *ref, size_t index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cref_purge_ptr(cref *ref, const void *ptr)
+cref_purge_ptr(cref *ref, void *ptr)
 {
 	size_t i = 0;
 
@@ -289,7 +289,7 @@ cref_purge_ptr(cref *ref, const void *ptr)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cref_push(cref *ref, const void *ptr)
+cref_push(cref *ref, void *ptr)
 {
 	size_t i = 0;
 
@@ -342,7 +342,7 @@ cref_repair(cref *ref)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cref_set_default_ptr(cref *ref, const void *ptr)
+cref_set_default_ptr(cref *ref, void *ptr)
 {
 	if (ref->err)
 	{

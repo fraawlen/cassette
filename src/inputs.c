@@ -32,9 +32,9 @@
 struct cinputs
 {
 	struct cinputs_input *slots;
-	const void *default_ptr;
 	size_t n;
 	size_t n_alloc;
+	void *default_ptr;
 	enum cerr err;
 };
 
@@ -229,7 +229,7 @@ cinputs_pull_index(cinputs *inputs, size_t index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cinputs_push(cinputs *inputs, unsigned int id, int x, int y, const void *ptr)
+cinputs_push(cinputs *inputs, unsigned int id, int x, int y, void *ptr)
 {
 	if (inputs->err)
 	{
@@ -273,7 +273,7 @@ cinputs_resize(cinputs *inputs, size_t max_inputs)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cinputs_set_default_ptr(cinputs *inputs, const void *ptr)
+cinputs_set_default_ptr(cinputs *inputs, void *ptr)
 {
 	if (inputs->err)
 	{

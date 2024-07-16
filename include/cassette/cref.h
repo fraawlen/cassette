@@ -184,7 +184,7 @@ CREF_NONNULL(1);
  * @param ptr : Pointer
  */
 void
-cref_pull_ptr(cref *ref, const void *ptr)
+cref_pull_ptr(cref *ref, void *ptr)
 CREF_NONNULL(1, 2);
 
 /**
@@ -206,7 +206,7 @@ CREF_NONNULL(1);
  * @param ptr : Pointer
  */
 void
-cref_purge_ptr(cref *ref, const void *ptr)
+cref_purge_ptr(cref *ref, void *ptr)
 CREF_NONNULL(1, 2);
 
 /**
@@ -220,7 +220,7 @@ CREF_NONNULL(1, 2);
  * @error CERR_INVALID  : Failed memory allocation
  */
 void
-cref_push(cref *ref, const void *ptr)
+cref_push(cref *ref, void *ptr)
 CREF_NONNULL(1, 2);
 
 /**
@@ -239,7 +239,7 @@ CREF_NONNULL(1);
  * @param ptr : Pointer
  */
 void
-cref_set_default_ptr(cref *ref, const void *ptr)
+cref_set_default_ptr(cref *ref, void *ptr)
 CREF_NONNULL(1);
 
 /************************************************************************************************************/
@@ -286,7 +286,7 @@ CREF_PURE;
  * @return_err : 0
  */
 unsigned int
-cref_find(const cref *ref, const void *ptr, size_t *index)
+cref_find(const cref *ref, void *ptr, size_t *index)
 CREF_NONNULL(1, 2);
 
 /**
@@ -313,7 +313,7 @@ CREF_PURE;
  * @return_err : Pointer value set with cref_set_default_ptr(). NULL can still be returned if the default
  *               pointer value was not set or if CREF_PLACHOLDER is passed as the ref parameter.
  */
-const void *
+void *
 cref_ptr(const cref *ref, size_t index)
 CREF_NONNULL(1)
 CREF_PURE;
