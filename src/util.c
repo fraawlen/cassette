@@ -25,21 +25,21 @@
 /************************************************************************************************************/
 
 double
-util_limit(double d, double lim_1, double lim_2)
-{
-	util_sort_pair(&lim_1, &lim_2);
-
-	return d < lim_1 ? lim_1 : (d > lim_2 ? lim_2 : d);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-double
 util_interpolate(double d_1, double d_2, double ratio)
 {
 	ratio = util_limit(ratio, 0.0, 1.0);
 
 	return d_2 * ratio + d_1 * (1.0 - ratio);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+double
+util_limit(double d, double lim_1, double lim_2)
+{
+	util_sort_pair(&lim_1, &lim_2);
+
+	return d < lim_1 ? lim_1 : (d > lim_2 ? lim_2 : d);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

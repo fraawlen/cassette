@@ -43,12 +43,14 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Opaque config instance object that holds all parsed resources.
- * This object holds an internal error value that can be checked with ccfg_error(). Some functions, upon
- * failure, can trigger specific error bits and will exit early without side effects. If the error value
- * is set to anything else than CERR_NONE, any function that takes this object as an argument will return early
- * early with no side effects and default return values. It is possible to repair the object to get rid of
- * erros. See ccfg_repair() for more details. 
+ * Opaque config object that holds all settings like sources and parameters as well as resolved parsed
+ * resources. A decision was made to use a parser that saves all resources instead of setting target values
+ * as the resources get read and resolved so that on a source file is read, a configuration object can be
+ * shared and re-used in software plygins.
+ *
+ * Some methods, upon failure, will set an error bit in an internal error bitfield. The error can be checked
+ * with ccfg_error(). If any error is set all config methods will exit early with default return values and
+ * no side-effects. It's possible to clear errors with ccfg_repair().
  */
 typedef struct ccfg ccfg;
 
@@ -62,8 +64,6 @@ typedef struct ccfg ccfg;
  * any side effects.
  */
 #define CCFG_PLACEHOLDER &ccfg_placeholder_instance
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Global string object instance with the error state set to CERR_INVALID. This instance is only made
@@ -86,8 +86,6 @@ ccfg_clone(ccfg *cfg)
 CCFG_NONNULL_RETURN
 CCFG_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Creates an empty config instance.
  *
@@ -97,8 +95,6 @@ CCFG_NONNULL(1);
 ccfg *
 ccfg_create(void)
 CCFG_NONNULL_RETURN;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Destroys the given config and frees memory.
@@ -125,8 +121,6 @@ CCFG_NONNULL(1);
 		default      : ccfg_push_param_long    \
 	)(CFG, NAME, VAL)
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Removes all parsed resources.
  *
@@ -135,8 +129,6 @@ CCFG_NONNULL(1);
 void
 ccfg_clear_resources(ccfg *cfg)
 CCFG_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Removes all added parameters.
@@ -147,8 +139,6 @@ void
 ccfg_clear_params(ccfg *cfg)
 CCFG_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Removes all added sources.
  *
@@ -157,8 +147,6 @@ CCFG_NONNULL(1);
 void
 ccfg_clear_sources(ccfg *cfg)
 CCFG_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Looks-up a resource by its namespace and property name. If found, its reference is kept around and the
@@ -181,8 +169,6 @@ void
 ccfg_fetch(ccfg *cfg, const char *namespace, const char *property)
 CCFG_NONNULL(1, 2, 3);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Increments an internal iterator offset and makes available the next value associated to a resource fetched
  * with ccfg_fetch(). Said value can be accessed with ccfg_resource(). This function exits early and returns
@@ -196,8 +182,6 @@ CCFG_NONNULL(1, 2, 3);
 bool
 ccfg_iterate(ccfg *cfg)
 CCFG_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Reads the first source file that can be opened, parses it, and stores the resolved resources. Every time
@@ -215,8 +199,6 @@ void
 ccfg_load(ccfg *cfg)
 CCFG_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Adds a double as a config parameter. This parameter's value can then be accessed from a config source
  * file. Unlike user-defined variables, only one value per parameter can be defined.
@@ -231,8 +213,6 @@ CCFG_NONNULL(1);
 void
 ccfg_push_param_double(ccfg *cfg, const char *name, double d)
 CCFG_NONNULL(1, 2);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Adds a long as a config parameter. This parameter's value can then be accessed from a config source file.
@@ -249,8 +229,6 @@ void
 ccfg_push_param_long(ccfg *cfg, const char *name, long long l)
 CCFG_NONNULL(1, 2);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Adds a C string as a config parameter. This parameter's value can then be accessed from a config source
  * file. Unlike user-defined variables, only one value per parameter can be defined.
@@ -266,8 +244,6 @@ void
 ccfg_push_param_str(ccfg *cfg, const char *name, const char *str)
 CCFG_NONNULL(1, 2, 3);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Adds a file as a config source. Only the first source that can be opened will be parsed. The remaining
  * sources act as fallback.
@@ -281,8 +257,6 @@ CCFG_NONNULL(1, 2, 3);
 void
 ccfg_push_source(ccfg *cfg, const char *filename)
 CCFG_NONNULL(1, 2);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Clears errors and puts the config back into an usable state. The only unrecoverable error is CCFG_INVALID.
@@ -312,8 +286,6 @@ bool
 ccfg_can_open_sources(const ccfg *cfg, size_t *index, const char **filename)
 CCFG_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  * Gets the error state.
  *
@@ -325,8 +297,6 @@ enum cerr
 ccfg_error(const ccfg *cfg)
 CCFG_NONNULL(1)
 CCFG_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Gets the resource value an internal iterator is pointing at. The value is returned as a C string. It's the
@@ -343,8 +313,6 @@ ccfg_resource(const ccfg *cfg)
 CCFG_NONNULL_RETURN
 CCFG_NONNULL(1)
 CCFG_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  * Gets the number of values a pre-fetched resource has.

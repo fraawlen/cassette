@@ -29,8 +29,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "attributes.h"
 #include "context.h"
+#include "file.h"
 #include "main.h"
 #include "sequence.h"
 #include "token.h"
@@ -39,8 +39,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _open_file  (struct context *ctx, const struct context *ctx_parent, const char *filename) NONNULL(1, 3);
-static void _parse_file (struct context *ctx);
+static bool _open_file  (struct context *, const struct context *, const char *) CCFG_NONNULL(1, 3);
+static void _parse_file (struct context *);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/

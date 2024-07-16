@@ -20,14 +20,15 @@
 
 #include <cassette/ccfg.h>
 #include <cassette/cobj.h>
+#include <float.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-#include "attributes.h"
 #include "context.h"
+#include "substitution.h"
 #include "token.h"
 #include "util.h"
 
@@ -36,16 +37,16 @@
 /************************************************************************************************************/
 
 static enum token _comment       (void);
-static enum token _eof           (struct context *ctx)                                                                                   NONNULL(1);
-static enum token _escape        (struct context *ctx, char token[static TOKEN_MAX_LEN])                                                 NONNULL(1);
-static enum token _filler        (struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)                            NONNULL(1);
-static enum token _if            (struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type)           NONNULL(1);
-static enum token _join          (struct context *ctx, char token[static TOKEN_MAX_LEN])                                                 NONNULL(1);
-static enum token _math          (struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type, size_t n) NONNULL(1);
-static enum token _math_cl       (struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type, size_t n) NONNULL(1);
-static enum token _param         (struct context *ctx, char token[static TOKEN_MAX_LEN])                                                 NONNULL(1);
-static enum token _variable      (struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)                            NONNULL(1);
-static enum token _variable_iter (struct context *ctx, char token[static TOKEN_MAX_LEN])                                                 NONNULL(1);
+static enum token _eof           (struct context *)                                                            CCFG_NONNULL(1);
+static enum token _escape        (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
+static enum token _filler        (struct context *, char [static TOKEN_MAX_LEN], double *)                     CCFG_NONNULL(1);
+static enum token _if            (struct context *, char [static TOKEN_MAX_LEN], double *, enum token)         CCFG_NONNULL(1);
+static enum token _join          (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
+static enum token _math          (struct context *, char [static TOKEN_MAX_LEN], double *, enum token, size_t) CCFG_NONNULL(1);
+static enum token _math_cl       (struct context *, char [static TOKEN_MAX_LEN], double *, enum token, size_t) CCFG_NONNULL(1);
+static enum token _param         (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
+static enum token _variable      (struct context *, char [static TOKEN_MAX_LEN], double *)                     CCFG_NONNULL(1);
+static enum token _variable_iter (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -247,11 +248,11 @@ _if(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, 
 			break;
 
 		case TOKEN_IF_EQ:
-			result = a == b;
+			result = fabs(a - b) < DBL_EPSILON;
 			break;
 
 		case TOKEN_IF_EQ_NOT:
-			result = a != b;
+			result = fabs(a - b) >= DBL_EPSILON;
 			break;
 
 		case TOKEN_IF_STR_EQ:

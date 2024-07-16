@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "attributes.h"
 #include "context.h"
 #include "substitution.h"
 #include "token.h"
@@ -35,7 +34,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _read_word (struct context *ctx, char token[static TOKEN_MAX_LEN]) NONNULL(1);
+static bool _read_word (struct context *, char [static TOKEN_MAX_LEN]) CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/

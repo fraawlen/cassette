@@ -23,7 +23,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "attributes.h"
 #include "context.h"
 #include "file.h"
 #include "sequence.h"
@@ -35,22 +34,22 @@
 
 /* sequences handlers */
 
-static void _combine_var      (struct context *ctx, enum token type)       NONNULL(1);
-static void _declare_enum     (struct context *ctx)                        NONNULL(1);
-static void _declare_resource (struct context *ctx, const char *namespace) NONNULL(1);
-static void _declare_variable (struct context *ctx)                        NONNULL(1);
-static void _include          (struct context *ctx)                        NONNULL(1);
-static void _iterate          (struct context *ctx)                        NONNULL(1);
-static void _print            (struct context *ctx)                        NONNULL(1);
-static void _section_add      (struct context *ctx)                        NONNULL(1);
-static void _section_begin    (struct context *ctx)                        NONNULL(1);
-static void _section_del      (struct context *ctx)                        NONNULL(1);
-static void _seed             (struct context *ctx)                        NONNULL(1);
+static void _combine_var      (struct context *, enum token)   CCFG_NONNULL(1);
+static void _declare_enum     (struct context *)               CCFG_NONNULL(1);
+static void _declare_resource (struct context *, const char *) CCFG_NONNULL(1);
+static void _declare_variable (struct context *)               CCFG_NONNULL(1);
+static void _include          (struct context *)               CCFG_NONNULL(1);
+static void _iterate          (struct context *)               CCFG_NONNULL(1);
+static void _print            (struct context *)               CCFG_NONNULL(1);
+static void _section_add      (struct context *)               CCFG_NONNULL(1);
+static void _section_begin    (struct context *)               CCFG_NONNULL(1);
+static void _section_del      (struct context *)               CCFG_NONNULL(1);
+static void _seed             (struct context *)               CCFG_NONNULL(1);
 
 /* iteration sequence preprocessing */
 
-static void   _preproc_iter_new  (struct context *ctx)                     NONNULL(1);
-static size_t _preproc_iter_nest (struct context *ctx, size_t start_group) NONNULL(1);
+static void   _preproc_iter_new  (struct context *)         CCFG_NONNULL(1);
+static size_t _preproc_iter_nest (struct context *, size_t) CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/

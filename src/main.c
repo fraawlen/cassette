@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "attributes.h"
 #include "file.h"
 #include "main.h"
 #include "token.h"
@@ -33,8 +32,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static const char * _select_source (const ccfg *cfg, size_t *index) NONNULL_RETURN NONNULL(1);
-static enum cerr    _update_err    (ccfg *cfg)                                     NONNULL(1);
+static const char * _select_source (const ccfg *, size_t *) CCFG_NONNULL_RETURN CCFG_NONNULL(1);
+static enum cerr    _update_err    (ccfg *)                                     CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

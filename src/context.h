@@ -28,7 +28,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#include "attributes.h"
 #include "token.h"
 
 /************************************************************************************************************/
@@ -92,22 +91,22 @@ struct context
 
 enum token
 context_get_token(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
-NONNULL(1);
+CCFG_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 enum token
 context_get_token_numeral(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
-NONNULL(1);
+CCFG_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 enum token
 context_get_token_raw(struct context *ctx, char token[static TOKEN_MAX_LEN])
-NONNULL(1);
+CCFG_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 context_goto_eol(struct context *ctx)
-NONNULL(1);
+CCFG_NONNULL(1);

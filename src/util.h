@@ -20,7 +20,13 @@
 
 #pragma once
 
-#include "attributes.h"
+#include <cassette/ccfg.h>
+
+#if __GNUC__ > 4
+	#define CONST __attribute__((const))
+#else
+	#define CONST
+#endif
 
 /************************************************************************************************************/
 /* PROCEDURES ***********************************************************************************************/
@@ -28,18 +34,18 @@
 
 void
 util_sort_pair(double *d_1, double *d_2)
-NONNULL(1, 2);
+CCFG_NONNULL(1, 2);
 
 /************************************************************************************************************/
 /* FUNCTIONS ************************************************************************************************/
 /************************************************************************************************************/
 
 double
-util_limit(double d, double lim_1, double lim_2)
+util_interpolate(double d_1, double d_2, double ratio)
 CONST;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
-util_interpolate(double d_1, double d_2, double ratio)
+util_limit(double d, double lim_1, double lim_2)
 CONST;

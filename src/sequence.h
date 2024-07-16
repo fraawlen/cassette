@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "attributes.h"
 #include "context.h"
 
 /************************************************************************************************************/
@@ -29,4 +28,4 @@
 
 void
 sequence_parse(struct context *ctx)
-NONNULL(1);
+CCFG_NONNULL(1);
