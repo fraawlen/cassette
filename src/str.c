@@ -55,8 +55,9 @@ struct cstr
 /************************************************************************************************************/
 
 static size_t      _byte_offset     (const cstr *, size_t) CSTR_NONNULL(1) CSTR_PURE;
-static bool        _is_end_byte     (char)                 CSTR_CONST;
+static bool        _is_head_byte    (uint8_t)              CSTR_CONST;
 static const char *_next_codepoint  (const char *)         CSTR_NONNULL(1) CSTR_PURE;
+static size_t      _tab_real_width  (const cstr *, size_t) CSTR_NONNULL(1) CSTR_PURE;
 static void        _update_n_values (cstr *)               CSTR_NONNULL(1);
 
 /************************************************************************************************************/
@@ -238,7 +239,11 @@ cstr_coords_offset(const cstr *str, size_t row, size_t col)
 				return offset;
 
 			case '\t':
-				col -= col >= str->tab_width ? str->tab_width : col;
+				if (col <= _tab_real_width(str, offset))
+				{
+					return offset;
+				}
+				col -= _tab_real_width(str, offset);
 				break;
 
 			default:
@@ -454,40 +459,52 @@ cstr_length(const cstr *str)
 void
 cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 {
-	size_t pad_n_chars;
+	size_t n_codepoints = 0;
 	size_t length_diff;
 	size_t n;
+	size_t i;
+	size_t j;
 	char *tmp;
 
-	if (str->err || length_target <= str->n_codepoints)
+	if (str->err || length_target <= str->n_codepoints || pattern[0] == '\0')
 	{
 		return;
 	}
 
-	pad_n_chars = strlen(pattern);
 	length_diff = length_target - str->n_codepoints;
 
-	/* create padding string */
+	/* alloc memory for the padding string */
 
-	if (!safe_mul(&n, pad_n_chars, length_diff)
+	if (!safe_mul(&n, length_diff, 4)
 	 || !safe_add(&n, n, 1))
 	{
 		str->err = CERR_OVERFLOW;
 		return;
 	}
 
-	if (!(tmp = malloc(n)))
+	if (!(tmp = calloc(n, 1)))
 	{
 		str->err = CERR_MEMORY;
 		return;
 	}
 
-	for (size_t i = 0; i < length_diff; i++)
+	/* build padding string */
+	
+	for (i = 0, j = 0;;)
 	{
-		memcpy(tmp + i * pad_n_chars, pattern, pad_n_chars);
+		if (_is_head_byte(pattern[j]))
+		{
+			if (pattern[j] == '\0')
+			{
+				j = 0;
+			}
+			if (n_codepoints++ >= length_diff)
+			{
+				break;
+			}
+		}
+		tmp[i++] = pattern[j++];
 	}
-
-	tmp[pad_n_chars * length_diff] = '\0';
 
 	/* insert it */
 
@@ -601,14 +618,18 @@ cstr_test_wrap(const cstr *str, size_t max_width)
 			col = 0;
 			row++;
 		}
-		else if (col == max_width)
+		else if (*codepoint == '\t')
+		{
+			col += _tab_real_width(str, col);
+		}
+		else if (col >= max_width)
 		{
 			col = 1;
 			row++;
 		}
 		else
 		{
-			col += *codepoint == '\t' ? str->tab_width : 1;
+			col++;
 		}
 	}
 
@@ -665,7 +686,6 @@ exit_lead:
 				return;
 		}
 	}
-
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -725,43 +745,40 @@ cstr_width(const cstr *str)
 void
 cstr_wrap(cstr *str, size_t max_width)
 {
-	size_t max_slots;
-	size_t max_rows;
-	size_t max_bytes;
 	size_t col;
+	size_t n;
 	char *tmp;
 
-	if (str->err || max_width == 0 || max_width >= str->n_cols)
+	if (str->err || max_width >= str->n_cols)
 	{
 		return;
 	}
 
-	/* calculate (with overflow protection) max required memory to host wrapped string */
-
-	if (!safe_mul(&max_slots, str->n_cols, str->n_rows)
-	 || !safe_div(&max_rows,  max_slots, max_width)
-	 || !safe_add(&max_rows,  max_rows, max_slots % max_width > 0 ? 1 : 0)
-	 || !safe_mul(&max_bytes, max_width, 4)
-	 || !safe_add(&max_bytes, max_bytes, 1)
-	 || !safe_mul(&max_bytes, max_bytes, max_rows))
+	if (max_width == 0)
 	{
-		str->err = CERR_OVERFLOW;
+		str->err = CERR_PARAM;
 		return;
 	}
 
 	/* alloc memory */
 
-	if (!(tmp = malloc(max_bytes)))
+	if (!safe_mul(&n, str->n_alloc, 2))
+	{
+		str->err = CERR_OVERFLOW;
+		return;
+	}
+
+	if (!(tmp = malloc(n)))
 	{
 		str->err = CERR_MEMORY;
 		return;
 	}
 
-	str->n_alloc = max_bytes;
+	str->n_alloc = n;
 
 	/* wrap string */
 
-	str->n_cols       = max_width;
+	str->n_cols       = 0;
 	str->n_rows       = 1;
 	str->n_chars      = 0;
 	str->n_codepoints = 0;
@@ -770,7 +787,7 @@ cstr_wrap(cstr *str, size_t max_width)
 
 	for (size_t i = 0;; i++)
 	{
-		if (_is_end_byte(str->chars[i]))
+		if (_is_head_byte(str->chars[i]))
 		{
 			if (str->chars[i] == '\0')
 			{
@@ -782,9 +799,14 @@ cstr_wrap(cstr *str, size_t max_width)
 				str->n_rows++;
 				col = 0;
 			}
+			else if (str->chars[i] == '\t')
+			{
+				col += _tab_real_width(str, col);
+			}
 			else if (col >= max_width)
 			{
 				tmp[str->n_chars] = '\n';
+				str->n_cols = col > str->n_cols ? col : str->n_cols;
 				str->n_codepoints++;
 				str->n_rows++;
 				str->n_chars++;
@@ -792,7 +814,7 @@ cstr_wrap(cstr *str, size_t max_width)
 			}
 			else
 			{
-				col += str->chars[i] == '\t' ? str->tab_width : 1;
+				col++;
 			}
 			str->n_codepoints++;
 		}
@@ -825,31 +847,31 @@ cstr_zero(cstr *str)
 static size_t
 _byte_offset(const cstr *str, size_t offset)
 {
-	size_t i = 0;
+	const char *codepoint = str->chars;
 
-	if (offset >= str->n_codepoints)
+	while (offset > 0 && *(codepoint = _next_codepoint(codepoint)) != '\0')
 	{
-		return str->n_chars - 1;
+		offset--;
 	}
 
-	while (offset > 0)
-	{
-		if (_is_end_byte(str->chars[i]))
-		{
-			offset--;
-		}
-		i++;
-	}
-
-	return i;
+	return codepoint - str->chars;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-_is_end_byte(char c)
+_is_head_byte(uint8_t c)
 {
-	return !!(((uint8_t)c >> 6) ^ 0x02); /* bitmask = 10xxxxxx */
+	/*
+	 * UTF-8 :
+	 *
+	 * 0xxxxxxx
+	 * 110xxxxx 10xxxxxx
+	 * 1110xxxx 10xxxxxx 10xxxxxx
+	 * 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+	 */
+
+	return (c & 0xC0) != 0x80;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -863,10 +885,18 @@ _next_codepoint(const char *codepoint)
 		{
 			codepoint++;
 		}
-		while (!_is_end_byte(*codepoint));
+		while (!_is_head_byte(*codepoint));
 	}
 
 	return codepoint;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static size_t
+_tab_real_width(const cstr *str, size_t col)
+{
+	return str->tab_width - (col % str->tab_width);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -899,11 +929,11 @@ _update_n_values(cstr *str)
 
 			case '\t':
 				str->n_codepoints++;
-				col += str->tab_width;
+				col += _tab_real_width(str, col);
 				break;
 
 			default:
-				if (_is_end_byte(str->chars[str->n_chars]))
+				if (_is_head_byte(str->chars[str->n_chars]))
 				{
 					str->n_codepoints++;
 					col++;
@@ -912,26 +942,3 @@ _update_n_values(cstr *str)
 		}
 	}
 }
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/*
-static const char *
-_prev_codepoint(const char *codepoint, const cstr *str)
-{
-	if (codepoint == str->chars)
-	{
-		return codepoint;
-	}
-
-	while (--codepoint != str->chars)
-	{
-		if (_is_end_byte(*(codepoint - 1)))
-		{
-			break;
-		}
-	}
-
-	return codepoint;
-}
-*/

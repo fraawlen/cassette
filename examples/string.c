@@ -70,7 +70,7 @@ main(void)
 	_str_ref  = cstr_create();
 	_str_wrap = cstr_create();
 
-	cstr_append(_str_ref, "This is a loooooooooooooooooooooooooooooooooooong line of text!");
+	cstr_append(_str_ref, "This is a lͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲng line Ͳf text!");
 
 	_update_wrap();
 

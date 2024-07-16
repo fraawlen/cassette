@@ -248,22 +248,20 @@ cstr_insert_raw(cstr *str, const char *raw_str, size_t offset)
 CSTR_NONNULL(1, 2);
 
 /**
- * Pads a string with a repeated sequence of characters set by pattern so that its length matches
- * length_target. The sequence of padding characters will be inserted at the given offset. This function is
+ * Pads a string with a repeated sequence of characters set by pattern until its length matches length_target.
+ * This function has no effects if the string's length is bigger than the target length or if the given
+ * pattern is empty. The sequence of padding characters will be inserted at the given offset. This function is
  * bounds-protected, so the offset parameter is capped at the string's length, even if a SIZE_MAX value is
- * supplied. The pattern parameter is of a raw C string type and not char to account for UTF-8 multi-byte
- * characters. However, it should not be used with multiple UTF-8 characters/codepoints, as it will yield
- * bigger than-expected character sequences. This function has no effects if the string's length is bigger
- * than the target length.
+ * supplied.
  *
  * Example :
  *
  *	cstr_clear(str);
  *	cstr_append(str, "test");
- *	cstr_pad(str, "_-", 1, 9);
+ *	cstr_pad(str, "_Ͳ", 1, 9);
  *	printf("%s\n", cstr_chars(str));
  *
- *	--> t_-_-_est
+ *	--> t_Ͳ_Ͳ_est
  *
  * @param str           : String to interact with
  * @param pattern       : UTF-8 character to use as padding
@@ -344,11 +342,13 @@ CSTR_NONNULL(1);
 
 /**
  * Wraps a string by adding newlines to rows that are longer than max_width. Old newlines are also kept.
- * This function has no effects if max_width is bigger than the string's width or is = 0.
+ * This function has no effects if max_width is bigger than the string's width. A max_width of 0 is
+ * illegal.
  *
  * @param str       : String to interact with
  * @param max_width : Width after which a newline is added to the string
  *
+ * @error CERR_PARAM    : Invalid width = 0 was given
  * @error CERR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
  * @error CERR_MEMORY   : Failed memory allocation
  */

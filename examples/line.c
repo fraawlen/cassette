@@ -35,6 +35,7 @@ int
 main(void)
 {
 	struct cline line = CLINE_DEFAULT;
+	cstr *str = cstr_create();
 
 	cline_limit(&line, 20, -20);
 	cline_move(&line, 7);
@@ -43,6 +44,29 @@ main(void)
 	cline_offset(&line, -7);
 
 	_print(line);
+
+	cstr_set_tab_width(str, 4);
+	cstr_append(str, "→est");
+	cstr_pad(str, "Ͳ", 1, 10);
+	cstr_insert(str, "\t", 0);
+	cstr_insert(str, "\t", 0);
+	cstr_wrap(str, 6);
+	printf("%s (%zu)\n", cstr_chars(str), cstr_width(str));
+	printf("%zu\n", cstr_coords_offset(str, 0, 1));
+	printf("%zu\n", cstr_coords_offset(str, 0, 2));
+	printf("%zu\n", cstr_coords_offset(str, 0, 3));
+	printf("%zu\n", cstr_coords_offset(str, 0, 4));
+	printf("%zu\n", cstr_coords_offset(str, 0, 5));
+	printf("%zu\n\n", cstr_coords_offset(str, 0, 6));
+	printf("%zu\n", cstr_coords_offset(str, 1, 1));
+	printf("%zu\n", cstr_coords_offset(str, 1, 2));
+	printf("%zu\n", cstr_coords_offset(str, 1, 3));
+	printf("%zu\n", cstr_coords_offset(str, 1, 4));
+	printf("%zu\n", cstr_coords_offset(str, 1, 5));
+	printf("%zu\n", cstr_coords_offset(str, 1, 6));
+	printf("%zu\n", cstr_coords_offset(str, 1, 7));
+	printf("%zu\n\n", cstr_coords_offset(str, 1, 8));
+	printf("%s\n", cstr_chars_at_coords(str, 0, 8));
 
 	return 0;
 }
