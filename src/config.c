@@ -24,6 +24,7 @@
 #include <cassette/cobj.h>
 #include <float.h>
 #include <limits.h>
+#include <math.h>
 #include <pwd.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -92,7 +93,7 @@ enum _value
 
 struct _word
 {
-	char *name;
+	const char *name;
 	enum _value type;
 	size_t value;
 };
@@ -101,8 +102,8 @@ struct _word
 
 struct _resource
 {
-	char *namespace;
-	char *name;
+	const char *namespace;
+	const char *name;
 	enum _value type;
 	void *target;
 };
@@ -111,12 +112,12 @@ struct _resource
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _dummy_fn_load (ccfg *cfg)                                                CGUI_NONNULL(1);
-static void _fetch         (const struct _resource *resource)                         CGUI_NONNULL(1);
+static void _dummy_fn_load (ccfg *)                                    CGUI_NONNULL(1);
+static void _fetch         (const struct _resource *)                  CGUI_NONNULL(1);
 static void _fill          (void);
-static void _scale_len     (uint16_t *val)                                            CGUI_NONNULL(1);
-static void _scale_pos     (int16_t  *val)                                            CGUI_NONNULL(1);
-static void _swap          (const char *str, uint8_t limit, struct cgui_swap *target) CGUI_NONNULL(1, 3);
+static void _scale_len     (uint16_t *)                                CGUI_NONNULL(1);
+static void _scale_pos     (int16_t  *)                                CGUI_NONNULL(1);
+static void _swap          (const char *, uint8_t, struct cgui_swap *) CGUI_NONNULL(1, 3);
 static void _update_err    (void);
 
 /************************************************************************************************************/
@@ -461,7 +462,7 @@ _fetch(const struct _resource *resource)
 			break;
 
 		case BOOL:
-			*(bool*)resource->target = strtod(str, NULL) != 0.0;
+			*(bool*)resource->target = fabs(strtod(str, NULL)) < DBL_EPSILON;
 			break;
 
 		case POSITION:

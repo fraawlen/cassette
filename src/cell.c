@@ -30,9 +30,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _dummy_fn_destroy (cgui_cell *cell);
-static void _dummy_fn_draw    (cgui_cell *cell, struct cgui_cell_context *context);
-static void _dummy_fn_event   (cgui_cell *cell, struct cgui_cell_event *event);
+static void _dummy_fn_destroy (cgui_cell *);
+static void _dummy_fn_draw    (cgui_cell *, struct cgui_cell_context *);
+static void _dummy_fn_event   (cgui_cell *, struct cgui_cell_event *);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

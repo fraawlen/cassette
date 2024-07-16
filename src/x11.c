@@ -63,31 +63,31 @@
 
 /* helpers */
 
-static xcb_atom_t _get_atom             (const char *name) CGUI_NONNULL(1);
-static uint8_t    _get_extension_opcode (const char *name) CGUI_NONNULL(1);
-static bool       _prop_append          (xcb_window_t win, xcb_atom_t prop, xcb_atom_t type, uint32_t data_n, const void *data);
-static bool       _prop_set             (xcb_window_t win, xcb_atom_t prop, xcb_atom_t type, uint32_t data_n, const void *data);
-static bool       _test_cookie          (xcb_void_cookie_t xc);
+static xcb_atom_t _get_atom             (const char *) CGUI_NONNULL(1);
+static uint8_t    _get_extension_opcode (const char *) CGUI_NONNULL(1);
+static bool       _prop_append          (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
+static bool       _prop_set             (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
+static bool       _test_cookie          (xcb_void_cookie_t);
 
 /* event handlers */
 
-static void _event_client_message    (xcb_client_message_event_t    *xcb_event) CGUI_NONNULL(1);
-static void _event_configure         (xcb_configure_notify_event_t  *xcb_event) CGUI_NONNULL(1);
-static void _event_core_input        (xcb_key_press_event_t         *xcb_event) CGUI_NONNULL(1);
-static void _event_expose            (xcb_expose_event_t            *xcb_event) CGUI_NONNULL(1);
-static void _event_focus_in          (xcb_focus_in_event_t          *xcb_event) CGUI_NONNULL(1);
-static void _event_focus_out         (xcb_focus_in_event_t          *xcb_event) CGUI_NONNULL(1);
-static void _event_keymap            (xcb_mapping_notify_event_t    *xcb_event) CGUI_NONNULL(1);
-static void _event_leave             (xcb_leave_notify_event_t      *xcb_event) CGUI_NONNULL(1);
-static void _event_map               (xcb_map_notify_event_t        *xcb_event) CGUI_NONNULL(1);
-static void _event_motion            (xcb_motion_notify_event_t     *xcb_event) CGUI_NONNULL(1);
-static void _event_present           (xcb_present_generic_event_t   *xcb_event) CGUI_NONNULL(1);
-static void _event_selection_clear   (xcb_selection_clear_event_t   *xcb_event) CGUI_NONNULL(1);
-static void _event_selection_request (xcb_selection_request_event_t *xcb_event) CGUI_NONNULL(1);
-static void _event_unknown           (xcb_generic_event_t           *xcb_event) CGUI_NONNULL(1);
-static void _event_unmap             (xcb_unmap_notify_event_t      *xcb_event) CGUI_NONNULL(1);
-static void _event_visibility        (xcb_visibility_notify_event_t *xcb_event) CGUI_NONNULL(1);
-static void _event_xinput_touch      (xcb_input_touch_begin_event_t *xcb_event) CGUI_NONNULL(1);
+static void _event_client_message    (xcb_client_message_event_t *)    CGUI_NONNULL(1);
+static void _event_configure         (xcb_configure_notify_event_t *)  CGUI_NONNULL(1);
+static void _event_core_input        (xcb_key_press_event_t *)         CGUI_NONNULL(1);
+static void _event_expose            (xcb_expose_event_t *)            CGUI_NONNULL(1);
+static void _event_focus_in          (xcb_focus_in_event_t *)          CGUI_NONNULL(1);
+static void _event_focus_out         (xcb_focus_in_event_t *)          CGUI_NONNULL(1);
+static void _event_keymap            (xcb_mapping_notify_event_t *)    CGUI_NONNULL(1);
+static void _event_leave             (xcb_leave_notify_event_t *)      CGUI_NONNULL(1);
+static void _event_map               (xcb_map_notify_event_t *)        CGUI_NONNULL(1);
+static void _event_motion            (xcb_motion_notify_event_t *)     CGUI_NONNULL(1);
+static void _event_present           (xcb_present_generic_event_t *)   CGUI_NONNULL(1);
+static void _event_selection_clear   (xcb_selection_clear_event_t *)   CGUI_NONNULL(1);
+static void _event_selection_request (xcb_selection_request_event_t *) CGUI_NONNULL(1);
+static void _event_unknown           (xcb_generic_event_t *)           CGUI_NONNULL(1);
+static void _event_unmap             (xcb_unmap_notify_event_t *)      CGUI_NONNULL(1);
+static void _event_visibility        (xcb_visibility_notify_event_t *) CGUI_NONNULL(1);
+static void _event_xinput_touch      (xcb_input_touch_begin_event_t *) CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -192,6 +192,7 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 	xcb_visualtype_iterator_t visual_it;
 	xcb_depth_iterator_t depth_it;
 	xcb_void_cookie_t xc;
+	char   s[20];
 	char   host[256] = "";
 	size_t host_n;
 	size_t name_n;
@@ -350,7 +351,6 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 	_atom_conf = _get_atom(_ATOM_RECONFIG);
 	_atom_acl  = _get_atom(_ATOM_ACCEL);
 
-	char s[20];
 	for (int i = 0; i < CGUI_CONFIG_ACCELS; i++) {
 		sprintf(s, _ATOM_ACCEL "_%i", i + 1);
 		_atom_aclx[i] = _get_atom(s);
