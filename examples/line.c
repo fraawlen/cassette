@@ -34,7 +34,7 @@ static void _print (const struct cline line);
 int
 main(void)
 {
-	struct cline line = CLINE_DEFAULT;
+	struct cline line = CLINE_I8;
 	cstr *str = cstr_create();
 
 	cline_limit(&line, 20, -20);
