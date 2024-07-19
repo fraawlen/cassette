@@ -57,9 +57,16 @@ struct cline
 /************************************************************************************************************/
 
 /**
- * Macro to initialize a cline with default values.
+ * Macros to initialize a cline with default values.
  */
-#define CLINE_DEFAULT (struct cline){.origin = 0, .length = 0, .min = INT64_MIN, .max = INT64_MAX}
+#define CLINE_I64 (struct cline){ .origin = 0, .length = 0, .min = INT64_MIN, .max = INT64_MAX  }
+#define CLINE_I32 (struct cline){ .origin = 0, .length = 0, .min = INT32_MIN, .max = INT32_MAX  }
+#define CLINE_I16 (struct cline){ .origin = 0, .length = 0, .min = INT16_MIN, .max = INT16_MAX  }
+#define CLINE_I8  (struct cline){ .origin = 0, .length = 0, .min = INT8_MIN,  .max = INT8_MAX   }
+#define CLINE_U64 (struct cline){ .origin = 0, .length = 0, .min = 0,         .max = INT64_MAX  }
+#define CLINE_U32 (struct cline){ .origin = 0, .length = 0, .min = 0,         .max = UINT32_MAX }
+#define CLINE_U16 (struct cline){ .origin = 0, .length = 0, .min = 0,         .max = UINT16_MAX }
+#define CLINE_U8  (struct cline){ .origin = 0, .length = 0, .min = 0,         .max = UINT8_MAX  }
 
 /************************************************************************************************************/
 /* PROCEDURES ***********************************************************************************************/
