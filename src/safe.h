@@ -23,24 +23,34 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#if __GNUC__ > 4
+	#define HIDDEN __attribute__((visibility ("hidden")))
+#else
+	#define HIDDEN
+#endif
+
 /************************************************************************************************************/
-/* FUNCTIONS ************************************************************************************************/
+/************************************************************************************************************/
 /************************************************************************************************************/
 
 bool
-safe_add(size_t *result, size_t a, size_t b);
+safe_add(size_t *result, size_t a, size_t b)
+HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-safe_div(size_t *result, size_t a, size_t b);
+safe_div(size_t *result, size_t a, size_t b)
+HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-safe_mul(size_t *result, size_t a, size_t b);
+safe_mul(size_t *result, size_t a, size_t b)
+HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-safe_sub(size_t *result, size_t a, size_t b);
+safe_sub(size_t *result, size_t a, size_t b)
+HIDDEN;
