@@ -370,7 +370,7 @@ CSTR_NONNULL(1);
 /************************************************************************************************************/
 
 /**
- * Gets the string's length in bytes, including the NULL terminator.
+ * Gets the string's length in bytes, including the NUL terminator.
  *
  * @param str : String to interact with
  *
@@ -399,7 +399,7 @@ CSTR_NONNULL(1)
 CSTR_PURE;
 
 /**
- * Gets the raw null terminated C string.
+ * Gets the raw NUL terminated C string.
  *
  * @param str : String to interact with
  *
@@ -413,7 +413,7 @@ CSTR_NONNULL(1)
 CSTR_PURE;
 
 /**
- * Gets the raw null terminated C string offseted by 2d coordinates.
+ * Gets the raw NUL terminated C string offseted by 2d coordinates.
  * This function is bounds-protected, so the row and col parameter are capped at the string's height and
  * width respectively, even if SIZE_MAX values are supplied.
  *
@@ -431,7 +431,7 @@ CSTR_NONNULL(1)
 CSTR_PURE;
 
 /**
- * Gets the raw null terminated C string offseted by an specific number of UTF-8 characters.
+ * Gets the raw NUL terminated C string offseted by an specific number of UTF-8 characters.
  * This function is bounds-protected, so the offset parameter is capped at the string's length, even if
  * a SIZE_MAX value is supplied.
  *
@@ -490,7 +490,7 @@ CSTR_NONNULL(1)
 CSTR_PURE;
 
 /**
- * Gets the number of UTF-8 characters a string is made of. Unlike cstr_byte_length(), the NULL terminator is
+ * Gets the number of UTF-8 characters a string is made of. Unlike cstr_byte_length(), the NUL terminator is
  * not included.
  *
  * @param str : String to interact with
@@ -539,7 +539,7 @@ CSTR_NONNULL(1, 2)
 CSTR_PURE;
 
 /**
- * Gets the number of columns. The NULL terminator and newline characters are not included.
+ * Gets the number of columns. The NUL terminator and newline characters are not included.
  *
  * @param str : String to interact with
  *

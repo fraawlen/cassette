@@ -29,9 +29,19 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+struct _slot
+{
+	unsigned int id;
+	int16_t x;
+	int16_t y;
+	void *ptr;
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 struct cinputs
 {
-	struct cinputs_input *slots;
+	struct _slot *slots;
 	size_t n;
 	size_t n_alloc;
 	void *default_ptr;
@@ -90,7 +100,7 @@ cinputs_clone(const cinputs *inputs)
 		return CINPUTS_PLACEHOLDER;
 	}
 
-	memcpy(inputs_new->slots, inputs->slots, inputs->n * sizeof(struct cinputs_input));
+	memcpy(inputs_new->slots, inputs->slots, inputs->n * sizeof(struct _slot));
 
 	inputs_new->default_ptr = inputs->default_ptr;
 	inputs_new->n           = inputs->n;
@@ -173,15 +183,15 @@ cinputs_find(const cinputs *inputs, unsigned int id, size_t *index)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-struct cinputs_input
-cinputs_get(const cinputs *inputs, size_t index)
+unsigned int
+cinputs_id(const cinputs *inputs, size_t index)
 {
 	if (inputs->err || index >= inputs->n)
 	{
-		return (struct cinputs_input){.id = 0, .ptr = inputs->default_ptr, .x = 0, .y = 0};
+		return 0;
 	}
 
-	return inputs->slots[index];
+	return inputs->slots[index].id;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -195,6 +205,19 @@ cinputs_load(const cinputs *inputs)
 	}
 
 	return inputs->n;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void *
+cinputs_ptr(const cinputs *inputs, size_t index)
+{
+	if (inputs->err || index >= inputs->n)
+	{
+		return inputs->default_ptr;
+	}
+
+	return inputs->slots[index].ptr;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -223,7 +246,7 @@ cinputs_pull_index(cinputs *inputs, size_t index)
 	memmove(
 		inputs->slots + index,
 		inputs->slots + index + 1,
-		(--inputs->n - index) * sizeof(struct cinputs_input));
+		(--inputs->n - index) * sizeof(struct _slot));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -237,7 +260,7 @@ cinputs_push(cinputs *inputs, unsigned int id, int x, int y, void *ptr)
 	}
 
 	cinputs_pull_id(inputs, id);
-	if (inputs->n < inputs->n_alloc)
+	if (inputs->n >= inputs->n_alloc)
 	{
 		return;
 	}
@@ -283,6 +306,33 @@ cinputs_set_default_ptr(cinputs *inputs, void *ptr)
 	inputs->default_ptr = ptr;
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+int16_t
+cinputs_x(const cinputs *inputs, size_t index)
+{
+	if (inputs->err || index >= inputs->n)
+	{
+		return 0;
+	}
+
+	return inputs->slots[index].x;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+int16_t
+cinputs_y(const cinputs *inputs, size_t index)
+{
+	if (inputs->err || index >= inputs->n)
+	{
+		return 0;
+	}
+
+	return inputs->slots[index].y;
+}
+
+
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
@@ -290,7 +340,7 @@ cinputs_set_default_ptr(cinputs *inputs, void *ptr)
 static bool
 _resize(cinputs *inputs, size_t n)
 {
-	struct cinputs_input *tmp;
+	struct _slot *tmp;
 
 	if (n == 0)
 	{
@@ -298,13 +348,13 @@ _resize(cinputs *inputs, size_t n)
 		return false;
 	}
 
-	if (!safe_mul(NULL, n, sizeof(struct cinputs_input)))
+	if (!safe_mul(NULL, n, sizeof(struct _slot)))
 	{
 		inputs->err |= CERR_OVERFLOW;
 		return false;
 	}
 
-	if (!(tmp = realloc(inputs->slots, n * sizeof(struct cinputs_input))))
+	if (!(tmp = realloc(inputs->slots, n * sizeof(struct _slot))))
 	{
 		inputs->err |= CERR_MEMORY;
 		return false;

@@ -239,7 +239,7 @@ CBOOK_NONNULL(1);
 
 /**
  * Appends a new string (called 'word') to the book and increments the book word count (and possibly group
- * count) by 1 as well as the character count by the string's length (NULL terminator included). The book will
+ * count) by 1 as well as the character count by the string's length (NUL terminator included). The book will
  * automatically extend its allocated memory to accommodate the new word.
  * 
  * @param book       : Book to interact with
@@ -306,7 +306,7 @@ CBOOK_NONNULL(1)
 CBOOK_PURE;
 
 /**
- * Gets the total length of the book (all NULL terminators included).
+ * Gets the total length of the book (all NUL terminators included).
  *
  * @param book : Book to interact with
  *

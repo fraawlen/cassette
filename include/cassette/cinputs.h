@@ -54,22 +54,6 @@ extern "C" {
  */
 typedef struct cinputs cinputs;
 
-/**
- * Details of an input.
- *
- * @param id  : Identifier
- * @param ptr : Arbitrary pointer to something related to the input
- * @param x   : X coordinate
- * @param y   : Y coordinate
- */
-struct cinputs_input
-{
-	unsigned int id;
-	int16_t x;
-	int16_t y;
-	void *ptr;
-};
-
 /************************************************************************************************************/
 /* GLOBALS **************************************************************************************************/
 /************************************************************************************************************/
@@ -248,17 +232,17 @@ cinputs_find(const cinputs *inputs, unsigned int id, size_t *index)
 CINPUTS_NONNULL(1);
 
 /** 
- * Gets the input at the given index. If index is out of bounds, the default return_err value is returned.
+ * Gets the input's id at the given index. If index is out of bounds, the default return_err value is
+ * returned.
  *
  * @param inputs : Input tracker to interact with
  * @param index : Index within the array
  *
  * @return     : Input
- * @return_err : Input whose values are all set to 0, except for the .ptr field is its default value was set
- *               with cinputs_set_default_ptr().
+ * @return_err : 0
  */
-struct cinputs_input
-cinputs_get(const cinputs *inputs, size_t index)
+unsigned int
+cinputs_id(const cinputs *inputs, size_t index)
 CINPUTS_NONNULL(1)
 CINPUTS_PURE;
 
@@ -272,6 +256,52 @@ CINPUTS_PURE;
  */
 size_t
 cinputs_load(const cinputs *inputs)
+CINPUTS_NONNULL(1)
+CINPUTS_PURE;
+
+/** 
+ * Gets the input's associated pointer at the given index. If index is out of bounds, the default return_err
+ * value is returned.
+ *
+ * @param inputs : Input tracker to interact with
+ * @param index : Index within the array
+ *
+ * @return     : Pointer
+ * @return_err : Pointer value set with cinputs_set_default_ptr(). NULL can still be returned if the default
+ *               pointer value was not set or if CREF_PLACHOLDER is passed as the ref parameter.
+ */
+void *
+cinputs_ptr(const cinputs *inputs, size_t index)
+CINPUTS_NONNULL(1)
+CINPUTS_PURE;
+
+/** 
+ * Gets the input's X coordinate at the given index. If index is out of bounds, the default return_err value
+ * is returned.
+ *
+ * @param inputs : Input tracker to interact with
+ * @param index : Index within the array
+ *
+ * @return     : Input
+ * @return_err : 0
+ */
+int16_t
+cinputs_x(const cinputs *inputs, size_t index)
+CINPUTS_NONNULL(1)
+CINPUTS_PURE;
+
+/** 
+ * Gets the input's Y coordinate at the given index. If index is out of bounds, the default return_err value
+ * is returned.
+ *
+ * @param inputs : Input tracker to interact with
+ * @param index : Index within the array
+ *
+ * @return     : Input
+ * @return_err : 0
+ */
+int16_t
+cinputs_y(const cinputs *inputs, size_t index)
 CINPUTS_NONNULL(1)
 CINPUTS_PURE;
 
