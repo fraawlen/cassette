@@ -35,7 +35,7 @@
 /************************************************************************************************************/
 
 double
-crand_get(crand *rand, double lim_1, double lim_2)
+crand_next(crand *rand, double lim_1, double lim_2)
 {
 	*rand = (A * (*rand) + C) % M;
 
@@ -47,5 +47,5 @@ crand_get(crand *rand, double lim_1, double lim_2)
 void
 crand_seed(crand *rand, unsigned long long int seed)
 {
-	*rand = crand_get(&seed, 0, MAX);
+	*rand = crand_next(&seed, 0, MAX);
 }

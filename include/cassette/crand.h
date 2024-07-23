@@ -53,7 +53,7 @@ typedef unsigned long long int crand;
  * @return : Generated random value
  */
 double
-crand_get(crand *rand, double lim_1, double lim_2)
+crand_next(crand *rand, double lim_1, double lim_2)
 CRAND_NONNULL(1);
 
 /**
