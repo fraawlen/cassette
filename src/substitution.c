@@ -441,7 +441,7 @@ _math(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result
 			break;
 
 		case TOKEN_OP_RANDOM:
-			result = crand_get(ctx->rand, d[0], d[1]);
+			result = crand_next(ctx->rand, d[0], d[1]);
 			break;
 
 		/* 3 parameters */
