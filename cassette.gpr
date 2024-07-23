@@ -1,0 +1,24 @@
+library project Cassette is
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	for Create_Missing_Dirs use "True";
+	
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	for Source_Dirs use ("src");
+	for Object_Dir  use "build/obj";
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	for Library_Name use "cada";
+	for Library_Dir  use "build/lib";
+	for Library_Kind use "static";
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	Linker_Switches := ("-L/usr/lib", "-lcobj", "-lccfg", "-lm");
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+end Cassette;
