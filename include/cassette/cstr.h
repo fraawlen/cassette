@@ -306,7 +306,7 @@ CSTR_NONNULL(1);
  * @param digits : Number of decimal digits
  */
 void
-cstr_set_double_digits(cstr *str, int digits)
+cstr_set_precision(cstr *str, int precision)
 CSTR_NONNULL(1);
 
 /**

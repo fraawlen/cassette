@@ -46,7 +46,7 @@ struct cstr
 	size_t n_alloc;
 	size_t n_codepoints;
 	size_t tab_width;
-	int digits;
+	int precision;
 	enum cerr err;
 };
 
@@ -73,7 +73,7 @@ cstr cstr_placeholder_instance =
 	.n_alloc      = 0,
 	.n_codepoints = 0,
 	.tab_width    = 0,
-	.digits       = 0,
+	.precision    = 0,
 	.err          = CERR_INVALID,
 };
 
@@ -185,7 +185,7 @@ cstr_clone(const cstr *str)
 	str_new->n_codepoints = str->n_codepoints;
 	str_new->n_alloc      = str->n_alloc;
 	str_new->tab_width    = str->tab_width;
-	str_new->digits       = str->digits;
+	str_new->precision    = str->precision;
 	str_new->err          = CERR_NONE;
 	
 	return str_new;
@@ -278,7 +278,7 @@ cstr_create(void)
 	str->chars[0]  = '\0';
 	str->n_alloc   = 1;
 	str->tab_width = 1;
-	str->digits    = 0;
+	str->precision = 0;
 	str->err       = CERR_NONE;
 	
 	_update_n_values(str);
@@ -366,7 +366,7 @@ cstr_insert_double(cstr *str, double d, size_t offset)
 {
 	char tmp[64];
 
-	snprintf(tmp, 64, "%.*f", str->digits, d);
+	snprintf(tmp, 64, "%.*f", str->precision, d);
 
 	cstr_insert_raw(str, tmp, offset);
 }
@@ -546,14 +546,14 @@ cstr_repair(cstr *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cstr_set_double_digits(cstr *str, int digits)
+cstr_set_precision(cstr *str, int precision)
 {
 	if (str->err)
 	{
 		return;
 	}
 
-	str->digits = digits;
+	str->precision = precision;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
