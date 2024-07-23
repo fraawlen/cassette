@@ -44,9 +44,11 @@ package Cassette.Inputs is
 	-- button presses in the order they get added. The array that holds them is fixed size. If that
 	-- array is full, new inputs get ignored.
 	--
-	-- Some methods, upon failure, will set an error bit in an internal error bitfield. The error can
-	-- be checked with Error(). If any error is set all inputs tracke methods will exit early with
-	-- default return values and no side-effects. It's possible to clear errors with Repair().
+	-- Some methods, upon failure, will set an error bit in an internal error bitfield and raise an
+	-- exception. The exact error code can be checked with Error(). If any error is set all methods
+	-- will exit early with default return values and no side-effects. It's possible to clear errors
+	-- with Repair().
+
 	--
 	type T is tagged limited private;
 
@@ -91,7 +93,7 @@ package Cassette.Inputs is
 		Self       : out T;
 		Max_Inputs : in  Size);
 
-	-- Destroys the input tracker.
+	-- Destroys the input tracker and frees memory.
 	--
 	-- [Params]
 	--

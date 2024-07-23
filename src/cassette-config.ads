@@ -46,9 +46,10 @@ package Cassette.Config is
 	-- setting target values as the resources get read and resolved so that on a source file is read,
 	-- a configuration object can be shared and re-used in software plugins.
 	--
-	-- Some methods, upon failure, will set an error bit in an internal error bitfield. The error can
-	-- be checked with Error(). If any error is set all inputs tracke methods will exit early with
-	-- default return values and no side-effects. It's possible to clear errors with Repair().
+	-- Some methods, upon failure, will set an error bit in an internal error bitfield and raise an
+	-- exception. The exact error code can be checked with Error(). If any error is set all methods
+	-- will exit early with default return values and no side-effects. It's possible to clear errors
+	-- with Repair().
 	--
 	type T is tagged limited private;
 
@@ -89,7 +90,7 @@ package Cassette.Config is
 	procedure Create (
 		Self : out T);
 
-	-- Destroys the config.
+	-- Destroys the config and frees memory.
 	--
 	-- [Params]
 	--
@@ -135,7 +136,7 @@ package Cassette.Config is
 	--
 	-- [Example]
 	--
-	--	Conf.Fetch("something", "something");
+	--	Conf.Fetch ("something", "something");
 	--	while Conf.Iterate loop
 	--		Put_Line (Conf.Resource);
 	--	end loop;

@@ -316,7 +316,7 @@ package body Cassette.Config is
 
 	function Resource (Self : in T) Return String
 	is
-		function Fn (Data : System.Address) return Interfaces.C.Strings.chars_ptr
+		function Fn (Data : System.Address) return C.Strings.chars_ptr
 			with Import        => True, 
 			     Convention    => C, 
 			     External_Name => "ccfg_resource";
