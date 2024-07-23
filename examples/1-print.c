@@ -77,7 +77,7 @@ main(void)
 	_print_resources("example-1", "e");
 	_print_resources("example-1", "f");
 	_print_resources("example-1", "g");
-	_print_resources("example-1", "h"); /* expected to not be found */
+	_print_resources("example-1", "h");
 	_print_resources("example-9", "i"); /* expected to not be found */
 
 	/* End */

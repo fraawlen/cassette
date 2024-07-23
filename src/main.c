@@ -57,21 +57,14 @@ ccfg ccfg_placeholder_instance =
 /************************************************************************************************************/
 
 bool
-ccfg_can_open_sources(const ccfg *cfg, size_t *index, const char **filename)
+ccfg_can_open_sources(const ccfg *cfg, size_t *index)
 {
-	const char *str;
-
-	if (cfg->err || (str = _select_source(cfg, index))[0] == '\0')
+	if (cfg->err)
 	{
 		return false;
 	}
 
-	if (filename)
-	{
-		*filename = str;
-	}
-
-	return true;
+	return _select_source(cfg, index)[0] != '\0';
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

@@ -48,7 +48,7 @@ extern "C" {
  * Opaque config object that holds all settings like sources and parameters as well as resolved parsed
  * resources. A decision was made to use a parser that saves all resources instead of setting target values
  * as the resources get read and resolved so that on a source file is read, a configuration object can be
- * shared and re-used in software plygins.
+ * shared and re-used in software plugins.
  *
  * Some methods, upon failure, will set an error bit in an internal error bitfield. The error can be checked
  * with ccfg_error(). If any error is set all config methods will exit early with default return values and
@@ -124,21 +124,21 @@ CCFG_NONNULL(1);
 	)(CFG, NAME, VAL)
 
 /**
- * Removes all parsed resources.
- *
- * @param cfg : Config instance to interact with
- */
-void
-ccfg_clear_resources(ccfg *cfg)
-CCFG_NONNULL(1);
-
-/**
  * Removes all added parameters.
  *
  * @param cfg : Config instance to interact with
  */
 void
 ccfg_clear_params(ccfg *cfg)
+CCFG_NONNULL(1);
+
+/**
+ * Removes all parsed resources.
+ *
+ * @param cfg : Config instance to interact with
+ */
+void
+ccfg_clear_resources(ccfg *cfg)
 CCFG_NONNULL(1);
 
 /**
@@ -177,9 +177,10 @@ CCFG_NONNULL(1, 2, 3);
  * false if the iterator cannot be incremented because it has already reached the last resource value or
  * because the config has an error.
  *
- * @param cfg Config instance to interact with
+ * @param cfg : Config instance to interact with
  *
- * @return True is the next value could be picked, false otherwhise.
+ * @return     : True is the next value could be picked, false otherwhise.
+ * @return_err : False
  */
 bool
 ccfg_iterate(ccfg *cfg)
@@ -274,18 +275,17 @@ CCFG_NONNULL(1);
 /************************************************************************************************************/
 
 /**
- * Returns true if any added source file can be opened up and read. Moreover, if index and filename parameters
- * are provided, this function will write into them the index and name of the first source that was opened.
+ * Returns true if any added source file can be opened up and read. Moreover, if the index parameter is
+ * provided, this function will write into it the rank of the source file that was opened.
  *
  * @param cfg      : Config instance to interact with
  * @param index    : Optional, source rank
- * @param filename : Optional, source filename
  *
  * @return     : Source availability
  * @return_err : False
  */
 bool
-ccfg_can_open_sources(const ccfg *cfg, size_t *index, const char **filename)
+ccfg_can_open_sources(const ccfg *cfg, size_t *index)
 CCFG_NONNULL(1);
 
 /**
