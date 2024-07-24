@@ -46,7 +46,7 @@ extern "C" {
 /**
  * Opawue dictionary object. It's implemented using the FNV1-A hash function and collisions are resolved using
  * linear probing. A dictionary can automatically grow to maintain a maximum load factor (set by default to
- * 0.6). Values are retrieved using both a NULL terminated string key and a group value.
+ * 0.6). Values are retrieved using both a NUL terminated string key and a group value.
  *
  * Some methods, upon failure, will set an error bit in an internal error bitfield. The error can be checked
  * with cdict_error(). If any error is set all dictionary methods will exit early with default return values
@@ -163,7 +163,7 @@ CDICT_NONNULL(1);
  * allocated slots. Default value = 0.6. Values outside of the [0.0 1.0], 0.0 excluded, are illegal.
  *
  * @param dict        : Dictionary to interact with
- * @param laod_factor : Maximum load factor to set
+ * @param load_factor : Maximum load factor to set
  *
  * @error CERR_OVERFLOW : The size of the resulting dictionary will be > SIZE_MAX
  * @error CERR_MEMORY   : Failed memory allocation

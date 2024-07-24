@@ -73,8 +73,6 @@ main(void)
 		}
 	}
 
-	/* Dict operations */
-
 	printf(">> %zu\n", cbook_group_length(_book, 0));
 	printf(">> %zu\n", cbook_group_length(_book, 1));
 	printf(">> %zu\n", cbook_group_length(_book, 2));
@@ -82,6 +80,8 @@ main(void)
 	printf(">> %zu\n", cbook_group_length(_book, 4));
 
 	printf(">> %s\n", cbook_word_in_group(_book, 3, 0));
+
+	/* Dict operations */
 
 	cdict_write(_dict, "test", 0, 12);
 	cdict_write(_dict, "test", 1, 32);

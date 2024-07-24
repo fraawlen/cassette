@@ -184,7 +184,8 @@ CINPUTS_NONNULL(1);
  * @param max_inputs : Maximum number of inputs to track at a time. 0 is an illegal value.
  *
  * @error CERR_OVERFLOW : The size of the resulting input tracking array will be > SIZE_MAX
- * @error CERR_INVALID  : Failed memory allocation
+ * @error CERR_MEMORY   : Failed memory allocation
+ * @error CERR_PARAM    : Illegal value
  */
 void
 cinputs_resize(cinputs *inputs, size_t max_inputs)
