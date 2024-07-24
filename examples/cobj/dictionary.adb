@@ -37,7 +37,7 @@ is
 	begin
 
 		S.Clear;
-		S.Append (Float (D.Load_Factor));
+		S.Append (D.Load_Factor);
 
 		Put ("Load:");
 		Put (D.Load'Image & " used slots (");

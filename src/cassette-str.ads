@@ -56,9 +56,9 @@ package Cassette.Str is
 
 	--  Numerics.
 	--
-	type Size      is new C.size_t;
-	type Index     is new C.size_t;
-	type Precision is new C.int range 0 .. 16;
+	subtype Size      is C.size_t;
+	subtype Index     is C.size_t;
+	subtype Precision is C.int range 0 .. 16;
 
 	-------------------------------------------------------------------------------------------------
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------

@@ -54,10 +54,10 @@ package Cassette.Inputs is
 
 	--  Numerics.
 	--
-	type Identifier is new C.unsigned;
-	type Size       is new C.size_t;
-	type Index      is new C.size_t;
-	type Position   is new Integer range -(2 ** 15) .. (2 ** 15 - 1);
+	subtype Identifier is C.unsigned;
+	subtype Size       is C.size_t;
+	subtype Index      is C.size_t;
+	subtype Position   is Integer range -(2 ** 15) .. (2 ** 15 - 1);
 
 	-------------------------------------------------------------------------------------------------
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------

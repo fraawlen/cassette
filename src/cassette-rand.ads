@@ -28,7 +28,7 @@ package Cassette.Rand is
 
 	-- Numerics.
 	--
-	type Seed_Value is new C.unsigned_long_long;
+	subtype Seed_Value is C.unsigned_long_long;
 
 	-- Container type that keeps track of the LCG (rand48-based) state.
 	--

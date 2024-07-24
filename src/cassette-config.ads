@@ -54,8 +54,8 @@ package Cassette.Config is
 
 	--  Numerics.
 	--
-	type Size  is new C.size_t;
-	type Index is new C.size_t;
+	subtype Size  is C.size_t;
+	subtype Index is C.size_t;
 
 	-------------------------------------------------------------------------------------------------
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------

@@ -54,10 +54,10 @@ package Cassette.Dict is
 
 	--  Numerics.
 	--
-	type Group_Value is new C.size_t;
-	type Slot_Value  is new C.size_t;
-	type Size        is new C.size_t;
-	type Ratio       is new Float range Float'Succ (0.0) .. 1.0;
+	subtype Group_Value is C.size_t;
+	subtype Slot_Value  is C.size_t;
+	subtype Size        is C.size_t;
+	subtype Ratio       is Float range Float'Succ (0.0) .. 1.0;
 
 	-------------------------------------------------------------------------------------------------
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
