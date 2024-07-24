@@ -48,7 +48,7 @@ package body Cassette.Inputs is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Create (Self : out T; Max_Inputs : in Size)
+	procedure Create (Self : out T; Max_Inputs : in Size_Input)
 	is
 		function Fn (Max_Inputs : size_t) return System.Address
 			with Import        => True, 
@@ -152,7 +152,7 @@ package body Cassette.Inputs is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Resize (Self : in out T; Max_Inputs : in Size)
+	procedure Resize (Self : in out T; Max_Inputs : in Size_Input)
 	is
 		procedure Fn (Data : System.Address; Max_Inputs : size_t)
 			with Import        => True, 

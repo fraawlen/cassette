@@ -4,14 +4,53 @@ Cassette Ada (CADA) is a set of first-party thick Ada bindings to Cassette libra
 
 The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems, and except for the compiler and build system, is not dependent on third-party software.
 
+Notice
+------
+
+This is a WIP. Not all Cassette functions have been ported yet. Moreover, the currently available bindings may be subject to changes. The following list shows the available bindings.
+
+- COBJ
+
+| Available | Header    |
+| --------- | --------- |
+|           | cbook.h   |
+|           | ccolor.h  |
+| Y         | cdict.h   |
+| Y         | cerr.h    |
+| Y         | cinputs.h |
+|           | cline.h   |
+| Y         | crand.h   |
+|           | cref.h    |
+| Y         | cstr.h    | 
+
+- CCFG
+	
+| Available | Header    |
+| --------- | --------- |
+| Y         | ccf.h     |
+
+- CGUI
+
+	- Not started yet.
+
+Features
+--------
+
+- Encapsulation of C pointer handles inside tagged limited private records.
+- Usage of Ada's exceptions when an object errors.
+- Convertion from C char array strings to Ada native strings.
+- Subtyping of C numeral values + ranges.
+- C function namespaces pushed into Ada packages.
+
+TODO details.
+
 Dependencies
 ------------
 
 - Tools :
 
 	- Ada 2012 compiler
-	- Gprbuild
-	- Xxd (optional, is only needed to build examples)
+	- [Gprbuild](https://github.com/AdaCore/gprbuild)
 
 - First-party libraries :
 
@@ -26,6 +65,8 @@ Installation
 gprbuild cassette.gpr
 gprbuild examples.gpr
 ```
+
+TODO detail.
 
 Mirrors
 -------

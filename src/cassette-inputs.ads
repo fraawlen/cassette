@@ -55,9 +55,10 @@ package Cassette.Inputs is
 	--  Numerics.
 	--
 	subtype Identifier is C.unsigned;
-	subtype Size       is C.size_t;
 	subtype Index      is C.size_t;
-	subtype Position   is Integer range -(2 ** 15) .. (2 ** 15 - 1);
+	subtype Size       is C.size_t;
+	subtype Size_Input is C.size_t range          1 .. C.size_t'Last;
+	subtype Position   is Integer  range -(2 ** 15) .. (2 ** 15 - 1);
 
 	-------------------------------------------------------------------------------------------------
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
@@ -91,7 +92,7 @@ package Cassette.Inputs is
 	--
 	procedure Create (
 		Self       : out T;
-		Max_Inputs : in  Size);
+		Max_Inputs : in  Size_Input);
 
 	-- Destroys the input tracker and frees memory.
 	--
@@ -173,16 +174,16 @@ package Cassette.Inputs is
 	-- [Params]
 	--
 	-- 	Self       : Input tracker to interact with
-	-- 	Max_Inputs : Maximum number of inputs to track at a time. 0 is an illegal value.
+	-- 	Max_Inputs : Maximum number of inputs to track at a time
 	--
 	-- [Errors]
 	--
 	-- 	OVERFLOW : The size of the resulting input tracking array will be > Size'Last
-	-- 	INVALID  : Failed memory allocation
+	-- 	MEMPRY   : Failed memory allocation
 	--
 	procedure Resize (
 		Self       : in out T;
-		Max_Inputs : in Size);
+		Max_Inputs : in Size_Input);
 
 	-- Sets a new default address value to return when Get() cannot return a proper value.
 	--
