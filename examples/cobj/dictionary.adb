@@ -17,37 +17,51 @@
 --------------------------------------------------------------------------------------------------------------
 
 with Ada.Text_IO;   use Ada.Text_IO;
-with Cassette.Rand; use Cassette;
+with Cassette.Dict; use Cassette;
 with Cassette.Str;
+with Cassette.Error;
 
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-procedure Random
+procedure Dictionary
 is
 
-	R : Rand.T;
+	D : Dict.T;
 	S : Str.T;
 	
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 	
-	procedure Sequence (Seed : in Rand.Seed_Value; Min : in Float; Max : in Float) is
+	procedure Print_Stats is
 	begin
 
-		R.Seed (Seed);
+		S.Clear;
+		S.Append (Float (D.Load_Factor));
 
-		Put ("Seed" & Seed'Image & ":");
-		for I in 1 .. 6
-		loop
-			S.Clear;
-			S.Append (R.Next(Min, Max));
-			S.Pad    ("_", 0, 7);
-			Put      (" " & S.Chars);
-		end loop;
+		Put ("Load:");
+		Put (D.Load'Image & " used slots (");
+		Put (S.Chars      & " load factor)");
 		New_Line;
 
-	end Sequence;
+	end Print_Stats;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+	
+	procedure Print_Value (Key : in String; Group : in Dict.Group_Value)
+	is
+		Value : Dict.Slot_Value;
+	begin
+
+		if D.Find (Key, Group, Value)
+		then
+			Put (Key         & ", ");
+			Put (Group'Image & ", ");
+			Put (Value'Image);
+			New_Line;
+		end if;
+
+	end Print_Value;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
@@ -55,25 +69,43 @@ begin
 
 	-- Setup
 
+	D.Create;
 	S.Create;
-	S.Set_Precision (2);
+
+	S.Set_Precision (3);
 
 	-- Operations
 
-	Sequence (0,  0.0,   10.0);
-	Sequence (1,  0.0, 1000.0);
-	Sequence (2,  0.0,   10.0);
-	Sequence (3, -1.0,    1.0);
+	D.Write ("test", 0, 12);
+	D.Write ("test", 1, 32);
+	D.Write ("test", 1, 44);
+	D.Write ("AAAA", 0, 99);
+	D.Write ("ASXC", 0, 56);
+
+	D.Erase ("AAAA", 0);
+	D.Clear_Group (0);
+
+	Print_Stats;
+	Print_Value ("test", 0);
+	Print_Value ("test", 1);
+	Print_Value ("AAAA", 0);
+	Print_Value ("ASXC", 0);
 
 	-- End
 
+	D.Destroy;
 	S.Destroy;
 
 exception
+	
+	when E : Dict.E =>
+		Put ("Dictionary errored during operation. Code :");
+		Put (D.Error'Image);
+		New_Line;
 
 	when E : Str.E =>
-		Put ("String errored during operation. Code :" );
+		Put ("String errored during operation. Code :");
 		Put (S.Error'Image);
 		New_Line;
 	
-end Random;
+end Dictionary;

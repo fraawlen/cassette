@@ -8,7 +8,7 @@ project Examples is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	for Main        use ("tracker.adb", "print.adb", "widget.adb", "random.adb");
+	for Main        use ("tracker.adb", "print.adb", "widget.adb", "random.adb", "dictionary.adb");
 	for Source_Dirs use ("examples/cobj", "examples/ccfg");
 	for Object_Dir  use "build/obj";
 	for Exec_Dir    use "build/bin";

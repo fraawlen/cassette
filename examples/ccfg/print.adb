@@ -41,7 +41,8 @@ is
 
 		Put (Namespace & " " & Property);
 		Conf.Fetch (Namespace, Property);
-		while Conf.Iterate loop
+		while Conf.Iterate
+		loop
 			Put (" " & Conf.Resource);
 		end loop;
 		New_Line;

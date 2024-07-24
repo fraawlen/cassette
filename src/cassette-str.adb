@@ -565,5 +565,4 @@ package body Cassette.Str is
 
 	end Check;
 
-
 end Cassette.Str;

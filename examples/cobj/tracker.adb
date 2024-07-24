@@ -31,7 +31,7 @@ is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Print (ID : Inputs.Identifier)
+	procedure Print (ID : in Inputs.Identifier)
 	is
 		I : Inputs.Index;
 	begin

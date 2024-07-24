@@ -127,7 +127,7 @@ package Cassette.Inputs is
 		Self : in out T;
 		ID   : in Identifier);
 
-	-- Untracks an input at the given index. This function has no effects if index is out of bounds.
+	-- Untracks an input at the given index. This procedure has no effects if index is out of bounds.
 	--
 	-- [Params]
 	--
@@ -140,7 +140,7 @@ package Cassette.Inputs is
 
 	-- Adds in input at the end of the input tracking array. If an input with a matching id already
 	-- exists within the array, it is pushed to the end of the array and its Addr, X and Y details
-	-- are updated. This function has no effect if the array is full.
+	-- are updated. This procedure has no effect if the array is full.
 	--
 	-- [Params]
 	--
@@ -177,7 +177,7 @@ package Cassette.Inputs is
 	--
 	-- [Errors]
 	--
-	-- 	OVERFLOW : The size of the resulting input tracking array will be > SIZE_MAX
+	-- 	OVERFLOW : The size of the resulting input tracking array will be > Size'Last
 	-- 	INVALID  : Failed memory allocation
 	--
 	procedure Resize (
@@ -332,9 +332,9 @@ package Cassette.Inputs is
 
 private
 
-	type Inputs is null record;
+	type Cinputs is null record;
 
-	Placeholder : aliased Inputs
+	Placeholder : aliased Cinputs
 		with Import        => True, 
 		     Convention    => C, 
 		     External_Name => "cinputs_placeholder_instance";

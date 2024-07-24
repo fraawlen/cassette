@@ -96,7 +96,7 @@ package Cassette.Str is
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
+	-- 	Self : String to interact with
 	--
 	procedure Destroy (
 		Self : in out T);
@@ -125,8 +125,7 @@ package Cassette.Str is
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Clears the contents of a given string. Allocated memory is not freed, use Destroy() for
-	-- that.
+	-- Clears the contents of a given string. Allocated memory is not freed, use Destroy() for that.
 	--
 	-- [Param]
 	--
@@ -136,8 +135,8 @@ package Cassette.Str is
 		Self : in out T);
 
 	-- Removes a set number of UTF-8 characters at a specific offset.
-	-- This function is bounds-protected, meaning that offset and length parameters will be
-	-- capped at the string's length, even if a Size'Last or Index'Last values are supplied.
+	-- This procedure is bounds-protected, meaning that offset and length parameters will be capped
+	-- at the string's length, even if a Size'Last or Index'Last values are supplied.
 	--
 	-- [Param]
 	--
@@ -151,10 +150,10 @@ package Cassette.Str is
 		Length : in Size);
 
 	-- Insert the contents of Src at a specific offset.
-	-- The string's allocated memory will be automatically extended if needed to accommodate
-	-- the inserted data. This function comes with overlap detection, so a String obtained from
-	-- Chars() can be used. This function is bounds-protected, so the offset parameter is
-	-- capped at the string's length, even if a Index'Last value is supplied.
+	-- The string's allocated memory will be automatically extended if needed to accommodate the
+	-- inserted data. This procedure comes with overlap detection, so a String obtained from Chars()
+	-- can be used. This procedure is bounds-protected, so the offset parameter is capped at the
+	-- string's length, even if a Index'Last value is supplied.
 	--
 	-- [Param]
 	--
@@ -172,12 +171,12 @@ package Cassette.Str is
 		Value  : in T;
 		Offset : in Index);
 
-	-- Converts a float into a string then inserts it at a specific offset. The number of
-	-- digits shown is controlled with Set_Precision().
-	-- The string's allocated memory will be automatically extended if needed to accommodate
-	-- the inserted data. This function comes with overlap detection, so a raw_str obtained
-	-- from Char*() can be used. This function is bounds-protected, so the offset parameter is
-	-- capped at the string's length, even if an Index'Last value is supplied.
+	-- Converts a float into a string then inserts it at a specific offset. The float is represented
+	-- using decimal notation. The number of digits shown is controlled with Set_Precision(). The
+	-- string's allocated memory will be automatically extended if needed to accommodate the inserted
+	-- data. This procedure comes with overlap detection, so a raw_str obtained from Char*() can be
+	-- used. This procedure is bounds-protected, so the offset parameter is capped at the string's
+	-- length, even if an Index'Last value is supplied.
 	--
 	-- [Param]
 	--
@@ -196,10 +195,10 @@ package Cassette.Str is
 		Offset : in Index);
 
 	-- Converts a long into a string then inserts it at a specific offset.
-	-- The string's allocated memory will be automatically extended if needed to accommodate
-	-- the inserted data. This function comes with overlap detection, so a raw_str obtained
-	-- from Char*() can be used. This function is bounds-protected, so the offset parameter is
-	-- capped at the string's length, even if an Index'Last value is supplied.
+	-- The string's allocated memory will be automatically extended if needed to accommodate the
+	-- inserted data. This procedure comes with overlap detection, so a raw_str obtained from Char*()
+	-- can be used. This procedure is bounds-protected, so the offset parameter is capped at the
+	-- string's length, even if an Index'Last value is supplied.
 	--
 	-- [Param]
 	--
@@ -218,10 +217,10 @@ package Cassette.Str is
 		Offset : in Index);
 
 	-- Insert a standard Ada string at a specific offset.
-	-- The string's allocated memory will be automatically extended if needed to accommodate
-	-- the inserted data. This function comes with overlap detection, so a raw_str obtained
-	-- from cChar*() can be used. This function is bounds-protected, so the offset parameter
-	-- is capped at the string's length, even if an Index'Last value is supplied.
+	-- The string's allocated memory will be automatically extended if needed to accommodate the
+	-- inserted data. This procedure comes with overlap detection, so a raw_str obtained from Char*()
+	-- can be used. This procedure is bounds-protected, so the offset parameter is capped at the
+	-- string's length, even if an Index'Last value is supplied.
 	--
 	-- [Param]
 	--
@@ -239,12 +238,11 @@ package Cassette.Str is
 		Value  : in String;
 		Offset : in Index);
 
-	-- Pads a string with a repeated sequence of characters set by pattern until its length
-	-- matches length_target. This function has no effects if the string's length is bigger
-	-- than the target length or if the given pattern is empty. The sequence of padding
-	-- characters will be inserted at the given offset. This function is bounds-protected, so
-	-- the offset parameter is capped at the string's length, even if an Index'Last value is
-	-- supplied.
+	-- Pads a string with a repeated sequence of characters set by pattern until its length matches 
+	-- length_target. This procedure has no effects if the string's length is bigger than the target
+	-- length or if the given pattern is empty. The sequence of padding characters will be inserted
+	-- at the given offset. This procedure is bounds-protected, so the offset parameter is capped at
+	-- the string's length, even if an Index'Last value is supplied.
 	--
 	-- [Example]
 	--
@@ -273,9 +271,9 @@ package Cassette.Str is
 		Offset        : in Index;
 		Length_Target : in Size);
 
-	-- Preallocates a set number of bytes to avoid triggering multiple automatic reallocs when
-	-- adding data to the string. This function has no effect if the requested number of bytes
-	-- is smaller than the previously allocated number.
+	-- Preallocates a set number of bytes to avoid triggering multiple automatic reallocs when adding
+	-- data to the string. This procedure has no effect if the requested number of bytes is smaller
+	-- than the previously allocated number.
 	--
 	-- [Param]
 	--
@@ -290,8 +288,8 @@ package Cassette.Str is
 		Self        : in out T;
 		Byte_Length : in Size);
 
-	-- Clears errors and puts the string back into an usable state. The only unrecoverable
-	-- error is CSTR_INVALID.
+	-- Clears errors and puts the string back into an usable state. The only unrecoverable error is
+	-- INVALID.
 	--
 	-- [Param]
 	--
@@ -300,8 +298,8 @@ package Cassette.Str is
 	procedure Repair (
 		Self : in out T);
 
-	-- Sets the number of digits to show when a double value gets inserted. The effects of the
-	-- int values are limited by the C printf's "%.*Lf" operator.
+	-- Sets the number of digits to show when a double value gets inserted. The effects of the int
+	-- values are limited by the C printf's "%.*Lf" operator.
 	--
 	-- [Param]
 	--
@@ -312,7 +310,7 @@ package Cassette.Str is
 		Self  : in out T;
 		Value : in Precision);
 
-	-- Sets the width of a '\t' character. This will affect the results of 2d functions like
+	-- Sets the width of a '\t' character. This will affect the results of 2d procedures like
 	-- Coords_Offset(), Test_Wrap(), Width() and, Wrap().
 	--
 	-- [Param]
@@ -324,9 +322,9 @@ package Cassette.Str is
 		Self  : in out T;
 		Width : in Size);
 
-	-- Slices out a set number of UTF-8 characters at a specific offset and discards the rest.
-	-- This function is bounds-protected, meaning that offset and length parameters will be
-	-- capped at the string's length, even if a Size'Last or Index'Last values are supplied.
+	-- Slices out a set number of UTF-8 characters at a specific offset and discards the rest. This
+	-- procedure is bounds-protected, meaning that offset and length parameters will be capped at the
+	-- string's length, even if a Size'Last or Index'Last values are supplied.
 	--
 	-- [Param]
 	--
@@ -348,9 +346,9 @@ package Cassette.Str is
 	procedure Trim (
 		Self : in out T);
 
-	-- Wraps a string by adding newlines to rows that are longer than Max_Width. Old newlines
-	-- are also kept. This function has no effects if max_width is bigger than the string's
-	-- width. A max_width of 0 is illegal.
+	-- Wraps a string by adding newlines to rows that are longer than Max_Width. Old newlines are
+	-- also kept. This procedure has no effects if max_width is bigger than the string's width. A
+	-- Max_Width of 0 is illegal.
 	--
 	-- [Param]
 	--
@@ -392,9 +390,9 @@ package Cassette.Str is
 		Self : in T)
 			return Size;
 
-	-- Converts the given UTF-8 character offset into a byte offset.
-	-- This function is bounds-protected, so the offset parameter is capped at the string's
-	-- length, even if an Index'Last value is supplied.
+	-- Converts the given UTF-8 character offset into a byte offset. This function is
+	-- bounds-protected, so the offset parameter is capped at the string's length, even if an
+	-- Index'Last value is supplied.
 	--
 	-- [Params]
 	--
@@ -424,9 +422,9 @@ package Cassette.Str is
 		Self : in T)
 			return String;
 
-	-- Gets the raw NUL terminated C string offseted by 2d coordinates.
-	-- This function is bounds-protected, so the row and col parameter are capped at the
-	-- string's height and width respectively, even if Index'Last values are supplied.
+	-- Gets the raw NUL terminated C string offseted by 2d coordinates. This function is
+	-- bounds-protected, so the row and col parameter are capped at the string's height and width
+	-- respectively, even if Index'Last values are supplied.
 	--
 	-- [Params]
 	--
@@ -444,9 +442,9 @@ package Cassette.Str is
 		Col  : in Index)
 			return String;
 
-	-- Gets the raw NUL terminated C string offseted by an specific number of UTF-8 characters.
-	-- This function is bounds-protected, so the offset parameter is capped at the string's
-	-- length, even if an Index'Last value is supplied.
+	-- Gets the raw NUL terminated C string offseted by an specific number of UTF-8 characters. This
+	-- function is bounds-protected, so the offset parameter is capped at the string's length, even
+	-- if an Index'Last value is supplied.
 	--
 	-- [Params]
 	--
@@ -462,9 +460,9 @@ package Cassette.Str is
 		Offset : in Index)
 			return String;
 
-	-- Converts the given 2d coordinates into a UTF-8 character offset.
-	-- This function is bounds-protected, so the row and col parameter are capped at the
-	-- string's height and width respectively, even if Index'Last values are supplied.
+	-- Converts the given 2d coordinates into a UTF-8 character offset. This function is
+	-- bounds-protected, so the row and col parameter are capped at the string's height and width
+	-- respectively, even if Index'Last values are supplied.
 	--
 	-- [Params]
 	--
@@ -487,7 +485,7 @@ package Cassette.Str is
 	--
 	-- [Params]
 	--
-	-- 	Self : Config to interact with
+	-- 	Self : String to interact with
 	-- 
 	-- [Return]
 	--
@@ -527,8 +525,8 @@ package Cassette.Str is
 		Self : in T)
 			return Size;
 
-	-- Calculates the number of rows a string wrapped with max_width will have. But unlike
-	-- Wrap() the string is not modified.
+	-- Calculates the number of rows a string wrapped with max_width will have. But unlike Wrap() the
+	-- string is not modified.
 	--
 	-- [Params]
 	--
@@ -545,16 +543,16 @@ package Cassette.Str is
 			return Size;
 
 	-- Converts the UTF-8 character offset of a wrapped string into an offset that matches the
-	-- character position of the unwrapped string. It is assumed the difference between Wrap
-	-- and str is a single Wrap() operation and that the tab width of both strings is equal.
-	-- Check out the provided example for more details about this function use case.
-	-- This function is bounds-protected, so the offset parameter is capped at the string's
-	-- length, even if a Index'Last value is supplied.
+	-- character position of the unwrapped string. It is assumed the difference between Wrap and
+	-- Self is a single Wrap() operation and that the tab width of both strings is equal. Check out
+	-- the provided example for more details about this function use case. This function is
+	-- bounds-protected, so the offset parameter is capped at the string's length, even if a
+	-- Index'Last value is supplied.
 	--
 	-- [Params]
 	--
 	-- 	Self   : Reference string
-	-- 	Wrap   : Wrapped string
+	-- 	Wrap   : Wrapped version of the reference string
 	-- 	Offset : UTF-8 character offset
 	--
 	-- [Return]
