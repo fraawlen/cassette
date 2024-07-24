@@ -19,7 +19,7 @@
 pragma Ada_2012;
 
 with Cassette.Error;
-with Interfaces.C;   use Interfaces;
+with Interfaces.C; use Interfaces;
 with System;
 
 --------------------------------------------------------------------------------------------------------------

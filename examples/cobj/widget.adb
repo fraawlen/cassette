@@ -18,9 +18,8 @@
 
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Text_IO;       use Ada.Text_IO;
-with Cassette;          use Cassette;
+with Cassette.Str;      use Cassette;
 with Cassette.Error;
-with Cassette.Str; 
 
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
