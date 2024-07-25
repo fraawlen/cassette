@@ -308,7 +308,7 @@ package body Cassette.Config is
 			     External_Name => "ccfg_error";
 	begin
 
-		return Cassette.Error.T (Fn (Self.Data));
+		return Fn (Self.Data);
 
 	end Error;
 
@@ -336,7 +336,7 @@ package body Cassette.Config is
 			     External_Name => "ccfg_resource_length";
 	begin
 
-		return Size (Fn (Self.Data));
+		return Fn (Self.Data);
 
 	end Resource_Length;
 

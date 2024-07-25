@@ -26,7 +26,7 @@ with Cassette.Str;
 
 procedure Colors
 is
-	Cl_1 : Color.T := Color.BLUE;
+	Cl_1 : Color.T;
 	Cl_2 : Color.T;
 	Cl_3 : Color.T;
 	Cl_4 : Color.T;
@@ -65,6 +65,7 @@ begin
 	S.Create;
 	S.Set_Precision (0);
 
+	Cl_1 := Color.BLUE;
 	Cl_2 := Color.From_Str    ("#FF0000");
 	Cl_3 := Color.From_RGBA   (128, 128, 128);
 	Cl_4 := Color.Interpolate (Cl_1, Cl_2, 0.5);

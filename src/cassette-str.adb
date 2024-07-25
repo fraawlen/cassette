@@ -178,7 +178,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_cut";
 	begin
 
-		Fn (Self.Data, size_t (Offset), size_t (Length));
+		Fn (Self.Data, Offset, Length);
 
 	end Cut;
 
@@ -192,7 +192,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_insert_cstr";
 	begin
 
-		Fn (Self.Data, Value.Data, size_t (Offset));
+		Fn (Self.Data, Value.Data, Offset);
 		Self.Check;
 
 	end Insert;
@@ -207,7 +207,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_insert_double";
 	begin
 
-		Fn (Self.Data, double (Value), size_t (Offset));
+		Fn (Self.Data, double (Value), Offset);
 		Self.Check;
 
 	end Insert;
@@ -222,7 +222,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_insert_long";
 	begin
 
-		Fn (Self.Data, Long_Long_Integer (Value), size_t (Offset));
+		Fn (Self.Data, Long_Long_Integer (Value), Offset);
 		Self.Check;
 
 	end Insert;
@@ -239,7 +239,7 @@ package body Cassette.Str is
 		S : C.Strings.chars_ptr := C.Strings.New_String (Value);
 	begin
 
-		Fn (Self.Data, S, size_t (Offset));
+		Fn (Self.Data, S, Offset);
 		C.Strings.Free (S);
 		Self.Check;
 
@@ -261,7 +261,7 @@ package body Cassette.Str is
 		S : C.Strings.chars_ptr := C.Strings.New_String (Pattern);
 	begin
 
-		Fn (Self.Data, S, size_t (Offset), size_t (Length_Target));
+		Fn (Self.Data, S, Offset, Length_Target);
 		C.Strings.Free (S);
 		Self.Check;
 
@@ -277,7 +277,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_prealloc";
 	begin
 
-		Fn (Self.Data, size_t (Byte_Length));
+		Fn (Self.Data, Byte_Length);
 		Self.Check;
 
 	end Prealloc;
@@ -306,7 +306,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_set_precision";
 	begin
 
-		Fn (Self.Data, int (Value));
+		Fn (Self.Data, Value);
 
 	end Set_Precision;
 
@@ -320,7 +320,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_set_tab_width";
 	begin
 
-		Fn (Self.Data, size_t (Width));
+		Fn (Self.Data, Width);
 
 	end Set_Tab_Width;
 
@@ -334,7 +334,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_slice";
 	begin
 
-		Fn (Self.Data, size_t (Offset), size_t (Length));
+		Fn (Self.Data, Offset, Length);
 
 	end Slice;
 
@@ -362,7 +362,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_wrap";
 	begin
 
-		Fn (Self.Data, size_t (Max_Width));
+		Fn (Self.Data, Max_Width);
 		Self.Check;
 
 	end Wrap;
@@ -393,7 +393,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_byte_length";
 	begin
 
-		return Size (Fn (Self.Data));
+		return Fn (Self.Data);
 
 	end Byte_Length;
 
@@ -407,7 +407,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_byte_offset";
 	begin
 
-		return Index (Fn (Self.Data, size_t (Offset)));
+		return Fn (Self.Data, Offset);
 
 	end Byte_Offset;
 
@@ -435,7 +435,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_chars";
 	begin
 
-		return C.Strings.Value (Fn (Self.Data, size_t (Row), size_t (Col)));
+		return C.Strings.Value (Fn (Self.Data, Row, Col));
 
 	end Chars_At_Coords;
 
@@ -449,7 +449,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_chars";
 	begin
 
-		return C.Strings.Value (Fn (Self.Data, size_t (Offset)));
+		return C.Strings.Value (Fn (Self.Data, Offset));
 
 	end Chars_At_Offset;
 
@@ -463,7 +463,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_coords_offset";
 	begin
 
-		return Index (Fn (Self.Data, size_t (Row), size_t (Col)));
+		return Fn (Self.Data, Row, Col);
 
 	end Coords_Offset;
 
@@ -477,7 +477,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_error";
 	begin
 
-		return Cassette.Error.T (Fn (Self.Data));
+		return Fn (Self.Data);
 
 	end Error;
 
@@ -491,7 +491,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_height";
 	begin
 
-		return Size (Fn (Self.Data));
+		return Fn (Self.Data);
 
 	end Height;
 
@@ -505,7 +505,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_length";
 	begin
 
-		return Size (Fn (Self.Data));
+		return Fn (Self.Data);
 
 	end Length;
 
@@ -519,7 +519,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_test_wrap";
 	begin
 
-		return Size (Fn (Self.Data, size_t (Max_Width)));
+		return Fn (Self.Data, Max_Width);
 
 	end Test_Wrap;
 
@@ -533,7 +533,7 @@ package body Cassette.Str is
 			     External_Name => "cstr_unwrapped_offset";
 	begin
 
-		return Index (Fn (Self.Data, Wrap.Data, size_t (Offset)));
+		return Fn (Self.Data, Wrap.Data, Offset);
 
 	end Unwrapped_Offset;
 

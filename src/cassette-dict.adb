@@ -103,7 +103,7 @@ package body Cassette.Dict is
 			     External_Name => "cdict_clear_group";
 	begin
 
-		Fn (Self.Data, size_t (Group));
+		Fn (Self.Data, Group);
 
 	end Clear_Group;
 
@@ -119,7 +119,7 @@ package body Cassette.Dict is
 		S : C.Strings.chars_ptr := C.Strings.New_String (Key);
 	begin
 
-		Fn (Self.Data, S, size_t (Group));
+		Fn (Self.Data, S, Group);
 		C.Strings.Free (S);
 
 	end Erase;
@@ -134,7 +134,7 @@ package body Cassette.Dict is
 			     External_Name => "cdict_prealloc";
 	begin
 
-		Fn (Self.Data, size_t (Slots_Number));
+		Fn (Self.Data, Slots_Number);
 		Self.Check;
 
 	end Prealloc;
@@ -184,7 +184,7 @@ package body Cassette.Dict is
 		S : C.Strings.chars_ptr := C.Strings.New_String (Key);
 	begin
 
-		Fn (Self.Data, S, size_t (Group), size_t (Value));
+		Fn (Self.Data, S, Group, Value);
 		C.Strings.Free (S);
 		Self.Check;
 
@@ -202,7 +202,7 @@ package body Cassette.Dict is
 			     External_Name => "cdict_error";
 	begin
 
-		return Cassette.Error.T (Fn (Self.Data));
+		return Fn (Self.Data);
 
 	end Error;
 
@@ -224,7 +224,7 @@ package body Cassette.Dict is
 		S : C.Strings.chars_ptr := C.Strings.New_String (Key);
 	begin
 
-		B := Fn (Self.Data, S, size_t (Group), NULL);
+		B := Fn (Self.Data, S, Group, NULL);
 		C.Strings.Free (S);
 
 		return Boolean (B);
@@ -251,8 +251,8 @@ package body Cassette.Dict is
 		S : C.Strings.chars_ptr := C.Strings.New_String (Key);
 	begin
 
-		B     := Fn (Self.Data, S, size_t (Group), G'Access);
-		Value := Slot_Value (G);
+		B     := Fn (Self.Data, S, Group, G'Access);
+		Value := G;
 		C.Strings.Free (S);
 
 		return Boolean (B);
@@ -269,7 +269,7 @@ package body Cassette.Dict is
 			     External_Name => "cdict_load";
 	begin
 
-		return Size (Fn (Self.Data));
+		return Fn (Self.Data);
 
 	end Load;
 

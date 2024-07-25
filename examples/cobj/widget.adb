@@ -100,7 +100,7 @@ begin
 	Str_Ref.Create;
 	Str_Wrap.Create;
 
-	Str_Ref.Append ("This is a lͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲng line Ͳf text!");
+	Str_Ref.Append ("This is a loooooooooooooooooooooooooooooooooooong line of text!");
 
 	Update_Wrap;
 

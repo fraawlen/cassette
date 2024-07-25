@@ -111,7 +111,7 @@ package body Cassette.Color is
 			     External_Name => "ccolor_interpolate";
 	begin
 
-		return Fn (Cl_1, Cl_2, double (Ratio));
+		return Fn (Cl_1, Cl_2, Ratio);
 
 	end Interpolate;
 

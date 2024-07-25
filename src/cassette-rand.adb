@@ -53,7 +53,7 @@ package body Cassette.Rand is
 			     External_Name => "crand_seed";
 	begin
 
-		Fn (Self.State'Access, unsigned_long_long (Value));
+		Fn (Self.State'Access, Value);
 
 	end Seed;
 

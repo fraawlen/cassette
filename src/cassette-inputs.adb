@@ -56,7 +56,7 @@ package body Cassette.Inputs is
 			     External_Name => "cinputs_create";
 	begin
 
-		Self.Data := Fn (size_t (Max_Inputs));
+		Self.Data := Fn (Max_Inputs);
 		Self.Check;
 
 	end Create;
@@ -102,7 +102,7 @@ package body Cassette.Inputs is
 			     External_Name => "cinputs_pull_id";
 	 begin
 
-		Fn (Self.Data, unsigned (ID));
+		Fn (Self.Data, ID);
 
 	 end Pull_ID;
 
@@ -116,7 +116,7 @@ package body Cassette.Inputs is
 			     External_Name => "cinputs_pull_index";
 	begin
 
-		Fn (Self.Data, size_t (I));
+		Fn (Self.Data, I);
 
 	end Pull_Index;
 
@@ -132,7 +132,7 @@ package body Cassette.Inputs is
 			     External_Name => "cinputs_push";
 	begin
 	
-		Fn (Self.Data, unsigned (ID), short (X), short (Y), Addr);
+		Fn (Self.Data, ID, short (X), short (Y), Addr);
 
 	end Push;
 
@@ -160,7 +160,7 @@ package body Cassette.Inputs is
 			     External_Name => "cinputs_resize";
 	begin
 	
-		Fn (Self.Data, size_t (Max_Inputs));
+		Fn (Self.Data, Max_Inputs);
 		Self.Check;
 
 	end Resize;
@@ -191,7 +191,7 @@ package body Cassette.Inputs is
 			     External_Name => "cinputs_ptr";
 	begin
 
-		return Fn (Self.Data, size_t (I));
+		return Fn (Self.Data, I);
 
 	end Address;
 
@@ -205,7 +205,7 @@ package body Cassette.Inputs is
 			     External_Name => "cinputs_error";
 	begin
 
-		return Cassette.Error.T (Fn (Self.Data));
+		return Fn (Self.Data);
 
 	end Error;
 
@@ -219,7 +219,7 @@ package body Cassette.Inputs is
 			     External_Name => "cinputs_find";
 	begin
 
-		return Boolean (Fn (Self.Data, unsigned (ID), NULL));
+		return Boolean (Fn (Self.Data, ID, NULL));
 
 	end Find;
 
@@ -236,8 +236,8 @@ package body Cassette.Inputs is
 		J : aliased size_t;
 	begin
 	
-		B := Fn    (Self.Data, unsigned(ID), J'Access);
-		I := Index (J);
+		B := Fn (Self.Data, ID, J'Access);
+		I := J;
 
 		return Boolean (B);
 
@@ -253,7 +253,7 @@ package body Cassette.Inputs is
 			     External_Name => "cinputs_id";
 	begin
 
-		return Identifier (Fn (Self.Data, size_t (I)));
+		return Fn (Self.Data, I);
 
 	end ID;
 
@@ -267,7 +267,7 @@ package body Cassette.Inputs is
 			     External_Name => "cinputs_load";
 	begin
 
-		return Size (Fn (Self.Data));
+		return Fn (Self.Data);
 
 	end Load;
 
@@ -281,7 +281,7 @@ package body Cassette.Inputs is
 			     External_Name => "cinputs_x";
 	begin
 
-		return Position (Fn (Self.Data, size_t (I)));
+		return Position (Fn (Self.Data, I));
 
 	end X;
 
@@ -295,7 +295,7 @@ package body Cassette.Inputs is
 			     External_Name => "cinputs_y";
 	begin
 
-		return Position (Fn (Self.Data, size_t (I)));
+		return Position (Fn (Self.Data, I));
 
 	end Y;
 
