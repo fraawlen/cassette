@@ -65,15 +65,15 @@ struct ccolor
 /**
  * Basic colors.
  */
-#define CCOLOR_TRANSPARENT (ccolor){0.000, 0.000, 0.000, 0.000}
-#define CCOLOR_WHITE       (ccolor){1.000, 1.000, 1.000, 1.000}
-#define CCOLOR_BLACK       (ccolor){0.000, 0.000, 0.000, 1.000}
-#define CCOLOR_RED         (ccolor){1.000, 0.000, 0.000, 1.000}
-#define CCOLOR_GREEN       (ccolor){0.000, 1.000, 0.000, 1.000}
-#define CCOLOR_BLUE        (ccolor){0.000, 0.000, 1.000, 1.000}
-#define CCOLOR_YELLOW      (ccolor){1.000, 1.000, 0.000, 1.000}
-#define CCOLOR_MAGENTA     (ccolor){1.000, 0.000, 1.000, 1.000}
-#define CCOLOR_CYAN        (ccolor){0.000, 1.000, 1.000, 1.000}
+#define CCOLOR_TRANSPARENT (struct ccolor){0.000, 0.000, 0.000, 0.000}
+#define CCOLOR_WHITE       (struct ccolor){1.000, 1.000, 1.000, 1.000}
+#define CCOLOR_BLACK       (struct ccolor){0.000, 0.000, 0.000, 1.000}
+#define CCOLOR_RED         (struct ccolor){1.000, 0.000, 0.000, 1.000}
+#define CCOLOR_GREEN       (struct ccolor){0.000, 1.000, 0.000, 1.000}
+#define CCOLOR_BLUE        (struct ccolor){0.000, 0.000, 1.000, 1.000}
+#define CCOLOR_YELLOW      (struct ccolor){1.000, 1.000, 0.000, 1.000}
+#define CCOLOR_MAGENTA     (struct ccolor){1.000, 0.000, 1.000, 1.000}
+#define CCOLOR_CYAN        (struct ccolor){0.000, 1.000, 1.000, 1.000}
 
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
