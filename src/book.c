@@ -258,49 +258,6 @@ cbook_prealloc(cbook *book, size_t bytes_number, size_t words_number, size_t gro
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-char *
-cbook_prepare_word(cbook *book, size_t length, enum cbook_group group_mode)
-{
-	size_t nc;
-	size_t nw;
-	size_t ng;
-
-	if (book->err)
-	{
-		return NULL;
-	}
-
-	nc = book->n_alloc_chars;
-	nw = book->n_alloc_words  * (book->n_words  >= book->n_alloc_words  ? 2 : 1);
-	ng = book->n_alloc_groups * (book->n_groups >= book->n_alloc_groups ? 2 : 1);
-
-	while (length > nc - book->n_chars)
-	{
-		if (!safe_mul(&nc, nc, 2))
-		{
-			book->err = CERR_OVERFLOW;
-			return NULL;
-		}
-	}
-
-	if (!_grow(book, nc, nw, ng))
-	{
-		return NULL;
-	}
-
-	if (group_mode == CBOOK_NEW || book->n_groups == 0)
-	{
-		book->groups[book->n_groups++] = book->n_words;
-	}
-
-	book->words[book->n_words] = book->n_chars;
-	book->n_chars += length;
-
-	return book->chars + book->words[book->n_words++];
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 void
 cbook_repair(cbook *book)
 {
@@ -368,15 +325,43 @@ cbook_words_number(const cbook *book)
 void
 cbook_write(cbook *book, const char *str, enum cbook_group group_mode)
 {
-	size_t n;
-	char *buf;
+	size_t ns;
+	size_t nc;
+	size_t nw;
+	size_t ng;
 
-	n = strlen(str) + 1;
-
-	if ((buf = cbook_prepare_word(book, n, group_mode)))
+	if (book->err)
 	{
-		memcpy(buf, str, n);
+		return;
 	}
+
+	ns = strlen(str) + 1;
+	nc = book->n_alloc_chars;
+	nw = book->n_alloc_words  * (book->n_words  >= book->n_alloc_words  ? 2 : 1);
+	ng = book->n_alloc_groups * (book->n_groups >= book->n_alloc_groups ? 2 : 1);
+
+	while (ns > nc - book->n_chars)
+	{
+		if (!safe_mul(&nc, nc, 2))
+		{
+			book->err = CERR_OVERFLOW;
+			return;
+		}
+	}
+
+	if (!_grow(book, nc, nw, ng))
+	{
+		return;
+	}
+
+	if (group_mode == CBOOK_NEW || book->n_groups == 0)
+	{
+		book->groups[book->n_groups++] = book->n_words;
+	}
+
+	memmove(book->chars + book->n_chars, str, ns);
+	book->words[book->n_words++] = book->n_chars;
+	book->n_chars += ns;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

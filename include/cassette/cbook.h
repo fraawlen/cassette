@@ -44,7 +44,7 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Opaque book object. It stores an automatically extensible array of chars. Chars are grouped into NULL
+ * Opaque book object. It stores an automatically extensible array of chars. Chars are grouped into NUL
  * terminated words, and words can also be grouped. The book behaves like a stack, words can only be added or
  * erased from the end of the book.
  *
@@ -187,45 +187,6 @@ CBOOK_NONNULL(1);
  */
 void
 cbook_prealloc(cbook *book, size_t bytes_number, size_t words_number, size_t groups_number)
-CBOOK_NONNULL(1);
-
-/**
- * Increments the book word count (and possibly group count) by 1 and returns the start position of a buffer
- * to write to. The value of the length parameter defines the size of the returned buffer. The total char
- * count also gets incremented by the given length regardless of the buffer's usage. This function is
- * intended to be used instead of cbook_write() when reading bytes from a stream to avoid needing extra read
- * and write operations. Exceptionally, in case of failure (due to a memory issue or if the given book already
- * had an error, this function can return NULL. The caller is responsible for respecting the buffer's size
- * when writing to it.
- *
- * Example, instead of this :
- *
- *	char buf[128];
- *	if (fgets(buf, 128, stream))
- *	{
- *    	cbook_write(book, buf, CBOOK_NEW);
- *	}
- *
- * Do this :
- *
- *	char *buf;
- *	if ((buf = cbook_prepare_word(book, 128, CBOOK_NEW)))
- *	{
- *		fgets(buf, 128, stream);
- *	}
- * 
- * @param book       : Book to interact with
- * @param length     : Number of bytes to allocate to buffer
- * @param group_mode : Create (or not) a group for the new word
- *
- * @return     : Pointer to string buffer of size 'length'
- * @return_err : NULL
- *
- * @error CERR_OVERFLOW : The size of the resulting book will be > SIZE_MAX
- * @error CERR_MEMORY   : Failed memory allocation
- */
-char *
-cbook_prepare_word(cbook *book, size_t length, enum cbook_group group_mode)
 CBOOK_NONNULL(1);
 
 /**
