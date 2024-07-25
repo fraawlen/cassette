@@ -55,7 +55,7 @@ package Cassette.Color is
 		B : aliased Channel := 0.0;
 		A : aliased Channel := 0.0;
 	end record
-		with Convention => C;
+		with Convention => C_Pass_By_Copy;
 
 	-------------------------------------------------------------------------------------------------
 	-- GLOBALS --------------------------------------------------------------------------------------

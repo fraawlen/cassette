@@ -16,35 +16,45 @@
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-with Ada.Text_IO;     use Ada.Text_IO;
-with Cassette.Inputs; use Cassette;
+with Ada.Text_IO;    use Ada.Text_IO;
+with Cassette.Color; use Cassette;
+with Cassette.Str;
 
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-procedure Tracker
+procedure Colors
 is
-
-	Tracker : Inputs.T;
-
+	Cl_1 : Color.T := Color.BLUE;
+	Cl_2 : Color.T;
+	Cl_3 : Color.T;
+	Cl_4 : Color.T;
+	S    : Str.T;
+	
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
-
-	procedure Print (ID : in Inputs.Identifier)
-	is
-		I : Inputs.Index;
+	
+	function To_Str (Val : Color.Channel) return String is
 	begin
 
-		Put ("Input with ID" & ID'Image);
-		if Tracker.Find (ID, I)
-		then
-			Put (" was found:");
-			Put (": X =" & Tracker.X(I)'Image);
-			Put (", Y =" & Tracker.Y(I)'Image);
-			New_Line;
-		else
-			Put_Line (" was not found");
-		end if;	
+		S.Clear;
+		S.Append (Float(Val) * 255.0);
+		S.Pad    (" ", 0, 4);
+
+		return S.Chars;
+	
+	end To_Str;
+	
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	procedure Print (Cl : Color.T) is
+	begin
+
+		Put (  "R =" & To_Str(Cl.R));
+		Put (", G =" & To_Str(Cl.G));
+		Put (", B =" & To_Str(Cl.B));
+		Put (", A =" & To_Str(Cl.A));
+		New_Line;
 
 	end Print;
 
@@ -52,37 +62,25 @@ is
 
 begin
 
-	Tracker.Create (10);
+	S.Create;
+	S.Set_Precision (0);
 
-	Tracker.Push (1,    0, 1000);
-	Tracker.Push (2,   34, 1450);
-	Tracker.Push (3, 1032,  653);
-	Tracker.Push (4,  327, 2459);
+	Cl_2 := Color.From_Str    ("#FF0000");
+	Cl_3 := Color.From_RGBA   (128, 128, 128);
+	Cl_4 := Color.Interpolate (Cl_1, Cl_2, 0.5);
 
-	Put_Line ("Tracker usage :" & Tracker.Load'Image);
-	
-	Tracker.Pull_ID    (1);
-	Tracker.Pull_Index (2);
+	Print (Cl_1);
+	Print (Cl_2);
+	Print (Cl_3);
+	Print (Cl_4);
 
-	Put_Line ("Tracker usage :" & Tracker.Load'Image);
-
-	Print (2);
-	Print (3);
-	Print (4);
-	Print (5);
-	Print (8);
-
-	Tracker.Clear;
-
-	Put_Line ("Tracker usage :" & Tracker.Load'Image);
-
-	Tracker.Destroy;
+	S.Destroy;
 
 exception
 
-	when E : Inputs.E =>
-		Put ("Input tracker errored during operation. Code :");
-		Put (Tracker.Error'Image);
+	when E : Str.E =>
+		Put ("String errored during operation. Code :");
+		Put (S.Error'Image);
 		New_Line;
 
-end Tracker;
+end Colors;

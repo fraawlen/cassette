@@ -66,7 +66,7 @@ package body Cassette.Color is
 		function Fn (Str : C.Strings.chars_ptr; Err : access bool) return T
 			with Import        => True, 
 			     Convention    => C, 
-			     External_Name => "ccolor_str";
+			     External_Name => "ccolor_from_str";
 
 		Cl : T;
 		S  : C.Strings.chars_ptr := C.Strings.New_String (Str);
@@ -86,7 +86,7 @@ package body Cassette.Color is
 		function Fn (Str : C.Strings.chars_ptr; Err : access bool) return T
 			with Import        => True, 
 			     Convention    => C, 
-			     External_Name => "ccolor_str";
+			     External_Name => "ccolor_from_str";
  
 		B  : aliased bool;
 		Cl : T;

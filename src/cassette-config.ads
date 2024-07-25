@@ -372,5 +372,4 @@ private
 
 	procedure Check (Self : in T);
 
-
 end Cassette.Config;
