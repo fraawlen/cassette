@@ -154,8 +154,7 @@ cbook_clear(cbook *book)
 CBOOK_NONNULL(1);
 
 /**
- * Deletes the last group of words. Allocated memory is not freed, use cbook_destroy() or cbook_trim() for
- * that.
+ * Deletes the last group of words. Allocated memory is not freed, use cbook_destroy() for that
  * 
  * @param book : Book to interact with
  */
@@ -164,7 +163,7 @@ cbook_pop_group(cbook *book)
 CBOOK_NONNULL(1);
 
 /**
- * Deletes the last word. Allocated memory is not freed, use cbook_destroy() or cbook_trim() for that.
+ * Deletes the last word. Allocated memory is not freed, use cbook_destroy() for that.
  * 
  * @param book : Book to interact with
  */
@@ -204,7 +203,7 @@ CBOOK_NONNULL(1);
  * automatically extend its allocated memory to accommodate the new word.
  * 
  * @param book       : Book to interact with
- * @param raw_str    : C string
+ * @param str        : C string
  * @param group_mode : Create (or not) a group for the new word
  *
  * @error CERR_OVERFLOW : The size of the resulting book will be > SIZE_MAX
