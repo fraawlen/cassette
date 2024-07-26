@@ -68,7 +68,7 @@ package Cassette.Config is
 	-- 	Self   : Config to interact with
 	-- 	Parent : Config to clone
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	--	INVALID : Initialisation failed
 	--
@@ -82,7 +82,7 @@ package Cassette.Config is
 	--
 	-- 	Self : Config to interact with
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	--	INVALID : Initialisation failed
 	--
@@ -316,7 +316,7 @@ package Cassette.Config is
 	-- 
 	-- [Return]
 	--
-	-- 	Error code
+	-- 	Error code.
 	--  
 	function Error (
 		Self : in T)
@@ -325,7 +325,7 @@ package Cassette.Config is
 	-- Gets the resource value an internal iterator is pointing at. It's the responsibility of the
 	-- caller to convert it into the required type.
 	--
-	-- [Param]
+	-- [Params]
 	--
 	--	Self : Config instance to interact with
 	--

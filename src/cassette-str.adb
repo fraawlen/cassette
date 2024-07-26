@@ -18,7 +18,6 @@
 
 pragma Ada_2012;
 
-with Ada.Strings.Fixed;       use Ada.Strings.Fixed;
 with Cassette;
 with Cassette.Error;
 with Interfaces.C;            use Interfaces.C;

@@ -71,7 +71,7 @@ package Cassette.Inputs is
 	-- 	Self   : Input tracker to interact with
 	-- 	Parent : Input tracker to clone
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	--	INVALID : Initialisation failed
 	--
@@ -86,7 +86,7 @@ package Cassette.Inputs is
 	-- 	Self       : Input tracker to interact with
 	-- 	Max_Inputs : Maximum number of inputs to track at a time. 0 is an illegal value.
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	--	INVALID : Initialisation failed
 	--
@@ -226,7 +226,7 @@ package Cassette.Inputs is
 	-- 
 	-- [Return]
 	--
-	-- 	Error code
+	-- 	Error code.
 	--  
 	function Error (
 		Self : in T)

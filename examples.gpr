@@ -17,7 +17,8 @@ project Examples is
 		"widget.adb",
 		"random.adb",
 		"colors.adb",
-		"dictionary.adb");
+		"dictionary.adb",
+		"data.adb");
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 

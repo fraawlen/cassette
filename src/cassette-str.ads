@@ -71,7 +71,7 @@ package Cassette.Str is
 	-- 	Self   : String to interact with
 	-- 	Parent : String to clone
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	--	INVALID : Initialisation failed
 	--
@@ -85,7 +85,7 @@ package Cassette.Str is
 	--
 	-- 	Self : String to interact with
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	--	INVALID : Initialisation failed
 	--
@@ -127,7 +127,7 @@ package Cassette.Str is
 
 	-- Clears the contents of a given string. Allocated memory is not freed, use Destroy() for that.
 	--
-	-- [Param]
+	-- [Params]
 	--
 	--	Self : String to interact with
 	--
@@ -138,7 +138,7 @@ package Cassette.Str is
 	-- This procedure is bounds-protected, meaning that offset and length parameters will be capped
 	-- at the string's length, even if a Size'Last or Index'Last values are supplied.
 	--
-	-- [Param]
+	-- [Params]
 	--
 	-- 	Self   : String to interact with
 	-- 	Offset : UTF-8 character position to start cutting from
@@ -155,13 +155,13 @@ package Cassette.Str is
 	-- can be used. This procedure is bounds-protected, so the offset parameter is capped at the
 	-- string's length, even if a Index'Last value is supplied.
 	--
-	-- [Param]
+	-- [Params]
 	--
 	-- 	Self   : String to insert new data to
 	-- 	Value  : String to ger new data from
 	-- 	Offset : UTF-8 character position to insert the new data at
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	-- 	OVERFLOW : The size of the resulting string will be > Index'Last
 	-- 	MEMORY   : Failed memory allocation
@@ -178,13 +178,13 @@ package Cassette.Str is
 	-- used. This procedure is bounds-protected, so the offset parameter is capped at the string's
 	-- length, even if an Index'Last value is supplied.
 	--
-	-- [Param]
+	-- [Params]
 	--
 	-- 	Self   : String to insert new data to
 	-- 	Value  : Floating value to insert
 	-- 	Offset : UTF-8 character position to insert the new data at
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	-- 	OVERFLOW : The size of the resulting string will be > Index'Last
 	-- 	MEMORY   : Failed memory allocation
@@ -200,13 +200,13 @@ package Cassette.Str is
 	-- can be used. This procedure is bounds-protected, so the offset parameter is capped at the
 	-- string's length, even if an Index'Last value is supplied.
 	--
-	-- [Param]
+	-- [Params]
 	--
 	-- 	Self   : String to insert new data to
 	-- 	Value  : Long value to insert
 	-- 	Offset : UTF-8 character position to insert the new data at
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	-- 	OVERFLOW : The size of the resulting string will be > Index'Last
 	-- 	MEMORY   : Failed memory allocation
@@ -222,13 +222,13 @@ package Cassette.Str is
 	-- can be used. This procedure is bounds-protected, so the offset parameter is capped at the
 	-- string's length, even if an Index'Last value is supplied.
 	--
-	-- [Param]
+	-- [Params]
 	--
 	-- 	Self   : String to insert new data to
 	-- 	Value  : Standard String to insert
 	-- 	Offset : UTF-8 character position to insert the new data at
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	-- 	OVERFLOW : The size of the resulting string will be > Index'Last
 	-- 	MEMORY   : Failed memory allocation
@@ -253,14 +253,14 @@ package Cassette.Str is
 	--
 	--	--> t_Ͳ_Ͳ_est
 	--
-	-- [Param]
+	-- [Params]
 	--
 	-- 	Self          : String to interact with
 	-- 	Pattern       : UTF-8 character to use as padding
 	-- 	Offset        : UTF-8 character position to insert the padded sequence at
 	-- 	Length_Target : Resulting string length that should be reached
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	-- 	OVERFLOW : The size of the resulting string will be > Size'Last
 	-- 	MEMORY   : Failed memory allocation
@@ -275,12 +275,12 @@ package Cassette.Str is
 	-- data to the string. This procedure has no effect if the requested number of bytes is smaller
 	-- than the previously allocated number.
 	--
-	-- [Param]
+	-- [Params]
 	--
 	-- 	Self        : String to interact with
 	-- 	Byte_Length : Number of bytes
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	-- 	MEMORY : Failed memory allocation
 	--
@@ -291,7 +291,7 @@ package Cassette.Str is
 	-- Clears errors and puts the string back into an usable state. The only unrecoverable error is
 	-- INVALID.
 	--
-	-- [Param]
+	-- [Params]
 	--
 	-- Self : String to interact with
 	--
@@ -301,7 +301,7 @@ package Cassette.Str is
 	-- Sets the number of digits to show when a double value gets inserted. The effects of the int
 	-- values are limited by the C printf's "%.*Lf" operator.
 	--
-	-- [Param]
+	-- [Params]
 	--
 	-- 	Self : String to interact with
 	-- 	N    : Number of decimal digits
@@ -313,7 +313,7 @@ package Cassette.Str is
 	-- Sets the width of a '\t' character. This will affect the results of 2d procedures like
 	-- Coords_Offset(), Test_Wrap(), Width() and, Wrap().
 	--
-	-- [Param]
+	-- [Params]
 	--
 	-- 	Self  : String to interact with
 	-- 	Width : Tab width
@@ -326,7 +326,7 @@ package Cassette.Str is
 	-- procedure is bounds-protected, meaning that offset and length parameters will be capped at the
 	-- string's length, even if a Size'Last or Index'Last values are supplied.
 	--
-	-- [Param]
+	-- [Params]
 	--
 	-- 	Self   : String to interact with
 	-- 	Offset : UTF-8 character position to start slicing from
@@ -339,7 +339,7 @@ package Cassette.Str is
 
 	-- Removes extra leading and trailing whitespaces (space and tab characters).
 	--
-	-- [Param]
+	-- [Params]
 	--
 	-- 	Self : String to interact with
 	--
@@ -350,12 +350,12 @@ package Cassette.Str is
 	-- also kept. This procedure has no effects if max_width is bigger than the string's width. A
 	-- Max_Width of 0 is illegal.
 	--
-	-- [Param]
+	-- [Params]
 	--
 	-- 	Self      : String to interact with
 	-- 	Max_Width : Width after which a newline is added to the string
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	-- 	PARAM    : Illegal width was given
 	-- 	OVERFLOW : The size of the resulting string will be > Size'Last
@@ -489,7 +489,7 @@ package Cassette.Str is
 	-- 
 	-- [Return]
 	--
-	-- 	Error code
+	-- 	Error code.
 	--  
 	function Error (
 		Self : in T)

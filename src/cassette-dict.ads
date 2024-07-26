@@ -70,7 +70,7 @@ package Cassette.Dict is
 	-- 	Self   : Dictionary to interact with
 	-- 	Parent : Dictionary to clone
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	--	INVALID : Initialisation failed
 	--
@@ -84,7 +84,7 @@ package Cassette.Dict is
 	--
 	-- 	Self : Dictionary to interact with
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	--	INVALID : Initialisation failed
 	--
@@ -150,7 +150,7 @@ package Cassette.Dict is
 	-- 	Self         : Dictionary to interact with
 	-- 	Slots_Number : Number of slots
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	-- 	OVERFLOW : The size of the resulting dictionary will be > Size'Last
 	-- 	MEMORY   : Failed memory allocation
@@ -167,7 +167,7 @@ package Cassette.Dict is
 	-- 	Self        : Dictionary to interact with
 	-- 	Load_Factor : Maximum load factor to set
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	-- 	OVERFLOW : The size of the resulting dictionary will be > Size'Last
 	-- 	MEMORY   : Failed memory allocation
@@ -198,7 +198,7 @@ package Cassette.Dict is
 	-- 	Group : Group to match
 	-- 	Value : Value to associate with the slot
 	--
-	-- [Error]
+	-- [Errors]
 	--
 	-- 	OVERFLOW : The size of the resulting dictionary will be > Size'Last
 	-- 	MEMORY   : Failed memory allocation
