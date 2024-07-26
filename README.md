@@ -13,7 +13,7 @@ This is a WIP. Not all Cassette functions have been ported yet. Moreover, the cu
 
 | Available | Header    |
 | --------- | --------- |
-|           | cbook.h   |
+| Y         | cbook.h   |
 | Y         | ccolor.h  |
 | Y         | cdict.h   |
 | Y         | cerr.h    |
