@@ -295,6 +295,19 @@ cbook_repair(cbook *book)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void
+cbook_undo_new_group(cbook *book)
+{
+	if (book->err || book->n_groups == 0)
+	{
+		return;
+	}
+
+	book->new_group = false;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 const char *
 cbook_word(const cbook *book, size_t word_index)
 {

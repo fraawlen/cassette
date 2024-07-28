@@ -67,6 +67,7 @@ main(void)
 	cbook_write(_book, "test8");
 
 	cbook_prepare_new_group(_book);
+	cbook_undo_new_group(_book);
 	cbook_write(_book, "test9");
 	cbook_write(_book, "test0");
 

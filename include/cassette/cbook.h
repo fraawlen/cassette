@@ -198,6 +198,15 @@ cbook_repair(cbook *book)
 CBOOK_NONNULL(1);
 
 /**
+ * Reverts the effects of cbook_prepare_new_group().
+ *
+ * @param book : Book to interact with
+ */
+void
+cbook_undo_new_group(cbook *book)
+CBOOK_NONNULL(1);
+
+/**
  * Appends a new word to the book and increments the book word count (and possibly group count) by 1 as well
  * as the character count by the string's length (NUL terminator included). The book will automatically extend
  * its allocated memory to accommodate the new word.
