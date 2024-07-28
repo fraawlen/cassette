@@ -39,8 +39,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static bool _has_err    (struct context *)                                       CCFG_NONNULL(1);
 static bool _open_file  (struct context *, const struct context *, const char *) CCFG_NONNULL(1, 3);
-static void _parse_file (struct context *);
+static void _parse_file (struct context *)                                       CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -122,19 +123,18 @@ file_parse_root(ccfg *cfg, const char *filename)
 	ctx.parent         = NULL;
 	ctx.rand           = &r;
 
-	if (cbook_error(ctx.iteration)
-	 || cbook_error(ctx.vars)
-	 || cdict_error(ctx.keys_vars))
+	if (_has_err(&ctx))
 	{	
-		cfg->err |= CERR_MEMORY;
+		cfg->err = CERR_MEMORY;
 		return;
 	}
 
 	_parse_file(&ctx);
 
-	cfg->err |= cbook_error(ctx.iteration);
-	cfg->err |= cbook_error(ctx.vars);
-	cfg->err |= cdict_error(ctx.keys_vars);
+	if (_has_err(&ctx))
+	{	
+		cfg->err = CERR_MEMORY;
+	}
 
 	cbook_destroy(ctx.iteration);
 	cbook_destroy(ctx.vars);
@@ -146,6 +146,14 @@ file_parse_root(ccfg *cfg, const char *filename)
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
+
+static bool
+_has_err(struct context *ctx)
+{
+	return cbook_error(ctx->iteration) || cbook_error(ctx->vars) || cdict_error(ctx->keys_vars);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
 _open_file(struct context *ctx, const struct context *ctx_parent, const char *filename)

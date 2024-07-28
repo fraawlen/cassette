@@ -50,9 +50,9 @@ extern "C" {
  * as the resources get read and resolved so that on a source file is read, a configuration object can be
  * shared and re-used in software plugins.
  *
- * Some methods, upon failure, will set an error bit in an internal error bitfield. The error can be checked
- * with ccfg_error(). If any error is set all config methods will exit early with default return values and
- * no side-effects. It's possible to clear errors with ccfg_repair().
+ * Some methods, upon failure, will set an error that can be checked with ccfg_error(). If any error is set
+ * all config methods will exit early with default return values and no side-effects. It's possible to clear
+ * errors with ccfg_repair().
  */
 typedef struct ccfg ccfg;
 

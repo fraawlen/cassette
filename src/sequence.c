@@ -140,7 +140,6 @@ static void
 _combine_var(struct context *ctx, enum token type)
 {
 	cstr *val;
-	enum cbook_group group = CBOOK_NEW;
 	char name[TOKEN_MAX_LEN];
 	char token_1[TOKEN_MAX_LEN];
 	char token_2[TOKEN_MAX_LEN];
@@ -162,6 +161,7 @@ _combine_var(struct context *ctx, enum token type)
 
 	/* generate new values and write them into the variable book */
 
+	cbook_prepare_new_group(ctx->vars);
 	for (size_t k = 0; k < cbook_group_length(ctx->vars, i); k++)
 	{
 		cstr_clear(val);
@@ -184,8 +184,7 @@ _combine_var(struct context *ctx, enum token type)
 				break;
 		}
 
-		cbook_write(ctx->vars, cstr_chars(val), group);
-		group = CBOOK_OLD;
+		cbook_write(ctx->vars, cstr_chars(val));
 	}
 
 	/* update variable's reference in the variable dict */
@@ -200,7 +199,6 @@ _combine_var(struct context *ctx, enum token type)
 static void
 _declare_enum(struct context *ctx)
 {
-	enum cbook_group group = CBOOK_NEW;
 	char name[TOKEN_MAX_LEN];
 	char token[TOKEN_MAX_LEN];
 	double min;
@@ -253,12 +251,12 @@ _declare_enum(struct context *ctx)
 	
 	/* generate enum values and write them into the variable book */
 
+	cbook_prepare_new_group(ctx->vars);
 	for (size_t i = 0; i <= steps; i++)
 	{
 		ratio = util_interpolate(min, max, i / steps);
 		snprintf(token, TOKEN_MAX_LEN, "%.*f", (int)precision, ratio);
-		cbook_write(ctx->vars, token, group);
-		group = CBOOK_OLD;
+		cbook_write(ctx->vars, token);
 	}
 
 	/* update variable's reference in the variable dict */
@@ -271,7 +269,8 @@ _declare_enum(struct context *ctx)
 static void
 _declare_resource(struct context *ctx, const char *namespace)
 {
-	enum cbook_group group = CBOOK_NEW;
+	// TODO
+
 	char name[TOKEN_MAX_LEN];
 	char value[TOKEN_MAX_LEN];
 	size_t i;
@@ -286,15 +285,16 @@ _declare_resource(struct context *ctx, const char *namespace)
 
 	/* write resource's values into the sequence book */
 
+	cbook_prepare_new_group(ctx->sequences);
 	while (context_get_token(ctx, value, NULL) != TOKEN_INVALID)
 	{
-		cbook_write(ctx->sequences, value, group);
-		group = CBOOK_OLD;
+		cbook_write(ctx->sequences, value);
 		n++;
 	}
 
 	if (n == 0)
 	{
+		cbook_undo_new_group(ctx->sequences);
 		return;
 	}
 
@@ -317,7 +317,6 @@ _declare_resource(struct context *ctx, const char *namespace)
 static void
 _declare_variable(struct context *ctx)
 {
-	enum cbook_group group = CBOOK_NEW;
 	char name[TOKEN_MAX_LEN];
 	char value[TOKEN_MAX_LEN];
 	size_t n = 0;
@@ -331,15 +330,16 @@ _declare_variable(struct context *ctx)
 
 	/* write variable's values into the variable book */
 
+	cbook_prepare_new_group(ctx->vars);
 	while (context_get_token(ctx, value, NULL) != TOKEN_INVALID)
 	{
-		cbook_write(ctx->vars, value, group);
-		group = CBOOK_OLD;
+		cbook_write(ctx->vars, value);
 		n++;
 	}
 
 	if (n == 0)
 	{
+		cbook_undo_new_group(ctx->vars);
 		return;
 	}
 
@@ -533,10 +533,11 @@ _preproc_iter_new(struct context *ctx)
 
 		/* write down sequences that will be iterated */
 
-		cbook_write(ctx->iteration, token, CBOOK_NEW);
+		cbook_prepare_new_group(ctx->iteration);
+		cbook_write(ctx->iteration, token);
 		while (context_get_token_raw(ctx, token) != TOKEN_INVALID)
 		{
-			cbook_write(ctx->iteration, token, CBOOK_OLD);
+			cbook_write(ctx->iteration, token);
 		}
 	}
 }

@@ -32,6 +32,12 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#define SET_ERR(ERR) if (ERR > cfg->err) { cfg->err = ERR; }
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
 static const char * _select_source (const ccfg *, size_t *) CCFG_NONNULL_RETURN CCFG_NONNULL(1);
 static enum cerr    _update_err    (ccfg *)                                     CCFG_NONNULL(1);
 
@@ -288,7 +294,7 @@ ccfg_push_param_str(ccfg *cfg, const char *name, const char *str)
 		return;
 	}
 
-	cbook_write(cfg->params, str, CBOOK_OLD);
+	cbook_write(cfg->params, str);
 	if (!cbook_error(cfg->params))
 	{
 		cdict_write(cfg->keys_params, name, 0, cbook_words_number(cfg->params) - 1);
@@ -307,7 +313,7 @@ ccfg_push_source(ccfg *cfg, const char *filename)
 		return;
 	}
 
-	cbook_write(cfg->sources, filename, CBOOK_OLD);
+	cbook_write(cfg->sources, filename);
 
 	_update_err(cfg);
 }
@@ -317,7 +323,10 @@ ccfg_push_source(ccfg *cfg, const char *filename)
 void
 ccfg_repair(ccfg *cfg)
 {
-	cfg->err &= CERR_INVALID;
+	if (cfg->err == CERR_INVALID)
+	{
+		return;
+	}
 
 	cbook_repair(cfg->params);
 	cbook_repair(cfg->sequences);
@@ -326,6 +335,8 @@ ccfg_repair(ccfg *cfg)
 	cdict_repair(cfg->keys_sequences);
 	cdict_repair(cfg->tokens);
 	
+	cfg->err = CERR_NONE;
+
 	_update_err(cfg);
 }
 
@@ -387,12 +398,12 @@ _select_source(const ccfg *cfg, size_t *index)
 static enum cerr
 _update_err(ccfg *cfg)
 {
-	cfg->err |= cbook_error(cfg->params);
-	cfg->err |= cbook_error(cfg->sequences);
-	cfg->err |= cbook_error(cfg->sources);	
-	cfg->err |= cdict_error(cfg->keys_params);
-	cfg->err |= cdict_error(cfg->keys_sequences);
-	cfg->err |= cdict_error(cfg->tokens);
+	SET_ERR(cbook_error(cfg->params))
+	SET_ERR(cbook_error(cfg->sequences))
+	SET_ERR(cbook_error(cfg->sources))
+	SET_ERR(cdict_error(cfg->keys_params))
+	SET_ERR(cdict_error(cfg->keys_sequences))
+	SET_ERR(cdict_error(cfg->tokens))
 
 	return cfg->err;
 }
