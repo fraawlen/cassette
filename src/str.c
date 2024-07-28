@@ -540,7 +540,10 @@ cstr_prealloc(cstr *str, size_t byte_length)
 void
 cstr_repair(cstr *str)
 {
-	str->err &= CERR_INVALID;
+	if (str->err != CERR_INVALID)
+	{
+		str->err = CERR_NONE;
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

@@ -48,20 +48,11 @@ extern "C" {
  * terminated words, and words can also be grouped. The book behaves like a stack, words can only be added or
  * erased from the end of the book.
  *
- * Some methods, upon failure, will set an error bit in an internal error bitfield. The error can be checked
- * with cbook_error(). If any error is set all book methods will exit early with default return values and
- * no side-effects. It's possible to clear errors with cbook_repair().
+ * Some methods, upon failure, will set an error that can be checked with cbook_error(). If any error is set
+ * all string methods will exit early with default return values and no side-effects. It's possible to clear
+ * errors with cbook_repair().
  */
 typedef struct cbook cbook;
-
-/**
- * String to group addition mode.
- */
-enum cbook_group
-{
-	CBOOK_OLD = false,
-	CBOOK_NEW = true,
-};
 
 /************************************************************************************************************/
 /* GLOBALS **************************************************************************************************/
@@ -189,6 +180,15 @@ cbook_prealloc(cbook *book, size_t bytes_number, size_t words_number, size_t gro
 CBOOK_NONNULL(1);
 
 /**
+ * After this function is called, the next word that is added with cbook_write() will be part of a new group.
+ *
+ * @param book : Book to interact with.
+ */
+void
+cbook_prepare_new_group(cbook *book)
+CBOOK_NONNULL(1);
+
+/**
  * Clears errors and puts the book back into an usable state. The only unrecoverable error is CBOOK_INVALID.
  *
  * @param book : Book to interact with
@@ -198,19 +198,18 @@ cbook_repair(cbook *book)
 CBOOK_NONNULL(1);
 
 /**
- * Appends a new string (called 'word') to the book and increments the book word count (and possibly group
- * count) by 1 as well as the character count by the string's length (NUL terminator included). The book will
- * automatically extend its allocated memory to accommodate the new word.
+ * Appends a new word to the book and increments the book word count (and possibly group count) by 1 as well
+ * as the character count by the string's length (NUL terminator included). The book will automatically extend
+ * its allocated memory to accommodate the new word.
  * 
- * @param book       : Book to interact with
- * @param str        : C string
- * @param group_mode : Create (or not) a group for the new word
+ * @param book : Book to interact with
+ * @param str  : C string
  *
  * @error CERR_OVERFLOW : The size of the resulting book will be > SIZE_MAX
  * @error CERR_MEMORY   : Failed memory allocation
  */
 void
-cbook_write(cbook *book, const char *str, enum cbook_group group_mode)
+cbook_write(cbook *book, const char *str)
 CBOOK_NONNULL(1, 2);
 
 /**

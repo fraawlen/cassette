@@ -285,7 +285,10 @@ cdict_prealloc(cdict *dict, size_t slots_number)
 void
 cdict_repair(cdict *dict)
 {
-	dict->err &= CERR_INVALID;
+	if (dict->err != CERR_INVALID)
+	{
+		dict->err = CERR_NONE;
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

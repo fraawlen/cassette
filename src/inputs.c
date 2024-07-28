@@ -277,7 +277,10 @@ cinputs_push(cinputs *inputs, unsigned int id, int x, int y, void *ptr)
 void
 cinputs_repair(cinputs *inputs)
 {
-	inputs->err &= CERR_INVALID;
+	if (inputs->err != CERR_INVALID)
+	{
+		inputs->err = CERR_NONE;
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -344,19 +347,19 @@ _resize(cinputs *inputs, size_t n)
 
 	if (n == 0)
 	{
-		inputs->err |= CERR_PARAM;
+		inputs->err = CERR_PARAM;
 		return false;
 	}
 
 	if (!safe_mul(NULL, n, sizeof(struct _slot)))
 	{
-		inputs->err |= CERR_OVERFLOW;
+		inputs->err = CERR_OVERFLOW;
 		return false;
 	}
 
 	if (!(tmp = realloc(inputs->slots, n * sizeof(struct _slot))))
 	{
-		inputs->err |= CERR_MEMORY;
+		inputs->err = CERR_MEMORY;
 		return false;
 	}
 

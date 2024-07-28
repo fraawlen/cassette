@@ -48,9 +48,9 @@ extern "C" {
  * linear probing. A dictionary can automatically grow to maintain a maximum load factor (set by default to
  * 0.6). Values are retrieved using both a NUL terminated string key and a group value.
  *
- * Some methods, upon failure, will set an error bit in an internal error bitfield. The error can be checked
- * with cdict_error(). If any error is set all dictionary methods will exit early with default return values
- * and no side-effects. It's possible to clear errors with cdict_repair().
+ * Some methods, upon failure, will set an error that can be checked with cdict_error(). If any error is set
+ * all string methods will exit early with default return values and no side-effects. It's possible to clear
+ * errors with cdict_repair().
  */
 typedef struct cdict cdict;
 

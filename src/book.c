@@ -41,6 +41,7 @@ struct cbook
 	size_t n_alloc_chars;
 	size_t n_alloc_words;
 	size_t n_alloc_groups;
+	bool new_group;
 	enum cerr err;
 };
 
@@ -66,6 +67,7 @@ cbook cbook_placeholder_instance =
 	.n_alloc_chars  = 0,
 	.n_alloc_words  = 0,
 	.n_alloc_groups = 0,
+	.new_group      = false,
 	.err            = CERR_INVALID,
 };
 
@@ -81,9 +83,10 @@ cbook_clear(cbook *book)
 		return;
 	}
 
-	book->n_groups = 0;
-	book->n_words  = 0;
-	book->n_chars  = 0;
+	book->n_groups  = 0;
+	book->n_words   = 0;
+	book->n_chars   = 0;
+	book->new_group = true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -111,10 +114,11 @@ cbook_clone(const cbook *book)
 	memcpy(book_new->words,  book->words,  book->n_words  * sizeof(size_t));
 	memcpy(book_new->groups, book->groups, book->n_groups * sizeof(size_t));
 
-	book_new->n_chars  = book->n_chars;
-	book_new->n_words  = book->n_words;
-	book_new->n_groups = book->n_groups;
-	book_new->err      = CERR_NONE;
+	book_new->n_chars   = book->n_chars;
+	book_new->n_words   = book->n_words;
+	book_new->n_groups  = book->n_groups;
+	book_new->new_group = book->new_group;
+	book_new->err       = CERR_NONE;
 
 	return book_new;
 }
@@ -143,6 +147,7 @@ cbook_create(void)
 	book->n_chars   = 0;
 	book->n_words   = 0;
 	book->n_groups  = 0;
+	book->new_group = true;
 	book->err       = CERR_NONE;
 
 	return book;
@@ -200,20 +205,6 @@ cbook_groups_number(const cbook *book)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-cbook_pop_group(cbook *book)
-{
-	if (book->err || book->n_groups == 0)
-	{
-		return;
-	}
-
-	book->n_chars = book->words[book->groups[--book->n_groups]];
-	book->n_words = book->groups[book->n_groups];
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 size_t
 cbook_length(const cbook *book)
 {
@@ -228,6 +219,25 @@ cbook_length(const cbook *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cbook_pop_group(cbook *book)
+{
+	if (book->err || book->n_groups == 0)
+	{
+		return;
+	}
+
+	book->n_chars = book->words[book->groups[--book->n_groups]];
+	book->n_words = book->groups[book->n_groups];
+
+	if (book->n_groups == 0)
+	{
+		book->new_group = true;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cbook_pop_word(cbook *book)
 {
 	if (book->err || book->n_words == 0)
@@ -237,7 +247,10 @@ cbook_pop_word(cbook *book)
 
 	if (book->groups[book->n_groups - 1] == book->n_words - 1)
 	{
-		book->n_groups--;
+		if (--book->n_groups == 0)
+		{
+			book->new_group = true;
+		}
 	}
 
 	book->n_chars = book->words[--book->n_words];
@@ -259,9 +272,25 @@ cbook_prealloc(cbook *book, size_t bytes_number, size_t words_number, size_t gro
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cbook_prepare_new_group(cbook *book)
+{
+	if (book->err)
+	{
+		return;
+	}
+
+	book->new_group = true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cbook_repair(cbook *book)
 {
-	book->err &= CERR_INVALID;
+	if (book->err != CERR_INVALID)
+	{
+		book->err = CERR_NONE;
+	}
 }	
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -323,7 +352,7 @@ cbook_words_number(const cbook *book)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cbook_write(cbook *book, const char *str, enum cbook_group group_mode)
+cbook_write(cbook *book, const char *str)
 {
 	size_t ns;
 	size_t nc;
@@ -354,9 +383,10 @@ cbook_write(cbook *book, const char *str, enum cbook_group group_mode)
 		return;
 	}
 
-	if (group_mode == CBOOK_NEW || book->n_groups == 0)
+	if (book->new_group)
 	{
 		book->groups[book->n_groups++] = book->n_words;
+		book->new_group = false;
 	}
 
 	memmove(book->chars + book->n_chars, str, ns);

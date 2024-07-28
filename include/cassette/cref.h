@@ -48,9 +48,9 @@ extern "C" {
  * a pointer gets pushed to this object, its reference count gets incremented. A saved pointer only gets 
  * removed when its counts reaches 0.
  *
- * Some methods, upon failure, will set an error bit in an internal error bitfield. The error can be checked
- * with cref_error(). If any error is set all reference counter methods will exit early with default return
- * values and no side-effects. It's possible to clear errors with cref_repair().
+ * Some methods, upon failure, will set an error that can be checked with cref_error(). If any error is set
+ * all string methods will exit early with default return values and no side-effects. It's possible to clear
+ * errors with cref_repair().
  */
 typedef struct cref cref;
 

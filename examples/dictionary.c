@@ -53,16 +53,22 @@ main(void)
 	printf(">> %zu\n", cbook_group_length(_book, 0));
 	printf(">> %s\n", cbook_word_in_group(_book, 0, 0));
 
-	cbook_write(_book, "test1", CBOOK_NEW);
-	cbook_write(_book, "test2", CBOOK_OLD);
-	cbook_write(_book, "test3", CBOOK_OLD);
-	cbook_write(_book, "test4", CBOOK_NEW);
-	cbook_write(_book, "test5", CBOOK_OLD);
-	cbook_write(_book, "test6", CBOOK_OLD);
-	cbook_write(_book, "test7", CBOOK_OLD);
-	cbook_write(_book, "test8", CBOOK_NEW);
-	cbook_write(_book, "test9", CBOOK_NEW);
-	cbook_write(_book, "test0", CBOOK_OLD);
+	cbook_write(_book, "test1");
+	cbook_write(_book, "test2");
+	cbook_write(_book, "test3");
+
+	cbook_prepare_new_group(_book);
+	cbook_write(_book, "test4");
+	cbook_write(_book, "test5");
+	cbook_write(_book, "test6");
+	cbook_write(_book, "test7");
+
+	cbook_prepare_new_group(_book);
+	cbook_write(_book, "test8");
+
+	cbook_prepare_new_group(_book);
+	cbook_write(_book, "test9");
+	cbook_write(_book, "test0");
 
 	for (size_t i = 0; i < cbook_groups_number(_book); i++)
 	{

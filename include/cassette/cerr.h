@@ -33,15 +33,15 @@ extern "C" {
  */
 enum cerr
 {
-	CERR_NONE     = 0,
-	CERR_INVALID  = 1,
-	CERR_OVERFLOW = 1 << 1,
-	CERR_MEMORY   = 1 << 2,
-	CERR_PARAM    = 1 << 3,
-	CERR_CONFIG   = 1 << 4,
-	CERR_XCB      = 1 << 5,
-	CERR_CAIRO    = 1 << 6,
-	CERR_MUTEX    = 1 << 7,
+	CERR_NONE = 0,
+	CERR_INVALID,
+	CERR_OVERFLOW,
+	CERR_MEMORY,
+	CERR_PARAM,
+	CERR_CONFIG,
+	CERR_XCB,
+	CERR_CAIRO,
+	CERR_MUTEX,
 };
 
 /************************************************************************************************************/

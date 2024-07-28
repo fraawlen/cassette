@@ -48,9 +48,9 @@ extern "C" {
  * in the order they get added. The array that holds them is fixed size. If that array is full, new inputs get
  * ignored.
  *
- * Some methods, upon failure, will set an error bit in an internal error bitfield. The error can be checked
- * with cinputs_error(). If any error is set all inputs tracke methods will exit early with default return
- * values and no side-effects. It's possible to clear errors with cinputs_repair().
+ * Some methods, upon failure, will set an error that can be checked with cinputs_error(). If any error is
+ * set all string methods will exit early with default return values and no side-effects. It's possible to
+ * clear errors with cstr_repair().
  */
 typedef struct cinputs cinputs;
 

@@ -50,9 +50,9 @@ extern "C" {
  * printable or non printable characters. The only exception to this width rule are tab characters, whose
  * width can be customized with cstr_set_tab_width().
  *
- * Some methods, upon failure, will set an error bit in an internal error bitfield. The error can be checked
- * with cstr_error(). If any error is set all string methods will exit early with default return values and no
- * side-effects. It's possible to clear errors with cstr_repair().
+ * Some methods, upon failure, will set an error that can be checked with cstr_error(). If any error is set
+ * all string methods will exit early with default return values and no side-effects. It's possible to clear
+ * errors with cstr_repair().
  */
 typedef struct cstr cstr;
 

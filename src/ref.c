@@ -336,7 +336,10 @@ cref_push(cref *ref, void *ptr)
 void
 cref_repair(cref *ref)
 {
-	ref->err &= CERR_INVALID;
+	if (ref->err != CERR_INVALID)
+	{
+		ref->err = CERR_NONE;
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
