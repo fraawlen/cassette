@@ -16,27 +16,27 @@
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-with Ada.Text_IO;      use Ada.Text_IO;
-with Cassette.Segment; use Cassette;
-with Interfaces;       use Interfaces;
+with Ada.Text_IO;  use Ada.Text_IO;
+with Cassette.Seg; use Cassette;
+with Interfaces;   use Interfaces;
 
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-procedure Lines
+procedure Segment
 is
-	S : Segment.T := Segment.I_8;
+	S : Seg.T := Seg.I_8;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Print (Seg : in Segment.T)
+	procedure Print (Segment : in Seg.T)
 	is begin
 
-		Put (Seg.Min'Image    & " <=");
-		Put (Seg.Origin'Image & " + ");
-		Put (Seg.Length'Image & " <=");
-		Put (Seg.Max'Image);
+		Put (Segment.Min'Image    & " <=");
+		Put (Segment.Origin'Image & " + ");
+		Put (Segment.Length'Image & " <=");
+		Put (Segment.Max'Image);
 		New_Line;
 
 	end Print;
@@ -52,4 +52,4 @@ begin
 
 	Print (S);
 
-end Lines;
+end Segment;

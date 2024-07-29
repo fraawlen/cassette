@@ -46,40 +46,32 @@ package Cassette.Color is
 	type ARGB_Uint is new C.unsigned_long  range   0 .. (2 ** 32 - 1);
 	type Byte      is new C.unsigned_short range   0 .. (2 **  8 - 1);
 
-	-- Represention of a RGBA color. Double types bound inside the [0.0 and 1.0] range are used, so
-	-- that they could be passed to cairo's function without conversion.
+	-- Represention of a RGBA color.
 	--
-	-- [Params]
-	--
-	-- 	R : Red   color component
-	-- 	G : Green color component
-	-- 	B : Blue  color component
-	-- 	A : Alpha color component
-	--
-	type T is record
-		R : aliased Channel := 0.0;
-		G : aliased Channel := 0.0;
-		B : aliased Channel := 0.0;
-		A : aliased Channel := 0.0;
-	end record
-		with Convention => C_Pass_By_Copy;
+	type T is tagged private;
 
 	-------------------------------------------------------------------------------------------------
-	-- GLOBALS --------------------------------------------------------------------------------------
+	-- PRESETS --------------------------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	TRANSPARENT : constant T := (R => 0.000, G => 0.000, B => 0.000, A => 0.000);
-	WHITE       : constant T := (R => 1.000, G => 1.000, B => 1.000, A => 1.000);
-	BLACK       : constant T := (R => 0.000, G => 0.000, B => 0.000, A => 1.000);
-	RED         : constant T := (R => 1.000, G => 0.000, B => 0.000, A => 1.000);
-	GREEN       : constant T := (R => 0.000, G => 1.000, B => 0.000, A => 1.000);
-	BLUE        : constant T := (R => 0.000, G => 0.000, B => 1.000, A => 1.000);
-	YELLOW      : constant T := (R => 1.000, G => 1.000, B => 0.000, A => 1.000);
-	MAGENTA     : constant T := (R => 1.000, G => 0.000, B => 1.000, A => 1.000);
-	CYAN        : constant T := (R => 0.000, G => 1.000, B => 1.000, A => 1.000);
+	-- Creates a color from a preset.
+	--
+	-- [Return]
+	--
+	--	Color.
+	--
+	function Transparent return T;
+	function White       return T;
+	function Black       return T;
+	function Red         return T;
+	function Green       return T;
+	function Blue        return T;
+	function Yellow      return T;
+	function Magenta     return T;
+	function Cyan        return T;
 
 	-------------------------------------------------------------------------------------------------
-	-- PURE METHODS --------------------------------------------------------------------------------- 
+	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
 	-- Converts a 32-bits ARGB color representation into a color object.
@@ -90,23 +82,40 @@ package Cassette.Color is
 	--
 	-- [Return]
 	--
-	-- 	Color record
+	-- 	Color.
 	--
 	function From_ARGB_Uint (
 		Argb : in ARGB_Uint)
 			return T;
 
-	-- Converts a RGBA color representation with channel values bounded between 0 and 255 into a
-	-- color object.
+	-- Converts a RGBA color representation into a color object.
 	--
-	-- @param r : Red   color component
-	-- @param g : Green color component
-	-- @param b : Blue  color component
-	-- @param a : Alpha color component, Optional
+	-- @param R : Red   color component
+	-- @param G : Green color component
+	-- @param B : Blue  color component
+	-- @param A : Alpha color component, Optional
 	--
 	-- [Return]
 	--
-	-- 	Color record
+	-- 	Color.
+	--
+	function From_RGBA (
+		R : in Channel;
+		G : in Channel;
+		B : in Channel;
+		A : in Channel := 1.0)
+			return T;
+
+	-- Converts a RGBA color representation with channels represented as bytes into a color object.
+	--
+	-- @param R : Red   color component
+	-- @param G : Green color component
+	-- @param B : Blue  color component
+	-- @param A : Alpha color component, Optional
+	--
+	-- [Return]
+	--
+	-- 	Color.
 	--
 	function From_RGBA (
 		R : in Byte;
@@ -130,7 +139,7 @@ package Cassette.Color is
 	--
 	-- [Return]
 	--
-	-- 	Color record.
+	-- 	Color.
 	--
 	-- [Errors]
 	--
@@ -152,7 +161,7 @@ package Cassette.Color is
 	--
 	-- [Return]
 	--
-	-- 	Color record. Check Error to be certain of the return's validity
+	-- 	Color.
 	--
 	function From_Str_Unchecked (
 		Str : in  String)
@@ -164,12 +173,11 @@ package Cassette.Color is
 	--
 	-- 	Color_1 : First  color
 	-- 	Color_2 : Second color
-	-- 	Ratio   : Second / first color ratio in the [0.0 1.0] range used for the
-	--              interpolation.
+	-- 	Ratio   : Second / first color ratio
 	--
 	-- [Return]
 	--
-	-- 	Interpolated color
+	-- 	Color.
 	--
 	function Interpolate (
 		Color_1 : in T;
@@ -177,12 +185,72 @@ package Cassette.Color is
 		Side    : in Ratio)
 			return T;
 
+	-------------------------------------------------------------------------------------------------
+	-- PURE METHODS --------------------------------------------------------------------------------- 
+	-------------------------------------------------------------------------------------------------
+
+	-- Gets the alpha color component.
+	--
+	-- [Param]
+	--
+	--	Color : Color to interact with
+	--
+	-- [Return]
+	--
+	--	Channel color value.
+	--
+	function A (
+		Color : in T)
+			return Channel;
+
+	-- Gets the blue color component.
+	--
+	-- [Param]
+	--
+	--	Color : Color to interact with
+	--
+	-- [Return]
+	--
+	--	Channel color value.
+	--
+	function B (
+		Color : in T)
+			return Channel;
+
+	-- Gets the green color component.
+	--
+	-- [Param]
+	--
+	--	Color : Color to interact with
+	--
+	-- [Return]
+	--
+	--	Channel color value.
+	--
+	function G (
+		Color : in T)
+			return Channel;
+
+	-- Gets the red color component.
+	--
+	-- [Param]
+	--
+	--	Color : Color to interact with
+	--
+	-- [Return]
+	--
+	--	Channel color value.
+	--
+	function R (
+		Color : in T)
+			return Channel;
+
 	-- Converts a given color object to its equivalent ARGB representation within a single 32-bit
 	-- unsigned int. Useful when using colors directly with XCB.
 	--
 	-- [Params]
 	--
-	-- 	Cl : Color record to convert
+	-- 	Cl : Color to convert
 	--
 	-- [Return]
 	--
@@ -193,16 +261,34 @@ package Cassette.Color is
 			return ARGB_Uint;
 
 	-------------------------------------------------------------------------------------------------
+	-- PRIVATE -------------------------------------------------------------------------------------- 
+	-------------------------------------------------------------------------------------------------
+	
+private
+
+	type C_T is record
+		R : aliased Channel := 0.0;
+		G : aliased Channel := 0.0;
+		B : aliased Channel := 0.0;
+		A : aliased Channel := 0.0;
+	end record
+		with Convention => C_Pass_By_Copy;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	type T is tagged record
+		Data : aliased C_T;
+	end record;
+
+	-------------------------------------------------------------------------------------------------
 	-- IMPORTS -------------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-private
-
-	function C_From_ARGB_Uint (Argb : ARGB_Uint)                                          return T;
-	function C_From_RGBA      (R : Byte; G : Byte; B : Byte; A : Byte)                    return T;
-	function C_From_Str       (Str : C.Strings.chars_ptr; Err : access C.Extensions.bool) return T;
-	function C_Interpolate    (Color_1 : T; Color_2 : T; Ratio : C.double)                return T;
-	function C_To_ARGB_Uint   (Color : T)                                                 return ARGB_Uint;
+	function C_From_ARGB_Uint (Argb : ARGB_Uint)                                          return C_T;
+	function C_From_RGBA      (R : Byte; G : Byte; B : Byte; A : Byte)                    return C_T;
+	function C_From_Str       (Str : C.Strings.chars_ptr; Err : access C.Extensions.bool) return C_T;
+	function C_Interpolate    (Color_1 : C_T; Color_2 : C_T; Ratio : C.double)            return C_T;
+	function C_To_ARGB_Uint   (Color : C_T)                                               return ARGB_Uint;
 
 	pragma Import (C, C_From_ARGB_Uint, "ccolor_from_argb_uint");
 	pragma Import (C, C_From_RGBA,      "ccolor_from_rgba");

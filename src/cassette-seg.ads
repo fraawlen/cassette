@@ -25,7 +25,7 @@ with System;
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-package Cassette.Segment is
+package Cassette.Seg is
 
 	-------------------------------------------------------------------------------------------------
 	-- TYPES ---------------------------------------------------------------------------------------- 
@@ -38,7 +38,7 @@ package Cassette.Segment is
 	type T is tagged private;
 
 	-------------------------------------------------------------------------------------------------
-	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
+	-- PRESETS --------------------------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
 	-- Creates a segment with limits set between -(2 ** 63/31/15/7) and (2 ** 63/31/15/7 - 1).
@@ -72,92 +72,92 @@ package Cassette.Segment is
 	--
 	-- [Params]
 	--
-	-- 	Segment : Segment to interact with
+	-- 	Seg : Segment to interact with
 	--
 	procedure Bind (
-		Segment : in out T);
+		Seg : in out T);
 
 	-- Adds a value to the segment's length.
 	--
 	-- [Params]
 	--
-	-- Segment : Segment to interact with
-	-- Length  : Distance value
+	-- 	Seg    : Segment to interact with
+	--	Length : Distance value
 	--  
 	procedure Grow (
-		Segment : in out T;
-		Length  : in Integer_64);
+		Seg    : in out T;
+		Length : in Integer_64);
 
 	-- Sets new limits. The order of Lim_1 or Lim_2 does not matter. If necessary, origin and length
 	-- values will also be updated to respect the new limits.
 	--
 	-- [Params]
 	--
-	-- 	Segment : Segment to interact with
-	-- 	Lim_1   : First bound
-	-- 	Lim_2   : Second bound
+	-- 	Seg   : Segment to interact with
+	-- 	Lim_1 : First bound
+	-- 	Lim_2 : Second bound
 	--
 	procedure Limit (
-		Segment : in out T;
-		Lim_1   : Integer_64;
-		Lim_2   : Integer_64);
+		Seg   : in out T;
+		Lim_1 : Integer_64;
+		Lim_2 : Integer_64);
 
 	-- Sets a new origin. If necessary, the length will also be udpated to respect the limits.
 	--
 	-- [Params]
 	--
-	-- 	Segment : Segment to interact with
-	-- 	Origin  : Position value
+	-- 	Seg    : Segment to interact with
+	-- 	Origin : Position value
 	--
 	procedure Move (
-		Segment : in out T;
-		Origin  : in Integer_64);
+		Seg    : in out T;
+		Origin : in Integer_64);
 
 	-- Add a value to the segment's origin. If necessary, the length will also be udpated to respect
 	-- the limits.
 	--
 	-- [Params]
 	--
-	-- 	Segment : Segment to interact with
-	-- 	Length  : Distance value
+	-- 	Seg    : Segment to interact with
+	-- 	Length : Distance value
 	--
 	procedure Offset (
-		Segment : in out T;
-		Length  : in Integer_64);
+		Seg    : in out T;
+		Length : in Integer_64);
 
 	-- Offsets the segment by a length value, then decreases its length (stored by the segment) by
 	-- 2 * length (the funtion parameter).
 	--
 	-- [Params]
 	--
-	-- 	Segment : Segment to interact with
-	-- 	Lenght  : Distance value
+	-- 	Seg    : Segment to interact with
+	-- 	Lenght : Distance value
 	--
 	procedure Pad (
-		Segment : in out T;
-		Length  : in Integer_64);
+		Seg    : in out T;
+		Length : in Integer_64);
 
 	-- Sets a new length value.
 	--
 	-- [Params]
 	--
-	-- 	Segment : Segment to interact with
-	-- 	Length  : Distance value
+	-- 	Seg    : Segment to interact with
+	-- 	Length : Distance value
 	--
 	procedure Resize (
-		Segment : in out T;
-		Length  : in Integer_64);
+		Seg    : in out T;
+		Length : in Integer_64);
 
 	-- Mutilplies the origin and length.
 	--
 	-- [Params]
 	--
-	--	Segment : Segment to interact with
-	-- 	Scale   : Multiplier value
+	--	Seg   : Segment to interact with
+	-- 	Scale : Multiplier value
 	--
 	procedure Scale (
-		Segment : in out T;
-		Scale   : in Float);
+		Seg   : in out T;
+		Scale : in Float);
 
 	-------------------------------------------------------------------------------------------------
 	-- PURE METHODS --------------------------------------------------------------------------------- 
@@ -167,72 +167,72 @@ package Cassette.Segment is
 	--
 	-- [Params]
 	--
-	-- 	Segment : Segment to interact with
-	-- 	Point   : Position value
+	-- 	Seg   : Segment to interact with
+	-- 	Point : Position value
 	--
 	-- [Return]
 	--
 	--	True if it is, false otherwise.
 	--
 	function Is_In (
-		Segment : in out T;
-		Point   : in Integer_64)
+		Seg   : in T;
+		Point : in Integer_64)
 			return Boolean;
 
 	-- Gets the length.
 	--
 	-- [Params]
 	--
-	-- 	Segment : Segment to interact with
+	-- 	Seg : Segment to interact with
 	--
 	-- [Return]
 	--
 	--	Segment's Length value.
 	--
 	function Length (
-		Segment : in T)
+		Seg : in T)
 			return Integer_64;
 
 	-- Gets the max limit.
 	--
 	-- [Params]
 	--
-	-- 	Segment : Segment to interact with
+	-- 	Seg : Segment to interact with
 	--
 	-- [Return]
 	--
 	--	Segment's Max value.
 	--
 	function Max (
-		Segment : in T)
+		Seg : in T)
 			return Integer_64;
 
 	-- Gets the min limit.
 	--
 	-- [Params]
 	--
-	-- 	Segment : Segment to interact with
+	-- 	Seg : Segment to interact with
 	--
 	-- [Return]
 	--
 	--	Segment's Min value.
 	--
 	function Min (
-		Segment : in T)
+		Seg : in T)
 			return Integer_64;
 
 	-- Gets the origin.
 	--
 	-- [Params]
 	--
-	-- 	Segment : Segment to interact with
+	-- 	Seg : Segment to interact with
 	--
 	-- [Return]
 	--
 	--	Segment's Origin value.
 	--
 	function Origin (
-		Segment : in T)
+		Seg : in T)
 			return Integer_64;
 
 	-------------------------------------------------------------------------------------------------
@@ -259,16 +259,16 @@ private
 	-- IMPORTS -------------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	procedure C_Bind   (Segment : access C_T);
-	procedure C_Grow   (Segment : access C_T; Length : Integer_64);
-	procedure C_Limit  (Segment : access C_T; Lim_1  : Integer_64; Lim_2 : Integer_64);
-	procedure C_Move   (Segment : access C_T; Origin : Integer_64);
-	procedure C_Offset (Segment : access C_T; Length : Integer_64);
-	procedure C_Pad    (Segment : access C_T; Length : Integer_64);
-	procedure C_Resize (Segment : access C_T; Length : Integer_64);
-	procedure C_Scale  (Segment : access C_T; Scale  : C.double);
+	procedure C_Bind   (Seg : access C_T);
+	procedure C_Grow   (Seg : access C_T; Length : Integer_64);
+	procedure C_Limit  (Seg : access C_T; Lim_1  : Integer_64; Lim_2 : Integer_64);
+	procedure C_Move   (Seg : access C_T; Origin : Integer_64);
+	procedure C_Offset (Seg : access C_T; Length : Integer_64);
+	procedure C_Pad    (Seg : access C_T; Length : Integer_64);
+	procedure C_Resize (Seg : access C_T; Length : Integer_64);
+	procedure C_Scale  (Seg : access C_T; Scale  : C.double);
 
-	function  C_Is_In  (Segment : C_T; Point : Integer_64) return C.Extensions.bool;
+	function  C_Is_In  (Seg : C_T; Point : Integer_64) return C.Extensions.bool;
 
 	pragma Import (C, C_Bind,   "cseg_bind");
 	pragma Import (C, C_Grow,   "cseg_grow");
@@ -280,4 +280,4 @@ private
 	pragma Import (C, C_Resize, "cseg_resize");
 	pragma Import (C, C_Scale,  "cseg_scale");
 
-end Cassette.Segment;
+end Cassette.Seg;

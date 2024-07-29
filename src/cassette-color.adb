@@ -22,8 +22,6 @@ with Interfaces.C.Extensions;
 with Interfaces.C.Strings;
 with System;
 
-with Ada.Text_IO;
-
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
@@ -31,22 +29,193 @@ with Ada.Text_IO;
 package body Cassette.Color is
 
 	-------------------------------------------------------------------------------------------------
-	-- PURE METHODS --------------------------------------------------------------------------------- 
+	-- PRESETS --------------------------------------------------------------------------------------
+	-------------------------------------------------------------------------------------------------
+
+	function Transparent return T
+	is
+		Cl : T;
+	begin
+
+		Cl.Data.R := 0.0;
+		Cl.Data.G := 0.0;
+		Cl.Data.B := 0.0;
+		Cl.Data.A := 0.0;
+
+		return Cl;
+
+	end Transparent;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	function White return T
+	is
+		Cl : T;
+	begin
+
+		Cl.Data.R := 1.0;
+		Cl.Data.G := 1.0;
+		Cl.Data.B := 1.0;
+		Cl.Data.A := 1.0;
+
+		return Cl;
+
+	end White;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	function Black return T
+	is
+		Cl : T;
+	begin
+
+		Cl.Data.R := 0.0;
+		Cl.Data.G := 0.0;
+		Cl.Data.B := 0.0;
+		Cl.Data.A := 1.0;
+
+		return Cl;
+
+	end Black;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	function Red return T
+	is
+		Cl : T;
+	begin
+
+		Cl.Data.R := 1.0;
+		Cl.Data.G := 0.0;
+		Cl.Data.B := 0.0;
+		Cl.Data.A := 1.0;
+
+		return Cl;
+
+	end Red;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	function Green return T
+	is
+		Cl : T;
+	begin
+
+		Cl.Data.R := 0.0;
+		Cl.Data.G := 1.0;
+		Cl.Data.B := 0.0;
+		Cl.Data.A := 1.0;
+
+		return Cl;
+
+	end Green;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	function Blue return T
+	is
+		Cl : T;
+	begin
+
+		Cl.Data.R := 0.0;
+		Cl.Data.G := 0.0;
+		Cl.Data.B := 1.0;
+		Cl.Data.A := 1.0;
+
+		return Cl;
+
+	end Blue;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	function Yellow return T
+	is
+		Cl : T;
+	begin
+
+		Cl.Data.R := 1.0;
+		Cl.Data.G := 1.0;
+		Cl.Data.B := 0.0;
+		Cl.Data.A := 1.0;
+
+		return Cl;
+
+	end Yellow;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	function Magenta return T
+	is
+		Cl : T;
+	begin
+
+		Cl.Data.R := 1.0;
+		Cl.Data.G := 0.0;
+		Cl.Data.B := 1.0;
+		Cl.Data.A := 1.0;
+
+		return Cl;
+
+	end Magenta;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	function Cyan return T
+	is
+		Cl : T;
+	begin
+
+		Cl.Data.R := 0.0;
+		Cl.Data.G := 1.0;
+		Cl.Data.B := 1.0;
+		Cl.Data.A := 1.0;
+
+		return Cl;
+
+	end Cyan;
+
+	-------------------------------------------------------------------------------------------------
+	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
 	function From_ARGB_Uint (Argb : in ARGB_Uint) return T
-	is begin
+	is
+		Cl : T;
+	begin
 
-		return C_From_ARGB_Uint (Argb);
+		Cl.Data := C_From_ARGB_Uint (Argb);
+
+		return Cl;
 
 	end From_ARGB_Uint;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function From_RGBA (R : in Byte; G : in Byte; B : in Byte; A : in Byte := 255) return T
-	is begin
+	function From_RGBA (R : in Channel; G : in Channel; B : in Channel; A : in Channel := 1.0)
+		return T
+	is
+		Cl : T;
+	begin
 
-		return C_From_RGBA (R, G, B, A);
+		Cl.Data.R := R;
+		Cl.Data.G := G;
+		Cl.Data.B := B;
+		Cl.Data.A := A;
+
+		return Cl;
+
+	end From_RGBA;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	function From_RGBA (R : in Byte; G : in Byte; B : in Byte; A : in Byte := 255) return T
+	is
+		Cl : T;
+	begin
+
+		Cl.Data := C_From_RGBA (R, G, B, A);
+
+		return Cl;
 
 	end From_RGBA;
 		
@@ -54,12 +223,12 @@ package body Cassette.Color is
 
 	function From_Str (Str : in  String) return T
 	is
-		B  : aliased C.Extensions.bool;
 		Cl : T;
+		B  : aliased C.Extensions.bool;
 		S  : C.Strings.chars_ptr := C.Strings.New_String (Str);
 	begin
 
-		Cl := C_From_Str (S, B'Access);
+		Cl.Data := C_From_Str (S, B'Access);
 		C.Strings.Free (S);
 
 		if B
@@ -79,7 +248,7 @@ package body Cassette.Color is
 		S  : C.Strings.chars_ptr := C.Strings.New_String (Str);
 	begin
 
-		Cl := C_From_Str (S, NULL);
+		Cl.Data := C_From_Str (S, NULL);
 		C.Strings.Free (S);
 
 		return Cl;
@@ -89,18 +258,60 @@ package body Cassette.Color is
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
 	function Interpolate (Color_1 : in T; Color_2 : in T; Side : Ratio) return T
-	is begin
+	is
+		Cl : T;
+	begin
 
-		return C_Interpolate (Color_1, Color_2, C.double (Side));
+		Cl.Data := C_Interpolate (Color_1.Data, Color_2.Data, C.double (Side));
+
+		return Cl;
 
 	end Interpolate;
+
+	-------------------------------------------------------------------------------------------------
+	-- PURE METHODS --------------------------------------------------------------------------------- 
+	-------------------------------------------------------------------------------------------------
+
+	function A (Color : in T) return Channel
+	is begin
+		
+		return Color.Data.A;
+
+	end A;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	function B (Color : in T) return Channel
+	is begin
+		
+		return Color.Data.B;
+
+	end B;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	function G (Color : in T) return Channel
+	is begin
+		
+		return Color.Data.G;
+
+	end G;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	function R (Color : in T) return Channel
+	is begin
+		
+		return Color.Data.R;
+
+	end R;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
 	function To_ARGB_Uint (Color : in T) return ARGB_Uint
 	is begin
 
-		return C_To_ARGB_Uint (Color);
+		return C_To_ARGB_Uint (Color.Data);
 
 	end To_ARGB_Uint;
 

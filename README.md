@@ -22,7 +22,6 @@ Features
 - Convertion from C char array strings to Ada native strings.
 - Subtyping of C numeral values + ranges.
 - Usage of packages instead of C function namespaces.
-- Usage of full words instead of shorthands.
 
 TODO details.
 

@@ -23,10 +23,10 @@ with System;
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-package body Cassette.Segment is
+package body Cassette.Seg is
 
 	-------------------------------------------------------------------------------------------------
-	-- CONSTRUCTORS / DESTRUCTORS ------------------------------------------------------------------- 
+	-- PRESETS --------------------------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
 	function I_64 return T
@@ -143,73 +143,73 @@ package body Cassette.Segment is
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	procedure Bind (Segment : in out T)
+	procedure Bind (Seg : in out T)
 	is begin
 
-		C_Bind (Segment.Data'Access);
+		C_Bind (Seg.Data'Access);
 
 	end Bind;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Grow (Segment : in out T; Length : in Integer_64)
+	procedure Grow (Seg : in out T; Length : in Integer_64)
 	is begin
 
-		C_Grow (Segment.Data'Access, Length);
+		C_Grow (Seg.Data'Access, Length);
 
 	end Grow;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Limit (Segment : in out T; Lim_1 : Integer_64; Lim_2 : Integer_64)
+	procedure Limit (Seg : in out T; Lim_1 : Integer_64; Lim_2 : Integer_64)
 	is begin
 
-		C_Limit (Segment.Data'Access, Lim_1, Lim_2);
+		C_Limit (Seg.Data'Access, Lim_1, Lim_2);
 
 	end Limit;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Move (Segment : in out T; Origin : in Integer_64)
+	procedure Move (Seg : in out T; Origin : in Integer_64)
 	is begin
 
-		C_Move (Segment.Data'Access, Origin);
+		C_Move (Seg.Data'Access, Origin);
 
 	end Move;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Offset (Segment : in out T; Length : in Integer_64)
+	procedure Offset (Seg : in out T; Length : in Integer_64)
 	is begin
 
-		C_Offset (Segment.Data'Access, Length);
+		C_Offset (Seg.Data'Access, Length);
 
 	end Offset;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Pad (Segment : in out T; Length : in Integer_64)
+	procedure Pad (Seg : in out T; Length : in Integer_64)
 	is begin
 
-		C_Pad (Segment.Data'Access, Length);
+		C_Pad (Seg.Data'Access, Length);
 
 	end Pad;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Resize (Segment : in out T; Length : in Integer_64)
+	procedure Resize (Seg : in out T; Length : in Integer_64)
 	is begin
 
-		C_Resize (Segment.Data'Access, Length);
+		C_Resize (Seg.Data'Access, Length);
 
 	end Resize;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Scale (Segment : in out T; Scale : in Float)
+	procedure Scale (Seg : in out T; Scale : in Float)
 	is begin
 
-		C_Scale (Segment.Data'Access, C.double(Scale));
+		C_Scale (Seg.Data'Access, C.double(Scale));
 
 	end Scale;
 
@@ -217,48 +217,48 @@ package body Cassette.Segment is
 	-- PURE METHODS --------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	function Is_In (Segment : in out T; Point : in Integer_64) return Boolean
+	function Is_In (Seg : in T; Point : in Integer_64) return Boolean
 	is begin
 
-		return Boolean (C_Is_In (Segment.Data, Point));
+		return Boolean (C_Is_In (Seg.Data, Point));
 
 	end Is_In;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Length (Segment : in T) return Integer_64
+	function Length (Seg : in T) return Integer_64
 	is begin
 
-		return Segment.Data.Length;
+		return Seg.Data.Length;
 
 	end Length;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
- 	function Max (Segment : in T) return Integer_64
+ 	function Max (Seg : in T) return Integer_64
 	is begin
 
-		return Segment.Data.Max;
+		return Seg.Data.Max;
 
 	end Max;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Min (Segment : in T) return Integer_64
+	function Min (Seg : in T) return Integer_64
 	is begin
 
-		return Segment.Data.Min;
+		return Seg.Data.Min;
 
 	end Min;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Origin (Segment : in T) return Integer_64
+	function Origin (Seg : in T) return Integer_64
 	is begin
 
-		return Segment.Data.Origin;
+		return Seg.Data.Origin;
 
 	end Origin;
 
-end Cassette.Segment;
+end Cassette.Seg;
 
