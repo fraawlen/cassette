@@ -30,8 +30,8 @@
 static void          _bind_color (struct ccolor *);
 static void          _bind_d     (double *);
 static uint8_t       _hex_to_int (char)                 CCOLOR_CONST; 
-static struct ccolor _from_hex   (const char *, bool *) CCOLOR_NONNULL(1) CCOLOR_PURE;
-static struct ccolor _from_ulong (const char *, bool *) CCOLOR_NONNULL(1) CCOLOR_PURE;
+static struct ccolor _from_hex   (const char *, bool *) CCOLOR_NONNULL(1);
+static struct ccolor _from_ulong (const char *, bool *) CCOLOR_NONNULL(1);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/

@@ -119,8 +119,7 @@ CCOLOR_CONST;
  */
 struct ccolor
 ccolor_from_str(const char *str, bool *err)
-CCOLOR_NONNULL(1)
-CCOLOR_PURE;
+CCOLOR_NONNULL(1);
 
 /**
  * Interpolates a color between two given colors.
