@@ -26,101 +26,101 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void    _bind_length (struct cline *)    CLINE_NONNULL(1);
-static void    _bind_origin (struct cline *)    CLINE_NONNULL(1);
-static int64_t _scale       (int64_t a, double) CLINE_CONST;
-static void    _swap_bounds (struct cline *)    CLINE_NONNULL(1);
+static void    _bind_length (struct cseg *)   CSEG_NONNULL(1);
+static void    _bind_origin (struct cseg *)   CSEG_NONNULL(1);
+static int64_t _scale       (int64_t, double) CSEG_CONST;
+static void    _swap_bounds (struct cseg *)   CSEG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 void
-cline_bind(struct cline *line)
+cseg_bind(struct cseg *seg)
 {
-	_swap_bounds(line);
-	_bind_origin(line);
-	_bind_length(line);
+	_swap_bounds(seg);
+	_bind_origin(seg);
+	_bind_length(seg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cline_grow(struct cline *line, int64_t length)
+cseg_grow(struct cseg *seg, int64_t length)
 {
 	if (length > 0)
 	{
-		line->length = line->length > INT64_MAX - length ? INT64_MAX : line->length + length;
+		seg->length = seg->length > INT64_MAX - length ? INT64_MAX : seg->length + length;
 	}
 	else
 	{
-		line->length = line->length < INT64_MIN - length ? INT64_MIN : line->length + length;
+		seg->length = seg->length < INT64_MIN - length ? INT64_MIN : seg->length + length;
 	}
 
-	_bind_length(line);
+	_bind_length(seg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-cline_is_in(struct cline line, int64_t point)
+cseg_is_in(struct cseg seg, int64_t point)
 {
-	if (line.length > 0)
+	if (seg.length > 0)
 	{
-		return point >= line.origin && point <= line.origin + line.length;
+		return point >= seg.origin && point <= seg.origin + seg.length;
 	}
 	else
 	{
-		return point <= line.origin && point >= line.origin + line.length;
+		return point <= seg.origin && point >= seg.origin + seg.length;
 	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cline_limit(struct cline *line, int64_t lim_1, int64_t lim_2)
+cseg_limit(struct cseg *seg, int64_t lim_1, int64_t lim_2)
 {
-	line->min = lim_1;
-	line->max = lim_2;
+	seg->min = lim_1;
+	seg->max = lim_2;
 
-	_swap_bounds(line);
-	_bind_origin(line);
-	_bind_length(line);
+	_swap_bounds(seg);
+	_bind_origin(seg);
+	_bind_length(seg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cline_move(struct cline *line, int64_t origin)
+cseg_move(struct cseg *seg, int64_t origin)
 {
-	line->origin = origin;
+	seg->origin = origin;
 
-	_bind_origin(line);
-	_bind_length(line);
+	_bind_origin(seg);
+	_bind_length(seg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cline_offset(struct cline *line, int64_t length)
+cseg_offset(struct cseg *seg, int64_t length)
 {
 	if (length > 0)
 	{
-		line->origin = line->origin > INT64_MAX - length ? INT64_MAX : line->origin + length;
+		seg->origin = seg->origin > INT64_MAX - length ? INT64_MAX : seg->origin + length;
 	}
 	else
 	{
-		line->origin = line->origin < INT64_MIN - length ? INT64_MIN : line->origin + length;
+		seg->origin = seg->origin < INT64_MIN - length ? INT64_MIN : seg->origin + length;
 	}
 	
-	_bind_origin(line);
-	_bind_length(line);
+	_bind_origin(seg);
+	_bind_length(seg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cline_pad(struct cline *line, int64_t length)
+cseg_pad(struct cseg *seg, int64_t length)
 {
 	int64_t len_2;
 
@@ -133,30 +133,30 @@ cline_pad(struct cline *line, int64_t length)
 		len_2 = length < (INT64_MIN + 1) / 2 ? INT64_MIN + 1 : length * 2;
 	}
 
-	cline_offset(line, length);
-	cline_grow(line, -len_2);
+	cseg_offset(seg, length);
+	cseg_grow(seg, -len_2);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cline_resize(struct cline *line, int64_t length)
+cseg_resize(struct cseg *seg, int64_t length)
 {
-	line->length = length;
+	seg->length = length;
 
-	_bind_length(line);
+	_bind_length(seg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cline_scale(struct cline *line, double scale)
+cseg_scale(struct cseg *seg, double scale)
 {
-	line->origin = _scale(line->origin, scale);
-	line->length = _scale(line->length, scale);
+	seg->origin = _scale(seg->origin, scale);
+	seg->length = _scale(seg->length, scale);
 
-	_bind_origin(line);
-	_bind_length(line);
+	_bind_origin(seg);
+	_bind_length(seg);
 }
 
 /************************************************************************************************************/
@@ -164,39 +164,39 @@ cline_scale(struct cline *line, double scale)
 /************************************************************************************************************/
 
 static void
-_bind_length(struct cline *line)
+_bind_length(struct cseg *seg)
 {
-	if (line->length > 0)
+	if (seg->length > 0)
 	{
-		if (line->origin > 0)
+		if (seg->origin > 0)
 		{
-			if (line->length > line->max - line->origin)
+			if (seg->length > seg->max - seg->origin)
 			{
-				line->length = line->max - line->origin;
+				seg->length = seg->max - seg->origin;
 			}
 		}
 		else
 		{
-			if (line->origin + line->length > line->max)
+			if (seg->origin + seg->length > seg->max)
 			{
-				line->length = line->max - line->origin;
+				seg->length = seg->max - seg->origin;
 			}
 		}
 	}
 	else
 	{
-		if (line->origin > 0)
+		if (seg->origin > 0)
 		{
-			if (line->origin + line->length < line->min)
+			if (seg->origin + seg->length < seg->min)
 			{
-				line->length = line->min - line->origin;
+				seg->length = seg->min - seg->origin;
 			}
 		}
 		else
 		{
-			if (line->length < line->min - line->origin)
+			if (seg->length < seg->min - seg->origin)
 			{
-				line->length = line->min - line->origin;
+				seg->length = seg->min - seg->origin;
 			}
 		}
 	}
@@ -205,15 +205,15 @@ _bind_length(struct cline *line)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_bind_origin(struct cline *line)
+_bind_origin(struct cseg *seg)
 {
-	if (line->origin < line->min)
+	if (seg->origin < seg->min)
 	{
-		line->origin = line->min;
+		seg->origin = seg->min;
 	}
-	else if (line->origin > line->max)
+	else if (seg->origin > seg->max)
 	{
-		line->origin = line->max;
+		seg->origin = seg->max;
 	}
 }
 
@@ -255,14 +255,14 @@ _scale(int64_t a, double scale)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_swap_bounds(struct cline *line)
+_swap_bounds(struct cseg *seg)
 {
 	int64_t tmp;
 
-	if (line->min > line->max)
+	if (seg->min > seg->max)
 	{
-		tmp       = line->min;
-		line->min = line->max;
-		line->max = tmp;
+		tmp      = seg->min;
+		seg->min = seg->max;
+		seg->max = tmp;
 	}
 }

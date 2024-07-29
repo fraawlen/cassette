@@ -25,7 +25,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _print (const struct cline line);
+static void _print (const struct cseg seg);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -34,15 +34,15 @@ static void _print (const struct cline line);
 int
 main(void)
 {
-	struct cline line = CLINE_I8;
+	struct cseg seg = CSEG_I8;
 
-	cline_limit(&line, 20, -20);
-	cline_move(&line, 7);
-	cline_resize(&line, -5);
-	cline_grow(&line, -30);
-	cline_offset(&line, -7);
+	cseg_limit(&seg, 20, -20);
+	cseg_move(&seg, 7);
+	cseg_resize(&seg, -5);
+	cseg_grow(&seg, -30);
+	cseg_offset(&seg, -7);
 
-	_print(line);
+	_print(seg);
 
 	return 0;
 }
@@ -52,8 +52,8 @@ main(void)
 /************************************************************************************************************/
 
 static void
-_print(const struct cline line)
+_print(const struct cseg seg)
 {
-	printf("%li <= %li + %li <= %li\n", line.min, line.origin, line.length, line.max);
+	printf("%li <= %li + %li <= %li\n", seg.min, seg.origin, seg.length, seg.max);
 }
 

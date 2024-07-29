@@ -14,9 +14,9 @@ Features
 | cdict   | hashmap with string + group keys, FNV-1A hashing and linear probing               |
 | cerr    | error codes used by every Cassette component                                      |
 | cinputs | 2D input (screen touches, key / button presses) tracker array                     |
-| cline   | 1D line represenation and manipulation with bound checks and UB prevention        |
 | crand   | re-implementation of POSIX's rand48 functions with a slightly more convenient API |
 | cref    | reference counter used to keep track of instanced components                      |
+| cseg    | 1D segment represenation and manipulation with bound checks and UB prevention     |
 | cstr    | UTF-8 strings with 2D (rows, columns, tabsize, wrapping) features                 |
 
 Dependencies
@@ -56,9 +56,9 @@ If you want to be more explicit, you can include the specific headers you need :
 #include <cassette/ccolor.h>
 #include <cassette/cdict.h>
 #include <cassette/cerr.h>
-#include <cassette/cline.h>
 #include <cassette/crand.h>
 #include <cassette/cref.h>
+#include <cassette/cseg.h>
 #include <cassette/cstr.h>
 ```
 

@@ -24,11 +24,11 @@
 #include <stdint.h>
 
 #if __GNUC__ > 4
-	#define CLINE_NONNULL(...) __attribute__((nonnull (__VA_ARGS__)))
-	#define CLINE_CONST        __attribute__((const))
+	#define CSEG_NONNULL(...) __attribute__((nonnull (__VA_ARGS__)))
+	#define CSEG_CONST        __attribute__((const))
 #else
-	#define CLINE_NONNULL(...)
-	#define CLINE_CONST
+	#define CSEG_NONNULL(...)
+	#define CSEG_CONST
 #endif
 
 #ifdef __cplusplus
@@ -40,11 +40,11 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Representation of a 1-dimension line defined by a length and an origin. As long as cline's methods are used
- * to manipulate cline's values, no overflow or underflow can occur and the following equation is guaranteed
- * to be true: min <= origin + length <= max.
+ * Representation of a 1-dimension segment defined by a length and an origin. As long as segment's methods are
+ * used to manipulate segment's values, no overflow or underflow can occur and the following equation is
+ * guaranteed to be true: min <= origin + length <= max.
  */
-struct cline
+struct cseg
 {
 	int64_t origin;
 	int64_t length;
@@ -57,118 +57,119 @@ struct cline
 /************************************************************************************************************/
 
 /**
- * Macros to initialize a cline with default values.
+ * Macros to initialize a cseg with default values.
  */
-#define CLINE_I64 (struct cline){ .origin = 0, .length = 0, .min = INT64_MIN, .max = INT64_MAX  }
-#define CLINE_I32 (struct cline){ .origin = 0, .length = 0, .min = INT32_MIN, .max = INT32_MAX  }
-#define CLINE_I16 (struct cline){ .origin = 0, .length = 0, .min = INT16_MIN, .max = INT16_MAX  }
-#define CLINE_I8  (struct cline){ .origin = 0, .length = 0, .min = INT8_MIN,  .max = INT8_MAX   }
-#define CLINE_U64 (struct cline){ .origin = 0, .length = 0, .min = 0,         .max = INT64_MAX  }
-#define CLINE_U32 (struct cline){ .origin = 0, .length = 0, .min = 0,         .max = UINT32_MAX }
-#define CLINE_U16 (struct cline){ .origin = 0, .length = 0, .min = 0,         .max = UINT16_MAX }
-#define CLINE_U8  (struct cline){ .origin = 0, .length = 0, .min = 0,         .max = UINT8_MAX  }
+#define CSEG_I64 (struct cseg){ .origin = 0, .length = 0, .min = INT64_MIN, .max = INT64_MAX  }
+#define CSEG_I32 (struct cseg){ .origin = 0, .length = 0, .min = INT32_MIN, .max = INT32_MAX  }
+#define CSEG_I16 (struct cseg){ .origin = 0, .length = 0, .min = INT16_MIN, .max = INT16_MAX  }
+#define CSEG_I8  (struct cseg){ .origin = 0, .length = 0, .min = INT8_MIN,  .max = INT8_MAX   }
+#define CSEG_U64 (struct cseg){ .origin = 0, .length = 0, .min = 0,         .max = INT64_MAX  }
+#define CSEG_U32 (struct cseg){ .origin = 0, .length = 0, .min = 0,         .max = UINT32_MAX }
+#define CSEG_U16 (struct cseg){ .origin = 0, .length = 0, .min = 0,         .max = UINT16_MAX }
+#define CSEG_U8  (struct cseg){ .origin = 0, .length = 0, .min = 0,         .max = UINT8_MAX  }
 
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Rechecks and corrects a cline so that its parameters respect this equation : min <= origin + length <= max.
+ * Rechecks and corrects a segment so that its parameters respect this equation :
+ * min <= origin + length <= max.
  *
- * @param line : Line to interact with
+ * @param seg : Segment to interact with
  */
 void
-cline_bind(struct cline *line)
-CLINE_NONNULL(1);
+cseg_bind(struct cseg *seg)
+CSEG_NONNULL(1);
 
 /**
- * Adds a value to the cline's length.
+ * Adds a value to the segment's length.
  *
- * @param line   : Line to interact with
+ * @param seg    : Segment to interact with
  * @param length : Distance value
  */
 void
-cline_grow(struct cline *line, int64_t length)
-CLINE_NONNULL(1);
+cseg_grow(struct cseg *seg, int64_t length)
+CSEG_NONNULL(1);
 
 /**
  * Sets new limits. The order of lim_1 or lim_2 does not matter. If necessary, origin and length values will
  * also be udpated to respect the new limits.
  *
- * @param line  : Line to interact with
+ * @param seg   : Segment to interact with
  * @param lim_1 : First bound
  * @param lim_2 : Second bound
  */
 void
-cline_limit(struct cline *line, int64_t lim_1, int64_t lim_2)
-CLINE_NONNULL(1);
+cseg_limit(struct cseg *seg, int64_t lim_1, int64_t lim_2)
+CSEG_NONNULL(1);
 
 /**
  * Sets a new origin. If necessary, the length will also be udpated to respect the limits.
  *
- * @param line   : Line to interact with
+ * @param seg    : Segment to interact with
  * @param origin : Position value
  */
 void
-cline_move(struct cline *line, int64_t origin)
-CLINE_NONNULL(1);
+cseg_move(struct cseg *seg, int64_t origin)
+CSEG_NONNULL(1);
 
 /**
- * Add a value to the cline's origin. If necessary, the length will also be udpated to respect the limits.
+ * Add a value to the segmetn's origin. If necessary, the length will also be udpated to respect the limits.
  *
- * @param line   : Line to interact with
+ * @param seg    : Segment to interact with
  * @param length : Distance value
  */
 void
-cline_offset(struct cline *line, int64_t length)
-CLINE_NONNULL(1);
+cseg_offset(struct cseg *seg, int64_t length)
+CSEG_NONNULL(1);
 
 /**
- * Offsets the line by a length value, then decreases its length (stored by the cline) by 2 * length (the
+ * Offsets the segment by a length value, then decreases its length (stored by the cseg) by 2 * length (the
  * funtion parameter).
  *
- * @param line   : Line to interact with
+ * @param seg    : Segment to interact with
  * @param lenght : Distance value
  */
 void
-cline_pad(struct cline *line, int64_t length)
-CLINE_NONNULL(1);
+cseg_pad(struct cseg *seg, int64_t length)
+CSEG_NONNULL(1);
 
 /**
  * Sets a new length value.
  *
- * @param line   : Line to interact with
+ * @param seg    : Segment to interact with
  * @param length : Distance value
  */
 void
-cline_resize(struct cline *line, int64_t length)
-CLINE_NONNULL(1);
+cseg_resize(struct cseg *seg, int64_t length)
+CSEG_NONNULL(1);
 
 /**
  * Mutilplies the origin and length.
  *
- * @param line  : Line to interact with
+ * @param seg   : Segment to interact with
  * @param scale : Multiplier value
  */
 void
-cline_scale(struct cline *line, double scale)
-CLINE_NONNULL(1);
+cseg_scale(struct cseg *seg, double scale)
+CSEG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Checks whether a point coordinate is on the line.
+ * Checks whether a point coordinate is on the seg.
  *
- * @param line  : Line to interact with
+ * @param seg   : Segment to interact with
  * @param point : Position value
  *
  * @return : True if it is, false otherwise
  */
 bool
-cline_is_in(struct cline line, int64_t point)
-CLINE_CONST;
+cseg_is_in(struct cseg seg, int64_t point)
+CSEG_CONST;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
