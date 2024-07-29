@@ -9,10 +9,14 @@ Notice
 
 Not all Cassette libraries have been ported yet.
 
-| Available | Library |
-| Y         | COBJ    |
-| Y         | CCFG    |
-|           | CGUI    |
+Available:
+
+	- COBJ
+	- CCFG
+
+Not available:
+
+	- CGUI
 
 Features
 --------
