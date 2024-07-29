@@ -20,7 +20,7 @@ This is a WIP. Not all Cassette functions have been ported yet. Moreover, the cu
 | Y         | cinputs.h |
 |           | cline.h   |
 | Y         | crand.h   |
-|           | cref.h    |
+| Y         | cref.h    |
 | Y         | cstr.h    | 
 
 - CCFG
@@ -40,7 +40,7 @@ Features
 - Usage of Ada's exceptions when an object errors.
 - Convertion from C char array strings to Ada native strings.
 - Subtyping of C numeral values + ranges.
-- C function namespaces pushed into Ada packages.
+- Usage of packages instead of C function namespaces.
 
 TODO details.
 

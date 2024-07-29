@@ -29,23 +29,6 @@ is
 
 	Tracker : Inputs.T;
 
-	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
-
-	procedure List_Inputs
-	is begin
-
-		for I in 0 .. Tracker.Load - 1
-		loop
-			Put ("ID :"  & Tracker.ID(I)'Image);
-			Put (", X =" & Tracker.X(I)'Image);
-			Put (", Y =" & Tracker.Y(I)'Image);
-			New_Line;
-		end loop;
-
-	end List_Inputs;
-
-	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
-
 begin
 
 	Tracker.Create (10);
@@ -54,12 +37,20 @@ begin
 	Tracker.Push (2,   34, 1450);
 	Tracker.Push (3, 1032,  653);
 	Tracker.Push (4,  327, 2459);
+	Tracker.Push (8, 1200,  200);
+	Tracker.Push (9,    0,   11);
 	Tracker.Push (3,  999, 1450);
 
 	Tracker.Pull_ID    (1);
 	Tracker.Pull_Index (2);
 
-	List_Inputs;
+	for I in 0 .. Tracker.Load - 1
+	loop
+		Put ("ID :"  & Tracker.ID(I)'Image);
+		Put (", X =" & Tracker.X(I)'Image);
+		Put (", Y =" & Tracker.Y(I)'Image);
+		New_Line;
+	end loop;
 
 	Tracker.Destroy;
 

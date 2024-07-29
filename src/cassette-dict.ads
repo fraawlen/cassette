@@ -172,7 +172,7 @@ package Cassette.Dict is
 			with Pre => Load_Factor > 0.0;
 
 	-- Clears errors and puts the dictionary back into an usable state. The only unrecoverable error
-	-- is INVALID.
+	-- is Error_Invalid.
 	--
 	-- [Params]
 	--

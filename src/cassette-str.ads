@@ -54,7 +54,7 @@ package Cassette.Str is
 	--
 	type T is tagged limited private;
 
-	--  Numerics.
+	-- Numerics.
 	--
 	type Precision is new C.int range 0 .. 16;
 
@@ -103,16 +103,16 @@ package Cassette.Str is
 	-- WRAPPER METHODS ------------------------------------------------------------------------------ 
 	-------------------------------------------------------------------------------------------------
 
-	-- Convenience wrappers for the Insert() method with the offset parameter set to
-	-- Index'Last. See Insert() for details.
+	-- Convenience wrappers for the Insert() method with the offset parameter set to Index'Last. See
+	-- Insert() for details.
 	--
 	procedure Append (Str : in out T; Value : in T);
 	procedure Append (Str : in out T; Value : in Float);
 	procedure Append (Str : in out T; Value : in Integer);
 	procedure Append (Str : in out T; Value : in String);
 
-	-- Convenience wrappers for the Insert() method with the offset parameter set to 0. See
-	-- Insert() for details.
+	-- Convenience wrappers for the Insert() method with the offset parameter set to 0. See Insert()
+	-- for details.
 	--
 	procedure Prepend (Str : in out T; Value : in T);
 	procedure Prepend (Str : in out T; Value : in Float);
