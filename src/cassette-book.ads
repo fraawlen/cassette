@@ -16,10 +16,9 @@
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-pragma Ada_2012;
-
-with Cassette.Error;
-with Interfaces.C; use Interfaces;
+with Interfaces.C;
+with Interfaces.C.Extensions;
+with Interfaces.C.Strings;
 with System;
 
 --------------------------------------------------------------------------------------------------------------
@@ -44,22 +43,11 @@ package Cassette.Book is
 	-- into NUL terminated words, and words can also be grouped. The book behaves like a stack, words
 	-- can only be added or erased from the end of the book.
 	--
-	-- Some methods, upon failure, will set an error bit in an internal error bitfield and raise an
-	-- exception. The exact error code can be checked with Error(). If any error is set all methods
-	-- will exit early with default return values and no side-effects. It's possible to clear errors
-	-- with Repair().
+	-- Some methods, upon failure, will set an error and raise an exception E. The exact error code
+	-- can be checked with Error(). If any error is set all methods will exit early with default
+	-- return values and no side-effects. It's possible to clear errors with Repair().
 	--
 	type T is tagged limited private;
-
-	-- String to group addition mode.
-	--
-	type Mode is (OLD_GROUP, NEW_GROUP)
-		with Convention => C;
-
-	--  Numerics.
-	--
-	subtype Index is C.size_t;
-	subtype Size  is C.size_t;
 
 	-------------------------------------------------------------------------------------------------
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
@@ -69,38 +57,38 @@ package Cassette.Book is
 	--
 	-- [Params]
 	--
-	-- 	Self   : Book to interact with
+	-- 	Book   : Book to interact with
 	-- 	Parent : Book to clone
 	--
 	-- [Errors]
 	--
-	--	INVALID : Initialisation failed
+	--	Error_Invalid : Initialisation failed
 	--
 	procedure Clone (
-		Self   : out T;
+		Book   : out T;
 		Parent : in  T);
 
 	-- Create an empty book.
 	--
 	-- [Params]
 	--
-	-- 	Self : Book to interact with
+	-- 	Book : Book to interact with
 	--
 	-- [Errors]
 	--
-	--	INVALID : Initialisation failed
+	--	Error_Invalid : Initialisation failed
 	--
 	procedure Create (
-		Self : out T);
+		Book : out T);
 
 	-- Destroys the book and frees memory.
 	--
 	-- [Params]
 	--
-	-- 	Self : Book to interact with
+	-- 	Book : Book to interact with
 	--
 	procedure Destroy (
-		Self : in out T);
+		Book : in out T);
 
 	-------------------------------------------------------------------------------------------------
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
@@ -110,28 +98,28 @@ package Cassette.Book is
 	--
 	-- [Params]
 	--
-	-- 	Self : Book to interact with
+	-- 	Book : Book to interact with
 	--
 	procedure Clear (
-		Self : in out T);
+		Book : in out T);
 
 	-- Deletes the last group of words. Allocated memory is not freed, use Destroy() for that.
 	-- 
 	-- [Params]
 	--
-	-- 	Self : Book to interact with
+	-- 	Book : Book to interact with
 	--
 	procedure Pop_Group (	
-		Self : in out T);
+		Book : in out T);
 
 	-- Deletes the last word. Allocated memory is not freed, use Destroy() for that.
 	-- 
 	-- [Params]
 	--
-	-- 	Self : Book to interact with
+	-- 	Book : Book to interact with
 	--
 	procedure Pop_Word (
-		Self : in out T);
+		Book : in out T);
 
 	-- Preallocates a set number of characters, words, references, and groups to avoid triggering
 	-- multiple automatic reallocs when adding data to the book. This procedure has no effect if the
@@ -139,59 +127,75 @@ package Cassette.Book is
 	--
 	-- [Params]
 	--
-	-- 	Self          : Book to interact with
+	-- 	Book          : Book to interact with
 	-- 	Bytes_Number  : Total number of bytes across all words
 	-- 	Words_Number  : Total number of words across all groups
 	-- 	Groups_Number : Total number of groups
 	--
 	-- [Errors]
 	--
-	-- 	OVERFLOW : The size of the resulting book will be > Size'Last
-	-- 	MEMORY   : Failed memory allocation
+	-- 	Error_Overflow : The size of the resulting book will be > Size'Last
+	-- 	Error_Memory   : Failed memory allocation
 	--
 	procedure Prealloc (
-		Self   : in out T;
+		Book   : in out T;
 		Bytes  : in Size;
 		Words  : in Size;
 		Groups : in Size);
 
-	-- Clears errors and puts the book back into an usable state. The only unrecoverable error is
-	-- INVALID.
+	-- After this function is called, the next word that is added with Write() will be part of a new
+	-- group.
 	--
 	-- [Params]
 	--
-	-- 	Self : Book to interact with
+	-- 	Book : Book to interact with
+	--
+	procedure Prepare_New_Group (
+		Book : in out T);
+
+	-- Clears errors and puts the book back into an usable state. The only unrecoverable error is
+	-- Error_Invalid.
+	--
+	-- [Params]
+	--
+	-- 	Book : Book to interact with
 	--
 	procedure Repair (
-		Self : in out T);
+		Book : in out T);
 
-	-- Appends a new string (called 'word') to the book and increments the book word count (and
-	-- possibly group count) by 1 as well as the character count by the string's length (NUL
-	-- terminator included). The book will automatically extend its allocated memory to accommodate
-	-- the new word.
+	-- Reverts the effects of Prepare_New_Group().
+	--
+	-- [Params]
+	--
+	-- 	Book : Book to interact with
+	--
+	procedure Undo_New_Group (
+		Book : in out T);
+
+	-- Appends a new word to the book and increments the book word count (and possibly group count)
+	-- by 1 as well as the character count by the string's length (NUL terminator included). The book
+	-- will automatically extend its allocated memory to accommodate the new word.
 	-- 
 	-- [Params]
 	--
-	-- 	Self       : Book to interact with
-	-- 	Str        : String
-	-- 	Group_Mode : Create (or not) a group for the new word
+	-- 	Book : Book to interact with
+	-- 	Str  : String
 	--
 	-- [Errors]
 	--
-	-- 	OVERFLOW : The size of the resulting book will be > Size'Last
-	-- 	MEMORY   : Failed memory allocation
+	-- 	Error_Overflow : The size of the resulting book will be > Size'Last
+	-- 	Error_Memory   : Failed memory allocation
 	--
 	procedure Write (
-		Self       : in out T;
-		Str        : in String;
-		Group_Mode : in Mode);
+		Book : in out T;
+		Str  : in String);
 
 	-- Similar to Clear() but all of the allocated memory is also zeroed.
 	--
-	-- 	Self : Book to interact with
+	-- 	Book : Book to interact with
 	--
 	procedure Zero (
-		Self : in out T);
+		Book : in out T);
 
 	-------------------------------------------------------------------------------------------------
 	-- PURE METHODS --------------------------------------------------------------------------------- 
@@ -201,22 +205,22 @@ package Cassette.Book is
 	--
 	-- [Params]
 	--
-	-- 	Self : Book to interact with
+	-- 	Book : Book to interact with
 	-- 
 	-- [Return]
 	--
 	-- 	Error code.
 	--  
 	function Error (
-		Self : in T)
-			return Cassette.Error.T;
+		Book : in T)
+			return Error_Code;
 	
 	-- Gets a group's word count.
 	-- 
 	-- [Params]
 	-- 
-	-- 	Self        : Book to interact with
-	-- 	Group_Index : Group index within book
+	-- 	Book  : Book to interact with
+	-- 	Group : Group index within book
 	--
 	-- [Return]
 	-- 
@@ -224,43 +228,43 @@ package Cassette.Book is
 	--	bounds, then 0 is always returned.
 	--
 	function Group_Length (
-		Self        : in T;
-		Group_Index : in Index)
+		Book  : in T;
+		Group : in Index)
 			return Size;
 
 	-- Gets the total number of groups.
 	-- 
 	-- [Params]
 	-- 
-	-- 	Self : Book to interact with
+	-- 	Book : Book to interact with
 	--
 	-- [Return]
 	-- 
 	-- 	Number of groups. If the book has errored, then 0 is always returned.
 	-- 
 	function Groups_Number (
-		Self : in T)
+		Book : in T)
 			return Size;
 
 	-- Gets the total length of the book (all NUL terminators included).
 	--
 	-- [Params]
 	-- 
-	-- 	Self : Book to interact with
+	-- 	Book : Book to interact with
 	--
 	-- [Return]
 	-- 
 	-- Number of bytes. If the book has errored, then 0 is always returned.
 	-- 
 	function Length (
-		Self : in T)
+		Book : in T)
 			return Size;
 
 	-- Gets a word.
 	-- 
 	-- [Params]
 	-- 
-	--	Self       : Book to interact with
+	--	Book       : Book to interact with
 	-- 	Word_Index : Word index in book across all groups
 	--
 	-- [Return]
@@ -269,17 +273,17 @@ package Cassette.Book is
 	--	empty string is always returned.
 	-- 
 	function Word (
-		Self       : in T;
-		Word_Index : in Index)
+		Book : in T;
+		Word : in Index)
 			return String;
 
 	-- Gets a word from a specific group.
 	-- 
 	-- [Params]
 	-- 
-	-- 	Self        : Book to interact with
-	-- 	Group_Index : Group index within book
-	-- 	Word_Index  : Word index within group
+	-- 	Book  : Book to interact with
+	-- 	Group : Group index within book
+	-- 	Word  : Word index within group
 	--
 	-- [Return]
 	-- 
@@ -287,18 +291,18 @@ package Cassette.Book is
 	--	bounds, then an empty string is always returned.
 	-- 
 	function Word_In_Group (
-		Self        : in T;
-		Group_Index : in Index;
-		Word_index  : in Index)
+		Book  : in T;
+		Group : in Index;
+		Word  : in Index)
 			return String;
 
 	-- Converts a group + local word indexes to a book-wide word index. 
 	--
 	-- [Params]
 	-- 
-	-- 	Self        : Book to interact with
-	-- 	Group_Index : Group index within book
-	-- 	Word_Index  : Word index within group
+	-- 	Book  : Book to interact with
+	-- 	Group : Group index within book
+	-- 	Word  : Word index within group
 	-- 
 	-- [Return]
 	-- 
@@ -306,16 +310,16 @@ package Cassette.Book is
 	--	bounds, then 0 is always returned.
 	-- 
 	function Word_Index (
-		Self        : in T;
-		Group_Index : in Index;
-		Word_Index  : in Index)
+		Book  : in T;
+		Group : in Index;
+		Word  : in Index)
 			return Index;
 
 	-- Gets the total number of words.
 	-- 
 	-- [Params]
 	-- 
-	-- 	Self : Book to interact with
+	-- 	Book : Book to interact with
 	--
 	-- [Return]
 	-- 
@@ -323,7 +327,7 @@ package Cassette.Book is
 	-- 	returned.
 	-- 
 	function Words_Number (
-		Self : in T)
+		Book : in T)
 			return Size;
 
 	-------------------------------------------------------------------------------------------------
@@ -332,17 +336,65 @@ package Cassette.Book is
 
 private
 
-	type Cbook is null record;
+	C_Placeholder : aliased Placeholder;
 
-	Placeholder : aliased Cbook
-		with Import        => True, 
-		     Convention    => C, 
-		     External_Name => "cbook_placeholder_instance";
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
 	type T is tagged limited record
-		Data : System.Address := Placeholder'Address;
+		Data : System.Address := C_Placeholder'Address;
 	end record;
 
-	procedure Check (Self : in T);
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	procedure Raise_Error (Book : in T);
+
+	-------------------------------------------------------------------------------------------------
+	-- IMPORTS -------------------------------------------------------------------------------------- 
+	-------------------------------------------------------------------------------------------------
+
+	procedure C_Clear             (Book : System.Address);
+	procedure C_Destroy           (Book : System.Address);
+	procedure C_Pop_Group         (Book : System.Address);
+	procedure C_Pop_Word          (Book : System.Address);
+	procedure C_Prealloc          (Book : System.Address; Bytes : C.size_t; Words : C.size_t; Groups : C.size_t);
+	procedure C_Prepare_New_Group (Book : System.Address);
+	procedure C_Repair            (Book : System.Address);
+	procedure C_Undo_New_Group    (Book : System.Address);
+	procedure C_Write             (Book : System.Address; Str : C.Strings.chars_ptr);
+	procedure C_Zero              (Book : System.Address);
+
+	function  C_Clone             (Book : System.Address)                                    return System.Address;
+	function  C_Create                                                                       return System.Address;
+	function  C_Error             (Book : System.Address)                                    return Error_Code;
+	function  C_Group_Length      (Book : System.Address; Group : C.size_t)                  return C.size_t;
+	function  C_Groups_Number     (Book : System.Address)                                    return C.size_t;
+	function  C_Length            (Book : System.Address)                                    return C.size_t;
+	function  C_Word              (Book : System.Address; Group : C.size_t)                  return C.Strings.chars_ptr;
+	function  C_Word_In_Group     (Book : System.Address; Group : C.size_t; Word : C.size_t) return C.Strings.chars_ptr;
+	function  C_Word_Index        (Book : System.Address; Group : C.size_t; Word : C.size_t) return C.size_t;
+	function  C_Words_Number      (Book : System.Address)                                    return C.size_t;
+	
+	pragma Import (C, C_Clear,             "cbook_clear");
+	pragma Import (C, C_Clone,             "cbook_clone");
+	pragma Import (C, C_Create,            "cbook_create");
+	pragma Import (C, C_Destroy,           "cbook_destroy");
+	pragma Import (C, C_Error,             "cbook_error");
+	pragma Import (C, C_Group_Length,      "cbook_group_length");
+	pragma Import (C, C_Groups_Number,     "cbook_groups_number");
+	pragma Import (C, C_Length,            "cbook_length");
+	pragma Import (C, C_Placeholder,       "cbook_placeholder_instance");
+	pragma Import (C, C_Pop_Group,         "cbook_pop_group");
+	pragma Import (C, C_Pop_Word,          "cbook_pop_word");
+	pragma Import (C, C_Prealloc,          "cbook_prealloc");
+	pragma Import (C, C_Prepare_New_Group, "cbook_prepare_new_group");
+	pragma Import (C, C_Repair,            "cbook_repair");
+	pragma Import (C, C_Undo_New_Group,    "cbook_undo_new_group");
+	pragma Import (C, C_Word,              "cbook_word");
+	pragma Import (C, C_Word_In_Group,     "cbook_word_in_group");
+	pragma Import (C, C_Word_Index,        "cbook_word_index");
+	pragma Import (C, C_Words_Number,      "cbook_words_number");
+	pragma Import (C, C_Write,             "cbook_write");
+	pragma Import (C, C_Zero,              "cbook_zero");
 
 end Cassette.Book;
+

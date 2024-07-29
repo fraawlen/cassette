@@ -16,12 +16,8 @@
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-pragma Ada_2012;
-
-with Cassette;
-with Cassette.Error;
-with Interfaces.C;            use Interfaces.C;
-with Interfaces.C.Extensions; use Interfaces.C.Extensions;
+with Interfaces.C;
+with Interfaces.C.Extensions;
 with Interfaces.C.Strings;
 with System;
 
@@ -35,46 +31,31 @@ package body Cassette.Config is
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	procedure Clone (Self : out T; Parent : in T)
-	is
-		function Fn (Parent : System.Address) return System.Address
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_clone";
-	begin
+	procedure Clone (Cfg : out T; Parent : in T)
+	is begin
 
-		Self.Data := Fn (Parent.Data);
-		Self.Check;
+		Cfg.Data := C_Clone (Parent.Data);
+		Cfg.Raise_Error;
 
 	end Clone;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Create (Self : out T)
-	is
-		function Fn return System.Address
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_create";
-	begin
+	procedure Create (Cfg : out T)
+	is begin
 
-		Self.Data := Fn;
-		Self.Check;
+		Cfg.Data := C_Create;
+		Cfg.Raise_Error;
 
 	end Create;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Destroy (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_destroy";
-	begin
+	procedure Destroy (Cfg : in out T)
+	is begin
 
-		Fn (Self.Data);
-		Self.Data := Placeholder'Address;
+		C_Destroy (Cfg.Data);
+		Cfg.Data := C_Placeholder'Address;
 
 	end Destroy;
 
@@ -82,63 +63,40 @@ package body Cassette.Config is
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	procedure Clear_Params (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_clear_params";
-	begin
+	procedure Clear_Params (Cfg : in out T)
+	is begin
 
-		Fn (Self.Data);
+		C_Clear_Params (Cfg.Data);
 
 	end Clear_Params;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Clear_Resources (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_clear_resources";
-	begin
+	procedure Clear_Resources (Cfg : in out T)
+	is begin
 
-		Fn (Self.Data);
+		C_Clear_Resources (Cfg.Data);
 
 	end Clear_Resources;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Clear_Sources (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_clear_sources";
-	begin
+	procedure Clear_Sources (Cfg : in out T)
+	is begin
 
-		Fn (Self.Data);
+		C_Clear_Sources (Cfg.Data);
 
 	end Clear_Sources;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Fetch (Self : in out T; Namespace : in String; Property : in String)
+	procedure Fetch (Cfg : in out T; Namespace : in String; Property : in String)
 	is
-		procedure Fn (
-			Data      : System.Address;
-			Namespace : C.Strings.chars_ptr;
-			Property  : C.Strings.chars_ptr)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_fetch";
-
 		S1 : C.Strings.chars_ptr := C.Strings.New_String (Namespace);
 		S2 : C.Strings.chars_ptr := C.Strings.New_String (Property);
 	begin
 
-		Fn (Self.Data, S1, S2);
+		C_Fetch (Cfg.Data, S1, S2);
 		C.Strings.Free (S1);
 		C.Strings.Free (S2);
 
@@ -146,152 +104,107 @@ package body Cassette.Config is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Iterate (Self : in out T) return Boolean
-	is
-		function Fn (Data : System.Address) return bool
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_iterate";
-	begin
+	function Iterate (Cfg : in out T) return Boolean
+	is begin
 
-		return Boolean (Fn (Self.Data));
+		return Boolean (C_Iterate (Cfg.Data));
 
 	end Iterate;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Load (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_load";
-	begin
-	
-		Fn (Self.Data);
-		Self.Check;
+	procedure Load (Cfg : in out T)
+	is begin
+
+		C_Load (Cfg.Data);
+		Cfg.Raise_Error;
 
 	end Load;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Push_Param (Self : in out T; Name : in String; Value : in Float)
+	procedure Push_Param (Cfg : in out T; Name : in String; Value : in Float)
 	is
-		procedure Fn (Data : System.Address; Name : C.Strings.chars_ptr; Val : double)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_push_param_double";
-
 		S : C.Strings.chars_ptr := C.Strings.New_String (Name);
 	begin
 
-		Fn (Self.Data, S, double (Value));
+		C_Push_Param_Double (Cfg.Data, S, C.double (Value));
 		C.Strings.Free (S);
-		Self.Check;
+		Cfg.Raise_Error;
 
 	end Push_Param;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Push_Param (Self : in out T; Name : in String; Value : in Integer)
+	procedure Push_Param (Cfg : in out T; Name : in String; Value : in Integer)
 	is
-		procedure Fn (Data : System.Address; Name : C.Strings.chars_ptr; Val : Long_Long_Integer)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_push_param_long";
-
 		S : C.Strings.chars_ptr := C.Strings.New_String (Name);
 	begin
 
-		Fn (Self.Data, S, Long_Long_Integer (Value));
-		C.Strings.Free (S);
-		Self.Check;
+		C_Push_Param_Long (Cfg.Data, S, Long_Long_Integer (Value));
+		C.Strings.Free    (S);
+		Cfg.Raise_Error;
 
 	end Push_Param;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Push_Param (Self : in out T; Name : in String; Value : in String)
+	procedure Push_Param (Cfg : in out T; Name : in String; Value : in String)
 	is
-		procedure Fn (Data : System.Address; Name : C.Strings.chars_ptr; Val : C.Strings.chars_ptr)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_push_param_str";
-
 		S1 : C.Strings.chars_ptr := C.Strings.New_String (Name);
 		S2 : C.Strings.chars_ptr := C.Strings.New_String (Value);
 	begin
 
-		Fn (Self.Data, S1, S2);
+		C_Push_Param_Str (Cfg.Data, S1, S2);
 		C.Strings.Free (S1);
 		C.Strings.Free (S2);
-		Self.Check;
+		Cfg.Raise_Error;
 
 	end Push_Param;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Push_Source (Self : in out T; Filename : in String)
+	procedure Push_Source (Cfg : in out T; Filename : in String)
 	is
-		procedure Fn (Data : System.Address; Filename : C.Strings.chars_ptr)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_push_source";
-
 		S : C.Strings.chars_ptr := C.Strings.New_String (Filename);
 	begin
 
-		Fn (Self.Data, S);
+		C_Push_Source (Cfg.Data, S);
 		C.Strings.Free (S);
-		Self.Check;
+		Cfg.Raise_Error;
 
 	end Push_Source;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Repair (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_repair";
-	begin
-	
-		Fn (Self.Data);
+	procedure Repair (Cfg : in out T)
+	is begin
+
+		C_Repair (Cfg.Data);
 
 	end Repair;
-	
+
 	-------------------------------------------------------------------------------------------------
 	-- PURE METHODS --------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	function Can_Open_Sources (Self : in T) return Boolean
-	is
-		function Fn (Data : System.Address; I : access size_t) return bool
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_can_open_sources";
-	begin
+	function Can_Open_Sources (Cfg : in T) return Boolean
+	is begin
 
-		return Boolean (Fn (Self.Data, NULL));
+		return Boolean (C_Can_Open_Sources (Cfg.Data, NULL));
 
 	end Can_Open_Sources;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Can_Open_Sources (Self : in T; I : out Index) return Boolean
+	function Can_Open_Sources (Cfg : in T; Rank : out Index) return Boolean
 	is
-		function Fn (Data : System.Address; I : access size_t) return bool
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_can_open_sources";
-
-		B : bool;
-		J : aliased size_t;
+		B : C.Extensions.bool;
+		I : aliased C.size_t;
 	begin
 
-		B := Fn    (Self.Data, J'Access);
-		I := Index (J);
+		B    := C_Can_Open_Sources (Cfg.Data, I'Access);
+		Rank := Index (I);
 
 		return Boolean (B);
 
@@ -299,43 +212,28 @@ package body Cassette.Config is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Error (Self : in T) return Cassette.Error.T
-	is
-		function Fn (Data : System.Address) return unsigned
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_error";
-	begin
+	function Error (Cfg : in T) return Error_Code
+	is begin
 
-		return Fn (Self.Data);
+		return C_Error (Cfg.Data);
 
 	end Error;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Resource (Self : in T) Return String
-	is
-		function Fn (Data : System.Address) return C.Strings.chars_ptr
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_resource";
-	begin
+	function Resource (Cfg : in T) Return String
+	is begin
 
-		return C.Strings.Value (Fn (Self.Data));
+		return C.Strings.Value (C_Resource (Cfg.Data));
 
 	end Resource;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Resource_Length (Self : in T) return Size
-	is
-		function Fn (Data : System.Address) return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccfg_resource_length";
-	begin
+	function Resource_Length (Cfg : in T) return Size
+	is begin
 
-		return Fn (Self.Data);
+		return C_Resource_Length (Cfg.Data);
 
 	end Resource_Length;
 
@@ -343,14 +241,15 @@ package body Cassette.Config is
 	-- PRIVATE METHODS ------------------------------------------------------------------------------ 
 	-------------------------------------------------------------------------------------------------
 
-	procedure Check (Self : in T) is
-	begin
+	procedure Raise_Error (Cfg : in T)
+	is begin
 
-		if Self.Error > 0
-		then
-			raise E;
-		end if;
+		case Cfg.Error
+		is
+			when Error_None => null;
+			when others     => raise E;
+		end case;
 
-	end Check;
+	end Raise_Error;
 
 end Cassette.Config;

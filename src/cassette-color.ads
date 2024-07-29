@@ -16,10 +16,10 @@
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-pragma Ada_2012;
-
-with Interfaces;   use Interfaces;
+with Interfaces;
 with Interfaces.C; use Interfaces.C;
+with Interfaces.C.Extensions;
+with Interfaces.C.Strings;
 with System;
 
 --------------------------------------------------------------------------------------------------------------
@@ -29,15 +29,22 @@ with System;
 package Cassette.Color is
 
 	-------------------------------------------------------------------------------------------------
+	-- EXCEPTIONS -----------------------------------------------------------------------------------
+	-------------------------------------------------------------------------------------------------
+
+	-- Exception that gets raised when an impure method fails.
+	--
+	E : exception;
+
+	-------------------------------------------------------------------------------------------------
 	-- TYPES ---------------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
 	--  Numerics.
 	--
-	subtype Ratio_Value is C.double         range 0.0 .. 1.0;
-	subtype Channel     is C.double         range 0.0 .. 1.0;
-	subtype ARGB_Uint   is C.unsigned_long  range   0 .. (2 ** 32 - 1);
-	subtype Byte        is C.unsigned_short range   0 .. (2 **  8 - 1);
+	type Channel   is new C.double         range 0.0 .. 1.0;
+	type ARGB_Uint is new C.unsigned_long  range   0 .. (2 ** 32 - 1);
+	type Byte      is new C.unsigned_short range   0 .. (2 **  8 - 1);
 
 	-- Represention of a RGBA color. Double types bound inside the [0.0 and 1.0] range are used, so
 	-- that they could be passed to cairo's function without conversion.
@@ -95,7 +102,7 @@ package Cassette.Color is
 	-- @param r : Red   color component
 	-- @param g : Green color component
 	-- @param b : Blue  color component
-	-- @param a : Alpha color component
+	-- @param a : Alpha color component, Optional
 	--
 	-- [Return]
 	--
@@ -114,6 +121,9 @@ package Cassette.Color is
 	-- character, in which case the string gets interpreted as a 6-8 digit "#rrggbbaa" hex. In this
 	-- representation, if the optional alpha parameter is omitted, a 0xFF value is assumed. 
 	--
+	-- Unlike the unchecked version of this function, if there is a formatting error in the given
+	-- string, an exception will be raised.
+	--
 	-- [Params]
 	--
 	--	Str : String to convert
@@ -121,6 +131,10 @@ package Cassette.Color is
 	-- [Return]
 	--
 	-- 	Color record.
+	--
+	-- [Errors]
+	--
+	--	Error_Param : Invalid input string
 	--
 	function From_Str (
 		Str : in String)
@@ -130,22 +144,18 @@ package Cassette.Color is
 	-- representation of an unsigned 32-bit ARGB value (which will get converted with C's stroul();
 	-- see the documentation of this function for more information), unless there is a leading '#'
 	-- character, in which case the string gets interpreted as a 6-8 digit "#rrggbbaa" hex. In this
-	-- representation, if the optional alpha parameter is omitted, a 0xFF value is assumed. This
-	-- function will set the Error parameter to True if the string to convert is invalid. Otherwise,
-	-- it's set to False.
+	-- representation, if the optional alpha parameter is omitted, a 0xFF value is assumed. 
 	--
 	-- [Params]
 	--
-	--	Str   : String to convert
-	-- 	Error : Conversion error check
+	--	Str  : String to convert
 	--
 	-- [Return]
 	--
 	-- 	Color record. Check Error to be certain of the return's validity
 	--
-	function From_Str (
-		Str   : in  String;
-		Error : out Boolean)
+	function From_Str_Unchecked (
+		Str : in  String)
 			return T;
 
 	-- Interpolates a color between two given colors.
@@ -162,9 +172,9 @@ package Cassette.Color is
 	-- 	Interpolated color
 	--
 	function Interpolate (
-		Cl_1  : in T;
-		Cl_2  : in T;
-		Ratio : in Ratio_Value)
+		Color_1 : in T;
+		Color_2 : in T;
+		Side    : in Ratio)
 			return T;
 
 	-- Converts a given color object to its equivalent ARGB representation within a single 32-bit
@@ -179,7 +189,23 @@ package Cassette.Color is
 	-- 	32-bit argb color value
 	--
 	function To_ARGB_Uint (
-		Cl : in T)
+		Color : in T)
 			return ARGB_Uint;
+
+	-------------------------------------------------------------------------------------------------
+	-- IMPORTS -------------------------------------------------------------------------------------- 
+	-------------------------------------------------------------------------------------------------
+
+	function C_From_ARGB_Uint (Argb : ARGB_Uint)                                          return T;
+	function C_From_RGBA      (R : Byte; G : Byte; B : Byte; A : Byte)                    return T;
+	function C_From_Str       (Str : C.Strings.chars_ptr; Err : access C.Extensions.bool) return T;
+	function C_Interpolate    (Color_1 : T; Color_2 : T; Ratio : C.double)                return T;
+	function C_To_ARGB_Uint   (Color : T)                                                 return ARGB_Uint;
+
+	pragma Import (C, C_From_ARGB_Uint, "ccolor_from_argb_uint");
+	pragma Import (C, C_From_RGBA,      "ccolor_from_rgba");
+	pragma Import (C, C_From_Str,       "ccolor_from_str");
+	pragma Import (C, C_Interpolate,    "ccolor_interpolate");
+	pragma Import (C, C_To_ARGB_Uint,   "ccolor_to_argb_uint");
 
 end Cassette.Color;

@@ -12,9 +12,11 @@
 -- You should have received a copy of the GNU Lesser General Public License along with this program. If not,
 -- see <http://www.gnu.org/licenses/>.
 
-pragma Ada_2012;
+--------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
 
-with Interfaces.C; use Interfaces.C;
+with Interfaces.C;
 
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
@@ -26,34 +28,19 @@ package body Cassette.Rand is
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	function Next (Self : in out T; Lim_1 : in Float; Lim_2 : in Float) return Float
-	is
-		function Fn (
-			Keeper : access unsigned_long_long;
-			lim_1  : double;
-			lim_2  : double) return double
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "crand_next";
-	begin
+	function Next (Rand : in out T; Lim_1 : in Float; Lim_2 : in Float) return Float
+	is begin
 
-		return Float (Fn (Self.State'Access, double (lim_1), double (lim_2)));
+		return Float (C_Next (Rand.State'Access, C.double (lim_1), C.double (lim_2)));
 
 	end Next;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Seed (Self : in out T; Value : in Seed_Value)
-	is
-		procedure Fn (
-			Keeper : access unsigned_long_long;
-			Value  :       unsigned_long_long)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "crand_seed";
-	begin
+	procedure Seed (Rand : in out T; Value : in Seed_Value)
+	is begin
 
-		Fn (Self.State'Access, Value);
+		C_Seed (Rand.State'Access, C.unsigned_long_long (Value));
 
 	end Seed;
 

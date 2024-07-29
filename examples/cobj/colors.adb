@@ -79,9 +79,13 @@ begin
 
 exception
 
-	when E : Str.E =>
+	when Str.E =>
 		Put ("String errored during operation. Code :");
 		Put (S.Error'Image);
 		New_Line;
 
+	when Color.E =>
+		Put ("Color conversion errored during operation.");
+		New_Line;
+	
 end Colors;

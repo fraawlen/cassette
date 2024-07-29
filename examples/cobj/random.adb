@@ -71,8 +71,8 @@ begin
 
 exception
 
-	when E : Str.E =>
-		Put ("String errored during operation. Code :" );
+	when Str.E =>
+		Put ("String errored during operation. Code : ");
 		Put (S.Error'Image);
 		New_Line;
 	

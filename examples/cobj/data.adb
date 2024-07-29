@@ -51,19 +51,16 @@ is
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
 	procedure Generate_Sequence (Key : in String)
-	is
-		M : Book.Mode := Book.NEW_GROUP;
-	begin
+	is begin
 
+		B.Prepare_New_Group;
 		D.Write (Key, 0, B.Groups_Number);
 		for I in 1 .. Integer (R.Next(1.0, 5.0)) -- Generate a random number of columns.
 		loop
 
 			S.Clear;
 			S.Append (R.Next (0.0, 999.0));
-			B.Write  (S.Chars, M);
-
-			M := Book.OLD_GROUP;
+			B.Write  (S.Chars);
 
 		end loop;
 
@@ -73,7 +70,7 @@ is
 	
 	procedure Print_Sequence (Key : in String)
 	is
-		I : Book.Index;
+		I : Index;
 	begin
 
 		if not D.Find (Key, 0, I)
@@ -131,18 +128,18 @@ begin
 
 exception
 
-	when E : Book.E =>
-		Put ("Book errored during operation. Code :");
+	when Book.E =>
+		Put ("Book errored during operation. Code : ");
 		Put (B.Error'Image);
 		New_Line;
 
-	when E : Dict.E =>
-		Put ("Dictionary errored during operation. Code :");
+	when Dict.E =>
+		Put ("Dictionary errored during operation. Code : ");
 		Put (D.Error'Image);
 		New_Line;
 
-	when E : Str.E =>
-		Put ("String errored during operation. Code :");
+	when Str.E =>
+		Put ("String errored during operation. Code : ");
 		Put (S.Error'Image);
 		New_Line;
 

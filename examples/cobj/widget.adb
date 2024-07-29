@@ -16,8 +16,8 @@
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-with Ada.Text_IO;    use Ada.Text_IO;
-with Cassette.Str;   use Cassette;
+with Ada.Text_IO;  use Ada.Text_IO;
+with Cassette.Str; use Cassette;
 
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ is
 
 	Str_Ref  : Str.T;
 	Str_Wrap : Str.T;
-	Columns  : Str.Size := 10;
+	Columns  : Size := 10;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
@@ -56,11 +56,11 @@ is
 	-- offset that can be used with the reference string. New data can then be added to the reference
 	-- string that will match the 2d coordinates of the wrapped string.
 
-	procedure Insert_2d (Text : in String; Row : in Str.Index; Col : in Str.Index)
+	procedure Insert_2d (Text : in String; Row : in Index; Col : in Index)
 	is
 	
-		Offset_Ref  : Str.Index;
-		Offset_Wrap : Str.Index;
+		Offset_Ref  : Index;
+		Offset_Wrap : Index;
 
 	begin
 
@@ -126,8 +126,8 @@ begin
 
 exception
 
-	when E : Str.E =>
-		Put ("Strings errored during operation. Code :");
+	when Str.E =>
+		Put ("Strings errored during operation. Code : ");
 		Put (Str_Ref.Error'Image & "-");
 		Put (Str_Wrap.Error'Image);
 		New_Line;

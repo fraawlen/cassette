@@ -16,12 +16,8 @@
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-pragma Ada_2012;
-
-with Cassette;
-with Cassette.Error;
-with Interfaces.C;            use Interfaces.C;
-with Interfaces.C.Extensions; use Interfaces.C.Extensions;
+with Interfaces.C;
+with Interfaces.C.Extensions;
 with Interfaces.C.Strings;
 with System;
 
@@ -35,46 +31,31 @@ package body Cassette.Str is
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	procedure Clone (Self : out T; Parent : in T)
-	is
-		function Fn (Parent : System.Address) return System.Address
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_clone";
-	begin
+	procedure Clone (Str : out T; Parent : in T)
+	is begin
 
-		Self.Data := Fn (Parent.Data);
-		Self.Check;
+		Str.Data := C_Clone (Parent.Data);
+		Str.Raise_Error;
 
 	end Clone;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Create (Self : out T)
-	is
-		function Fn return System.Address
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_create";
-	begin
+	procedure Create (Str : out T)
+	is begin
 
-		Self.Data := Fn;
-		Self.Check;
+		Str.Data := C_Create;
+		Str.Raise_Error;
 
 	end Create;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Destroy (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_destroy";
-	begin
+	procedure Destroy (Str : in out T)
+	is begin
 
-		Fn (Self.Data);
-		Self.Data := Placeholder'Address;
+		C_Destroy (Str.Data);
+		Str.Data := C_Placeholder'Address;
 
 	end Destroy;
 	
@@ -82,72 +63,73 @@ package body Cassette.Str is
 	-- WRAPPER METHODS ------------------------------------------------------------------------------ 
 	-------------------------------------------------------------------------------------------------
 
-	procedure Append (Self : in out T; Value : in T) is
+	procedure Append (Str : in out T; Value : in T) is
 	begin
 
-		Self.Insert (Value, Index'Last);
+		Str.Insert (Value, Index'Last);
 
 	end Append;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Append (Self : in out T; Value : in Float) is
+	procedure Append (Str : in out T; Value : in Float) is
 	begin
 
-		Self.Insert (Value, Index'Last);
-
-	end Append;
-	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
-
-	procedure Append (Self : in out T; Value : in Integer) is
-	begin
-
-		Self.Insert (Value, Index'Last);
+		Str.Insert (Value, Index'Last);
 
 	end Append;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Append (Self : in out T; Value : in String) is
+	procedure Append (Str : in out T; Value : in Integer) is
 	begin
 
-		Self.Insert (Value, Index'Last);
+		Str.Insert (Value, Index'Last);
 
 	end Append;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Prepend (Self : in out T; Value : in T) is
+	procedure Append (Str : in out T; Value : in String) is
 	begin
 
-		Self.Insert (Value, 0);
+		Str.Insert (Value, Index'Last);
+
+	end Append;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	procedure Prepend (Str : in out T; Value : in T) is
+	begin
+
+		Str.Insert (Value, 0);
 
 	end Prepend;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Prepend (Self : in out T; Value : in Float) is
+	procedure Prepend (Str : in out T; Value : in Float) is
 	begin
 
-		Self.Insert (Value, 0);
+		Str.Insert (Value, 0);
 
 	end Prepend;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Prepend (Self : in out T; Value : in Integer) is
+	procedure Prepend (Str : in out T; Value : in Integer) is
 	begin
 
-		Self.Insert (Value, 0);
+		Str.Insert (Value, 0);
 
 	end Prepend;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Prepend (Self : in out T; Value : in String) is
+	procedure Prepend (Str : in out T; Value : in String) is
 	begin
 
-		Self.Insert (Value, 0);
+		Str.Insert (Value, 0);
 
 	end Prepend;
 
@@ -155,228 +137,149 @@ package body Cassette.Str is
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	procedure Clear (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_clear";
-	begin
+	procedure Clear (Str : in out T)
+	is begin
 
-		Fn (Self.Data);
+		C_Clear (Str.Data);
 
 	end Clear;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Cut (Self : in out T; Offset : in Index; Length : in Size)
-	is
-		procedure Fn (Data : System.Address; Offset : size_t; Length : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_cut";
-	begin
+	procedure Cut (Str : in out T; Offset : in Index; Length : in Size)
+	is begin
 
-		Fn (Self.Data, Offset, Length);
+		C_Cut (Str.Data, Offset, Length);
 
 	end Cut;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Insert (Self : in out T; Value : in T; Offset : in Index)
-	is
-		procedure Fn (Data : System.Address; Value : System.Address; Offset : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_insert_cstr";
-	begin
+	procedure Insert (Str : in out T; Value : in T; Offset : in Index)
+	is begin
 
-		Fn (Self.Data, Value.Data, Offset);
-		Self.Check;
+		C_Insert_Cstr (Str.Data, Value.Data, Offset);
+		Str.Raise_Error;
 
 	end Insert;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Insert (Self : in out T; Value : in Float; Offset : in Index)
-	is
-		procedure Fn (Data : System.Address; Value : double; Offset : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_insert_double";
-	begin
+	procedure Insert (Str : in out T; Value : in Float; Offset : in Index)
+	is begin
 
-		Fn (Self.Data, double (Value), Offset);
-		Self.Check;
+		C_Insert_Double (Str.Data, C.double (Value), Offset);
+		Str.Raise_Error;
 
 	end Insert;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Insert (Self : in out T; Value : in Integer; Offset : in Index)
-	is
-		procedure Fn (Data : System.Address; Value : Long_Long_Integer; Offset : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_insert_long";
-	begin
+	procedure Insert (Str : in out T; Value : in Integer; Offset : in Index)
+	is begin
 
-		Fn (Self.Data, Long_Long_Integer (Value), Offset);
-		Self.Check;
+		C_Insert_Long (Str.Data, Long_Long_Integer (Value), Offset);
+		Str.Raise_Error;
 
 	end Insert;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Insert (Self : in out T; Value : in String; Offset : in Index)
-	is
-		procedure Fn (Data : System.Address; Value : C.Strings.chars_ptr; Offset : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_insert_raw";
-		
+	procedure Insert (Str : in out T; Value : in String; Offset : in Index)
+	is		
 		S : C.Strings.chars_ptr := C.Strings.New_String (Value);
 	begin
 
-		Fn (Self.Data, S, Offset);
+		C_Insert_Raw (Str.Data, S, Offset);
 		C.Strings.Free (S);
-		Self.Check;
+		Str.Raise_Error;
 
 	end Insert;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Pad (Self : in out T; Pattern : in String; Offset : in Index; Length_Target : in Size)
+	procedure Pad (Str : in out T; Pattern : in String; Offset : in Index; Length_Target : in Size)
 	is
-		procedure Fn (
-			Data          : System.Address;
-			Pattern       : C.Strings.chars_ptr;
-			Offset        : size_t;
-			Length_Target : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_pad";
-		
 		S : C.Strings.chars_ptr := C.Strings.New_String (Pattern);
 	begin
 
-		Fn (Self.Data, S, Offset, Length_Target);
+		C_Pad (Str.Data, S, Offset, Length_Target);
 		C.Strings.Free (S);
-		Self.Check;
+		Str.Raise_Error;
 
 	end Pad;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Prealloc (Self : in out T; Byte_Length : in Size)
-	is
-		procedure Fn (Data : System.Address; Byte_Length : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_prealloc";
-	begin
+	procedure Prealloc (Str : in out T; Bytes : in Size)
+	is begin
 
-		Fn (Self.Data, Byte_Length);
-		Self.Check;
+		C_Prealloc (Str.Data, Bytes);
+		Str.Raise_Error;
 
 	end Prealloc;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Repair (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_repair";
-	begin
+	procedure Repair (Str : in out T)
+	is begin
 
-		Fn (Self.Data);
+		C_Repair (Str.Data);
 
 	end Repair;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Set_Precision (Self : in out T; Value : in Precision)
-	is
-		procedure Fn (Data : System.Address; Value : int)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_set_precision";
-	begin
+	procedure Set_Precision (Str : in out T; Value : in Precision)
+	is begin
 
-		Fn (Self.Data, Value);
+		C_Set_Precision (Str.Data, C.int (Value));
 
 	end Set_Precision;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Set_Tab_Width (Self : in out T; Width : in Size)
-	is
-		procedure Fn (Data : System.Address; Width : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_set_tab_width";
-	begin
+	procedure Set_Tab_Width (Str : in out T; Width : in Size)
+	is begin
 
-		Fn (Self.Data, Width);
+		C_Set_Tab_Width (Str.Data, Width);
 
 	end Set_Tab_Width;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Slice (Self : in out T; Offset : in Index; Length : in Size)
-	is
-		procedure Fn (Data : System.Address; Offset : size_t; Length : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_slice";
-	begin
+	procedure Slice (Str : in out T; Offset : in Index; Length : in Size)
+	is begin
 
-		Fn (Self.Data, Offset, Length);
+		C_Slice (Str.Data, Offset, Length);
 
 	end Slice;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Trim (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_trim";
-	begin
+	procedure Trim (Str : in out T)
+	is begin
 
-		Fn (Self.Data);
+		C_Trim (Str.Data);
 
 	end Trim;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Wrap (Self : in out T; Max_Width : in Size)
-	is
-		procedure Fn (Data : System.Address; Max_Width : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_wrap";
-	begin
+	procedure Wrap (Str : in out T; Width : in Size)
+	is begin
 
-		Fn (Self.Data, Max_Width);
-		Self.Check;
+		C_Wrap (Str.Data, Width);
+		Str.Raise_Error;
 
 	end Wrap;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Zero (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_zero";
-	begin
+	procedure Zero (Str : in out T)
+	is begin
 
-		Fn (Self.Data);
+		C_Zero (Str.Data);
 
 	end Zero;
 
@@ -384,169 +287,109 @@ package body Cassette.Str is
 	-- PURE METHODS --------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	function Byte_Length (Self : in T) return Size
-	is
-		function Fn (Data : System.Address) return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_byte_length";
-	begin
+	function Byte_Length (Str : in T) return Size
+	is begin
 
-		return Fn (Self.Data);
+		return C_Byte_Length (Str.Data);
 
 	end Byte_Length;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Byte_Offset (Self : in T; Offset : in Index) return Index
-	is
-		function Fn (Data : System.Address; Offset : size_t) return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_byte_offset";
-	begin
+	function Byte_Offset (Str : in T; Offset : in Index) return Index
+	is begin
 
-		return Fn (Self.Data, Offset);
+		return C_Byte_Offset (Str.Data, Offset);
 
 	end Byte_Offset;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Chars (Self : in T) return String
-	is
-		function Fn (Data : System.Address) return C.Strings.chars_ptr
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_chars";
-	begin
+	function Chars (Str : in T) return String
+	is begin
 
-		return C.Strings.Value (Fn (Self.Data));
+		return C.Strings.Value (C_Chars (Str.Data));
 
 	end Chars;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Chars_At_Coords (Self : in T; Row : in Index; Col : in Index) return String
-	is
-		function Fn (Data : System.Address; Row : size_t; Col : size_t) return C.Strings.chars_ptr
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_chars";
-	begin
+	function Chars_At_Coords (Str : in T; Row : in Index; Col : in Index) return String
+	is begin
 
-		return C.Strings.Value (Fn (Self.Data, Row, Col));
+		return C.Strings.Value (C_Chars_At_Coords (Str.Data, Row, Col));
 
 	end Chars_At_Coords;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Chars_At_Offset (Self : in T; Offset : in Index) return String
-	is
-		function Fn (Data : System.Address; Offset : size_t) return C.Strings.chars_ptr
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_chars";
-	begin
+	function Chars_At_Offset (Str : in T; Offset : in Index) return String
+	is begin
 
-		return C.Strings.Value (Fn (Self.Data, Offset));
+		return C.Strings.Value (C_Chars_At_Offset (Str.Data, Offset));
 
 	end Chars_At_Offset;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Coords_Offset (Self : in T; Row : in Index; Col : in Index) return Index
-	is
-		function Fn (Data : System.Address; Row : size_t; Col : size_t) return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_coords_offset";
-	begin
+	function Coords_Offset (Str : in T; Row : in Index; Col : in Index) return Index
+	is begin
 
-		return Fn (Self.Data, Row, Col);
+		return C_Coords_Offset (Str.Data, Row, Col);
 
 	end Coords_Offset;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Error (Self : in T) return Cassette.Error.T
-	is
-		function Fn (Data : System.Address) return unsigned
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_error";
-	begin
+	function Error (Str : in T) return Error_Code
+	is begin
 
-		return Fn (Self.Data);
+		return C_Error (Str.Data);
 
 	end Error;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Height (Self : in T) return Size
-	is
-		function Fn (Data : System.Address) return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_height";
-	begin
+	function Height (Str : in T) return Size
+	is begin
 
-		return Fn (Self.Data);
+		return C_Height (Str.Data);
 
 	end Height;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Length (Self : in T) return Size
-	is
-		function Fn (Data : System.Address) return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_length";
-	begin
+	function Length (Str : in T) return Size
+	is begin
 
-		return Fn (Self.Data);
+		return C_Length (Str.Data);
 
 	end Length;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Test_Wrap (Self : in T; Max_Width : in Size) return Size
-	is
-		function Fn (Data : System.Address; Max_Width : size_t) return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_test_wrap";
-	begin
+	function Test_Wrap (Str : in T; Width : in Size) return Size
+	is begin
 
-		return Fn (Self.Data, Max_Width);
+		return C_Test_Wrap (Str.Data, Width);
 
 	end Test_Wrap;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Unwrapped_Offset (Self : in T; Wrap : in T; Offset : Index) return Index
-	is
-		function Fn (Data : System.Address; Wrap : System.Address; Offset : size_t) return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_unwrapped_offset";
-	begin
+	function Unwrapped_Offset (Str : in T; Wrap : in T; Offset : Index) return Index
+	is begin
 
-		return Fn (Self.Data, Wrap.Data, Offset);
+		return C_Unwrapped_Offset (Str.Data, Wrap.Data, Offset);
 
 	end Unwrapped_Offset;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Width (Self : in T) return Size
-	is
-		function Fn (Data : System.Address) return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cstr_width";
-	begin
+	function Width (Str : in T) return Size
+	is begin
 
-		return Size (Fn (Self.Data));
+		return C_Width (Str.Data);
 
 	end Width;
 
@@ -554,14 +397,15 @@ package body Cassette.Str is
 	-- PRIVATE METHODS ------------------------------------------------------------------------------ 
 	-------------------------------------------------------------------------------------------------
 
-	procedure Check (Self : in T) is
-	begin
+	procedure Raise_Error (Str : in T)
+	is begin
 
-		if Self.Error > 0
-		then
-			raise E;
-		end if;
+		case Str.Error
+		is
+			when Error_None => null;
+			when others     => raise E;
+		end case;
 
-	end Check;
+	end Raise_Error;
 
 end Cassette.Str;

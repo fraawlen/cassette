@@ -13,12 +13,12 @@ project Examples is
 	for Exec_Dir    use "build/bin";
 	for Main        use (
 		"tracker.adb", 
-		"print.adb",
+		"data.adb",
 		"widget.adb",
 		"random.adb",
 		"colors.adb",
 		"dictionary.adb",
-		"data.adb");
+		"print.adb");
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 

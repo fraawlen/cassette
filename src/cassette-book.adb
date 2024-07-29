@@ -16,12 +16,8 @@
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-pragma Ada_2012;
-
-with Cassette;
-with Cassette.Error;
-with Interfaces.C;            use Interfaces.C;
-with Interfaces.C.Extensions; use Interfaces.C.Extensions;
+with Interfaces.C;
+with Interfaces.C.Extensions;
 with Interfaces.C.Strings;
 with System;
 
@@ -35,46 +31,31 @@ package body Cassette.Book is
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	procedure Clone (Self : out T; Parent : in T)
-	is
-		function Fn (Parent : System.Address) return System.Address
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cbook_clone";
-	begin
+	procedure Clone (Book : out T; Parent : in T)
+	is begin
 
-		Self.Data := Fn (Parent.Data);
-		Self.Check;
+		Book.Data := C_Clone (Parent.Data);
+		Book.Raise_Error;
 
 	end Clone;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Create (Self : out T)
-	is
-		function Fn return System.Address
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cbook_create";
-	begin
+	procedure Create (Book : out T)
+	is begin
 
-		Self.Data := Fn;
-		Self.Check;
+		Book.Data := C_Create;
+		Book.Raise_Error;
 
 	end Create;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Destroy (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cbook_destroy";
-	begin
+	procedure Destroy (Book : in out T)
+	is begin
 
-		Fn (Self.Data);
-		Self.Data := Placeholder'Address;
+		C_Destroy (Book.Data);
+		Book.Data := C_Placeholder'Address;
 
 	end Destroy;
 
@@ -82,105 +63,87 @@ package body Cassette.Book is
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	procedure Clear (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cbook_clear";
-	begin
+	procedure Clear (Book : in out T)
+	is begin
 
-		Fn (Self.Data);
+		C_Clear (Book.Data);
 
 	end Clear;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Pop_Group (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True,
-			     Convention    => C,
-			     External_Name => "cbook_pop_group";
-	begin
+	procedure Pop_Group (Book : in out T)
+	is begin
 
-		Fn (Self.Data);
+		C_Pop_Group (Book.Data);
 
 	end Pop_Group;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Pop_Word (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True,
-			     Convention    => C,
-			     External_Name => "cbook_pop_word";
-	begin
+	procedure Pop_Word (Book : in out T)
+	is begin
 
-		Fn (Self.Data);
+		C_Pop_Word (Book.Data);
 
 	end Pop_Word;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Prealloc (Self : in out T; Bytes : in Size; Words : in Size; Groups : in Size)
-	is
-		procedure Fn (Data : System.Address; B : size_t; W : size_t; G : size_t)
-			with Import        => True,
-			     Convention    => C,
-			     External_Name => "cbook_prealloc";
-	begin
+	procedure Prealloc (Book : in out T; Bytes : in Size; Words : in Size; Groups : in Size)
+	is begin
 		
-		Fn (Self.Data, Bytes, Words, Groups);
-		Self.Check;
+		C_Prealloc (Book.Data, Bytes, Words, Groups);
+		Book.Raise_Error;
 
 	end Prealloc;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Repair (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True,
-			     Convention    => C,
-			     External_Name => "cbook_repair";
-	begin
+	procedure Prepare_New_Group (Book : in out T)
+	is begin
 
-		Fn (Self.Data);
+		C_Prepare_New_Group (Book.Data);
+
+	end Prepare_New_Group;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	procedure Repair (Book : in out T)
+	is begin
+
+		C_Repair (Book.Data);
 
 	end Repair;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Write (Self : in out T; Str : in String; Group_Mode : in Mode)
+	procedure Undo_New_Group (Book : in out T)
+	is begin
+
+		C_Undo_New_Group (Book.Data);
+
+	end Undo_New_Group;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	procedure Write (Book : in out T; Str : in String)
 	is
-		procedure Fn (Data : System.Address; Str : C.Strings.chars_ptr; Group_Mode : Mode)
-			with Import        => True,
-			     Convention    => C,
-			     External_Name => "cbook_write";
-		
-		S : C.Strings.chars_ptr := C.Strings.New_String (Str);
-		
+		S : C.Strings.chars_ptr := C.Strings.New_String (Str);	
 	begin
 
-		Fn (Self.Data, S, Group_Mode);
+		C_Write (Book.Data, S);
 		C.Strings.Free (S);
-		Self.Check;
+		Book.Raise_Error;
 
 	end Write;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Zero (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cbook_zero";
-	begin
+	procedure Zero (Book : in out T)
+	is begin
 
-		Fn (Self.Data);
+		C_Zero (Book.Data);
 
 	end Zero;
 
@@ -188,121 +151,73 @@ package body Cassette.Book is
 	-- PURE METHODS --------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	function Error (Self : in T) return Cassette.Error.T
-	is
-		function Fn (Data : System.Address) return unsigned
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cbook_error";
-	begin
+	function Error (Book : in T) return Error_Code
+	is begin
 
-		return Fn (Self.Data);
+		return C_Error (Book.Data);
 
 	end Error;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Group_Length (Self : in T; Group_Index : in Index) return Size
-	is
-		function Fn (Data : System.Address; Group_Index : size_t) return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cbook_group_length";
-	begin
+	function Group_Length (Book : in T; Group : in Index) return Size
+	is begin
 
-		return Fn (Self.Data, Group_Index);
+		return C_Group_Length (Book.Data, Group);
 
 	end Group_Length;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Groups_Number (Self : in T) return Size
-	is
-		function Fn (Data : System.Address) return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cbook_groups_number";
-	begin
+	function Groups_Number (Book : in T) return Size
+	is begin
 
-		return Fn (Self.Data);
+		return C_Groups_Number (Book.Data);
 
 	end Groups_Number;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Length (Self : in T) return Size
-	is
-		function Fn (Data : System.Address) return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cbook_length";
-	begin
+	function Length (Book : in T) return Size
+	is begin
 
-		return Fn (Self.Data);
+		return C_Length (Book.Data);
 
 	end Length;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Word (Self : in T; Word_Index : in Index) return String
-	is
-		function Fn (Data : System.Address; Group_Index : size_t) return C.Strings.chars_ptr
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cbook_word";
-	begin
+	function Word (Book : in T; Word : in Index) return String
+	is begin
 
-		return C.Strings.Value (Fn (Self.Data, Word_Index));
+		return C.Strings.Value (C_Word (Book.Data, Word));
 
 	end Word;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Word_In_Group (Self : in T; Group_Index : in Index; Word_Index : in Index) return String
-	is
-		function Fn (
-			Data        : System.Address;
-			Group_Index : size_t;
-			Word_Index  : size_t)
-				return C.Strings.chars_ptr
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cbook_word_in_group";
-	begin
+	function Word_In_Group (Book : in T; Group : in Index; Word : in Index) return String
+	is begin
 
-		return C.Strings.Value (Fn (Self.Data, Group_Index, Word_Index));
+		return C.Strings.Value (C_Word_In_Group (Book.Data, Group, Word));
 
 	end Word_In_Group;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Word_Index (Self : in T; Group_Index : in Index; Word_Index : in Index) return Index
-	is
-		function Fn (
-			Data        : System.Address;
-			Group_Index : size_t;
-			Word_Index  : size_t)
-				return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cbook_word_index";
-	begin
+	function Word_Index (Book : in T; Group : in Index; Word : in Index) return Index
+	is begin
 
-		return Fn (Self.Data, Group_Index, Word_Index);
+		return C_Word_Index (Book.Data, Group, Word);
 
 	end Word_Index;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Words_Number (Self : in T) return Size
-	is
-		function Fn (Data : System.Address) return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cbook_words_number";
-	begin
+	function Words_Number (Book : in T) return Size
+	is begin
 
-		return Fn (Self.Data);
+		return C_Words_Number (Book.Data);
 
 	end Words_Number;
 
@@ -310,15 +225,17 @@ package body Cassette.Book is
 	-- PRIVATE -------------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	procedure Check (Self : in T) is
-	begin
+	procedure Raise_Error (Book : in T)
+	is begin
 
-		if Self.Error > 0
-		then
-			raise E;
-		end if;
+		case Book.Error
+		is
+			when Error_None => null;
+			when others     => raise E;
+		end case;
 
-	end Check;
+	end Raise_Error;
 
 end Cassette.Book;
+
 

@@ -16,11 +16,10 @@
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-pragma Ada_2012;
-
-with Cassette.Error;
-with Interfaces.C;            use Interfaces.C;
-with Interfaces.C.Extensions; use Interfaces.C.Extensions;
+with Interfaces;
+with Interfaces.C;
+with Interfaces.C.Extensions;
+with Interfaces.C.Strings;
 with System;
 
 --------------------------------------------------------------------------------------------------------------
@@ -33,46 +32,31 @@ package body Cassette.Inputs is
 	-- CONSTRUCTORS / DESTRUCTORS ------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	procedure Clone (Self : out T; Parent : in T)
-	is
-		function Fn (Parent : System.Address) return System.Address
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_clone";
-	begin
+	procedure Clone (Inputs : out T; Parent : in T)
+	is begin
 
-		Self.Data := Fn (Parent.Data);
-		Self.Check;
+		Inputs.Data := C_Clone (Parent.Data);
+		Inputs.Raise_Error;
 
 	end Clone;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Create (Self : out T; Max_Inputs : in Size_Input)
-	is
-		function Fn (Max_Inputs : size_t) return System.Address
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_create";
-	begin
+	procedure Create (Inputs : out T; Length : in Size)
+	is begin
 
-		Self.Data := Fn (Max_Inputs);
-		Self.Check;
+		Inputs.Data := C_Create (Length);
+		Inputs.Raise_Error;
 
 	end Create;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Destroy (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_destroy";
-	begin
+	procedure Destroy (Inputs : in out T)
+	is begin
 
-		Fn (Self.Data);
-		Self.Data := Placeholder'Address;
+		C_Destroy (Inputs.Data);
+		Inputs.Data := C_Placeholder'Address;
 
 	end Destroy;
 
@@ -80,102 +64,66 @@ package body Cassette.Inputs is
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	procedure Clear (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_clear";
-	begin
+	procedure Clear (Inputs : in out T)
+	is begin
 
-		Fn (Self.Data);
+		C_Clear (Inputs.Data);
 
 	end Clear;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	 procedure Pull_ID (Self : in out T; ID : in Identifier)
-	 is
-		procedure Fn (Data : System.Address; ID : unsigned)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_pull_id";
-	 begin
+	 procedure Pull_ID (Inputs : in out T; ID : in Identifier)
+	 is begin
 
-		Fn (Self.Data, ID);
+		C_Pull_ID (Inputs.Data, C.unsigned (ID));
 
 	 end Pull_ID;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
- 	procedure Pull_Index (Self : in out T; I : in Index)
-	is
-		procedure Fn (Data : System.Address; Index : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_pull_index";
-	begin
+ 	procedure Pull_Index (Inputs : in out T; I : in Index)
+	is begin
 
-		Fn (Self.Data, I);
+		C_Pull_Index (Inputs.Data, I);
 
 	end Pull_Index;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Push (Self : in out T; ID : in Identifier; X : in Position := 0; Y : in Position := 0;
-	                Addr : in System.Address := System.Null_Address)
-	is
-		procedure Fn (
-			Data : System.Address; ID : unsigned; X : short; Y : short; Addr : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_push";
-	begin
+	procedure Push (Inputs : in out T; ID : in Identifier; X : in Position := 0;
+	                Y : in Position := 0; Addr : in System.Address := System.Null_Address)
+	is begin
 	
-		Fn (Self.Data, ID, short (X), short (Y), Addr);
+		C_Push (Inputs.Data, C.unsigned (ID), Integer_16 (X), Integer_16 (Y), Addr);
 
 	end Push;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Repair (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_repair";
-	begin
+	procedure Repair (Inputs : in out T)
+	is begin
 	
-		Fn (Self.Data);
+		C_Repair (Inputs.Data);
 
 	end Repair;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Resize (Self : in out T; Max_Inputs : in Size_Input)
-	is
-		procedure Fn (Data : System.Address; Max_Inputs : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_resize";
-	begin
+	procedure Resize (Inputs : in out T; Length : in Size)
+	is begin
 	
-		Fn (Self.Data, Max_Inputs);
-		Self.Check;
+		C_Resize (Inputs.Data, Length);
+		Inputs.Raise_Error;
 
 	end Resize;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Set_Default_Address (Self : in out T; Addr : in System.Address)
-	is
-		procedure Fn (Data : System.Address; Addr : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_set_default_ptr";
-	begin
+	procedure Set_Default_Address (Inputs : in out T; Addr : in System.Address)
+	is begin
 	
-		Fn (Self.Data, Addr);
+		C_Set_Default_Ptr (Inputs.Data, Addr);
 
 	end Set_Default_Address;
 
@@ -183,60 +131,40 @@ package body Cassette.Inputs is
 	-- PURE METHODS --------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	function Address (Self : in T; I : Index) return System.Address
-	is
-		function Fn (Data : System.Address; Index : size_t) return System.Address
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_ptr";
-	begin
+	function Address (Inputs : in T; I : Index) return System.Address
+	is begin
 
-		return Fn (Self.Data, I);
+		return C_Ptr (Inputs.Data, I);
 
 	end Address;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Error (Self : in T) return Cassette.Error.T
-	is
-		function Fn (Data : System.Address) return unsigned
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_error";
-	begin
+	function Error (Inputs : in T) return Error_Code
+	is begin
 
-		return Fn (Self.Data);
+		return C_Error (Inputs.Data);
 
 	end Error;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Find (Self : in T; ID : in Identifier) return Boolean
-	is
-		function Fn (Data : System.Address; ID : unsigned; Index : access size_t) return bool
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_find";
-	begin
+	function Find (Inputs : in T; ID : in Identifier) return Boolean
+	is begin
 
-		return Boolean (Fn (Self.Data, ID, NULL));
+		return Boolean (C_Find (Inputs.Data, C.unsigned (ID), NULL));
 
 	end Find;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 	
-	function Find (Self : in T; ID : in Identifier; I : out Index) return Boolean
+	function Find (Inputs : in T; ID : in Identifier; I : out Index) return Boolean
 	is
-		function Fn (Data : System.Address; ID : unsigned; Index : access size_t) return bool
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_find";
-
-		B : bool;
-		J : aliased size_t;
+		B : C.Extensions.bool;
+		J : aliased C.size_t;
 	begin
 	
-		B := Fn (Self.Data, ID, J'Access);
+		B := C_Find (Inputs.Data, C.unsigned (ID), J'Access);
 		I := J;
 
 		return Boolean (B);
@@ -245,57 +173,37 @@ package body Cassette.Inputs is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function ID (Self : in T; I : Index) return Identifier
-	is
-		function Fn (Data : System.Address; Index : size_t) return unsigned
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_id";
-	begin
+	function ID (Inputs : in T; I : Index) return Identifier
+	is begin
 
-		return Fn (Self.Data, I);
+		return Identifier (C_ID (Inputs.Data, I));
 
 	end ID;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Load (Self : in T) return Size
-	is
-		function Fn (Data : System.Address) return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_load";
-	begin
+	function Load (Inputs : in T) return Size
+	is begin
 
-		return Fn (Self.Data);
+		return C_Load (Inputs.Data);
 
 	end Load;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function X (Self : in T; I : Index) return Position
-	is
-		function Fn (Data : System.Address; Index : size_t) return short
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_x";
-	begin
+	function X (Inputs : in T; I : Index) return Position
+	is begin
 
-		return Position (Fn (Self.Data, I));
+		return Position (C_X (Inputs.Data, I));
 
 	end X;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Y (Self : in T; I : Index) return Position
-	is
-		function Fn (Data : System.Address; Index : size_t) return short
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cinputs_y";
-	begin
+	function Y (Inputs : in T; I : Index) return Position
+	is begin
 
-		return Position (Fn (Self.Data, I));
+		return Position (C_Y (Inputs.Data, I));
 
 	end Y;
 
@@ -303,14 +211,15 @@ package body Cassette.Inputs is
 	-- PRIVATE METHODS ------------------------------------------------------------------------------ 
 	-------------------------------------------------------------------------------------------------
 
-	procedure Check (Self : in T) is
-	begin
+	procedure Raise_Error (Inputs : in T)
+	is begin
 
-		if Self.Error > 0
-		then
-			raise E;
-		end if;
+		case Inputs.Error
+		is
+			when Error_None => null;
+			when others     => raise E;
+		end case;
 
-	end Check;
+	end Raise_Error;
 
 end Cassette.Inputs;

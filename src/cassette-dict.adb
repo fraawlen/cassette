@@ -16,11 +16,8 @@
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-pragma Ada_2012;
-
-with Cassette.Error;
-with Interfaces.C;            use Interfaces.C;
-with Interfaces.C.Extensions; use Interfaces.C.Extensions;
+with Interfaces.C;
+with Interfaces.C.Extensions;
 with Interfaces.C.Strings;
 with System;
 
@@ -34,46 +31,31 @@ package body Cassette.Dict is
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	procedure Clone (Self : out T; Parent : in T)
-	is
-		function Fn (Parent : System.Address) return System.Address
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cdict_clone";
-	begin
+	procedure Clone (Dict : out T; Parent : in T)
+	is begin
 
-		Self.Data := Fn (Parent.Data);
-		Self.Check;
+		Dict.Data := C_Clone (Parent.Data);
+		Dict.Raise_Error;
 
 	end Clone;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Create (Self : out T)
-	is
-		function Fn return System.Address
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cdict_create";
-	begin
+	procedure Create (Dict : out T)
+	is begin
 
-		Self.Data := Fn;
-		Self.Check;
+		Dict.Data := C_Create;
+		Dict.Raise_Error;
 
 	end Create;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Destroy (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cdict_destroy";
-	begin
+	procedure Destroy (Dict : in out T)
+	is begin
 
-		Fn (Self.Data);
-		Self.Data := Placeholder'Address;
+		C_Destroy (Dict.Data);
+		Dict.Data := C_Placeholder'Address;
 
 	end Destroy;
 
@@ -81,112 +63,73 @@ package body Cassette.Dict is
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	procedure Clear (Self : in out T)
-	is	
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cdict_clear";
-	begin
+	procedure Clear (Dict : in out T)
+	is begin
 
-		Fn (Self.Data);
+		C_Clear (Dict.Data);
 
 	end Clear;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Clear_Group (Self : in out T; Group : in Group_Value)
-	is
-		procedure Fn (Data : System.Address; Group : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cdict_clear_group";
-	begin
+	procedure Clear_Group (Dict : in out T; Group : in Index)
+	is begin
 
-		Fn (Self.Data, Group);
+		C_Clear_Group (Dict.Data, Group);
 
 	end Clear_Group;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Erase (Self : in out T; Key : in String; Group : in Group_Value)
+	procedure Erase (Dict : in out T; Key : in String; Group : in Index)
 	is
-		procedure Fn (Data : System.Address; Key : C.Strings.chars_ptr; Group : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cdict_erase";
-
 		S : C.Strings.chars_ptr := C.Strings.New_String (Key);
 	begin
 
-		Fn (Self.Data, S, Group);
+		C_Erase (Dict.Data, S, Group);
 		C.Strings.Free (S);
 
 	end Erase;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Prealloc (Self : in out T; Slots_Number : in Size)
-	is
-		procedure Fn (Data : System.Address; Slots_Number : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cdict_prealloc";
-	begin
+	procedure Prealloc (Dict : in out T; Slots : in Size)
+	is begin
 
-		Fn (Self.Data, Slots_Number);
-		Self.Check;
+		C_Prealloc (Dict.Data, Slots);
+		Dict.Raise_Error;
 
 	end Prealloc;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Set_Max_Load (Self : in out T; Load_Factor : in Ratio)
-	is
-		procedure Fn (Data : System.Address; Load_Factor : double)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cdict_set_max_load";
-	begin
+	procedure Set_Max_Load (Dict : in out T; Load_Factor : in Ratio)
+	is begin
 
-		Fn (Self.Data, double (Load_Factor));
-		Self.Check;
+		C_Set_Max_Load (Dict.Data, C.double (Load_Factor));
+		Dict.Raise_Error;
 
 	end Set_Max_Load;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Repair (Self : in out T)
-	is
-		procedure Fn (Data : System.Address)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cdict_repair";
-	begin
+	procedure Repair (Dict : in out T)
+	is begin
 
-		Fn (Self.Data);
+		C_Repair (Dict.Data);
 
 	end Repair;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Write (Self : in out T; Key : in String; Group : in Group_Value; Value : in Slot_Value)
+	procedure Write (Dict : in out T; Key : in String; Group : in Index; Value : in Index)
 	is
-		procedure Fn (
-			Data  : System.Address;
-			Key   : C.Strings.chars_ptr;
-			Group : size_t;
-			Value : size_t)
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cdict_write";
-
 		S : C.Strings.chars_ptr := C.Strings.New_String (Key);
 	begin
 
-		Fn (Self.Data, S, Group, Value);
+		C_Write (Dict.Data, S, Group, Value);
 		C.Strings.Free (S);
-		Self.Check;
+		Dict.Raise_Error;
 
 	end Write;
 
@@ -194,37 +137,22 @@ package body Cassette.Dict is
 	-- PURE METHODS --------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	function Error (Self : in T) return Cassette.Error.T
-	is
-		function Fn (Data : System.Address) return unsigned
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cdict_error";
-	begin
+	function Error (Dict : in T) return Error_Code
+	is begin
 
-		return Fn (Self.Data);
+		return C_Error (Dict.Data);
 
 	end Error;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Find (Self : in T; Key : in String; Group : in Group_Value) return Boolean
+	function Find (Dict : in T; Key : in String; Group : in Index) return Boolean
 	is
-		function Fn (
-			Data  : System.Address;
-			Key   : C.Strings.chars_ptr;
-			Group : size_t;
-			Value : access size_t)
-				return bool
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cdict_find";
-
-		B : bool;
+		B : C.Extensions.bool;
 		S : C.Strings.chars_ptr := C.Strings.New_String (Key);
 	begin
 
-		B := Fn (Self.Data, S, Group, NULL);
+		B := C_Find (Dict.Data, S, Group, NULL);
 		C.Strings.Free (S);
 
 		return Boolean (B);
@@ -233,25 +161,14 @@ package body Cassette.Dict is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Find (Self : in T; Key : in String; Group : in Group_Value; Value : out Slot_Value)
-		return Boolean
+	function Find (Dict : in T; Key : in String; Group : in Index; Value : out Index) return Boolean
 	is
-		function Fn (
-			Data  : System.Address;
-			Key   : C.Strings.chars_ptr;
-			Group : size_t;
-			Value : access size_t)
-				return bool
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cdict_find";
-
-		B : bool;
-		G : aliased size_t;
+		B : C.Extensions.bool;
+		G : aliased C.size_t;
 		S : C.Strings.chars_ptr := C.Strings.New_String (Key);
 	begin
 
-		B     := Fn (Self.Data, S, Group, G'Access);
+		B     := C_Find (Dict.Data, S, Group, G'Access);
 		Value := G;
 		C.Strings.Free (S);
 
@@ -261,29 +178,19 @@ package body Cassette.Dict is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Load (Self : in T) return Size
-	is 
-		function Fn (Data : System.Address) return size_t
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cdict_load";
-	begin
+	function Load (Dict : in T) return Size
+	is begin
 
-		return Fn (Self.Data);
+		return C_Load (Dict.Data);
 
 	end Load;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Load_Factor (Self : in T) return Ratio
-	is
-		function Fn (Data : System.Address) return double
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "cdict_load_factor";
-	begin
+	function Load_Factor (Dict : in T) return Ratio
+	is begin
 
-		return Ratio (Fn (Self.Data));
+		return Ratio (C_Load_Factor (Dict.Data));
 
 	end Load_Factor;
 
@@ -291,14 +198,15 @@ package body Cassette.Dict is
 	-- PRIVATE -------------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	procedure Check (Self : in T) is
-	begin
+	procedure Raise_Error (Dict : in T)
+	is begin
 
-		if Self.Error > 0
-		then
-			raise E;
-		end if;
+		case Dict.Error
+		is
+			when Error_None => null;
+			when others     => raise E;
+		end case;
 
-	end Check;
+	end Raise_Error;
 
 end Cassette.Dict;

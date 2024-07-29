@@ -12,9 +12,11 @@
 -- You should have received a copy of the GNU Lesser General Public License along with this program. If not,
 -- see <http://www.gnu.org/licenses/>.
 
-pragma Ada_2012;
+--------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
 
-with Interfaces.C; use Interfaces;
+with Interfaces.C;
 
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
@@ -26,15 +28,15 @@ package Cassette.Rand is
 	-- TYPES ---------------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Numerics.
-	--
-	subtype Seed_Value is C.unsigned_long_long;
-
 	-- Container type that keeps track of the LCG (rand48-based) state.
 	--
 	type T is tagged record
 		State : aliased C.unsigned_long_long;
 	end record;
+
+	-- Numerics.
+	--
+	type Seed_Value is new C.unsigned_long_long;
 
 	-------------------------------------------------------------------------------------------------
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
@@ -44,7 +46,7 @@ package Cassette.Rand is
 	--
 	-- [Params]
 	--
-	-- 	Self  : Container to interact with
+	-- 	Rand  : Container to interact with
 	-- 	Lim_1 : First bound 
 	-- 	Lim_2 : Second bound
 	--
@@ -53,7 +55,7 @@ package Cassette.Rand is
 	-- 	Generated random value
 	--
 	function Next (
-		Self  : in out T;
+		Rand  : in out T;
 		Lim_1 : in Float;
 		Lim_2 : in Float)
 			return Float;
@@ -62,11 +64,22 @@ package Cassette.Rand is
 	--
 	-- [Params]
 	--
-	-- 	Self  : Container to interact with
+	-- 	Rand  : Container to interact with
 	-- 	Value : Initial value to apply
 	--
 	procedure Seed (
-		Self  : in out T;
+		Rand  : in out T;
 		Value : in Seed_Value);
+
+	-------------------------------------------------------------------------------------------------
+	-- IMPORTS -------------------------------------------------------------------------------------- 
+	-------------------------------------------------------------------------------------------------
+
+	procedure C_Seed (Rand : access C.unsigned_long_long; Value : C.unsigned_long_long);
+
+	function  C_Next (Rand : access C.unsigned_long_long; lim_1 : C.double; lim_2  : C.double) return C.double;
+
+	pragma Import (C, C_Next, "crand_next");
+	pragma Import (C, C_Seed, "crand_seed");
 
 end Cassette.Rand;

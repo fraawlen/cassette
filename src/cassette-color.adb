@@ -16,12 +16,13 @@
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-pragma Ada_2012;
-
-with Interfaces.C;            use Interfaces.C;
-with Interfaces.C.Extensions; use Interfaces.C.Extensions;
+with Interfaces;
+with Interfaces.C;
+with Interfaces.C.Extensions;
 with Interfaces.C.Strings;
 with System;
+
+with Ada.Text_IO;
 
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
@@ -34,46 +35,37 @@ package body Cassette.Color is
 	-------------------------------------------------------------------------------------------------
 
 	function From_ARGB_Uint (Argb : in ARGB_Uint) return T
-	is
-		function Fn (Argb : ARGB_Uint) return T
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccolor_from_argb_uint";
-	begin
+	is begin
 
-		return Fn (Argb);
+		return C_From_ARGB_Uint (Argb);
 
 	end From_ARGB_Uint;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
 	function From_RGBA (R : in Byte; G : in Byte; B : in Byte; A : in Byte := 255) return T
-	is
-		function Fn (R : Byte; G : Byte; B : Byte; A : Byte) return T
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccolor_from_rgba";
-	begin
+	is begin
 
-		return Fn (R, G, B, A);
+		return C_From_RGBA (R, G, B, A);
 
 	end From_RGBA;
 		
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function From_Str (Str : in String) return T
+	function From_Str (Str : in  String) return T
 	is
-		function Fn (Str : C.Strings.chars_ptr; Err : access bool) return T
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccolor_from_str";
-
+		B  : aliased C.Extensions.bool;
 		Cl : T;
 		S  : C.Strings.chars_ptr := C.Strings.New_String (Str);
 	begin
 
-		Cl := Fn (S, NULL);
+		Cl := C_From_Str (S, B'Access);
 		C.Strings.Free (S);
+
+		if B
+		then
+			raise E;
+		end if;
 
 		return Cl;
 
@@ -81,51 +73,34 @@ package body Cassette.Color is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function From_Str (Str : in  String; Error : out Boolean) return T
+	function From_Str_Unchecked (Str : in String) return T
 	is
-		function Fn (Str : C.Strings.chars_ptr; Err : access bool) return T
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccolor_from_str";
- 
-		B  : aliased bool;
 		Cl : T;
 		S  : C.Strings.chars_ptr := C.Strings.New_String (Str);
-
 	begin
 
-		Cl := Fn (S, B'Access);
+		Cl := C_From_Str (S, NULL);
 		C.Strings.Free (S);
 
 		return Cl;
 
-	end From_Str;
+	end From_Str_Unchecked;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function Interpolate (Cl_1 : in T; Cl_2 : in T; Ratio : in Ratio_Value) return T
-	is
-		function Fn (Cl_1 : T; Cl_2 : T; Ratio : double) return T
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccolor_interpolate";
-	begin
+	function Interpolate (Color_1 : in T; Color_2 : in T; Side : Ratio) return T
+	is begin
 
-		return Fn (Cl_1, Cl_2, Ratio);
+		return C_Interpolate (Color_1, Color_2, C.double (Side));
 
 	end Interpolate;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	function To_ARGB_Uint (Cl : in T) return ARGB_Uint
-	is
-		function Fn (Cl : T) return ARGB_Uint
-			with Import        => True, 
-			     Convention    => C, 
-			     External_Name => "ccolor_to_argb_uint";
-	begin
+	function To_ARGB_Uint (Color : in T) return ARGB_Uint
+	is begin
 
-		return Fn (Cl);
+		return C_To_ARGB_Uint (Color);
 
 	end To_ARGB_Uint;
 

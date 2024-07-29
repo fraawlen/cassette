@@ -16,10 +16,8 @@
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-with Ada.Strings.Fixed; use Ada.Strings.Fixed;
-with Ada.Text_IO;       use Ada.Text_IO;
-with Cassette.Config;   use Cassette;
-with Cassette.Error;
+with Ada.Text_IO;     use Ada.Text_IO;
+with Cassette.Config; use Cassette;
 
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
@@ -80,8 +78,8 @@ begin
 
 exception
 
-	when E : Config.E =>
-		Put ("Input tracker errored during operation. Code :");
+	when Config.E =>
+		Put ("Input tracker errored during operation. Code : ");
 		Put (Conf.Error'Image);
 		New_Line;
 

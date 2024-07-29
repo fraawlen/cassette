@@ -18,6 +18,7 @@
 
 with Ada.Text_IO;     use Ada.Text_IO;
 with Cassette.Inputs; use Cassette;
+with Interfaces.C;    use Interfaces.C;
 
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
@@ -30,23 +31,18 @@ is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Print (ID : in Inputs.Identifier)
-	is
-		I : Inputs.Index;
-	begin
+	procedure List_Inputs
+	is begin
 
-		Put ("Input with ID" & ID'Image);
-		if Tracker.Find (ID, I)
-		then
-			Put (" was found:");
-			Put (": X =" & Tracker.X(I)'Image);
+		for I in 0 .. Tracker.Load - 1
+		loop
+			Put ("ID :"  & Tracker.ID(I)'Image);
+			Put (", X =" & Tracker.X(I)'Image);
 			Put (", Y =" & Tracker.Y(I)'Image);
 			New_Line;
-		else
-			Put_Line (" was not found");
-		end if;	
+		end loop;
 
-	end Print;
+	end List_Inputs;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
@@ -58,29 +54,18 @@ begin
 	Tracker.Push (2,   34, 1450);
 	Tracker.Push (3, 1032,  653);
 	Tracker.Push (4,  327, 2459);
+	Tracker.Push (3,  999, 1450);
 
-	Put_Line ("Tracker usage :" & Tracker.Load'Image);
-	
 	Tracker.Pull_ID    (1);
 	Tracker.Pull_Index (2);
 
-	Put_Line ("Tracker usage :" & Tracker.Load'Image);
-
-	Print (2);
-	Print (3);
-	Print (4);
-	Print (5);
-	Print (8);
-
-	Tracker.Clear;
-
-	Put_Line ("Tracker usage :" & Tracker.Load'Image);
+	List_Inputs;
 
 	Tracker.Destroy;
 
 exception
 
-	when E : Inputs.E =>
+	when Inputs.E =>
 		Put ("Input tracker errored during operation. Code :");
 		Put (Tracker.Error'Image);
 		New_Line;

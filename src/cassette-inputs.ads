@@ -16,10 +16,10 @@
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-pragma Ada_2012;
-
-with Cassette.Error;
-with Interfaces.C; use Interfaces;
+with Interfaces; use Interfaces;
+with Interfaces.C;
+with Interfaces.C.Extensions;
+with Interfaces.C.Strings;
 with System;
 
 --------------------------------------------------------------------------------------------------------------
@@ -27,6 +27,8 @@ with System;
 --------------------------------------------------------------------------------------------------------------
 
 package Cassette.Inputs is
+
+	use type Interfaces.C.size_t;
 
 	-------------------------------------------------------------------------------------------------
 	-- EXCEPTIONS -----------------------------------------------------------------------------------
@@ -44,21 +46,16 @@ package Cassette.Inputs is
 	-- button presses in the order they get added. The array that holds them is fixed size. If that
 	-- array is full, new inputs get ignored.
 	--
-	-- Some methods, upon failure, will set an error bit in an internal error bitfield and raise an
-	-- exception. The exact error code can be checked with Error(). If any error is set all methods
-	-- will exit early with default return values and no side-effects. It's possible to clear errors
-	-- with Repair().
-
+	-- Some methods, upon failure, will set an error and raise an exception E. The exact error code
+	-- can be checked with Error(). If any error is set all methods will exit early with default
+	-- return values and no side-effects. It's possible to clear errors with Repair().
 	--
 	type T is tagged limited private;
 
 	--  Numerics.
 	--
-	subtype Identifier is C.unsigned;
-	subtype Index      is C.size_t;
-	subtype Size       is C.size_t;
-	subtype Size_Input is C.size_t range          1 .. C.size_t'Last;
-	subtype Position   is Integer  range -(2 ** 15) .. (2 ** 15 - 1);
+	type Identifier is new C.unsigned;
+	type Position   is new Integer_16;
 
 	-------------------------------------------------------------------------------------------------
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
@@ -68,40 +65,41 @@ package Cassette.Inputs is
 	--
 	-- [Params]
 	--
-	-- 	Self   : Input tracker to interact with
+	-- 	Inputs : Input tracker to interact with
 	-- 	Parent : Input tracker to clone
 	--
 	-- [Errors]
 	--
-	--	INVALID : Initialisation failed
+	--	Error_Invalid : Initialisation failed
 	--
 	procedure Clone (
-		Self   : out T;
+		Inputs : out T;
 		Parent : in  T);
 
 	-- Create an empty input tracker.
 	--
 	-- [Params]
 	--
-	-- 	Self       : Input tracker to interact with
-	-- 	Max_Inputs : Maximum number of inputs to track at a time. 0 is an illegal value.
+	-- 	Inputs : Input tracker to interact with
+	-- 	Length : Maximum number of inputs to track at a time. 0 is an illegal value.
 	--
 	-- [Errors]
 	--
-	--	INVALID : Initialisation failed
+	--	Error_Invalid : Initialisation failed
 	--
 	procedure Create (
-		Self       : out T;
-		Max_Inputs : in  Size_Input);
+		Inputs : out T;
+		Length : in  Size)
+			with Pre => Length > 0;
 
 	-- Destroys the input tracker and frees memory.
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
+	-- 	Inputs : Input tracker to interact with
 	--
 	procedure Destroy (
-		Self : in out T);
+		Inputs : in out T);
 
 	-------------------------------------------------------------------------------------------------
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
@@ -112,32 +110,32 @@ package Cassette.Inputs is
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
+	-- 	Inputs : Input tracker to interact with
 	--
 	procedure Clear (
-		Self : in out T);
+		Inputs : in out T);
 
 	-- If present, untracks an input with the matching id.
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
+	-- 	Inputs : Input tracker to interact with
 	-- 	ID   : Identifier to match
 	--  
 	procedure Pull_ID (
-		Self : in out T;
-		ID   : in Identifier);
+		Inputs : in out T;
+		ID     : in Identifier);
 
 	-- Untracks an input at the given index. This procedure has no effects if index is out of bounds.
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
+	-- 	Inputs : Input tracker to interact with
 	-- 	I    : Index within the array
 	--  
 	procedure Pull_Index (
-		Self : in out T;
-		I    : in Index);
+		Inputs : in out T;
+		I      : in Index);
 
 	-- Adds in input at the end of the input tracking array. If an input with a matching id already
 	-- exists within the array, it is pushed to the end of the array and its Addr, X and Y details
@@ -145,56 +143,58 @@ package Cassette.Inputs is
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
-	-- 	ID   : Identifier
-	-- 	X    : X coordinate
-	-- 	Y    : Y coordinate
-	-- 	Addr : Arbitrary address to something related to the input
+	-- 	Inputs : Input tracker to interact with
+	-- 	ID     : Identifier
+	-- 	X      : Optional, X coordinate
+	-- 	Y      : Optional, Y coordinate
+	-- 	Addr   : Optional, Arbitrary address to something related to the input
 	--
 	procedure Push (
-		Self : in out T;
-		ID   : in Identifier;
-		X    : in Position       := 0;
-		Y    : in Position       := 0;
-		Addr : in System.Address := System.Null_Address);
+		Inputs : in out T;
+		ID     : in Identifier;
+		X      : in Position       := 0;
+		Y      : in Position       := 0;
+		Addr   : in System.Address := System.Null_Address);
 
 	-- Clears errors and puts the input tracker back into an usable state. The only unrecoverable
-	-- error is INVALID.
+	-- error is Error_Invalid.
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
+	-- 	Inputs : Input tracker to interact with
 	--
 	procedure Repair (
-		Self : in out T);
+		Inputs : in out T);
 
 	-- Updates the size of input tracker. If the requested size is smaller than the current load,
 	-- tailing inputs will be pulled.
 	--
 	-- [Params]
 	--
-	-- 	Self       : Input tracker to interact with
-	-- 	Max_Inputs : Maximum number of inputs to track at a time
+	-- 	Inputs : Input tracker to interact with
+	-- 	Length : Maximum number of inputs to track at a time
 	--
 	-- [Errors]
 	--
-	-- 	OVERFLOW : The size of the resulting input tracking array will be > Size'Last
-	-- 	MEMPRY   : Failed memory allocation
+	-- 	Error_Overflow : The size of the resulting input tracking array will be > Size'Last
+	-- 	Error_Memory   : Failed memory allocation
+	--	Error_Param    : Illegal length = 0 has been given
 	--
 	procedure Resize (
-		Self       : in out T;
-		Max_Inputs : in Size_Input);
+		Inputs : in out T;
+		Length : in Size)
+			with Pre => Length > 0;
 
 	-- Sets a new default address value to return when Get() cannot return a proper value.
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
-	-- 	Addr : Address
+	-- 	Inputs : Input tracker to interact with
+	-- 	Addr   : Address
 	--
 	procedure Set_Default_Address (
-		Self : in out T;
-		Addr : in System.Address);
+		Inputs : in out T;
+		Addr   : in System.Address);
 
 	-------------------------------------------------------------------------------------------------
 	-- PURE METHODS --------------------------------------------------------------------------------- 
@@ -204,8 +204,8 @@ package Cassette.Inputs is
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
-	-- 	I    : Index within the array
+	-- 	Inputs : Input tracker to interact with
+	-- 	I      : Index within the array
 	--
 	-- [Return]
 	--
@@ -214,38 +214,38 @@ package Cassette.Inputs is
 	-- 	not set) is always returned.
 	--  
 	function Address (
-		Self : in T;
-		I    : in Index)
+		Inputs : in T;
+		I      : in Index)
 			return System.Address;
 
 	-- Gets the error state.
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
+	-- 	Inputs : Input tracker to interact with
 	-- 
 	-- [Return]
 	--
 	-- 	Error code.
 	--  
 	function Error (
-		Self : in T)
-			return Cassette.Error.T;
+		Inputs : in T)
+			return Error_Code;
 
 	-- Tries to find an input with the matching id. If found, True is returned,
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
-	-- 	ID   : Identifier to match
+	-- 	Inputs : Input tracker to interact with
+	-- 	ID     : Identifier to match
 	--
 	-- [Return]
 	--
 	--	ID match. If the object has errored, then always return False.
 	--
 	function Find (
-		Self : in T;
-		ID   : in Identifier)
+		Inputs : in T;
+		ID     : in Identifier)
 			return Boolean;
 	
 	-- Tries to find an input with the matching id. If found, True is returned, and the array index 
@@ -253,78 +253,80 @@ package Cassette.Inputs is
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
-	-- 	ID   : Identifier to match
-	-- 	I    : Index of the found input
+	-- 	Inputs : Input tracker to interact with
+	-- 	ID     : Identifier to match
+	-- 	I      : Index of the found input
 	--
 	-- [Return]
 	--
 	--	ID match. If the object has errored, then always return False.
 	--  
 	function Find (
-		Self : in  T;
-		ID   : in  Identifier;
-		I    : out Index)
+		Inputs : in  T;
+		ID     : in  Identifier;
+		I      : out Index)
 			return Boolean;
 
 	-- Gets the input's ID at the given index.
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
-	-- 	I    : Index within the array
+	-- 	Inputs : Input tracker to interact with
+	-- 	I      : Index within the array
 	--
 	-- [Return]
 	--
 	--	Identifier. If the object has errored, or I is out of bounds, then always return 0.
 	--  
 	function ID (
-		Self : in T;
-		I    : in Index)
+		Inputs : in T;
+		I      : in Index)
 			return Identifier;
 
 	-- Gets the total number of different tracked inputs.
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
+	-- 	Inputs : Input tracker to interact with
 	--
 	-- [Return]
 	--
 	--	Number of tracked inputs. If the object has errored, then always return 0.
 	--
 	function Load (
-		Self : in T)
+		Inputs : in T)
 			return Size;
 
 	-- Gets the input's X coordinate at the given index.
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
-	-- 	I    : Index within the array
+	-- 	Inputs : Input tracker to interact with
+	-- 	I      : Index within the array
 	--
 	-- [Return]
 	--
 	--	X Coordinate. If the object has errored, or I is out of bounds, then always return 0.
 	--  
-	function X (Self : in T; I : in Index)
-		return Position;
+	function X (
+		Inputs : in T;
+		I      : in Index)
+			return Position;
 
 	-- Gets the input's Y coordinate at the given index. 
 	--
 	-- [Params]
 	--
-	-- 	Self : Input tracker to interact with
-	-- 	I    : Index within the array
+	-- 	Inputs : Input tracker to interact with
+	-- 	I      : Index within the array
 	--
 	-- [Return]
 	--
 	--	Y Coordinate. If the object has errored, or I is out of bounds, then always return 0.
 	--  
 	function Y (
-		Self : in T;
-		I : in Index)
+		Inputs : in T;
+		I      : in Index)
 			return Position;
 
 	-------------------------------------------------------------------------------------------------
@@ -333,17 +335,58 @@ package Cassette.Inputs is
 
 private
 
-	type Cinputs is null record;
+	C_Placeholder : aliased Placeholder;
 
-	Placeholder : aliased Cinputs
-		with Import        => True, 
-		     Convention    => C, 
-		     External_Name => "cinputs_placeholder_instance";
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
 	type T is tagged limited record
-		Data : System.Address := Placeholder'Address;
+		Data : System.Address := C_Placeholder'Address;
 	end record;
 
-	procedure Check (Self : in T);
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	procedure Raise_Error (Inputs : in T);
+
+	-------------------------------------------------------------------------------------------------
+	-- IMPORTS -------------------------------------------------------------------------------------- 
+	-------------------------------------------------------------------------------------------------
+
+	procedure C_Clear           (Inputs : System.Address);
+	procedure C_Destroy         (Inputs : System.Address);
+	procedure C_Pull_ID         (Inputs : System.Address; ID : C.unsigned);
+	procedure C_Pull_Index      (Inputs : System.Address; Index : C.size_t);
+	procedure C_Push            (Inputs : System.Address; ID : C.unsigned; X : Integer_16; Y : Integer_16; Addr : System.Address);
+	procedure C_Repair          (Inputs : System.Address);
+	procedure C_Resize          (Inputs : System.Address; Length : C.size_t);
+	procedure C_Set_Default_Ptr (Inputs : System.Address; Addr : System.Address);
+
+	function  C_Clone           (Inputs : System.Address)                                           return System.Address;
+	function  C_Create          (Length : C.size_t)                                                 return System.Address;
+	function  C_Ptr             (Inputs : System.Address; Index : C.size_t)                         return System.Address;
+	function  C_Error           (Inputs : System.Address)                                           return Error_Code;
+	function  C_Find            (Inputs : System.Address; ID : C.unsigned; Index : access C.size_t) return C.Extensions.bool;
+	function  C_ID              (Inputs : System.Address; Index : C.size_t)                         return C.unsigned;
+	function  C_Load            (Inputs : System.Address)                                           return C.size_t;
+	function  C_X               (Inputs : System.Address; Index : C.size_t)                         return Integer_16;
+	function  C_Y               (Inputs : System.Address; Index : C.size_t)                         return Integer_16;
+
+	pragma Import (C, C_Ptr,             "cinputs_ptr");
+	pragma Import (C, C_Clear,           "cinputs_clear");
+	pragma Import (C, C_Clone,           "cinputs_clone");
+	pragma Import (C, C_Create,          "cinputs_create");
+	pragma Import (C, C_Destroy,         "cinputs_destroy");
+	pragma Import (C, C_Error,           "cinputs_error");
+	pragma Import (C, C_Find,            "cinputs_find");
+	pragma Import (C, C_ID,              "cinputs_id");
+	pragma Import (C, C_Load,            "cinputs_load");
+	pragma Import (C, C_Placeholder,     "cinputs_placeholder_instance");
+	pragma Import (C, C_Pull_ID,         "cinputs_pull_id");
+	pragma Import (C, C_Pull_Index,      "cinputs_pull_index");
+	pragma Import (C, C_Push,            "cinputs_push");
+	pragma Import (C, C_Repair,          "cinputs_repair");
+	pragma Import (C, C_Resize,          "cinputs_resize");
+	pragma Import (C, C_Set_Default_Ptr, "cinputs_set_default_ptr");
+	pragma Import (C, C_X,               "cinputs_x");
+	pragma Import (C, C_Y,               "cinputs_y");
 
 end Cassette.Inputs;

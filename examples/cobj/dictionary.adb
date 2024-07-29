@@ -47,9 +47,9 @@ is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 	
-	procedure Print_Value (Key : in String; Group : in Dict.Group_Value)
+	procedure Print_Value (Key : in String; Group : in Index)
 	is
-		Value : Dict.Slot_Value;
+		Value : Index;
 	begin
 
 		if D.Find (Key, Group, Value)
@@ -97,13 +97,13 @@ begin
 
 exception
 	
-	when E : Dict.E =>
-		Put ("Dictionary errored during operation. Code :");
+	when Dict.E =>
+		Put ("Dictionary errored during operation. Code : ");
 		Put (D.Error'Image);
 		New_Line;
 
-	when E : Str.E =>
-		Put ("String errored during operation. Code :");
+	when Str.E =>
+		Put ("String errored during operation. Code : ");
 		Put (S.Error'Image);
 		New_Line;
 	
