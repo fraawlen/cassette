@@ -18,6 +18,7 @@ project Examples is
 		"random.adb",
 		"colors.adb",
 		"dictionary.adb",
+		"lines.adb",
 		"print.adb");
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --

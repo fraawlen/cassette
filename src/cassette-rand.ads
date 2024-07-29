@@ -75,9 +75,10 @@ package Cassette.Rand is
 	-- IMPORTS -------------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	procedure C_Seed (Rand : access C.unsigned_long_long; Value : C.unsigned_long_long);
+private
 
 	function  C_Next (Rand : access C.unsigned_long_long; lim_1 : C.double; lim_2  : C.double) return C.double;
+	procedure C_Seed (Rand : access C.unsigned_long_long; Value : C.unsigned_long_long);
 
 	pragma Import (C, C_Next, "crand_next");
 	pragma Import (C, C_Seed, "crand_seed");

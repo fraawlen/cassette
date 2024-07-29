@@ -7,40 +7,22 @@ The library is free and open-source software licensed under the [LGPL-2.1](https
 Notice
 ------
 
-This is a WIP. Not all Cassette functions have been ported yet. Moreover, the currently available bindings may be subject to changes. The following list shows the available bindings.
+Not all Cassette libraries have been ported yet.
 
-- COBJ
-
-| Available | Header    |
-| --------- | --------- |
-| Y         | cbook.h   |
-| Y         | ccolor.h  |
-| Y         | cdict.h   |
-| Y         | cerr.h    |
-| Y         | cinputs.h |
-|           | cline.h   |
-| Y         | crand.h   |
-| Y         | cref.h    |
-| Y         | cstr.h    | 
-
-- CCFG
-	
-| Available | Header    |
-| --------- | --------- |
-| Y         | ccf.h     |
-
-- CGUI
-
-	- Not started yet.
+| Available | Library |
+| Y         | COBJ    |
+| Y         | CCFG    |
+|           | CGUI    |
 
 Features
 --------
 
-- Encapsulation of C pointer handles inside tagged limited private records.
+- Encapsulation of objects (opaque or public) inside tagged limited private records.
 - Usage of Ada's exceptions when an object errors.
 - Convertion from C char array strings to Ada native strings.
 - Subtyping of C numeral values + ranges.
 - Usage of packages instead of C function namespaces.
+- Usage of full words instead of shorthands.
 
 TODO details.
 

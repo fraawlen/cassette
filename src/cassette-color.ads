@@ -196,6 +196,8 @@ package Cassette.Color is
 	-- IMPORTS -------------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
+private
+
 	function C_From_ARGB_Uint (Argb : ARGB_Uint)                                          return T;
 	function C_From_RGBA      (R : Byte; G : Byte; B : Byte; A : Byte)                    return T;
 	function C_From_Str       (Str : C.Strings.chars_ptr; Err : access C.Extensions.bool) return T;
