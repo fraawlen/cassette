@@ -15,7 +15,7 @@ Features
 
 You no longer need to prefix every type, function, or macro with the library's name, including the 'c' for 'Cassette'. Instead, each component is now namespaced into its package with a root package called `Cassette`. This package serves as the central point for using the `use` Ada clause when working with Cassette libraries, and it defines a few common types used throughout the child packages. Previously, error codes and types were defined in a separate header called `cerr.h`; now, they are included inside the parent `Cassette` package. And the `cobj.h` meta header goes away.
 
-![package tree](./extra/packages.svg)
+![package tree](./extras/packages.svg)
 
 ### Types
 
