@@ -144,12 +144,12 @@ main(void)
 	
 	if cdict_find(d, 0, 12, &v)
 	{
-		// Do something using v
+		// Do something with v
  	}
 	
 	if cdict_find(d, 0, 12, NULL)
 	{
-		// Something without v
+		// Do something without v
 	}
 	
 	...
@@ -171,12 +171,12 @@ begin
 	
 	if (D.Find (0, 12, V))
 	then
-		-- So something using V
+		-- Do something with V
 	end if;
 	
 	if (D.Find (0, 12))
 	then
-		-- So something without V
+		-- Do something without V
 	end if;
 	
 	...
