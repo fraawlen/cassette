@@ -37,7 +37,7 @@ extern "C" {
 /**
  * Keeper value that keeps track of the LCG (rand48-based) state.
  */
-typedef unsigned long long int crand;
+typedef unsigned long crand;
 
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
@@ -63,7 +63,7 @@ CRAND_NONNULL(1);
  * @param seed : Initial value to apply
  */
 void
-crand_seed(crand *rand, unsigned long long int seed)
+crand_seed(crand *rand, unsigned long seed)
 CRAND_NONNULL(1);
 
 /************************************************************************************************************/

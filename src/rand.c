@@ -45,7 +45,7 @@ crand_next(crand *rand, double lim_1, double lim_2)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-crand_seed(crand *rand, unsigned long long int seed)
+crand_seed(crand *rand, unsigned long seed)
 {
 	*rand = crand_next(&seed, 0, MAX);
 }
