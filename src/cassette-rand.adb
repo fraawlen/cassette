@@ -40,7 +40,7 @@ package body Cassette.Rand is
 	procedure Seed (Rand : in out T; Value : in Seed_Value)
 	is begin
 
-		C_Seed (Rand.State'Access, C.unsigned_long_long (Value));
+		C_Seed (Rand.State'Access, C.unsigned_long (Value));
 
 	end Seed;
 

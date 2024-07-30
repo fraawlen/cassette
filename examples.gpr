@@ -27,10 +27,9 @@ project Examples is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	package Linker is
-
+	package Linker
+	is
 		for Default_Switches ("Ada") use Cassette.Linker_Switches;
-
 	end Linker;
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --

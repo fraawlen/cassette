@@ -31,12 +31,12 @@ package Cassette.Rand is
 	-- Container type that keeps track of the LCG (rand48-based) state.
 	--
 	type T is tagged record
-		State : aliased C.unsigned_long_long;
+		State : aliased C.unsigned_long;
 	end record;
 
 	-- Numerics.
 	--
-	type Seed_Value is new C.unsigned_long_long;
+	type Seed_Value is new C.unsigned_long;
 
 	-------------------------------------------------------------------------------------------------
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
@@ -77,8 +77,8 @@ package Cassette.Rand is
 
 private
 
-	function  C_Next (Rand : access C.unsigned_long_long; lim_1 : C.double; lim_2  : C.double) return C.double;
-	procedure C_Seed (Rand : access C.unsigned_long_long; Value : C.unsigned_long_long);
+	function  C_Next (Rand : access C.unsigned_long; lim_1 : C.double; lim_2  : C.double) return C.double;
+	procedure C_Seed (Rand : access C.unsigned_long; Value : C.unsigned_long);
 
 	pragma Import (C, C_Next, "crand_next");
 	pragma Import (C, C_Seed, "crand_seed");
