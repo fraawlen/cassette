@@ -47,7 +47,8 @@ package Cassette is
 		Error_Config,
 		Error_Xcb,
 		Error_Cairo,
-		Error_Mutex)
+		Error_Mutex,
+		Error_Instance)
 			with Convention => C;
 
 	-------------------------------------------------------------------------------------------------
