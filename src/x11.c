@@ -35,6 +35,7 @@
 #include <xkbcommon/xkbcommon.h>
 
 #include "main.h"
+#include "window.h"
 #include "x11.h"
 
 /************************************************************************************************************/
@@ -61,13 +62,24 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+struct xi_input_mask
+{
+    	xcb_input_event_mask_t    head;
+    	xcb_input_xi_event_mask_t mask;
+};
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
 /* helpers */
 
-static xcb_atom_t _get_atom             (const char *) CGUI_NONNULL(1);
-static uint8_t    _get_extension_opcode (const char *) CGUI_NONNULL(1);
-static bool       _prop_append          (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
-static bool       _prop_set             (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
-static bool       _test_cookie          (xcb_void_cookie_t);
+static cgui_window *_find_window          (xcb_window_t);
+static xcb_atom_t   _get_atom             (const char *) CGUI_NONNULL(1);
+static uint8_t      _get_extension_opcode (const char *) CGUI_NONNULL(1);
+static bool         _prop_add             (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
+static bool         _prop_set             (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
+static bool         _test_cookie          (xcb_void_cookie_t);
 
 /* event handlers */
 
@@ -86,7 +98,6 @@ static void _event_selection_clear   (xcb_selection_clear_event_t *)   CGUI_NONN
 static void _event_selection_request (xcb_selection_request_event_t *) CGUI_NONNULL(1);
 static void _event_unknown           (xcb_generic_event_t *)           CGUI_NONNULL(1);
 static void _event_unmap             (xcb_unmap_notify_event_t *)      CGUI_NONNULL(1);
-static void _event_visibility        (xcb_visibility_notify_event_t *) CGUI_NONNULL(1);
 static void _event_xinput_touch      (xcb_input_touch_begin_event_t *) CGUI_NONNULL(1);
 
 /************************************************************************************************************/
@@ -336,11 +347,6 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 		_atom_aclx[i] = _get_atom(s);
 	}
 
-	/* get extensions opcodes */
-
-	_opcode_present = _get_extension_opcode("Present");
-	_opcode_xinput  = _get_extension_opcode("XInputExtension");
-
 	/* set leader window ICCCM properties */
 
 	gethostname(host, 256);
@@ -360,8 +366,18 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 
 	for (int i = 0; i < _argc; i++)
 	{
-		_prop_append(_win_leader, _atom_cmd, XCB_ATOM_STRING, strlen(_argv[i]) + 1, _argv[i]);
+		_prop_add(_win_leader, _atom_cmd, XCB_ATOM_STRING, strlen(_argv[i]) + 1, _argv[i]);
 	}
+
+	if (cgui_error())
+	{
+		goto fail_props;
+	}
+
+	/* get extensions opcodes */
+
+	_opcode_present = _get_extension_opcode("Present");
+	_opcode_xinput  = _get_extension_opcode("XInputExtension");
 
 	/* end */
 	
@@ -371,6 +387,8 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 
 	/* errors */
 
+fail_props:
+	xcb_key_symbols_free(_keysyms);
 fail_keysyms:
 	xcb_destroy_window(_connection, _win_leader);
 fail_leader:
@@ -507,10 +525,6 @@ x11_update(void)
 			_event_configure((xcb_configure_notify_event_t*)event);
 			break;
 
-		case XCB_VISIBILITY_NOTIFY:
-			_event_visibility((xcb_visibility_notify_event_t*)event);
-			break;
-
 		case XCB_MAPPING_NOTIFY:
 			_event_keymap((xcb_mapping_notify_event_t*)event);
 			break;
@@ -545,6 +559,223 @@ x11_update(void)
 	xcb_flush(_connection);
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_activate(xcb_window_t id)
+{
+	_test_cookie(xcb_map_window_checked(_connection, id));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+x11_window_create(xcb_window_t *id, int16_t x, int16_t y, uint16_t width, uint16_t height)
+{
+	xcb_void_cookie_t xc;
+	char   host[256] = "";
+	size_t host_n;
+	size_t vers_n;
+	size_t cls0_n;
+	size_t cls1_n;
+	size_t pid;
+
+	struct xi_input_mask xi_mask =
+	{
+		.head.deviceid = XCB_INPUT_DEVICE_ALL_MASTER,
+		.head.mask_len = 1,
+		.mask          = XCB_INPUT_XI_EVENT_MASK_TOUCH_BEGIN
+		               | XCB_INPUT_XI_EVENT_MASK_TOUCH_END
+		               | XCB_INPUT_XI_EVENT_MASK_TOUCH_UPDATE,
+	};
+
+	const uint32_t ev_mask[] =
+	{
+		0xFF000000,
+		0x00000000,
+		false,
+		XCB_EVENT_MASK_EXPOSURE
+		| XCB_EVENT_MASK_POINTER_MOTION
+		| XCB_EVENT_MASK_BUTTON_PRESS
+		| XCB_EVENT_MASK_BUTTON_RELEASE
+		| XCB_EVENT_MASK_ENTER_WINDOW
+		| XCB_EVENT_MASK_LEAVE_WINDOW
+		| XCB_EVENT_MASK_KEYMAP_STATE
+		| XCB_EVENT_MASK_KEY_PRESS
+		| XCB_EVENT_MASK_KEY_RELEASE
+		| XCB_EVENT_MASK_FOCUS_CHANGE
+		| XCB_EVENT_MASK_VISIBILITY_CHANGE
+		| XCB_EVENT_MASK_PROPERTY_CHANGE
+		| XCB_EVENT_MASK_STRUCTURE_NOTIFY,
+		_colormap,
+	};
+
+	/* create X window */
+
+	*id = xcb_generate_id(_connection);
+	xc = xcb_create_window_checked(
+		_connection,
+		_depth->depth,
+		*id,
+		_screen->root,
+		x,
+		y,
+		width,
+		height,
+		0,
+		XCB_WINDOW_CLASS_INPUT_OUTPUT,
+		_visual->visual_id,
+		XCB_CW_BACK_PIXEL
+		| XCB_CW_BORDER_PIXEL
+		| XCB_CW_OVERRIDE_REDIRECT
+		| XCB_CW_EVENT_MASK
+		| XCB_CW_COLORMAP,
+		ev_mask);
+
+	if (!_test_cookie(xc))
+	{
+		goto fail_id;
+	}
+
+	/* indicate that the window should receive Present extension events */
+
+	xc = xcb_present_select_input_checked(
+		_connection,
+		xcb_generate_id(_connection),
+		*id,
+		XCB_PRESENT_EVENT_MASK_COMPLETE_NOTIFY);
+
+	if (!_test_cookie(xc))
+	{
+		goto fail_present;
+	}
+
+	/* indicate that the window should receive XI touch extension events */
+
+
+	xc = xcb_input_xi_select_events(
+		_connection,
+		*id,
+		1,
+		(xcb_input_event_mask_t*)(&xi_mask));
+	
+	if (!_test_cookie(xc))
+	{
+		goto fail_xi;
+	}
+
+	/* set window's X properties */
+
+	gethostname(host, 256);
+
+	host_n = strlen(host);
+	vers_n = strlen(CGUI_VERSION);
+	cls0_n = strlen(_class_name) + 1;
+	cls1_n = strlen(_class_class);
+	pid    = getpid();
+
+	_prop_set(*id, _atom_host, XCB_ATOM_STRING,   host_n, host);
+	_prop_set(*id, _atom_vers, XCB_ATOM_STRING,   vers_n, CGUI_VERSION);
+	_prop_set(*id, _atom_lead, XCB_ATOM_WINDOW,   1,      &_win_leader);
+	_prop_set(*id, _atom_pid,  XCB_ATOM_CARDINAL, 1,      &pid);
+
+	_prop_set(*id, _atom_cls,  XCB_ATOM_STRING,   cls0_n, _class_name);
+	_prop_add(*id, _atom_cls,  XCB_ATOM_STRING,   cls1_n, _class_class);
+
+	_prop_set(*id, _atom_prot, XCB_ATOM_ATOM,     1,      &_atom_del);
+	_prop_add(*id, _atom_prot, XCB_ATOM_ATOM,     1,      &_atom_foc);
+	_prop_add(*id, _atom_prot, XCB_ATOM_ATOM,     1,      &_atom_ping);
+	_prop_add(*id, _atom_prot, XCB_ATOM_ATOM,     1,      &_atom_sig);
+
+	x11_window_rename(*id, NULL);
+	x11_window_update_state_hints(*id, (struct cgui_window_state_flags){false});
+
+	if (cgui_error())
+	{
+		goto fail_prop;
+	}
+
+	/* end */
+
+	xcb_flush(_connection);
+
+	return true;
+
+	/* errors */
+
+fail_prop:
+fail_xi:
+fail_present:
+	xcb_destroy_window(_connection, *id);
+fail_id:
+	main_set_error(CERR_XCB);
+	return false;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_deactivate(xcb_window_t id)
+{
+	_test_cookie(xcb_unmap_window_checked(_connection, id));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_destroy(xcb_window_t id)
+{
+	_test_cookie(xcb_unmap_window_checked(_connection, id));
+	_test_cookie(xcb_destroy_window_checked(_connection, id));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_rename(xcb_window_t id, const char *name)
+{
+	size_t n;
+
+	if (!name)
+	{
+		name = _class_name;
+	}
+	n = strlen(name);
+
+	_prop_set(id, _atom_nam,  XCB_ATOM_STRING, n, name);
+	_prop_set(id, _atom_ico,  XCB_ATOM_STRING, n, name);
+	_prop_set(id, _atom_nnam, _atom_utf8,      n, name);
+	_prop_set(id, _atom_nnam, _atom_utf8,      n, name);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_update_state_hints(xcb_window_t id, struct cgui_window_state_flags state)
+{
+	_test_cookie(xcb_delete_property_checked(_connection, id, _atom_stt));
+
+	if (state.active)
+	{
+		_prop_add(id, _atom_stt, XCB_ATOM_ATOM, 1, &_atom_won);
+	}
+
+	if (state.disabled)
+	{
+		_prop_add(id, _atom_stt, XCB_ATOM_ATOM, 1, &_atom_wena);
+	}
+
+	if (state.locked_grid)
+	{
+		_prop_add(id, _atom_stt, XCB_ATOM_ATOM, 1, &_atom_plck);
+	}
+
+	if (state.locked_focus)
+	{
+		_prop_add(id, _atom_stt, XCB_ATOM_ATOM, 1, &_atom_flck);
+	}
+}
+
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
@@ -554,7 +785,57 @@ _event_client_message(xcb_client_message_event_t *xcb_event)
 {
 	struct cgui_event event = {0};
 
-	(void)xcb_event; // TODO
+	const xcb_atom_t a1 = xcb_event->data.data32[0];
+	const xcb_atom_t a2 = xcb_event->data.data32[1];
+	const xcb_atom_t a3 = xcb_event->data.data32[2];
+
+	if (xcb_event->type != _atom_prot)
+	{
+		return;
+	}
+
+	/* window independent message */
+
+	if (a1 == _atom_sig && a2 == _atom_conf)
+	{
+		event.type   = CGUI_EVENT_RECONFIG;
+		event.window = CGUI_WINDOW_PLACEHOLDER;
+		goto update;
+	}
+
+	/* window dependent messages */
+
+	if (a1 == _atom_sig && a2 == _atom_acl)
+	{
+		event.type        = CGUI_EVENT_ACCELERATOR;
+		event.window      = _find_window(xcb_event->window);
+		event.accelerator = a3;
+		goto update;
+	}
+
+	if (a1 == _atom_del)
+	{
+		event.type   = CGUI_EVENT_CLOSE;
+		event.window = _find_window(xcb_event->window);
+		goto update;
+	}
+
+	if (a1 == _atom_foc)
+	{
+		xcb_set_input_focus(_connection, XCB_INPUT_FOCUS_PARENT, xcb_event->window, XCB_CURRENT_TIME);
+		return;
+	}
+
+	if (a1 == _atom_ping)
+	{
+		xcb_event->window = _screen->root;
+		xcb_send_event(_connection, 0, _screen->root, XCB_EVENT_MASK_NO_EVENT, (char*)xcb_event);
+		return;
+	}
+
+	/* send CGUI event */
+
+update:
 
 	main_update(&event);
 }
@@ -564,9 +845,15 @@ _event_client_message(xcb_client_message_event_t *xcb_event)
 static void
 _event_configure(xcb_configure_notify_event_t *xcb_event)
 {
-	struct cgui_event event = {0};
-
-	(void)xcb_event; // TODO
+	struct cgui_event event =
+	{
+		.type             = CGUI_EVENT_TRANSFORM,
+		.window           = _find_window(xcb_event->window),
+		.transform_x      = xcb_event->x,
+		.transform_y      = xcb_event->y,
+		.transform_width  = xcb_event->width,
+		.transform_height = xcb_event->height,
+	};
 
 	main_update(&event);
 }
@@ -600,9 +887,11 @@ _event_expose(xcb_expose_event_t *xcb_event)
 static void
 _event_focus_in(xcb_focus_in_event_t *xcb_event)
 {
-	struct cgui_event event = {0};
-
-	(void)xcb_event; // TODO
+	struct cgui_event event =
+	{
+		.type   = CGUI_EVENT_FOCUS,
+		.window = _find_window(xcb_event->event),
+	};
 
 	main_update(&event);
 }
@@ -612,11 +901,22 @@ _event_focus_in(xcb_focus_in_event_t *xcb_event)
 static void
 _event_focus_out(xcb_focus_in_event_t *xcb_event)
 {
-	struct cgui_event event = {0};
+	struct cgui_event event =
+	{
+		.type   = CGUI_EVENT_UNFOCUS,
+		.window = _find_window(xcb_event->event),
+	};
 
-	(void)xcb_event; // TODO
+	/* mode values significations (maybe) (common for both focus in and out) :                     */
+	/* 0 = explictit focus change by the end-user                                                  */
+	/* 1 = focus temporary lost when window is resized or moved      (never happens for focus in ) */
+	/* 2 = focus gain after expose event after move or resize action (never happens for focus out) */
+	/* 3 = focus change due to a workspace change when the window is focused                       */
 
-	main_update(&event);
+	if (xcb_event->mode != 1)
+	{
+		main_update(&event);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -644,9 +944,11 @@ _event_leave(xcb_leave_notify_event_t *xcb_event)
 static void
 _event_map(xcb_map_notify_event_t *xcb_event)
 {
-	struct cgui_event event = {0};
-
-	(void)xcb_event; // TODO
+	struct cgui_event event =
+	{
+		.type   = CGUI_EVENT_MAP,
+		.window = _find_window(xcb_event->window),
+	};
 
 	main_update(&event);
 }
@@ -704,10 +1006,12 @@ _event_selection_request(xcb_selection_request_event_t *xcb_event)
 static void
 _event_unknown(xcb_generic_event_t *xcb_event)
 {
-	struct cgui_event event = {0};
-
-	event.type      = CGUI_EVENT_UNKNOWN_XCB;
-	event.xcb_event = xcb_event;
+	struct cgui_event event =
+	{
+		.type      = CGUI_EVENT_UNKNOWN_XCB,
+		.window    = CGUI_WINDOW_PLACEHOLDER,
+		.xcb_event = xcb_event,
+	};
 
 	main_update(&event);
 }
@@ -717,21 +1021,11 @@ _event_unknown(xcb_generic_event_t *xcb_event)
 static void
 _event_unmap(xcb_unmap_notify_event_t *xcb_event)
 {
-	struct cgui_event event = {0};
-
-	(void)xcb_event; // TODO
-
-	main_update(&event);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-_event_visibility(xcb_visibility_notify_event_t *xcb_event)
-{
-	struct cgui_event event = {0};
-
-	(void)xcb_event; // TODO
+	struct cgui_event event =
+	{
+		.type   = CGUI_EVENT_UNMAP,
+		.window = _find_window(xcb_event->window),
+	};
 
 	main_update(&event);
 }
@@ -741,11 +1035,51 @@ _event_visibility(xcb_visibility_notify_event_t *xcb_event)
 static void
 _event_xinput_touch(xcb_input_touch_begin_event_t *xcb_event)
 {
-	struct cgui_event event = {0};
+	struct cgui_event event =
+	{
+		.window   = _find_window(xcb_event->event),
+		.touch_x  = xcb_event->event_x >> 16,
+		.touch_y  = xcb_event->event_y >> 16,
+		.touch_id = xcb_event->detail,
+	};
 
-	(void)xcb_event; // TODO
+	switch (xcb_event->event_type)
+	{
+		case XCB_INPUT_TOUCH_BEGIN:
+			event.type = CGUI_EVENT_TOUCH_BEGIN;
+			break;
+
+		case XCB_INPUT_TOUCH_UPDATE:
+			event.type = CGUI_EVENT_TOUCH_UPDATE;
+			break;
+
+		case XCB_INPUT_TOUCH_END:
+			event.type = CGUI_EVENT_TOUCH_END;
+			break;
+
+		default:
+			return;
+	}
 
 	main_update(&event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static cgui_window *
+_find_window(xcb_window_t id)
+{
+	const cref *windows = main_windows();
+
+	CREF_FOR_EACH(windows, i)
+	{
+		if (((cgui_window*)cref_ptr(windows, i))->x_id == id)
+		{
+			return (cgui_window*)cref_ptr(windows, i);
+		}
+	}
+
+	return CGUI_WINDOW_PLACEHOLDER;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -796,7 +1130,7 @@ _get_extension_opcode(const char *name)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-_prop_append(xcb_window_t win, xcb_atom_t prop, xcb_atom_t type, uint32_t data_n, const void *data)
+_prop_add(xcb_window_t win, xcb_atom_t prop, xcb_atom_t type, uint32_t data_n, const void *data)
 {
 	xcb_void_cookie_t xc;
 
@@ -842,6 +1176,7 @@ _test_cookie(xcb_void_cookie_t xc)
 
 	if ((x_err = xcb_request_check(_connection, xc)))
 	{
+		main_set_error(CERR_XCB);
 		free(x_err);
 		return false;
 	}

@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "cgui-window.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -35,27 +37,62 @@ enum cgui_event_type
 {
 	CGUI_EVENT_NONE = 0,
 	CGUI_EVENT_UNKNOWN_XCB,
+	CGUI_EVENT_RECONFIG,
+	CGUI_EVENT_CLOSE,
+	CGUI_EVENT_ACCELERATOR,
+	CGUI_EVENT_TRANSFORM,
+	CGUI_EVENT_MAP,
+	CGUI_EVENT_UNMAP,
+	CGUI_EVENT_FOCUS,
+	CGUI_EVENT_UNFOCUS,
+	CGUI_EVENT_TOUCH_BEGIN,
+	CGUI_EVENT_TOUCH_UPDATE,
+	CGUI_EVENT_TOUCH_END,
 };
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
  */
 struct cgui_event
 {
+	cgui_window *window;
 	enum cgui_event_type type;
 	union
 	{
 		/* CGUI_EVENT_UNKNOWN_XCB */
 		xcb_generic_event_t *xcb_event;
-		/* CGUI_EVENT_NONE */
-		/* no fields for these events */
+		/* CGUI_EVENT_ACCELERATOR */
+		int accelerator;
+		/* CGUI_EVENT_TRANSFORM */
+		struct
+		{
+			 int16_t transform_x;
+			 int16_t transform_y;
+			uint16_t transform_width;
+			uint16_t transform_height;
+		};
+		/* CGUI_EVENT_TOUCH_BEGIN  */
+		/* CGUI_EVENT_TOUCH_UPDATE */
+		/* CGUI_EVENT_TOUCH_END    */
+		struct
+		{
+			 int16_t touch_x;
+			 int16_t touch_y;
+			uint32_t touch_id;
+		};
+		/* CGUI_EVENT_CLOSE    */
+		/* CGUI_EVENT_RECONFIG */
+		/* CGUI_EVENT_MAP      */
+		/* CGUI_EVENT_UNMAP    */
+		/* CGUI_EVENT_FOCUS    */
+		/* CGUI_EVENT_UNFOCUS  */
+		/* CGUI_EVENT_NONE     */
+		/* no extra fields for these events */
 	};
 };
 
 /************************************************************************************************************/
-/* PROCEDURES ***********************************************************************************************/
+/* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
 
 /**

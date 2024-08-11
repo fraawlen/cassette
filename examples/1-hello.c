@@ -32,12 +32,19 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static void _on_close (cgui_window *);
+static void _on_state (cgui_window *, enum cgui_window_state_mask);
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
 static cgui_cell   *_cell   = CGUI_CELL_PLACEHOLDER;
 static cgui_grid   *_grid   = CGUI_GRID_PLACEHOLDER;
 static cgui_window *_window = CGUI_WINDOW_PLACEHOLDER;
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* MAIN *****************************************************************************************************/
 /************************************************************************************************************/
 
 /**
@@ -66,6 +73,11 @@ static cgui_window *_window = CGUI_WINDOW_PLACEHOLDER;
 
 	/* Window setup */
 
+	cgui_window_rename(_window, "Hi");
+	cgui_window_on_close(_window, _on_close);
+	cgui_window_on_state(_window, _on_state);
+	cgui_window_activate(_window);
+
 	/* Run */
 
 	cgui_run();
@@ -85,3 +97,55 @@ static cgui_window *_window = CGUI_WINDOW_PLACEHOLDER;
 
 	return 0;
  }
+
+/************************************************************************************************************/
+/* STATIC ***************************************************************************************************/
+/************************************************************************************************************/
+
+static void
+_on_close(cgui_window *window)
+{
+	cgui_window_deactivate(window);
+	
+	printf("window closed\n");
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_on_state(cgui_window *window, enum cgui_window_state_mask mask)
+{
+	struct cgui_window_state_flags state;
+
+	state = cgui_window_state(window);
+
+	switch (mask)
+	{
+		case CGUI_WINDOW_ACTIVE:
+			printf("window %s\n", state.active ? "activated" : "deactivated");
+			break;
+
+		case CGUI_WINDOW_MAPPED:
+			printf("window %s\n", state.mapped ? "mapped" : "unmapped");
+			break;
+
+		case CGUI_WINDOW_FOCUSED:
+			printf("window %s\n", state.focused ? "focused" : "unfocused");
+			break;
+
+		case CGUI_WINDOW_DISABLED:
+			printf("window %s\n", state.disabled ? "disabled" : "enabled");
+			break;
+
+		case CGUI_WINDOW_LOCKED_GRID:
+			printf("window %s\n", state.locked_grid ? "grid locked" : "grid unlocked");
+			break;
+
+		case CGUI_WINDOW_LOCKED_FOCUS:
+			printf("window %s\n", state.locked_focus ? "focus locked" : "focus unlocked");
+			break;
+
+		default:
+			return;
+	}
+}

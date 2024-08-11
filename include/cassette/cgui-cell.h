@@ -39,8 +39,6 @@ extern "C" {
  */
 typedef struct cgui_cell cgui_cell;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
@@ -50,8 +48,6 @@ enum cgui_cell_event_type
 
 	// TODO
 };
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -63,8 +59,6 @@ struct cgui_cell_event
 	// TODO
 };
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
@@ -74,8 +68,6 @@ struct cgui_cell_context
 	
 	// TODO
 };
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -104,9 +96,7 @@ struct cgui_cell_style
  * functions. However, any function called with a handle set to this value will return early and without any
  * side effects.
  */
-#define CGUI_CELL_PLACEHOLDER &cgui_cell_placeholder_instance
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+#define CGUI_CELL_PLACEHOLDER (&cgui_cell_placeholder_instance)
 
 /**
  * Global cell instance with the error state set to CGUI_CELL_INVALID. This instance is only made available to
@@ -125,8 +115,6 @@ cgui_cell *
 cgui_cell_create(void)
 CGUI_NONNULL_RETURN;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
@@ -135,7 +123,7 @@ cgui_cell_destroy(cgui_cell *cell)
 CGUI_NONNULL(1);
 
 /************************************************************************************************************/
-/* PROCEDURES ***********************************************************************************************/
+/* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
 
 /**
@@ -145,16 +133,12 @@ void
 cgui_cell_on_destroy(cgui_cell *cell, void (*fn)(cgui_cell *cell))
 CGUI_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
 void
 cgui_cell_on_draw(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_context *context))
 CGUI_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -163,8 +147,6 @@ void
 cgui_cell_on_event(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_event *event))
 CGUI_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
@@ -172,16 +154,12 @@ void
 cgui_cell_redraw(cgui_cell *cell)
 CGUI_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
 bool
 cgui_cell_send_custom_event(cgui_cell *cell, int id, void *data, size_t length)
 CGUI_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -191,7 +169,7 @@ cgui_cell_set_data(cgui_cell *cell, void *data)
 CGUI_NONNULL(1);
 
 /************************************************************************************************************/
-/* FUNCTIONS ************************************************************************************************/
+/* PURE METHODS *********************************************************************************************/
 /************************************************************************************************************/
 
 /**
@@ -202,8 +180,6 @@ cgui_cell_data(const cgui_cell *cell)
 CGUI_NONNULL(1)
 CGUI_PURE;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
@@ -212,8 +188,6 @@ void
 CGUI_NONNULL_RETURN
 CGUI_NONNULL(1)
 CGUI_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -224,8 +198,6 @@ CGUI_NONNULL_RETURN
 CGUI_NONNULL(1)
 CGUI_PURE;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
@@ -234,8 +206,6 @@ void
 CGUI_NONNULL_RETURN
 CGUI_NONNULL(1)
 CGUI_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *

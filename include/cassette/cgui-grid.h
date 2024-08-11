@@ -36,8 +36,6 @@ extern "C" {
  */
 typedef struct cgui_grid cgui_grid;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
@@ -49,8 +47,6 @@ enum cgui_grid_relative_size
 	CGUI_GRID_SIZE_UNDEFINED = 3,
 	CGUI_GRID_SIZE_INVALID   = 4,
 };
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -71,9 +67,7 @@ enum cgui_grid_relative_flex
  * functions. However, any function called with a handle set to this value will return early and without any
  * side effects.
  */
-#define CGUI_GRID_PLACEHOLDER &cgui_grid_placeholder_instance
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+#define CGUI_GRID_PLACEHOLDER (&cgui_grid_placeholder_instance)
 
 /**
  * Global grid instance with the error state set to CGUI_GRID_INVALID. This instance is only made available to
@@ -93,16 +87,12 @@ cgui_grid_clone(const cgui_grid *grid)
 CGUI_NONNULL_RETURN
 CGUI_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
 cgui_grid *
 cgui_grid_create(size_t cols, size_t rows)
 CGUI_NONNULL_RETURN;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -112,7 +102,7 @@ cgui_grid_destroy(cgui_grid *grid)
 CGUI_NONNULL(1);
 
 /************************************************************************************************************/
-/* PROCEDURES ***********************************************************************************************/
+/* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
 
 /**
@@ -122,16 +112,12 @@ void
 cgui_grid_assign_cell(cgui_grid *grid, cgui_cell *cell, size_t x, size_t y, size_t width, size_t height)
 CGUI_NONNULL(1, 2);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
 void
 cgui_grid_resize_col(cgui_grid *grid, size_t col, int16_t width)
 CGUI_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -140,8 +126,6 @@ void
 cgui_grid_resize_row(cgui_grid *grid, size_t row, int16_t height)
 CGUI_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
@@ -149,16 +133,12 @@ void
 cgui_grid_set_col_flex(cgui_grid *grid, size_t col, double flex)
 CGUI_NONNULL(1);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
 void
 cgui_grid_set_reference(cgui_grid *grid, cgui_grid *grid_ref)
 CGUI_NONNULL(1, 2);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -168,7 +148,7 @@ cgui_grid_set_row_flex(cgui_grid *grid, size_t row, double flex)
 CGUI_NONNULL(1);
 
 /************************************************************************************************************/
-/* FUNCTIONS ************************************************************************************************/
+/* PURE METHODS *********************************************************************************************/
 /************************************************************************************************************/
 
 /**
@@ -179,8 +159,6 @@ cgui_grid_compare_flex(const cgui_grid *grid_1, const cgui_grid *grid_2)
 CGUI_NONNULL(1, 2)
 CGUI_PURE;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
@@ -188,8 +166,6 @@ enum cgui_grid_relative_size
 cgui_grid_compare_size(const cgui_grid *grid_1, const cgui_grid *grid_2)
 CGUI_NONNULL(1, 2)
 CGUI_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
@@ -199,8 +175,6 @@ cgui_grid_flex_horizontal(const cgui_grid *grid)
 CGUI_NONNULL(1)
 CGUI_PURE;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
@@ -209,8 +183,6 @@ cgui_grid_flex_vertical(const cgui_grid *grid)
 CGUI_NONNULL(1)
 CGUI_PURE;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
@@ -218,8 +190,6 @@ uint16_t
 cgui_grid_min_height(const cgui_grid *grid)
 CGUI_NONNULL(1)
 CGUI_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *

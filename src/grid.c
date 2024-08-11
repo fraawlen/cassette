@@ -143,6 +143,16 @@ cgui_grid_clone(const cgui_grid *grid)
 		goto fail_push;
 	}
 
+	CREF_FOR_EACH(grid->areas, i)
+	{
+		area = (const struct area*)cref_ptr(grid->areas, i);
+		cgui_grid_assign_cell(grid_new, area->cell, area->x, area->y, area->width, area->height);
+		if (cgui_error())
+		{
+			goto fail_copy;
+		}
+	}
+
 	memcpy(grid_new->cols, grid->cols, grid->n_cols * sizeof(struct grid_line));
 	memcpy(grid_new->rows, grid->rows, grid->n_rows * sizeof(struct grid_line));
 
@@ -156,26 +166,17 @@ cgui_grid_clone(const cgui_grid *grid)
 	grid_new->total_height_inv = grid->total_height_inv; 
 	grid_new->ref              = grid->ref;
 	grid_new->valid            = true;
-	
-	CREF_FOR_EACH(grid->areas, i)
-	{
-		area = (const struct area*)cref_ptr(grid->areas, i);
-		cgui_grid_assign_cell(grid_new, area->cell, area->x, area->y, area->width, area->height);
-	}
-
-	if (cgui_error())
-	{
-		grid_new->valid = false;
-		grid_destroy(grid_new);
-		cgui_repair();
-		main_set_error(CERR_INSTANCE);
-		return CGUI_GRID_PLACEHOLDER;
-	}
 
 	return grid_new;
 
 	/* errors */
 
+fail_copy:
+	cref_repair(grid->areas);
+	CREF_FOR_EACH(grid->areas, i)
+	{
+		free(cref_ptr(grid->areas, i));
+	}
 fail_push:
 	cref_destroy(grid_new->areas);
 fail_areas:
@@ -584,7 +585,7 @@ grid_destroy(cgui_grid *grid)
 
 	CREF_FOR_EACH(grid->areas, i)
 	{
-		free((void*)cref_ptr(grid->areas, i));
+		free(cref_ptr(grid->areas, i));
 	}
 
 	cref_pull(main_grids(), grid);

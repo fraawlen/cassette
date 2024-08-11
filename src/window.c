@@ -31,29 +31,55 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static void _dummy_fn_close (cgui_window *)                              CGUI_NONNULL(1);
+static void _dummy_fn_state (cgui_window *, enum cgui_window_state_mask) CGUI_NONNULL(1);
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+static const struct cgui_window_state_flags _default_states = {false};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 cgui_window cgui_window_placeholder_instance =
 {
-	.x            = 0,
-	.y            = 0,
-	.width        = 0,
-	.height       = 0,
-	.valid        = false,
-	.active       = false,
-	.mapped       = false,
-	.obscured     = false,
-	.focused      = false,
-	.disabled     = false,
-	.locked_grid  = false,
-	.locked_focus = false,
+	.x        = 0,
+	.y        = 0,
+	.width    = 0,
+	.height   = 0,
+	.fn_close = _dummy_fn_close,
+	.fn_state = _dummy_fn_state,
+	.state    = _default_states,
+	.valid    = false,
 };
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
+void
+cgui_window_activate(cgui_window *window)
+{
+	if (cgui_error() || !window->valid || window->state.active)
+	{
+		return;
+	}
+
+	x11_window_activate(window->x_id);
+	window_update_state(window, CGUI_WINDOW_ACTIVE, true);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 cgui_window *
 cgui_window_create(void)
 {
+	 int16_t x      = 0;
+	 int16_t y      = 0;
+	uint16_t width  = 400;
+	uint16_t height = 400;
+
 	cgui_window *window;
 
 	if (cgui_error())
@@ -66,34 +92,51 @@ cgui_window_create(void)
 		goto fail_alloc;
 	}
 
+	if (!x11_window_create(&window->x_id, x, y, width, height))
+	{
+		goto fail_backend;
+	}
+
 	if (!main_push_instance(main_windows(), window))
 	{
 		goto fail_push;
 	}
 
-	window->x            = 0;
-	window->y            = 0;
-	window->width        = 400;
-	window->height       = 400;
-	window->valid        = true;
-	window->active       = false;
-	window->mapped       = false;
-	window->obscured     = false;
-	window->focused      = false;
-	window->disabled     = false;
-	window->locked_grid  = false;
-	window->locked_focus = false;
+	window->x        = x;
+	window->y        = y;
+	window->width    = width;
+	window->height   = height;
+	window->fn_close = _dummy_fn_close;
+	window->fn_state = _dummy_fn_state;
+	window->state    = _default_states;
+	window->valid    = true;
 
 	return window;
 
 	/* errors */
 
 fail_push:
+	x11_window_destroy(window->x_id);
+fail_backend:
 	free(window);
 fail_alloc:
 	main_set_error(CERR_INSTANCE);
 fail_main:
 	return CGUI_WINDOW_PLACEHOLDER;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_deactivate(cgui_window *window)
+{
+	if (cgui_error() || !window->valid || !window->state.active)
+	{
+		return;
+	}
+
+	x11_window_deactivate(window->x_id);
+	window_update_state(window, CGUI_WINDOW_ACTIVE, false);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -111,96 +154,6 @@ cgui_window_destroy(cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-cgui_window_is_active(const cgui_window *window)
-{
-	if (cgui_error() || !window->valid)
-	{
-		return false;
-	}
-
-	return window->active;
-}
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-cgui_window_is_disabled(const cgui_window *window)
-{
-	if (cgui_error() || !window->valid)
-	{
-		return false;
-	}
-
-	return window->disabled;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-cgui_window_is_focused(const cgui_window *window)
-{
-	if (cgui_error() || !window->valid)
-	{
-		return false;
-	}
-
-	return window->focused;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-cgui_window_is_locked_focus(const cgui_window *window)
-{
-	if (cgui_error() || !window->valid)
-	{
-		return false;
-	}
-
-	return window->locked_focus;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-cgui_window_is_locked_grid(const cgui_window *window)
-{
-	if (cgui_error() || !window->valid)
-	{
-		return false;
-	}
-
-	return window->locked_grid;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-cgui_window_is_mapped(const cgui_window *window)
-{
-	if (cgui_error() || !window->valid)
-	{
-		return false;
-	}
-
-	return window->mapped;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-cgui_window_is_obscured(const cgui_window *window)
-{
-	if (cgui_error() || !window->valid)
-	{
-		return false;
-	}
-
-	return window->obscured;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
 cgui_window_is_valid(const cgui_window *window)
 {
 	if (cgui_error())
@@ -209,6 +162,58 @@ cgui_window_is_valid(const cgui_window *window)
 	}
 
 	return window->valid;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_on_close(cgui_window *window, void (*fn)(cgui_window *window))
+{
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+	
+	window->fn_close = fn ? fn : _dummy_fn_close;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_on_state(cgui_window *window, void (*fn)(cgui_window *window, enum cgui_window_state_mask mask))
+{
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+	
+	window->fn_state = fn ? fn : _dummy_fn_state;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_rename(cgui_window *window, const char *name)
+{
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+
+	x11_window_rename(window->x_id, name);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct cgui_window_state_flags
+cgui_window_state(const cgui_window *window)
+{
+	if (cgui_error() || !window->valid)
+	{
+		return _default_states;
+	}
+
+	return window->state;
 }
 
 /************************************************************************************************************/
@@ -224,6 +229,7 @@ window_destroy(cgui_window *window)
 	}
 
 	main_pull_instance(main_windows(), window);
+	x11_window_destroy(window->x_id);
 	free(window);
 }
 
@@ -233,4 +239,80 @@ void
 window_present(cgui_window *window)
 {
 	(void)window;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+window_update_state(cgui_window *window, enum cgui_window_state_mask mask, bool value)
+{
+	bool old;
+
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+
+	switch (mask)
+	{
+		case CGUI_WINDOW_ACTIVE:
+			old = window->state.active;
+			window->state.active = value;
+			break;
+
+		case CGUI_WINDOW_MAPPED:
+			old = window->state.mapped;
+			window->state.mapped = value;
+			break;
+
+		case CGUI_WINDOW_FOCUSED:
+			old = window->state.focused;
+			window->state.focused = value;
+			break;
+
+		case CGUI_WINDOW_DISABLED:
+			old = window->state.disabled;
+			window->state.disabled = value;
+			break;
+
+		case CGUI_WINDOW_LOCKED_GRID:
+			old = window->state.locked_grid;
+			window->state.locked_grid = value;
+			break;
+
+		case CGUI_WINDOW_LOCKED_FOCUS:
+			old = window->state.locked_focus;
+			window->state.locked_focus = value;
+			break;
+
+		default:
+			return;
+	}
+
+	if (old == value)
+	{
+		return;
+	}
+
+	x11_window_update_state_hints(window->x_id, window->state);
+	window->fn_state(window, mask);
+}
+
+/************************************************************************************************************/
+/* STATIC ***************************************************************************************************/
+/************************************************************************************************************/
+
+static void
+_dummy_fn_close(cgui_window *window)
+{
+	cgui_window_deactivate(window);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_dummy_fn_state(cgui_window *window, enum cgui_window_state_mask mask)
+{
+	(void)window;
+	(void)mask;
 }

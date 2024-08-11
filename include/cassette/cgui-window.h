@@ -37,6 +37,32 @@ extern "C" {
  */
 typedef struct cgui_window cgui_window;
 
+/**
+ *
+ */
+struct cgui_window_state_flags
+{
+	bool active;
+	bool mapped;
+	bool focused;
+	bool disabled;
+	bool locked_grid;
+	bool locked_focus;
+};
+
+/**
+ *
+ */
+enum cgui_window_state_mask
+{
+	CGUI_WINDOW_ACTIVE,
+	CGUI_WINDOW_MAPPED,
+	CGUI_WINDOW_FOCUSED,
+	CGUI_WINDOW_DISABLED,
+	CGUI_WINDOW_LOCKED_GRID,
+	CGUI_WINDOW_LOCKED_FOCUS,
+};
+
 /************************************************************************************************************/
 /* GLOBALS **************************************************************************************************/
 /************************************************************************************************************/
@@ -46,9 +72,7 @@ typedef struct cgui_window cgui_window;
  * functions. However, any function called with a handle set to this value will return early and without any
  * side effects.
  */
-#define CGUI_WINDOW_PLACEHOLDER &cgui_window_placeholder_instance
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+#define CGUI_WINDOW_PLACEHOLDER (&cgui_window_placeholder_instance)
 
 /**
  * Global window instance with the error state set to CGUI_WINDOW_INVALID. This instance is only made
@@ -67,8 +91,6 @@ cgui_window *
 cgui_window_create(void)
 CGUI_NONNULL_RETURN;
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 /**
  *
  */
@@ -77,69 +99,61 @@ cgui_window_destroy(cgui_window *window)
 CGUI_NONNULL(1);
 
 /************************************************************************************************************/
-/* FUNCTIONS ************************************************************************************************/
+/* IMPURE METHODS *******************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ *
+ */
+void
+cgui_window_activate(cgui_window *window)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_window_deactivate(cgui_window *window)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_window_on_close(cgui_window *window, void (*fn)(cgui_window *window))
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_window_on_state(cgui_window *window, void (*fn)(cgui_window *window, enum cgui_window_state_mask mask))
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_window_rename(cgui_window *window, const char *name)
+CGUI_NONNULL(1, 2);
+
+/************************************************************************************************************/
+/* PURE METHODS *********************************************************************************************/
 /************************************************************************************************************/
 
 /**
  *
  */
 bool
-cgui_window_is_active(const cgui_window *window)
-CGUI_NONNULL(1)
-CGUI_PURE;
-
-/**
- *
- */
-bool
-cgui_window_is_disabled(const cgui_window *window)
-CGUI_NONNULL(1)
-CGUI_PURE;
-/**
- *
- */
-bool
-cgui_window_is_focused(const cgui_window *window)
-CGUI_NONNULL(1)
-CGUI_PURE;
-
-/**
- *
- */
-bool
-cgui_window_is_locked_focus(const cgui_window *window)
-CGUI_NONNULL(1)
-CGUI_PURE;
-
-/**
- *
- */
-bool
-cgui_window_is_locked_grid(const cgui_window *window)
-CGUI_NONNULL(1)
-CGUI_PURE;
-
-/**
- *
- */
-bool
-cgui_window_is_mapped(const cgui_window *window)
-CGUI_NONNULL(1)
-CGUI_PURE;
-
-/**
- *
- */
-bool
-cgui_window_is_obscured(const cgui_window *window)
-CGUI_NONNULL(1)
-CGUI_PURE;
-
-/**
- *
- */
-bool
 cgui_window_is_valid(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+struct cgui_window_state_flags
+cgui_window_state(const cgui_window *window)
 CGUI_NONNULL(1)
 CGUI_PURE;
 

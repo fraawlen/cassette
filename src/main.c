@@ -483,7 +483,7 @@ _is_any_window_activated(void)
 {
 	CREF_FOR_EACH(_windows, i)
 	{
-		if (((cgui_window*)cref_ptr(_windows, i))->active)
+		if (((cgui_window*)cref_ptr(_windows, i))->state.active)
 		{
 			return true;
 		}

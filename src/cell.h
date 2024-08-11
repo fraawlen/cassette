@@ -35,9 +35,9 @@ struct cgui_cell
 
 	/* callbacks */
 
-	void (*fn_destroy) (cgui_cell *cell);
-	void (*fn_draw)    (cgui_cell *cell, struct cgui_cell_context *context);
-	void (*fn_event)   (cgui_cell *cell, struct cgui_cell_event *event);
+	void (*fn_destroy) (cgui_cell *);
+	void (*fn_draw)    (cgui_cell *, struct cgui_cell_context *);
+	void (*fn_event)   (cgui_cell *, struct cgui_cell_event   *);
 
 	/* states */
 

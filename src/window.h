@@ -36,16 +36,19 @@ struct cgui_window
 	uint16_t width;
 	uint16_t height;
 
+	/* xcb stuff */
+
+	xcb_window_t x_id;
+
+	/* callbacks */
+
+	void (*fn_close) (cgui_window *);
+	void (*fn_state) (cgui_window *, enum cgui_window_state_mask);
+
 	/* states */
 
+	struct cgui_window_state_flags state;
 	bool valid;
-	bool active;
-	bool mapped;
-	bool obscured;
-	bool focused;
-	bool disabled;
-	bool locked_grid;
-	bool locked_focus;
 };
 
 /************************************************************************************************************/
@@ -57,9 +60,15 @@ window_destroy(cgui_window *window)
 CGUI_NONNULL(1);
 
 /************************************************************************************************************/
-/* PROCEDURES ***********************************************************************************************/
+/* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
 
 void
 window_present(cgui_window *window)
+CGUI_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+window_update_state(cgui_window *window, enum cgui_window_state_mask mask, bool value)
 CGUI_NONNULL(1);

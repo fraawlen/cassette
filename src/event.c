@@ -22,12 +22,24 @@
 #include <xcb/xcb.h>
 
 #include "event.h"
+#include "window.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static void _accelerate           (struct cgui_event *) CGUI_NONNULL(1);
+static void _close                (struct cgui_event *) CGUI_NONNULL(1);
 static void _dummy_callback_event (struct cgui_event *) CGUI_NONNULL(1);
+static void _focus                (struct cgui_event *) CGUI_NONNULL(1);
+static void _map                  (struct cgui_event *) CGUI_NONNULL(1);
+static void _reconfig             (void);
+static void _touch_begin          (struct cgui_event *) CGUI_NONNULL(1);
+static void _touch_end            (struct cgui_event *) CGUI_NONNULL(1);
+static void _touch_update         (struct cgui_event *) CGUI_NONNULL(1);
+static void _transform            (struct cgui_event *) CGUI_NONNULL(1);
+static void _unfocus              (struct cgui_event *) CGUI_NONNULL(1);
+static void _unmap                (struct cgui_event *) CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -61,10 +73,52 @@ event_process(struct cgui_event *event)
 
 	switch (event->type)
 	{
-		// TODO
+		case CGUI_EVENT_CLOSE:
+			_close(event);
+			break;
+
+		case CGUI_EVENT_ACCELERATOR:
+			_accelerate(event);
+			break;
+
+		case CGUI_EVENT_RECONFIG:
+			_reconfig();
+			break;
+
+		case CGUI_EVENT_TRANSFORM:
+			_transform(event);
+			break;
+
+		case CGUI_EVENT_FOCUS:
+			_focus(event);
+			break;
+
+		case CGUI_EVENT_UNFOCUS:
+			_unfocus(event);
+			break;
+
+		case CGUI_EVENT_MAP:
+			_map(event);
+			break;
+
+		case CGUI_EVENT_UNMAP:
+			_unmap(event);
+			break;
+
+		case CGUI_EVENT_TOUCH_BEGIN:
+			_touch_begin(event);
+			break;
+
+		case CGUI_EVENT_TOUCH_UPDATE:
+			_touch_update(event);
+			break;
+
+		case CGUI_EVENT_TOUCH_END:
+			_touch_end(event);
+			break;
 
 		case CGUI_EVENT_NONE:
-		default:
+		case CGUI_EVENT_UNKNOWN_XCB:
 			break;
 	}
 }
@@ -74,8 +128,124 @@ event_process(struct cgui_event *event)
 /************************************************************************************************************/
 
 static void
+_accelerate(struct cgui_event *event)
+{
+	(void)event;
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_close(struct cgui_event *event)
+{
+	event->window->fn_close(event->window);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 _dummy_callback_event(struct cgui_event *event)
 {
 	(void)event;
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_focus(struct cgui_event *event)
+{
+	window_update_state(event->window, CGUI_WINDOW_FOCUSED, true);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_map(struct cgui_event *event)
+{
+	window_update_state(event->window, CGUI_WINDOW_MAPPED, true);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_reconfig(void)
+{
+	cgui_reconfig();
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_touch_begin(struct cgui_event *event)
+{
+	(void)event;
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_touch_end(struct cgui_event *event)
+{
+	(void)event;
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_touch_update(struct cgui_event *event)
+{
+	(void)event;
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_transform(struct cgui_event *event)
+{
+	cgui_window *w = event->window;
+
+	if (w == CGUI_WINDOW_PLACEHOLDER)
+	{
+		return;
+	}
+
+	w->x = event->transform_x;
+	w->y = event->transform_y;
+
+	if (w->width  != event->transform_width
+	 || w->height != event->transform_height)
+	{
+		w->width  = event->transform_width;
+		w->height = event->transform_height;
+		// TODO update current grid
+		// TODO update wm focus hints
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_unfocus(struct cgui_event *event)
+{
+	window_update_state(event->window, CGUI_WINDOW_FOCUSED, false);
+
+	// TODO clear all tracked inputs
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_unmap(struct cgui_event *event)
+{
+	window_update_state(event->window, CGUI_WINDOW_MAPPED, false);
+
+	// TODO propagate event to cells
+}
