@@ -40,12 +40,11 @@ static void _dummy_fn_event   (cgui_cell *, struct cgui_cell_event *);
 
 cgui_cell cgui_cell_placeholder_instance =
 {
-	.to_destroy = false,
 	.data       = NULL,
 	.fn_destroy = _dummy_fn_destroy,
 	.fn_draw    = _dummy_fn_draw,
 	.fn_event   = _dummy_fn_event,
-	.err        = CERR_INVALID,
+	.valid      = false,
 };
 
 /************************************************************************************************************/
@@ -57,21 +56,37 @@ cgui_cell_create(void)
 {
 	cgui_cell *cell;
 
-	if (!cgui_is_init() || cgui_error() || !(cell = malloc(sizeof(cgui_cell))))
+	if (cgui_error())
 	{
-		return CGUI_CELL_PLACEHOLDER;
+		goto fail_main;
 	}
 
-	cell->data       = NULL,
-	cell->fn_destroy = _dummy_fn_destroy,
-	cell->fn_draw    = _dummy_fn_draw,
-	cell->fn_event   = _dummy_fn_event,
-	cell->to_destroy = false;
-	cell->err        = CERR_NONE;
+	if (!(cell = malloc(sizeof(cgui_cell))))
+	{
+		goto fail_alloc;
+	}
 
-	main_push_instance(main_cells(), cell);
+	if (!main_push_instance(main_cells(), cell))
+	{
+		goto fail_push;
+	}
+
+	cell->data       = NULL;
+	cell->fn_destroy = _dummy_fn_destroy;
+	cell->fn_draw    = _dummy_fn_draw;
+	cell->fn_event   = _dummy_fn_event;
+	cell->valid      = true;
 
 	return cell;
+
+	/* errors */
+
+fail_push:
+	free(cell);
+fail_alloc:
+	main_set_error(CERR_INSTANCE);
+fail_main:
+	return CGUI_CELL_PLACEHOLDER;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -79,7 +94,7 @@ cgui_cell_create(void)
 void *
 cgui_cell_data(const cgui_cell *cell)
 {
-	if (cell->err)
+	if (cgui_error() || !cell->valid)
 	{
 		return NULL;
 	}
@@ -92,12 +107,7 @@ cgui_cell_data(const cgui_cell *cell)
 void
 cgui_cell_destroy(cgui_cell *cell)
 {
-	if (cell == CGUI_CELL_PLACEHOLDER)
-	{
-		return;
-	}
-
-	cell->to_destroy = true;
+	cell->valid = false;
 	if (!cgui_is_running())
 	{
 		cell_destroy(cell);
@@ -106,18 +116,10 @@ cgui_cell_destroy(cgui_cell *cell)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cerr
-cgui_cell_error(const cgui_cell *cell)
-{
-	return cell->err;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 void
 (*cgui_cell_fn_destroy(cgui_cell *cell))(cgui_cell *cell)
 {
-	if (cell->err)
+	if (cgui_error() || !cell->valid)
 	{
 		return _dummy_fn_destroy;
 	}
@@ -131,7 +133,7 @@ void
 void
 (*cgui_cell_fn_draw(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_context *context)
 {
-	if (cell->err)
+	if (cgui_error() || !cell->valid)
 	{
 		return _dummy_fn_draw;
 	}
@@ -145,7 +147,7 @@ void
 void
 (*cgui_cell_fn_event(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_event *event)
 {
-	if (cell->err)
+	if (cgui_error() || !cell->valid)
 	{
 		return _dummy_fn_event;
 	}
@@ -155,10 +157,23 @@ void
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+bool
+cgui_cell_is_valid(const cgui_cell *cell)
+{
+	if (cgui_error())
+	{
+		return false;
+	}
+
+	return cell->valid;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 cgui_cell_on_destroy(cgui_cell *cell, void (*fn)(cgui_cell *cell))
 {
-	if (cell->err)
+	if (cgui_error() || !cell->valid)
 	{
 		return;
 	}
@@ -171,7 +186,7 @@ cgui_cell_on_destroy(cgui_cell *cell, void (*fn)(cgui_cell *cell))
 void
 cgui_cell_on_draw(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_context *context))
 {
-	if (cell->err)
+	if (cgui_error() || !cell->valid)
 	{
 		return;
 	}
@@ -184,7 +199,7 @@ cgui_cell_on_draw(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_
 void
 cgui_cell_on_event(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_event *event))
 {
-	if (cell->err)
+	if (cgui_error() || !cell->valid)
 	{
 		return;
 	}
@@ -197,7 +212,7 @@ cgui_cell_on_event(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell
 void
 cgui_cell_redraw(cgui_cell *cell)
 {
-	if (cell->err)
+	if (cgui_error() || !cell->valid)
 	{
 		return;
 	}
@@ -207,18 +222,10 @@ cgui_cell_redraw(cgui_cell *cell)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-cgui_cell_repair(cgui_cell *cell)
-{
-	cell->err &= CERR_INVALID;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 bool
 cgui_cell_send_custom_event(cgui_cell *cell, int id, void *data, size_t length)
 {
-	if (cell->err)
+	if (cgui_error() || !cell->valid)
 	{
 		return false;
 	}
@@ -237,7 +244,7 @@ cgui_cell_send_custom_event(cgui_cell *cell, int id, void *data, size_t length)
 void
 cgui_cell_set_data(cgui_cell *cell, void *data)
 {
-	if (cell->err)
+	if (cgui_error() || !cell->valid)
 	{
 		return;
 	}
@@ -252,7 +259,7 @@ cgui_cell_set_data(cgui_cell *cell, void *data)
 void
 cell_destroy(cgui_cell *cell)
 {
-	if (!cell->to_destroy)
+	if (cell == CGUI_CELL_PLACEHOLDER || cell->valid)
 	{
 		return;
 	}
@@ -262,7 +269,7 @@ cell_destroy(cgui_cell *cell)
 }
 
 /************************************************************************************************************/
-/* _ ********************************************************************************************************/
+/* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 static void

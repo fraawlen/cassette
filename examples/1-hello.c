@@ -51,9 +51,9 @@ static cgui_window *_window = CGUI_WINDOW_PLACEHOLDER;
 
 	cgui_init(argc, argv);
 
+	_window = cgui_window_create();
 	_grid   = cgui_grid_create(1, 1);
 	_cell   = cgui_cell_create();
-	_window = cgui_window_create();
 
 	/* Cell setup */
 

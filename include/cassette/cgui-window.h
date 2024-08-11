@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 #include "cgui-attributes.h"
 
 #ifdef __cplusplus
@@ -34,23 +36,6 @@ extern "C" {
  *
  */
 typedef struct cgui_window cgui_window;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
-enum cgui_window_state
-{
-	CGUI_WINDOW_INITIAL      = 0,
-	CGUI_WINDOW_ACTIVE       = 1,
-	CGUI_WINDOW_MAPPED       = 1 << 1,
-	CGUI_WINDOW_OBSCURED     = 1 << 2,
-	CGUI_WINDOW_FOCUSED      = 1 << 3,
-	CGUI_WINDOW_DISABLED     = 1 << 4,
-	CGUI_WINDOW_LOCKED_GRID  = 1 << 5,
-	CGUI_WINDOW_LOCKED_FOCUS = 1 << 6,
-};
 
 /************************************************************************************************************/
 /* GLOBALS **************************************************************************************************/
@@ -92,35 +77,69 @@ cgui_window_destroy(cgui_window *window)
 CGUI_NONNULL(1);
 
 /************************************************************************************************************/
-/* PROCEDURES ***********************************************************************************************/
-/************************************************************************************************************/
-
-/**
- *
- */
-void
-cgui_window_repair(cgui_window *window)
-CGUI_NONNULL(1);
-
-/************************************************************************************************************/
 /* FUNCTIONS ************************************************************************************************/
 /************************************************************************************************************/
 
 /**
  *
  */
-enum cerr
-cgui_window_error(const cgui_window *window)
+bool
+cgui_window_is_active(const cgui_window *window)
 CGUI_NONNULL(1)
 CGUI_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 /**
  *
  */
-enum cgui_window_state
-cgui_window_state(const cgui_window *window)
+bool
+cgui_window_is_disabled(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+/**
+ *
+ */
+bool
+cgui_window_is_focused(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+bool
+cgui_window_is_locked_focus(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+bool
+cgui_window_is_locked_grid(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+bool
+cgui_window_is_mapped(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+bool
+cgui_window_is_obscured(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+bool
+cgui_window_is_valid(const cgui_window *window)
 CGUI_NONNULL(1)
 CGUI_PURE;
 

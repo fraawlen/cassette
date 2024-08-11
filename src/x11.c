@@ -93,8 +93,6 @@ static void _event_xinput_touch      (xcb_input_touch_begin_event_t *) CGUI_NONN
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static enum cerr _err = CERR_INVALID | CERR_XCB;
-
 /* ICCCM properties */
 
 static char  const *_class_name  = NULL;
@@ -168,20 +166,7 @@ static cref *_events = CREF_PLACEHOLDER;
 xcb_connection_t *
 x11_connection(void)
 {
-	if (_err)
-	{
-		return NULL;
-	}
-
 	return _connection;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-enum cerr
-x11_error(void)
-{
-	return _err;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -206,23 +191,18 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 		XCB_EVENT_MASK_PROPERTY_CHANGE,
 	};
 
-	if (!(_err & CERR_INVALID))
-	{
-		return;
-	}
-
 	/* setup class and cmd args */
 
-	_argc = argc;
-	_argv = argv;
-
+	_argc        = argc;
+	_argv        = argv;
 	_class_class = class_class;
 	_class_name  = class_name;
 
 	/* init event buffer */
 
 	if ((_events = cref_create()) == CREF_PLACEHOLDER)
-	{
+	{	
+		main_set_error(CERR_MEMORY);
 		return;
 	}
 
@@ -230,14 +210,14 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 
 	if (!(_connection = connection ? connection : xcb_connect(NULL, NULL)))
 	{
-		goto fail_xserver;
+		goto fail_server;
 	}
 
 	/* find screen */
 
 	if (!(_screen = xcb_setup_roots_iterator(xcb_get_setup(_connection)).data))
 	{
-		goto fail_xserver;
+		goto fail_setup;
 	}
 
 	/* get depth */
@@ -253,7 +233,7 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 	}
 	if (!_depth)
 	{
-		goto fail_xserver;
+		goto fail_setup;
 	}
 
 	/* get visual */
@@ -269,7 +249,7 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 	}
 	if (!_visual)
 	{
-		goto fail_xserver;
+		goto fail_setup;
 	}
 
 	/* create colormap */
@@ -284,7 +264,7 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 
 	if (!_test_cookie(xc))
 	{
-		goto fail_xserver;
+		goto fail_setup;
 	}
 
 	/* create leader window */
@@ -387,8 +367,6 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 	
 	xcb_flush(_connection);
 
-	_err = CERR_NONE;
-
 	return;
 
 	/* errors */
@@ -397,8 +375,16 @@ fail_keysyms:
 	xcb_destroy_window(_connection, _win_leader);
 fail_leader:
 	xcb_free_colormap(_connection, _colormap);
-fail_xserver:
+fail_setup:
+	if (!connection)
+	{
+		xcb_disconnect(_connection);
+	}
+	_connection = NULL;
+fail_server:
+	main_set_error(CERR_XCB);
 	cref_destroy(_events);
+	_events = CREF_PLACEHOLDER;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -406,7 +392,7 @@ fail_xserver:
 xcb_window_t
 x11_leader_window(void)
 {
-	if (_err)
+	if (cgui_error())
 	{
 		return 0;
 	}
@@ -417,41 +403,26 @@ x11_leader_window(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_repair(void)
-{
-	if (_err & CERR_INVALID)
-	{
-		return;
-	}
-
-	_err = cref_error(_events);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
 x11_reset(bool kill_connection)
 {
-	if (_err & CERR_INVALID)
-	{
-		return;
-	}
-
 	CREF_FOR_EACH(_events, i)
 	{
 		free((void*)cref_ptr(_events, i));
 	}
 	cref_destroy(_events);
+	_events = CREF_PLACEHOLDER;
 
-	xcb_key_symbols_free(_keysyms);
-	xcb_destroy_window(_connection, _win_leader);
-	xcb_free_colormap(_connection, _colormap);
-	if (kill_connection)
+	if (_connection)
 	{
-		xcb_disconnect(_connection);
-	}
-	
-	_err = CERR_INVALID | CERR_XCB;
+		xcb_key_symbols_free(_keysyms);
+		xcb_destroy_window(_connection, _win_leader);
+		xcb_free_colormap(_connection, _colormap);
+		if (kill_connection)
+		{
+			xcb_disconnect(_connection);
+		}
+		_connection = NULL;
+	}	
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -461,7 +432,7 @@ x11_update(void)
 {
 	xcb_generic_event_t *event;
 
-	if (_err)
+	if (cgui_error())
 	{
 		return;
 	}
@@ -483,7 +454,7 @@ x11_update(void)
 
 	if (!event)
 	{
-		_err |= CERR_XCB;
+		main_set_error(CERR_XCB);
 		return;
 	}
 
@@ -574,38 +545,8 @@ x11_update(void)
 	xcb_flush(_connection);
 }
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-x11_window_create(cgui_window *window)
-{
-	(void)window;
-
-	// TODO
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-x11_window_destroy(cgui_window *window)
-{
-	(void)window;
-
-	// TODO
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-x11_window_resize(cgui_window *window)
-{
-	(void)window;
-
-	// TODO
-}
-
 /************************************************************************************************************/
-/* _ ********************************************************************************************************/
+/* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 static void

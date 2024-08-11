@@ -38,9 +38,14 @@ struct cgui_window
 
 	/* states */
 
-	bool to_destroy;
-	enum cgui_window_state state;
-	enum cerr err;
+	bool valid;
+	bool active;
+	bool mapped;
+	bool obscured;
+	bool focused;
+	bool disabled;
+	bool locked_grid;
+	bool locked_focus;
 };
 
 /************************************************************************************************************/

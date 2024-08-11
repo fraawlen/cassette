@@ -128,15 +128,6 @@ CGUI_NONNULL(1, 2);
  *
  */
 void
-cgui_grid_repair(cgui_grid *grid)
-CGUI_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
-void
 cgui_grid_resize_col(cgui_grid *grid, size_t col, int16_t width)
 CGUI_NONNULL(1);
 
@@ -196,16 +187,6 @@ CGUI_PURE;
 enum cgui_grid_relative_size
 cgui_grid_compare_size(const cgui_grid *grid_1, const cgui_grid *grid_2)
 CGUI_NONNULL(1, 2)
-CGUI_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
-enum cerr
-cgui_grid_error(const cgui_grid *grid)
-CGUI_NONNULL(1)
 CGUI_PURE;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

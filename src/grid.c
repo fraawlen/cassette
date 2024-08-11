@@ -36,8 +36,19 @@
 
 cgui_grid cgui_grid_placeholder_instance =
 {
-	.to_destroy = false,
-	.err        = CERR_INVALID,
+	.n_cols           = 0,
+	.n_rows           = 0,
+	.total_col_flex   = 0,
+	.total_row_flex   = 0,
+	.total_width      = 0,
+	.total_width_inv  = 0,
+	.total_height     = 0,
+	.total_height_inv = 0,
+	.cols             = NULL,
+	.rows             = NULL,
+	.areas            = CREF_PLACEHOLDER,
+	.ref              = NULL,
+	.valid            = false,
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -60,16 +71,30 @@ cgui_grid_assign_cell(cgui_grid *grid, cgui_cell *cell, size_t x, size_t y, size
 {
 	struct area *area;
 
-	if (grid->err
-	 || cell->err
+	if (cgui_error()
+	 || !grid->valid
 	 || width  == 0
 	 || height == 0
 	 || grid->n_cols < width
 	 || grid->n_rows < height
 	 || grid->n_cols - width  > x
-	 || grid->n_rows - height > y
-	 || !(area = malloc(sizeof(struct area))))
+	 || grid->n_rows - height > y)
 	{
+		main_set_error(CERR_PARAM);
+		return;
+	}
+
+	if (!(area = malloc(sizeof(struct area))))
+	{
+		main_set_error(CERR_MEMORY);
+		return;
+	}
+
+	cref_push(grid->areas, area);
+	if (cref_error(grid->areas))
+	{
+		main_set_error(cref_error(grid->areas));
+		free(area);
 		return;
 	}
 
@@ -78,10 +103,6 @@ cgui_grid_assign_cell(cgui_grid *grid, cgui_cell *cell, size_t x, size_t y, size
 	area->width  = width;
 	area->height = height;
 	area->cell   = cell;
-
-	main_push_instance(grid->areas, area);
-
-	grid->err |= cref_error(grid->areas);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -92,7 +113,12 @@ cgui_grid_clone(const cgui_grid *grid)
 	cgui_grid *grid_new;
 	const struct area *area;
 
-	if (grid->err || !(grid_new = malloc(sizeof(cgui_grid))))
+	if (cgui_error() || !grid->valid)
+	{
+		goto fail_main;
+	}
+
+	if (!(grid_new = malloc(sizeof(cgui_grid))))
 	{
 		goto fail_grid;
 	}
@@ -112,6 +138,11 @@ cgui_grid_clone(const cgui_grid *grid)
 		goto fail_areas;
 	}
 
+	if (!main_push_instance(main_grids(), grid_new))
+	{
+		goto fail_push;
+	}
+
 	memcpy(grid_new->cols, grid->cols, grid->n_cols * sizeof(struct grid_line));
 	memcpy(grid_new->rows, grid->rows, grid->n_rows * sizeof(struct grid_line));
 
@@ -124,27 +155,29 @@ cgui_grid_clone(const cgui_grid *grid)
 	grid_new->total_height     = grid->total_height;
 	grid_new->total_height_inv = grid->total_height_inv; 
 	grid_new->ref              = grid->ref;
-	grid_new->to_destroy       = false;
-	grid_new->err              = CERR_NONE;
+	grid_new->valid            = true;
 	
-	cref_push(main_grids(), grid_new);
-
 	CREF_FOR_EACH(grid->areas, i)
 	{
 		area = (const struct area*)cref_ptr(grid->areas, i);
 		cgui_grid_assign_cell(grid_new, area->cell, area->x, area->y, area->width, area->height);
 	}
 
-	if (grid->err)
+	if (cgui_error())
 	{
-		grid_new->to_destroy = true;
+		grid_new->valid = false;
 		grid_destroy(grid_new);
+		cgui_repair();
+		main_set_error(CERR_INSTANCE);
+		return CGUI_GRID_PLACEHOLDER;
 	}
 
 	return grid_new;
 
 	/* errors */
 
+fail_push:
+	cref_destroy(grid_new->areas);
 fail_areas:
 	free(grid_new->rows);
 fail_rows:
@@ -152,6 +185,8 @@ fail_rows:
 fail_cols:
 	free(grid_new);
 fail_grid:
+	main_set_error(CERR_INSTANCE);
+fail_main:
 	return CGUI_GRID_PLACEHOLDER;
 }
 
@@ -165,7 +200,7 @@ cgui_grid_compare_flex(const cgui_grid *grid_1, const cgui_grid *grid_2)
 	bool y1;
 	bool y2;
 
-	if (grid_1->err || grid_2->err)
+	if (cgui_error() || !grid_1->valid || !grid_2->valid)
 	{
 		return CGUI_GRID_FLEX_INVALID;
 	}
@@ -193,7 +228,7 @@ cgui_grid_compare_size(const cgui_grid *grid_1, const cgui_grid *grid_2)
 	enum cgui_grid_relative_size x = CGUI_GRID_SIZE_UNDEFINED;
 	enum cgui_grid_relative_size y = CGUI_GRID_SIZE_UNDEFINED;
 
-	if (grid_1->err || grid_2->err)
+	if (cgui_error() || !grid_1->valid || !grid_2->valid)
 	{
 		return CGUI_GRID_SIZE_INVALID;
 	}
@@ -256,9 +291,12 @@ cgui_grid_create(size_t cols, size_t rows)
 {
 	cgui_grid *grid;
 
-	if (!cgui_is_init()
-	 || cgui_error()
-	 || cols == 0
+	if (cgui_error())
+	{
+		goto fail_main;
+	}
+
+	if (cols == 0
 	 || rows == 0
 	 || cols > INT16_MAX
 	 || rows > INT16_MAX
@@ -284,6 +322,11 @@ cgui_grid_create(size_t cols, size_t rows)
 		goto fail_areas;
 	}
 
+	if (!main_push_instance(main_grids(), grid))
+	{
+		goto fail_push;
+	}
+
 	for (size_t i = 0; i < cols; i++)
 	{
 		grid->cols[i].size = -1;
@@ -305,15 +348,14 @@ cgui_grid_create(size_t cols, size_t rows)
 	grid->total_height     = rows;
 	grid->total_height_inv = 0; 
 	grid->ref              = CGUI_GRID_PLACEHOLDER;
-	grid->to_destroy       = false;
-	grid->err              = CERR_NONE;
-
-	cref_push(main_grids(), grid);
+	grid->valid            = true;
 
 	return grid;
 
 	/* errors */
 
+fail_push:
+	cref_destroy(grid->areas);	
 fail_areas:
 	free(grid->rows);
 fail_rows:
@@ -321,6 +363,8 @@ fail_rows:
 fail_cols:
 	free(grid);
 fail_grid:
+	main_set_error(CERR_INSTANCE);
+fail_main:
 	return CGUI_GRID_PLACEHOLDER;
 }
 
@@ -329,12 +373,7 @@ fail_grid:
 void
 cgui_grid_destroy(cgui_grid *grid)
 {
-	if (grid == CGUI_GRID_PLACEHOLDER)
-	{
-		return;
-	}
-
-	grid->to_destroy = true;
+	grid->valid = false;
 	if (!cgui_is_running())
 	{
 		grid_destroy(grid);
@@ -343,18 +382,10 @@ cgui_grid_destroy(cgui_grid *grid)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum cerr
-cgui_grid_error(const cgui_grid *grid)
-{
-	return grid->err;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 double
 cgui_grid_flex_horizontal(const cgui_grid *grid)
 {
-	if (grid->err)
+	if (cgui_error() || !grid->valid)
 	{
 		return 0.0;
 	}
@@ -367,7 +398,7 @@ cgui_grid_flex_horizontal(const cgui_grid *grid)
 double
 cgui_grid_flex_vertical(const cgui_grid *grid)
 {
-	if (grid->err)
+	if (cgui_error() || !grid->valid)
 	{
 		return 0.0;
 	}
@@ -380,9 +411,9 @@ cgui_grid_flex_vertical(const cgui_grid *grid)
 uint16_t
 cgui_grid_min_height(const cgui_grid *grid)
 {
-	struct cline h = { .origin = 0, .length = 0, .min = INT16_MIN, .max = INT16_MAX};
+	struct cseg h = CSEG_I16;
 
-	if (grid->err)
+	if (cgui_error() || !grid->valid)
 	{
 		return 0;
 	}
@@ -397,9 +428,9 @@ cgui_grid_min_height(const cgui_grid *grid)
 uint16_t
 cgui_grid_min_width(const cgui_grid *grid)
 {
-	struct cline w = { .origin = 0, .length = 0, .min = INT16_MIN, .max = INT16_MAX};
+	struct cseg w = CSEG_I16;
 
-	if (grid->err)
+	if (cgui_error() || !grid->valid)
 	{
 		return 0;
 	}
@@ -412,19 +443,11 @@ cgui_grid_min_width(const cgui_grid *grid)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_grid_repair(cgui_grid *grid)
-{
-	grid->err &= CERR_INVALID;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
 cgui_grid_resize_col(cgui_grid *grid, size_t col, int16_t width)
 {
-	struct cline w = { .origin = 0, .length = 0, .min = INT16_MIN, .max = INT16_MAX};
+	struct cseg w = CSEG_I16;
 
-	if (grid->err || col >= grid->n_cols)
+	if (cgui_error() || !grid->valid || col >= grid->n_cols)
 	{
 		return;
 	}
@@ -441,13 +464,13 @@ cgui_grid_resize_col(cgui_grid *grid, size_t col, int16_t width)
 	if (width > 0)
 	{
 		w.length = grid->total_width;
-		cline_grow(&w, width);
+		cseg_grow(&w, width);
 		grid->total_width = w.length;
 	}
 	else
 	{
 		w.length = grid->total_width_inv;
-		cline_grow(&w, -width);
+		cseg_grow(&w, -width);
 		grid->total_width_inv = w.length;
 	}
 
@@ -459,9 +482,9 @@ cgui_grid_resize_col(cgui_grid *grid, size_t col, int16_t width)
 void
 cgui_grid_resize_row(cgui_grid *grid, size_t row, int16_t height)
 {
-	struct cline h = { .origin = 0, .length = 0, .min = INT16_MIN, .max = INT16_MAX};
+	struct cseg h = CSEG_I16;
 
-	if (grid->err || row >= grid->n_rows)
+	if (cgui_error() || !grid->valid || row >= grid->n_rows)
 	{
 		return;
 	}
@@ -478,13 +501,13 @@ cgui_grid_resize_row(cgui_grid *grid, size_t row, int16_t height)
 	if (height > 0)
 	{
 		h.length = grid->total_height;
-		cline_grow(&h, height);
+		cseg_grow(&h, height);
 		grid->total_height = h.length;
 	}
 	else
 	{
 		h.length = grid->total_height_inv;
-		cline_grow(&h, -height);
+		cseg_grow(&h, -height);
 		grid->total_height_inv = h.length;
 	}
 
@@ -496,10 +519,16 @@ cgui_grid_resize_row(cgui_grid *grid, size_t row, int16_t height)
 void
 cgui_grid_set_col_flex(cgui_grid *grid, size_t col, double flex)
 {
-	if (grid->err || col >= grid->n_cols || flex < 0.0)
+	if (cgui_error() || !grid->valid || col >= grid->n_cols)
 	{
 		return;
 	}
+
+	if (flex < 0.0)
+	{
+		main_set_error(CERR_PARAM);
+		return;
+	}	
 
 	grid->total_col_flex += flex - grid->cols[col].flex;
 	grid->cols[col].flex  = flex;
@@ -510,8 +539,8 @@ cgui_grid_set_col_flex(cgui_grid *grid, size_t col, double flex)
 void
 cgui_grid_set_reference(cgui_grid *grid, cgui_grid *grid_ref)
 {
-	if (grid->err
-	 || grid_ref->err
+	if (cgui_error()
+	 || !grid->valid
 	 || cgui_grid_compare_size(grid, grid_ref) != CGUI_GRID_SIZE_EQUAL
 	 || cgui_grid_compare_flex(grid, grid_ref) != CGUI_GRID_FLEX_SAME)
 	{
@@ -526,10 +555,16 @@ cgui_grid_set_reference(cgui_grid *grid, cgui_grid *grid_ref)
 void
 cgui_grid_set_row_flex(cgui_grid *grid, size_t row, double flex)
 {
-	if (grid->err || row >= grid->n_rows || flex < 0.0)
+	if (cgui_error() || !grid->valid || row >= grid->n_rows)
 	{
 		return;
 	}
+
+	if (flex < 0.0)
+	{
+		main_set_error(CERR_PARAM);
+		return;
+	}	
 
 	grid->total_row_flex += flex - grid->rows[row].flex;
 	grid->rows[row].flex  = flex;
@@ -542,7 +577,7 @@ cgui_grid_set_row_flex(cgui_grid *grid, size_t row, double flex)
 void
 grid_destroy(cgui_grid *grid)
 {
-	if (!grid->to_destroy)
+	if (grid == CGUI_GRID_PLACEHOLDER || grid->valid)
 	{
 		return;
 	}

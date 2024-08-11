@@ -34,6 +34,7 @@
 #include "config.h"
 #include "config-default.h"
 #include "env.h"
+#include "main.h"
 #include "util.h"
 
 /************************************************************************************************************/
@@ -128,7 +129,6 @@ static struct cgui_config _config  = config_default;
 static void (*_fn_load)(ccfg *cfg) = _dummy_fn_load;
 static ccfg  *_parser              = CCFG_PLACEHOLDER;
 static cdict *_dict                = CDICT_PLACEHOLDER;
-static enum cerr _err              = CERR_INVALID | CERR_CONFIG;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -295,20 +295,12 @@ cgui_config_on_load(void (*fn)(ccfg *cfg))
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
-enum cerr
-config_error(void)
-{
-	return _err;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 void
 config_init(const char *app_name, const char *app_class)
 {
 	cstr *home;
 
-	if (!(_err & CERR_INVALID))
+	if (cgui_error())
 	{
 		return;
 	}
@@ -318,7 +310,6 @@ config_init(const char *app_name, const char *app_class)
 	 home   = cstr_create();
 	_parser = ccfg_create();
 	_dict   = cdict_create();
-	_err    = CERR_NONE;
 
 	/* parser setup */
 
@@ -346,10 +337,6 @@ config_init(const char *app_name, const char *app_class)
 	/* end */
 
 	_update_err();
-	if (_err)
-	{
-		_err |= CERR_CONFIG;
-	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -360,7 +347,7 @@ config_load(void)
 	_config      = config_default;
 	_config.init = true;
 
-	if (util_env_exists(ENV_NO_PARSING))
+	if (cgui_error() || util_env_exists(ENV_NO_PARSING))
 	{
 		return;
 	}
@@ -397,16 +384,8 @@ config_load(void)
 void
 config_repair(void)
 {
-	if (_err & CERR_INVALID)
-	{
-		return;
-	}
-
 	ccfg_repair(_parser);
 	cdict_repair(_dict);
-
-	_err = CERR_NONE;
-	_update_err();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -421,11 +400,10 @@ config_reset(void)
 	_config  = config_default;
 	_parser  = CCFG_PLACEHOLDER;
 	_dict    = CDICT_PLACEHOLDER;
-	_err     = CERR_INVALID | CERR_CONFIG;
 }
 
 /************************************************************************************************************/
-/* _ ********************************************************************************************************/
+/* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 static void
@@ -517,7 +495,7 @@ _fetch(const struct _resource *resource)
 static void
 _fill(void)
 {
-	struct cline line = { .origin = 0, .length = 0, .min = 0, .max = INT16_MAX};
+	struct cseg seg = CSEG_U16;
 	cairo_font_extents_t f_e;
 	cairo_text_extents_t t_e;
 	cairo_surface_t *c_srf;
@@ -538,7 +516,7 @@ _fill(void)
 	if (cairo_surface_status(c_srf) != CAIRO_STATUS_SUCCESS
 	 || cairo_status(c_ctx)         != CAIRO_STATUS_SUCCESS)
 	{
-		_err |= CERR_CAIRO;
+		main_set_error(CERR_CONFIG);
 		goto skip_font_setup;
 	}
 	
@@ -564,10 +542,10 @@ skip_font_setup:
 
 skip_auto_font:
 
-	cline_grow(&line, _config.font_ascent);
-	cline_grow(&line, _config.font_descent);
+	cseg_grow(&seg, _config.font_ascent);
+	cseg_grow(&seg, _config.font_descent);
 
-	_config.font_height = line.length;
+	_config.font_height = seg.length;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -575,11 +553,11 @@ skip_auto_font:
 static void
 _scale_len(uint16_t *val)
 {
-	struct cline line = {.origin = 0,.length = *val, .min = 0, .max = INT16_MAX}; 
+	struct cseg seg = CSEG_U16; 
 
-	cline_scale(&line, _config.scale);
-
-	*val = line.length;
+	seg.length = *val;
+	cseg_scale(&seg, _config.scale);
+	*val = seg.length;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -587,11 +565,11 @@ _scale_len(uint16_t *val)
 static void
 _scale_pos(int16_t *val)
 {
-	struct cline line = {.origin = 0, .length = *val, .min = INT16_MIN, .max = INT16_MAX};
+	struct cseg seg = CSEG_I16;
 
-	cline_scale(&line, _config.scale);
-
-	*val = line.length;
+	seg.length = *val;
+	cseg_scale(&seg, _config.scale);
+	*val = seg.length;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -607,7 +585,7 @@ _swap(const char *str, uint8_t limit, struct cgui_swap *target)
 
 	if (!(str_copy = strdup(str)))
 	{
-		_err |= CERR_MEMORY;
+		main_set_error(CERR_CONFIG);
 		return;
 	}
 
@@ -661,6 +639,8 @@ _swap(const char *str, uint8_t limit, struct cgui_swap *target)
 static void
 _update_err(void)
 {
-	_err |= ccfg_error(_parser);
-	_err |= cdict_error(_dict);
+	if (ccfg_error(_parser) || cdict_error(_dict))
+	{
+		main_set_error(CERR_CONFIG);
+	}
 }

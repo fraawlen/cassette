@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cassette/cobj.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "cgui-attributes.h"
@@ -176,15 +177,6 @@ CGUI_NONNULL(1);
 /**
  *
  */
-void
-cgui_cell_repair(cgui_cell *cell)
-CGUI_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
 bool
 cgui_cell_send_custom_event(cgui_cell *cell, int id, void *data, size_t length)
 CGUI_NONNULL(1);
@@ -207,16 +199,6 @@ CGUI_NONNULL(1);
  */
 void *
 cgui_cell_data(const cgui_cell *cell)
-CGUI_NONNULL(1)
-CGUI_PURE;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- *
- */
-enum cerr
-cgui_cell_error(const cgui_cell *cell)
 CGUI_NONNULL(1)
 CGUI_PURE;
 
@@ -250,6 +232,16 @@ CGUI_PURE;
 void
 (*cgui_cell_fn_event(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_event *event)
 CGUI_NONNULL_RETURN
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ *
+ */
+bool
+cgui_cell_is_valid(const cgui_cell *cell)
 CGUI_NONNULL(1)
 CGUI_PURE;
 

@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <cassette/cobj.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdlib.h>
