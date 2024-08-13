@@ -220,9 +220,6 @@ static const struct _resource _resources[] =
 	{ "window",   "border_thickness",            LENGTH,    &_config.window_border                    },
 	{ "window",   "padding",                     LENGTH,    &_config.window_padding                   },
 	{ "window",   "color_background",            COLOR,     &_config.window_color_background          },
-	{ "window",   "color_background_disabled",   COLOR,     &_config.window_color_background_disabled },
-	{ "window",   "color_background_focused",    COLOR,     &_config.window_color_background_focused  },
-	{ "window",   "color_background_locked",     COLOR,     &_config.window_color_background_locked   },
 	{ "window",   "color_border",                COLOR,     &_config.window_color_border              },
 	{ "window",   "color_border_disabled",       COLOR,     &_config.window_color_border_disabled     },
 	{ "window",   "color_border_focused",        COLOR,     &_config.window_color_border_focused      },
@@ -448,7 +445,7 @@ _fetch(const struct _resource *resource)
 			break;
 
 		case LENGTH:
-			*(int*)resource->target = util_str_to_long(str, 0, INT16_MAX);
+			*(int*)resource->target = util_str_to_long(str, 0, UINT16_MAX);
 			break;
 
 		case LONG:
@@ -456,7 +453,7 @@ _fetch(const struct _resource *resource)
 			break;
 
 		case ULONG:
-			*(unsigned long*)resource->target = util_str_to_long(str, 0, ULONG_MAX);
+			*(unsigned long*)resource->target = util_str_to_long(str, 0, LONG_MAX);
 			break;
 
 		case DOUBLE:

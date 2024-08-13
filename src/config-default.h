@@ -55,14 +55,11 @@ static const struct cgui_config config_default =
 
 	/* window */
 
-	.window_color_background          = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.window_color_background_disabled = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.window_color_background_focused  = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.window_color_background_locked   = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.window_color_border              = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.window_color_border_disabled     = { .r = 0.400, .g = 0.400, .b = 0.400, .a = 1.000 },
-	.window_color_border_focused      = { .r = 0.671, .g = 0.671, .b = 0.671, .a = 1.000 },
-	.window_color_border_locked       = { .r = 0.500, .g = 0.100, .b = 0.100, .a = 1.000 },
+	.window_color_background      = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.window_color_border          = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.window_color_border_disabled = { .r = 0.400, .g = 0.400, .b = 0.400, .a = 1.000 },
+	.window_color_border_focused  = { .r = 0.671, .g = 0.671, .b = 0.671, .a = 1.000 },
+	.window_color_border_locked   = { .r = 0.500, .g = 0.100, .b = 0.100, .a = 1.000 },
 
 	.window_border   = 2,
 	.window_padding  = 10,

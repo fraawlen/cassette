@@ -20,12 +20,24 @@
 
 #pragma once
 
+#include <cairo/cairo.h>
 #include <cassette/cgui.h>
 #include <stdbool.h>
 
 /************************************************************************************************************/
 /* TYPES ****************************************************************************************************/
 /************************************************************************************************************/
+
+enum window_draw_level
+{
+	WINDOW_DRAW_NONE    = 0,
+	WINDOW_DRAW_BORDERS = 1, /* borders                      */
+	WINDOW_DRAW_CELLS   = 2, /* cells                        */
+	WINDOW_DRAW_BOTH    = 3, /* borders + cells              */
+	WINDOW_DRAW_FULL    = 4, /* borders + cells + background */
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct cgui_window
 {
@@ -36,18 +48,24 @@ struct cgui_window
 	uint16_t width;
 	uint16_t height;
 
-	/* xcb stuff */
+	/* backend stuff */
 
+	uint32_t x_serial;
 	xcb_window_t x_id;
+	cairo_surface_t *surface;
+	cairo_t *drawable;
 
 	/* callbacks */
 
 	void (*fn_close) (cgui_window *);
+	void (*fn_draw)  (cgui_window *);
 	void (*fn_state) (cgui_window *, enum cgui_window_state_mask);
 
 	/* states */
 
 	struct cgui_window_state_flags state;
+	enum window_draw_level draw;
+	bool wait_present;
 	bool valid;
 };
 
@@ -64,7 +82,31 @@ CGUI_NONNULL(1);
 /************************************************************************************************************/
 
 void
+window_draw(cgui_window *window)
+CGUI_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 window_present(cgui_window *window)
+CGUI_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+window_repair(cgui_window *window)
+CGUI_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+window_resize(cgui_window *window, uint16_t width, uint16_t height)
+CGUI_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+window_set_draw_level(cgui_window *window, enum window_draw_level draw)
 CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

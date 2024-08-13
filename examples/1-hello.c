@@ -33,6 +33,7 @@
 /************************************************************************************************************/
 
 static void _on_close (cgui_window *);
+static void _on_draw  (cgui_window *);
 static void _on_state (cgui_window *, enum cgui_window_state_mask);
 
 /************************************************************************************************************/
@@ -74,6 +75,7 @@ static cgui_window *_window = CGUI_WINDOW_PLACEHOLDER;
 	/* Window setup */
 
 	cgui_window_rename(_window, "Hi");
+	cgui_window_on_draw(_window, _on_draw);
 	cgui_window_on_close(_window, _on_close);
 	cgui_window_on_state(_window, _on_state);
 	cgui_window_activate(_window);
@@ -108,6 +110,16 @@ _on_close(cgui_window *window)
 	cgui_window_deactivate(window);
 	
 	printf("window closed\n");
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_on_draw(cgui_window *window)
+{
+	(void)window;
+
+	printf("window redrawn\n");
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

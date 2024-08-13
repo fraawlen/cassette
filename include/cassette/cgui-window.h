@@ -20,7 +20,9 @@
 
 #pragma once
 
+#include <cairo/cairo.h>
 #include <stdbool.h>
+#include <xcb/xcb.h>
 
 #include "cgui-attributes.h"
 
@@ -127,7 +129,21 @@ CGUI_NONNULL(1);
  *
  */
 void
+cgui_window_on_draw(cgui_window *window, void (*fn)(cgui_window *window))
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
 cgui_window_on_state(cgui_window *window, void (*fn)(cgui_window *window, enum cgui_window_state_mask mask))
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_window_redraw(cgui_window *window)
 CGUI_NONNULL(1);
 
 /**
@@ -144,6 +160,30 @@ CGUI_NONNULL(1, 2);
 /**
  *
  */
+cairo_t *
+cgui_window_cairo_drawable(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+cairo_surface_t *
+cgui_window_cairo_surface(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+uint16_t
+cgui_window_height(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
 bool
 cgui_window_is_valid(const cgui_window *window)
 CGUI_NONNULL(1)
@@ -154,6 +194,38 @@ CGUI_PURE;
  */
 struct cgui_window_state_flags
 cgui_window_state(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+uint16_t
+cgui_window_width(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+int16_t
+cgui_window_x(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+xcb_window_t
+cgui_window_x11_id(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+int16_t
+cgui_window_y(const cgui_window *window)
 CGUI_NONNULL(1)
 CGUI_PURE;
 

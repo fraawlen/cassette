@@ -132,9 +132,6 @@ struct cgui_config
 	/* window */
 
 	struct ccolor window_color_background;
-	struct ccolor window_color_background_disabled;
-	struct ccolor window_color_background_focused;
-	struct ccolor window_color_background_locked;
 	struct ccolor window_color_border;
 	struct ccolor window_color_border_disabled;
 	struct ccolor window_color_border_focused;
@@ -170,7 +167,7 @@ struct cgui_config
 	bool cell_auto_lock;
 	bool input_persistent_pointer;
 	bool input_persistent_touch;
-	long anim_divider;
+	unsigned long anim_divider;
 
 	/* input swaps */
 

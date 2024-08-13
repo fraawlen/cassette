@@ -69,6 +69,11 @@ x11_window_destroy(xcb_window_t id);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+x11_window_present(xcb_window_t id, uint32_t serial);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 x11_window_rename(xcb_window_t id, const char *name);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -87,3 +92,8 @@ x11_connection(void);
 
 xcb_window_t
 x11_leader_window(void);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+xcb_visualtype_t *
+x11_visual(void);

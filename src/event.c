@@ -29,11 +29,18 @@
 /************************************************************************************************************/
 
 static void _accelerate           (struct cgui_event *) CGUI_NONNULL(1);
+static void _button_press         (struct cgui_event *) CGUI_NONNULL(1);
+static void _button_release       (struct cgui_event *) CGUI_NONNULL(1);
 static void _close                (struct cgui_event *) CGUI_NONNULL(1);
 static void _dummy_callback_event (struct cgui_event *) CGUI_NONNULL(1);
 static void _focus                (struct cgui_event *) CGUI_NONNULL(1);
+static void _key_press            (struct cgui_event *) CGUI_NONNULL(1);
+static void _key_release          (struct cgui_event *) CGUI_NONNULL(1);
+static void _leave                (struct cgui_event *) CGUI_NONNULL(1);
 static void _map                  (struct cgui_event *) CGUI_NONNULL(1);
+static void _pointer              (struct cgui_event *) CGUI_NONNULL(1);
 static void _reconfig             (void);
+static void _redraw               (struct cgui_event *) CGUI_NONNULL(1);
 static void _touch_begin          (struct cgui_event *) CGUI_NONNULL(1);
 static void _touch_end            (struct cgui_event *) CGUI_NONNULL(1);
 static void _touch_update         (struct cgui_event *) CGUI_NONNULL(1);
@@ -117,8 +124,36 @@ event_process(struct cgui_event *event)
 			_touch_end(event);
 			break;
 
-		case CGUI_EVENT_NONE:
+		case CGUI_EVENT_BUTTON_PRESS:
+			_button_press(event);
+			break;
+
+		case CGUI_EVENT_BUTTON_RELEASE:
+			_button_release(event);
+			break;
+
+		case CGUI_EVENT_KEY_PRESS:
+			_key_press(event);
+			break;
+
+		case CGUI_EVENT_KEY_RELEASE:
+			_key_release(event);
+			break;
+
+		case CGUI_EVENT_POINTER_MOTION:
+			_pointer(event);
+			break;
+
+		case CGUI_EVENT_LEAVE:
+			_leave(event);
+			break;
+
+		case CGUI_EVENT_REDRAW:
+			_redraw(event);
+
 		case CGUI_EVENT_UNKNOWN_XCB:
+		case CGUI_EVENT_ENTER:
+		case CGUI_EVENT_NONE:
 			break;
 	}
 }
@@ -130,7 +165,36 @@ event_process(struct cgui_event *event)
 static void
 _accelerate(struct cgui_event *event)
 {
-	(void)event;
+	if (!event->window->valid)
+	{
+		return;
+	}
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_button_press(struct cgui_event *event)
+{
+	if (!event->window->valid)
+	{
+		return;
+	}
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_button_release(struct cgui_event *event)
+{
+	if (!event->window->valid)
+	{
+		return;
+	}
 
 	// TODO
 }
@@ -156,7 +220,51 @@ _dummy_callback_event(struct cgui_event *event)
 static void
 _focus(struct cgui_event *event)
 {
+	if (!event->window->valid)
+	{
+		return;
+	}
+
 	window_update_state(event->window, CGUI_WINDOW_FOCUSED, true);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_key_press(struct cgui_event *event)
+{
+	if (!event->window->valid)
+	{
+		return;
+	}
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_key_release(struct cgui_event *event)
+{
+	if (!event->window->valid)
+	{
+		return;
+	}
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_leave(struct cgui_event *event)
+{
+	if (!event->window->valid)
+	{
+		return;
+	}
+
+	// TODO
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -164,7 +272,25 @@ _focus(struct cgui_event *event)
 static void
 _map(struct cgui_event *event)
 {
+	if (!event->window->valid)
+	{
+		return;
+	}
+
 	window_update_state(event->window, CGUI_WINDOW_MAPPED, true);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_pointer(struct cgui_event *event)
+{
+	if (!event->window->valid)
+	{
+		return;
+	}
+
+	// TODO
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -178,9 +304,30 @@ _reconfig(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
+_redraw(struct cgui_event *event)
+{
+	if (!event->window->valid)
+	{
+		return;
+	}
+
+	if (event->redraw_all)
+	{
+		window_set_draw_level(event->window, WINDOW_DRAW_FULL);
+	}
+
+	window_draw(event->window);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 _touch_begin(struct cgui_event *event)
 {
-	(void)event;
+	if (!event->window->valid)
+	{
+		return;
+	}
 
 	// TODO
 }
@@ -190,7 +337,10 @@ _touch_begin(struct cgui_event *event)
 static void
 _touch_end(struct cgui_event *event)
 {
-	(void)event;
+	if (!event->window->valid)
+	{
+		return;
+	}
 
 	// TODO
 }
@@ -200,7 +350,10 @@ _touch_end(struct cgui_event *event)
 static void
 _touch_update(struct cgui_event *event)
 {
-	(void)event;
+	if (!event->window->valid)
+	{
+		return;
+	}
 
 	// TODO
 }
@@ -212,7 +365,7 @@ _transform(struct cgui_event *event)
 {
 	cgui_window *w = event->window;
 
-	if (w == CGUI_WINDOW_PLACEHOLDER)
+	if (!event->window->valid)
 	{
 		return;
 	}
@@ -220,14 +373,16 @@ _transform(struct cgui_event *event)
 	w->x = event->transform_x;
 	w->y = event->transform_y;
 
-	if (w->width  != event->transform_width
-	 || w->height != event->transform_height)
+	if (w->width  == event->transform_width
+	 && w->height == event->transform_height)
 	{
-		w->width  = event->transform_width;
-		w->height = event->transform_height;
-		// TODO update current grid
-		// TODO update wm focus hints
+		return;
 	}
+	
+	window_resize(w, event->transform_width, event->transform_height);
+
+	// TODO update current grid
+	// TODO update wm focus hints
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -235,6 +390,11 @@ _transform(struct cgui_event *event)
 static void
 _unfocus(struct cgui_event *event)
 {
+	if (!event->window->valid)
+	{
+		return;
+	}
+
 	window_update_state(event->window, CGUI_WINDOW_FOCUSED, false);
 
 	// TODO clear all tracked inputs
@@ -245,6 +405,11 @@ _unfocus(struct cgui_event *event)
 static void
 _unmap(struct cgui_event *event)
 {
+	if (!event->window->valid)
+	{
+		return;
+	}
+
 	window_update_state(event->window, CGUI_WINDOW_MAPPED, false);
 
 	// TODO propagate event to cells

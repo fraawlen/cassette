@@ -229,6 +229,11 @@ cgui_repair(void)
 	config_repair();
 
 	_err = CERR_NONE;
+
+	CREF_FOR_EACH(_windows, i)
+	{
+		window_repair((cgui_window*)cref_ptr(_windows, i));
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
