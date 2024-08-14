@@ -27,6 +27,7 @@
 #include <stdlib.h>
 
 #include "cgui-attributes.h"
+#include "cgui-box.h"
 #include "cgui-swap.h"
 
 #ifdef __cplusplus
@@ -131,15 +132,12 @@ struct cgui_config
 
 	/* window */
 
-	struct ccolor window_color_background;
-	struct ccolor window_color_border;
-	struct ccolor window_color_border_disabled;
-	struct ccolor window_color_border_focused;
-	struct ccolor window_color_border_locked;
+	struct cgui_box window_frame;
+	struct cgui_box window_frame_focused;
+	struct cgui_box window_frame_disabled;
+	struct cgui_box window_frame_locked;
 
-	uint16_t window_border;
-	uint16_t window_padding;
-
+	bool window_focus_on_activation;
 	bool window_enable_disabled;
 	bool window_enable_focused;
 	bool window_enable_locked;

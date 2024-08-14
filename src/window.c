@@ -34,12 +34,18 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+/* impure */
+
 static void _cairo_destroy  (cgui_window *)                              CGUI_NONNULL(1);
-static bool _cairo_error    (const cgui_window *)                        CGUI_NONNULL(1);
 static bool _cairo_setup    (cgui_window *, uint16_t, uint16_t)          CGUI_NONNULL(1);
 static void _dummy_fn_close (cgui_window *)                              CGUI_NONNULL(1);
 static void _dummy_fn_draw  (cgui_window *)                              CGUI_NONNULL(1);
 static void _dummy_fn_state (cgui_window *, enum cgui_window_state_mask) CGUI_NONNULL(1);
+
+/* pure */
+
+static struct cgui_box _box         (const cgui_window *) CGUI_NONNULL(1) CGUI_PURE;
+static bool            _cairo_error (const cgui_window *) CGUI_NONNULL(1) CGUI_PURE;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -82,6 +88,10 @@ cgui_window_activate(cgui_window *window)
 
 	x11_window_activate(window->x_id);
 	window_update_state(window, CGUI_WINDOW_ACTIVE, true);
+	if (CONFIG->window_focus_on_activation)
+	{
+		window_update_state(window, CGUI_WINDOW_FOCUSED, true);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -381,7 +391,14 @@ window_destroy(cgui_window *window)
 void
 window_draw(cgui_window *window)
 {
-	struct ccolor cl;
+	struct cgui_zone zone =
+	{
+		.drawable = window->drawable,
+		.x        = 0,
+		.y        = 0,
+		.width    = window->width,
+		.height   = window->height,
+	};
 
 	if (!window->state.mapped || window->draw == WINDOW_DRAW_NONE)
 	{
@@ -394,24 +411,12 @@ window_draw(cgui_window *window)
 
 	if (window->draw == WINDOW_DRAW_FULL)
 	{
-		cl = CONFIG->window_color_background;
-		cairo_set_source_rgba(window->drawable, cl.r, cl.g, cl.b, cl.a);
-		cairo_paint(window->drawable);
-	}
-
-	/* draw border */
-
-	if (window->draw != WINDOW_DRAW_CELLS)
-	{
-		// TODO
+		cgui_box_draw(_box(window), zone);
 	}
 
 	/* draw cells */
 
-	if (window->draw != WINDOW_DRAW_BORDERS)
-	{
-		// TODO
-	}
+	// TODO
 
 	/* check if there is a new draw cycle requested */
 
@@ -482,25 +487,9 @@ window_resize(cgui_window *window, uint16_t width, uint16_t height)
 void
 window_set_draw_level(cgui_window *window, enum window_draw_level draw)
 {
-	if (window->draw == draw || window->draw == WINDOW_DRAW_FULL)
+	if (window->draw < draw)
 	{
-		return;
-	}
-
-	switch (draw)
-	{
-		case WINDOW_DRAW_BORDERS:
-		case WINDOW_DRAW_CELLS:
-			window->draw = window->draw == WINDOW_DRAW_NONE ? draw : WINDOW_DRAW_BOTH;
-			break;
-
-		case WINDOW_DRAW_BOTH:
-		case WINDOW_DRAW_FULL:
-			window->draw = draw;
-			break;
-
-		case WINDOW_DRAW_NONE:
-			break;
+		window->draw = draw;
 	}
 }
 
@@ -557,6 +546,13 @@ window_update_state(cgui_window *window, enum cgui_window_state_mask mask, bool 
 		return;
 	}
 
+	if ((CONFIG->window_enable_locked   && mask == CGUI_WINDOW_LOCKED_GRID)
+	 || (CONFIG->window_enable_disabled && mask == CGUI_WINDOW_DISABLED)
+	 || (CONFIG->window_enable_focused  && mask == CGUI_WINDOW_FOCUSED))
+	{
+		window_set_draw_level(window, WINDOW_DRAW_FULL);	
+	}
+
 	x11_window_update_state_hints(window->x_id, window->state);
 	window->fn_state(window, mask);
 }
@@ -564,6 +560,34 @@ window_update_state(cgui_window *window, enum cgui_window_state_mask mask, bool 
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
+
+static struct cgui_box
+_box(const cgui_window *window)
+{
+	if (!window->state.focused)
+	{
+		return CONFIG->window_frame;
+	}
+
+	if (CONFIG->window_enable_disabled && window->state.disabled)
+	{
+		return CONFIG->window_frame_disabled;
+	}
+
+	if (CONFIG->window_enable_locked && window->state.locked_grid)
+	{
+		return CONFIG->window_frame_locked;
+	}
+
+	if (CONFIG->window_enable_focused)
+	{
+		return CONFIG->window_frame_focused;
+	}
+
+	return CONFIG->window_frame;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
 _cairo_destroy(cgui_window *window)

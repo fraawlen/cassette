@@ -31,10 +31,8 @@
 enum window_draw_level
 {
 	WINDOW_DRAW_NONE    = 0,
-	WINDOW_DRAW_BORDERS = 1, /* borders                      */
-	WINDOW_DRAW_CELLS   = 2, /* cells                        */
-	WINDOW_DRAW_BOTH    = 3, /* borders + cells              */
-	WINDOW_DRAW_FULL    = 4, /* borders + cells + background */
+	WINDOW_DRAW_PARTIAL = 1, /* cells              */
+	WINDOW_DRAW_FULL    = 2, /* cells + background */
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

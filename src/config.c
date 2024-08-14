@@ -41,13 +41,14 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define STYLE_CELL(NAMESPACE, TARGET) \
-	{ NAMESPACE, "border_thickness",  LENGTH, &TARGET.thickness_border  }, \
-	{ NAMESPACE, "outline_thickness", LENGTH, &TARGET.thickness_outline }, \
-	{ NAMESPACE, "margin",            LENGTH, &TARGET.margin            }, \
-	{ NAMESPACE, "color_background",  COLOR,  &TARGET.color_background  }, \
-	{ NAMESPACE, "color_border",      COLOR,  &TARGET.color_border      }, \
-	{ NAMESPACE, "color_outline",     COLOR,  &TARGET.color_outline     },
+#define BOX(NAMESPACE, STATE, TARGET) \
+	{ NAMESPACE, #STATE "corner_style",     CORNER_TYPE, &TARGET                  }, \
+	{ NAMESPACE, #STATE "corner_size",      CORNER_SIZE, &TARGET                  }, \
+	{ NAMESPACE, #STATE "thickness",        LENGTH,      &TARGET.thickness        }, \
+	{ NAMESPACE, #STATE "padding",          LENGTH,      &TARGET.padding          }, \
+	{ NAMESPACE, #STATE "color_border",     COLOR,       &TARGET.color_border     }, \
+	{ NAMESPACE, #STATE "color_background", COLOR,       &TARGET.color_background }, \
+	{ NAMESPACE, #STATE "outer_shaping",    BOOL,        &TARGET.outer_shaping    },
 
 #define KEY(VALUE) \
 	{ "key",     #VALUE, MAP_KEY, &_config.keys[VALUE][CGUI_CONFIG_SWAP_DIRECT] }, \
@@ -86,6 +87,8 @@ enum _value
 
 	/* composite */
 
+	CORNER_TYPE,
+	CORNER_SIZE,
 	MAP_KEY,
 	MAP_BUTTON,
 };
@@ -116,8 +119,10 @@ struct _resource
 static void _dummy_fn_load (ccfg *)                                    CGUI_NONNULL(1);
 static void _fetch         (const struct _resource *)                  CGUI_NONNULL(1);
 static void _fill          (void);
+static void _scale_box     (struct cgui_box *)                         CGUI_NONNULL(1);
 static void _scale_len     (uint16_t *)                                CGUI_NONNULL(1);
 static void _scale_pos     (int16_t  *)                                CGUI_NONNULL(1);
+static void _set_corners   (enum _value, struct cgui_box *)            CGUI_NONNULL(2);
 static void _swap          (const char *, uint8_t, struct cgui_swap *) CGUI_NONNULL(1, 3);
 static void _update_err    (void);
 
@@ -135,7 +140,6 @@ static cdict *_dict                = CDICT_PLACEHOLDER;
 static const struct _word _words[] =
 {
 	{ "mod1",       MOD_KEY,     CGUI_CONFIG_MOD_1                  },
-
 	{ "mod4",       MOD_KEY,     CGUI_CONFIG_MOD_4                  },
 	{ "ctrl",       MOD_KEY,     CGUI_CONFIG_MOD_CTRL               },
 
@@ -191,61 +195,59 @@ static const struct _word _words[] =
 	
 	{ "reconfig",   SWAP_ACTION, CGUI_INPUT_SWAP_RECONFIG           },
 	{ "exit",       SWAP_ACTION, CGUI_INPUT_SWAP_EXIT               },
+
+	{ "straight",   CORNER_TYPE, CGUI_BOX_STRAIGHT                  },
+	{ "chamfer",    CORNER_TYPE, CGUI_BOX_CHAMFER                   },
+	{ "radii",      CORNER_TYPE, CGUI_BOX_RADII                     },
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static const struct _resource _resources[] =
 {
-	{ "global",   "scale",                       UDOUBLE,   &_config.scale                            },
-	{ "global",   "modkey",                      MOD_KEY,   &_config.modkey                           },
+	{ "global",   "scale",                       UDOUBLE,   &_config.scale                          },
+	{ "global",   "modkey",                      MOD_KEY,   &_config.modkey                         },
 
-	{ "font",     "face",                        STRING,     _config.font_face                        },
-	{ "font",     "size",                        LENGTH,    &_config.font_size                        },
-	{ "font",     "horizontal_spacing",          LENGTH,    &_config.font_spacing_horizontal          },
-	{ "font",     "vertical_spacing",            LENGTH,    &_config.font_spacing_vertical            },
-	{ "font",     "width_override",              LENGTH,    &_config.font_override_width              },
-	{ "font",     "ascent_override",             LENGTH,    &_config.font_override_ascent             },
-	{ "font",     "descent_override",            LENGTH,    &_config.font_override_descent            },
-	{ "font",     "x_offset",                    POSITION,  &_config.font_offset_x                    },
-	{ "font",     "y_offset",                    POSITION,  &_config.font_offset_y                    },
-	{ "font",     "enable_overrides",            BOOL,      &_config.font_enable_overrides            },
-	{ "font",     "enable_hint_metrics",         BOOL,      &_config.font_enable_hint_metrics         },
-	{ "font",     "antialias_mode",              ANTIALIAS, &_config.font_antialias                   },
-	{ "font",     "subpixel_mode",               SUBPIXEL,  &_config.font_subpixel                    },
+	{ "font",     "face",                        STRING,     _config.font_face                      },
+	{ "font",     "size",                        LENGTH,    &_config.font_size                      },
+	{ "font",     "horizontal_spacing",          LENGTH,    &_config.font_spacing_horizontal        },
+	{ "font",     "vertical_spacing",            LENGTH,    &_config.font_spacing_vertical          },
+	{ "font",     "width_override",              LENGTH,    &_config.font_override_width            },
+	{ "font",     "ascent_override",             LENGTH,    &_config.font_override_ascent           },
+	{ "font",     "descent_override",            LENGTH,    &_config.font_override_descent          },
+	{ "font",     "x_offset",                    POSITION,  &_config.font_offset_x                  },
+	{ "font",     "y_offset",                    POSITION,  &_config.font_offset_y                  },
+	{ "font",     "enable_overrides",            BOOL,      &_config.font_enable_overrides          },
+	{ "font",     "enable_hint_metrics",         BOOL,      &_config.font_enable_hint_metrics       },
+	{ "font",     "antialias_mode",              ANTIALIAS, &_config.font_antialias                 },
+	{ "font",     "subpixel_mode",               SUBPIXEL,  &_config.font_subpixel                  },
 
-	{ "grid",     "padding",                     LENGTH,    &_config.grid_padding                     },
-	{ "grid",     "spacing",                     LENGTH,    &_config.grid_spacing                     },
+	{ "grid",     "padding",                     LENGTH,    &_config.grid_padding                   },
+	{ "grid",     "spacing",                     LENGTH,    &_config.grid_spacing                   },
 
-	{ "window",   "border_thickness",            LENGTH,    &_config.window_border                    },
-	{ "window",   "padding",                     LENGTH,    &_config.window_padding                   },
-	{ "window",   "color_background",            COLOR,     &_config.window_color_background          },
-	{ "window",   "color_border",                COLOR,     &_config.window_color_border              },
-	{ "window",   "color_border_disabled",       COLOR,     &_config.window_color_border_disabled     },
-	{ "window",   "color_border_focused",        COLOR,     &_config.window_color_border_focused      },
-	{ "window",   "color_border_locked",         COLOR,     &_config.window_color_border_locked       },
-	{ "window",   "enable_disabled_substyle",    BOOL,      &_config.window_enable_disabled           },
-	{ "window",   "enable_focused_substyle",     BOOL,      &_config.window_enable_focused            },
-	{ "window",   "enable_locked_substyle",      BOOL,      &_config.window_enable_locked             },
+	{ "window",   "enable_disabled_substyle",    BOOL,      &_config.window_enable_disabled         },
+	{ "window",   "enable_focused_substyle",     BOOL,      &_config.window_enable_focused          },
+	{ "window",   "enable_locked_substyle",      BOOL,      &_config.window_enable_locked           },
+	{ "window",   "focus_on_activation",         BOOL,      &_config.window_focus_on_activation     },
 
-	{ "popup",    "border_thickness",            LENGTH,    &_config.popup_border                     },
-	{ "popup",    "padding",                     LENGTH,    &_config.popup_padding                    },
-	{ "popup",    "color_background",            COLOR,     &_config.popup_color_background           },
-	{ "popup",    "color_border",                COLOR,     &_config.popup_color_border               },
-	{ "popup",    "max_width",                   LENGTH,    &_config.popup_max_width                  },
-	{ "popup",    "max_height",                  LENGTH,    &_config.popup_max_height                 },
-	{ "popup",    "width_override",              LENGTH,    &_config.popup_override_width             },
-	{ "popup",    "height_override",             LENGTH,    &_config.popup_override_height            },
-	{ "popup",    "x_position_override",         POSITION,  &_config.popup_override_x                 },
-	{ "popup",    "y_position_override",         POSITION,  &_config.popup_override_y                 },
-	{ "popup",    "enable_position_overrides",   BOOL,      &_config.popup_enable_override_position   },
-	{ "popup",    "enable_width_override",       BOOL,      &_config.popup_enable_override_width      },
-	{ "popup",    "ennable_height_override",     BOOL,      &_config.popup_enable_override_height     },
+	{ "popup",    "border_thickness",            LENGTH,    &_config.popup_border                   },
+	{ "popup",    "padding",                     LENGTH,    &_config.popup_padding                  },
+	{ "popup",    "color_background",            COLOR,     &_config.popup_color_background         },
+	{ "popup",    "color_border",                COLOR,     &_config.popup_color_border             },
+	{ "popup",    "max_width",                   LENGTH,    &_config.popup_max_width                },
+	{ "popup",    "max_height",                  LENGTH,    &_config.popup_max_height               },
+	{ "popup",    "width_override",              LENGTH,    &_config.popup_override_width           },
+	{ "popup",    "height_override",             LENGTH,    &_config.popup_override_height          },
+	{ "popup",    "x_position_override",         POSITION,  &_config.popup_override_x               },
+	{ "popup",    "y_position_override",         POSITION,  &_config.popup_override_y               },
+	{ "popup",    "enable_position_overrides",   BOOL,      &_config.popup_enable_override_position },
+	{ "popup",    "enable_width_override",       BOOL,      &_config.popup_enable_override_width    },
+	{ "popup",    "ennable_height_override",     BOOL,      &_config.popup_enable_override_height   },
 	
-	{ "behavior", "enable_cell_auto_lock",       BOOL,      &_config.cell_auto_lock                   },
-	{ "behavior", "enable_persistent_pointer",   BOOL,      &_config.input_persistent_pointer         },
-	{ "behavior", "enable_persistent_touch",     BOOL,      &_config.input_persistent_touch           },
-	{ "behavior", "animation_framerate_divider", ULONG,     &_config.anim_divider                     },
+	{ "behavior", "enable_cell_auto_lock",       BOOL,      &_config.cell_auto_lock                 },
+	{ "behavior", "enable_persistent_pointer",   BOOL,      &_config.input_persistent_pointer       },
+	{ "behavior", "enable_persistent_touch",     BOOL,      &_config.input_persistent_touch         },
+	{ "behavior", "animation_framerate_divider", ULONG,     &_config.anim_divider                   },
 
 	KEY(  1) KEY(  2) KEY(  3) KEY(  4) KEY(  5) KEY(  6) KEY(  7) KEY(  8) KEY(  9) KEY( 10)
 	KEY( 11) KEY( 12) KEY( 13) KEY( 14) KEY( 15) KEY( 16) KEY( 17) KEY( 18) KEY( 19) KEY( 20)
@@ -263,6 +265,12 @@ static const struct _resource _resources[] =
 
 	BUTTON( 1) BUTTON( 2) BUTTON( 3) BUTTON( 4) BUTTON( 5) BUTTON( 6) BUTTON( 7) BUTTON( 8)
 	BUTTON( 9) BUTTON(10) BUTTON(11) BUTTON(12)
+
+	BOX("window", ,          _config.window_frame)
+	BOX("window", default_,  _config.window_frame)
+	BOX("window", focused_,  _config.window_frame_focused)
+	BOX("window", disabled_, _config.window_frame_disabled)
+	BOX("window", locked_,   _config.window_frame_locked)
 };
 
 /************************************************************************************************************/
@@ -363,13 +371,13 @@ config_load(void)
 	_scale_len(&_config.font_override_width);
 	_scale_len(&_config.grid_padding);
 	_scale_len(&_config.grid_spacing);
-	_scale_len(&_config.window_border);
-	_scale_len(&_config.window_padding);
 	_scale_len(&_config.popup_border);
 	_scale_len(&_config.popup_padding);
 
 	_scale_pos(&_config.font_offset_x);
 	_scale_pos(&_config.font_offset_y);
+
+	_scale_box(&_config.window_frame);
 
 	_fill();
 	_fn_load(_parser);
@@ -437,15 +445,15 @@ _fetch(const struct _resource *resource)
 			break;
 
 		case BOOL:
-			*(bool*)resource->target = fabs(strtod(str, NULL)) < DBL_EPSILON;
+			*(bool*)resource->target = !(fabs(strtod(str, NULL)) < DBL_EPSILON);
 			break;
 
 		case POSITION:
-			*(int*)resource->target = util_str_to_long(str, INT16_MIN, INT16_MAX);
+			*(int16_t*)resource->target = util_str_to_long(str, INT16_MIN, INT16_MAX);
 			break;
 
 		case LENGTH:
-			*(int*)resource->target = util_str_to_long(str, 0, UINT16_MAX);
+			*(uint16_t*)resource->target = util_str_to_long(str, 0, UINT16_MAX);
 			break;
 
 		case LONG:
@@ -482,6 +490,14 @@ _fetch(const struct _resource *resource)
 			_swap(str, CGUI_CONFIG_BUTTONS, (struct cgui_swap*)resource->target);
 			break;
 
+		case CORNER_TYPE:
+			_set_corners(CORNER_TYPE, (struct cgui_box*)resource->target);
+			break;
+
+		case CORNER_SIZE:
+			_set_corners(CORNER_SIZE, (struct cgui_box*)resource->target);
+			break;
+
 		default:
 			return;
 	}
@@ -497,6 +513,17 @@ _fill(void)
 	cairo_text_extents_t t_e;
 	cairo_surface_t *c_srf;
 	cairo_t *c_ctx;
+
+	/* set window frame invariants */
+
+	_config.window_frame.outer_shaping          = false;
+	_config.window_frame_focused.outer_shaping  = false;
+	_config.window_frame_disabled.outer_shaping = false;
+	_config.window_frame_locked.outer_shaping   = false;
+
+	_config.window_frame_focused.padding  = _config.window_frame.padding;
+	_config.window_frame_locked.padding   = _config.window_frame.padding;
+	_config.window_frame_disabled.padding = _config.window_frame.padding;
 
 	/* get font geometry with cairo */
 
@@ -548,6 +575,19 @@ skip_auto_font:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
+_scale_box(struct cgui_box *box)
+{
+	_scale_len(&box->corner_size[0]);
+	_scale_len(&box->corner_size[1]);
+	_scale_len(&box->corner_size[2]);
+	_scale_len(&box->corner_size[3]);
+	_scale_len(&box->thickness);
+	_scale_len(&box->padding);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 _scale_len(uint16_t *val)
 {
 	struct cseg seg = CSEG_U16; 
@@ -567,6 +607,57 @@ _scale_pos(int16_t *val)
 	seg.length = *val;
 	cseg_scale(&seg, _config.scale);
 	*val = seg.length;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_set_corners(enum _value variant, struct cgui_box *box)
+{
+	const char *str;
+	size_t tmp;
+	size_t n = 0;
+
+	/* fill array values */
+
+	do
+	{
+		str = ccfg_resource(_parser);
+		switch (variant)
+		{
+			case CORNER_TYPE:
+				cdict_find(_dict, str, CORNER_TYPE, &tmp);
+				box->corner_type[n] = tmp;
+				break;
+
+			case CORNER_SIZE:
+				box->corner_size[n] = util_str_to_long(str, 0, UINT16_MAX);
+				break;
+
+			default:
+				return;
+		}
+	}
+	while (++n < 4 && ccfg_iterate(_parser));
+
+	/* fill remaining value with last set value */
+
+	for (size_t i = n--; i < 4; i++)
+	{
+		switch (variant)
+		{
+			case CORNER_TYPE:
+				box->corner_type[i] = box->corner_type[n];
+				break;
+
+			case CORNER_SIZE:
+				box->corner_size[i] = box->corner_size[n];
+				break;
+
+			default:
+				return;
+		}
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
