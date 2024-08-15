@@ -44,14 +44,11 @@ typedef struct cgui_window cgui_window;
 /**
  *
  */
-struct cgui_window_state_flags
+enum cgui_window_type
 {
-	bool active;
-	bool mapped;
-	bool focused;
-	bool disabled;
-	bool locked_grid;
-	bool locked_focus;
+	CGUI_WINDOW_NORMAL,
+	CGUI_WINDOW_DESKTOP,
+	CGUI_WINDOW_OVERLAY,
 };
 
 /**
@@ -65,6 +62,19 @@ enum cgui_window_state_mask
 	CGUI_WINDOW_DISABLED,
 	CGUI_WINDOW_LOCKED_GRID,
 	CGUI_WINDOW_LOCKED_FOCUS,
+};
+
+/**
+ *
+ */
+struct cgui_window_state_flags
+{
+	bool active;
+	bool mapped;
+	bool focused;
+	bool disabled;
+	bool locked_grid;
+	bool locked_focus;
 };
 
 /************************************************************************************************************/
@@ -132,6 +142,13 @@ CGUI_NONNULL(1);
  */
 void
 cgui_window_enable(cgui_window *window)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_window_move(cgui_window *window, int16_t x, int16_t y)
 CGUI_NONNULL(1);
 
 /**
@@ -215,8 +232,22 @@ CGUI_NONNULL(1);
  *
  */
 void
+cgui_window_resize(cgui_window *window, uint16_t width, uint16_t height)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
 cgui_window_set_accelerator(cgui_window *window, int id, const char *name, void (*fn)(cgui_window *window, int id))
 CGUI_NONNULL(1, 3);
+
+/**
+ *
+ */
+void
+cgui_window_set_type(cgui_window *window, enum cgui_window_type type)
+CGUI_NONNULL(1);
 
 /**
  *

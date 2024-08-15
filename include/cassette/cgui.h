@@ -33,6 +33,7 @@
 #include "cgui-config.h"
 #include "cgui-event.h"
 #include "cgui-grid.h"
+#include "cgui-screen.h"
 #include "cgui-swap.h"
 #include "cgui-window.h"
 #include "cgui-zone.h"

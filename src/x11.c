@@ -126,24 +126,28 @@ static xcb_window_t       _win_leader = 0;
 
 /* common atoms */
 
-static xcb_atom_t _atom_clip = 0; /* "CLIPBOARD"         */
-static xcb_atom_t _atom_time = 0; /* "TIMESTAMP"         */
-static xcb_atom_t _atom_mult = 0; /* "MULTIPLE"          */
-static xcb_atom_t _atom_trgt = 0; /* "TARGETS"           */
-static xcb_atom_t _atom_utf8 = 0; /* "UTF8_STRING"       */
-static xcb_atom_t _atom_prot = 0; /* "WM_PROTOCOLS"      */
-static xcb_atom_t _atom_del  = 0; /* "WM_DELETE_WINDOW"  */
-static xcb_atom_t _atom_foc  = 0; /* "WM_TAKE_FOCUS"     */
-static xcb_atom_t _atom_nam  = 0; /* "WM_NAME"           */
-static xcb_atom_t _atom_ico  = 0; /* "WM_ICON_MANE"      */
-static xcb_atom_t _atom_cls  = 0; /* "WM_CLASS"          */
-static xcb_atom_t _atom_cmd  = 0; /* "WM_COMMAND"        */
-static xcb_atom_t _atom_host = 0; /* "WM_CLIENT_MACHINE" */
-static xcb_atom_t _atom_lead = 0; /* "WM_CLIENT_LEADER"  */
-static xcb_atom_t _atom_ping = 0; /* "_NET_WM_PING"      */
-static xcb_atom_t _atom_pid  = 0; /* "_NET_WM_PID"       */
-static xcb_atom_t _atom_nnam = 0; /* "_NET_WM_NAME"      */
-static xcb_atom_t _atom_nico = 0; /* "_NET_WM_ICON_NAME" */
+static xcb_atom_t _atom_clip = 0; /* "CLIPBOARD"                   */
+static xcb_atom_t _atom_time = 0; /* "TIMESTAMP"                   */
+static xcb_atom_t _atom_mult = 0; /* "MULTIPLE"                    */
+static xcb_atom_t _atom_trgt = 0; /* "TARGETS"                     */
+static xcb_atom_t _atom_utf8 = 0; /* "UTF8_STRING"                 */
+static xcb_atom_t _atom_prot = 0; /* "WM_PROTOCOLS"                */
+static xcb_atom_t _atom_del  = 0; /* "WM_DELETE_WINDOW"            */
+static xcb_atom_t _atom_foc  = 0; /* "WM_TAKE_FOCUS"               */
+static xcb_atom_t _atom_nam  = 0; /* "WM_NAME"                     */
+static xcb_atom_t _atom_ico  = 0; /* "WM_ICON_MANE"                */
+static xcb_atom_t _atom_cls  = 0; /* "WM_CLASS"                    */
+static xcb_atom_t _atom_cmd  = 0; /* "WM_COMMAND"                  */
+static xcb_atom_t _atom_host = 0; /* "WM_CLIENT_MACHINE"           */
+static xcb_atom_t _atom_lead = 0; /* "WM_CLIENT_LEADER"            */
+static xcb_atom_t _atom_ping = 0; /* "_NET_WM_PING"                */
+static xcb_atom_t _atom_pid  = 0; /* "_NET_WM_PID"                 */
+static xcb_atom_t _atom_nnam = 0; /* "_NET_WM_NAME"                */
+static xcb_atom_t _atom_nico = 0; /* "_NET_WM_ICON_NAME"           */
+static xcb_atom_t _atom_wtyp = 0; /* "_NET_WM_WINDOW_TYPE"         */
+static xcb_atom_t _atom_wnom = 0; /* "_NET_WM_WINDOW_TYPE_NORMAL"  */
+static xcb_atom_t _atom_wdsk = 0; /* "_NET_WM_WINDOW_TYPE_DESKTOP" */
+static xcb_atom_t _atom_wovr = 0; /* "_NET_WM_WINDOW_TYPE_OVERLAY" */
 
 /* CGUI custom atoms */
 
@@ -330,6 +334,10 @@ x11_init(int argc, char **argv, const char *class_name, const char *class_class,
 	_atom_nnam = _get_atom("_NET_WM_NAME");
 	_atom_nico = _get_atom("_NET_WM_ICON_NAME");
 	_atom_isig = _get_atom("_INTERNAL_LOOP_SIGNAL");
+	_atom_wtyp = _get_atom("_NET_WM_WINDOW_TYPE");
+	_atom_wnom = _get_atom("_NET_WM_WINDOW_TYPE_NORMAL");
+	_atom_wdsk = _get_atom("_NET_WM_WINDOW_TYPE_DESKTOP");
+	_atom_wovr = _get_atom("_NET_WM_WINDOW_TYPE_DOCK");
 
 	_atom_sig  = _get_atom(_ATOM_SIGNALS);
 	_atom_vers = _get_atom(_ATOM_VERSION);
@@ -444,6 +452,52 @@ x11_reset(bool kill_connection)
 		}
 		_connection = NULL;
 	}	
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct cgui_screen
+x11_screen(size_t i, size_t *n, size_t *primary)
+{
+	xcb_randr_get_monitors_cookie_t xc;
+	xcb_randr_get_monitors_reply_t *xr;
+	xcb_randr_monitor_info_iterator_t xi;
+	struct cgui_screen screen = {0};
+
+	*primary = 0;
+	*n = 0;
+	xc = xcb_randr_get_monitors(_connection, _screen->root, 1);
+	xr = xcb_randr_get_monitors_reply(_connection, xc, NULL);
+	if (!xr)
+	{
+		main_set_error(CERR_XCB);
+		return screen;
+	}
+
+	*n = xcb_randr_get_monitors_monitors_length(xr);
+	xi = xcb_randr_get_monitors_monitors_iterator(xr);
+	for (size_t j = 0; xi.rem; j++)
+	{
+		screen.x       = xi.data->x;
+		screen.y       = xi.data->y;
+		screen.width   = xi.data->width;
+		screen.height  = xi.data->height;
+		screen.primary = xi.data->primary;
+		if (screen.primary)
+		{
+			*primary = i;
+		}
+
+		xcb_randr_monitor_info_next(&xi);
+		if (j == i)
+		{
+			break;
+		}
+	}
+
+	free(xr);
+
+	return screen;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -750,6 +804,19 @@ x11_window_destroy(xcb_window_t id)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+x11_window_move(xcb_window_t id, int16_t x, int16_t y)
+{
+	_test_cookie(
+		xcb_configure_window_checked(
+			_connection,
+			id,
+			XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y,
+			(uint32_t[2]){x, y}));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 x11_window_present(xcb_window_t id, uint32_t serial)
 {
 	xcb_present_notify_msc(_connection, id, serial, 0, CONFIG->anim_divider, 0);
@@ -777,6 +844,19 @@ x11_window_rename(xcb_window_t id, const char *name)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+x11_window_resize(xcb_window_t id, uint16_t width, uint16_t height)
+{
+	_test_cookie(
+		xcb_configure_window_checked(
+			_connection,
+			id,
+			XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT,
+			(uint32_t[2]){width, height}));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 x11_window_set_accel(xcb_window_t id, int accel, const char *name)
 {
 	_test_cookie(xcb_delete_property_checked(_connection, id, _atom_aclx[accel]));
@@ -792,6 +872,34 @@ void
 x11_window_set_transient(xcb_window_t id, xcb_window_t id_under)
 {
 	_prop_set(id, XCB_ATOM_WM_TRANSIENT_FOR, XCB_ATOM_WINDOW, 1, &id_under);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_set_type(xcb_window_t id, enum cgui_window_type type)
+{
+	xcb_atom_t atom;
+
+	switch (type)
+	{
+		case CGUI_WINDOW_NORMAL:
+			atom = _atom_wnom;
+			break;
+
+		case CGUI_WINDOW_DESKTOP:
+			atom = _atom_wdsk;
+			break;
+
+		case CGUI_WINDOW_OVERLAY:
+			atom = _atom_wovr;
+			break;
+
+		default:
+			return;
+	}
+
+	_prop_set(id, _atom_wtyp, XCB_ATOM_ATOM, 1, &atom);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1230,6 +1338,7 @@ _get_atom(const char *name)
 	xr = xcb_intern_atom_reply(_connection, xc, NULL);
 	if (!xr)
 	{
+		main_set_error(CERR_XCB);
 		return 0;
 	}
 
@@ -1253,6 +1362,7 @@ _get_extension_opcode(const char *name)
 	xr = xcb_query_extension_reply(_connection, xc, NULL);
 	if (!xr)
 	{
+		main_set_error(CERR_XCB);
 		return 0;
 	}
 

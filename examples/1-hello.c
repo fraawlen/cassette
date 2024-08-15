@@ -46,6 +46,8 @@ static cgui_cell   *_cell   = CGUI_CELL_PLACEHOLDER;
 static cgui_grid   *_grid   = CGUI_GRID_PLACEHOLDER;
 static cgui_window *_window = CGUI_WINDOW_PLACEHOLDER;
 
+static struct cgui_screen _screen;
+
 /************************************************************************************************************/
 /* MAIN *****************************************************************************************************/
 /************************************************************************************************************/
@@ -64,7 +66,8 @@ static cgui_window *_window = CGUI_WINDOW_PLACEHOLDER;
 	_window = cgui_window_create();
 	_grid   = cgui_grid_create(1, 1);
 	_cell   = cgui_cell_create();
-	
+	_screen = cgui_screen_primary_specs();
+
 	/* Cell setup */
 
 	// TODO
@@ -85,6 +88,9 @@ static cgui_window *_window = CGUI_WINDOW_PLACEHOLDER;
 	cgui_window_on_draw(_window, _on_draw);
 	cgui_window_on_close(_window, _on_close);
 	cgui_window_on_state(_window, _on_state);
+	cgui_window_set_type(_window, CGUI_WINDOW_OVERLAY);
+	cgui_window_move(_window, _screen.x, _screen.y);
+	cgui_window_resize(_window, _screen.width, _screen.height / 2);
 	cgui_window_activate(_window);
 
 	/* Run */

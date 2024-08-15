@@ -42,6 +42,12 @@ x11_reset(bool kill_connection);
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
 
+struct cgui_screen
+x11_screen(size_t i, size_t *n, size_t *primary)
+CGUI_NONNULL(2, 3);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 x11_update(void);
 
@@ -69,6 +75,11 @@ x11_window_destroy(xcb_window_t id);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+x11_window_move(xcb_window_t id, int16_t x, int16_t y);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 x11_window_present(xcb_window_t id, uint32_t serial);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -79,12 +90,22 @@ x11_window_rename(xcb_window_t id, const char *name);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+x11_window_resize(xcb_window_t id, uint16_t width, uint16_t height);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 x11_window_set_accel(xcb_window_t id, int accel, const char *name);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 x11_window_set_transient(xcb_window_t id, xcb_window_t id_under);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_set_type(xcb_window_t id, enum cgui_window_type type);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

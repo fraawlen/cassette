@@ -385,6 +385,19 @@ cgui_window_is_valid(const cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cgui_window_move(cgui_window *window, int16_t x, int16_t y)
+{
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+
+	x11_window_move(window->x_id, x, y);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cgui_window_non_urgent(cgui_window *window)
 {
 	if (cgui_error() || !window->valid)
@@ -544,6 +557,27 @@ cgui_window_reset_grid(cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cgui_window_resize(cgui_window *window, uint16_t width, uint16_t height)
+{
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+
+	if (width == 0 || height == 0)
+	{
+		main_set_error(CERR_PARAM);
+		return;
+	}
+
+	// TODO check against min grid
+
+	x11_window_resize(window->x_id, width, height);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cgui_window_set_accelerator(cgui_window *window, int id, const char *name, void (*fn)(cgui_window *window, int id))
 {
 	char *tmp;
@@ -570,6 +604,19 @@ cgui_window_set_accelerator(cgui_window *window, int id, const char *name, void 
 	window->accels[id].fn   = fn;
 
 	x11_window_set_accel(window->x_id, id, fn ? name : NULL);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_set_type(cgui_window *window, enum cgui_window_type type)
+{
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+	
+	x11_window_set_type(window->x_id, type);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
