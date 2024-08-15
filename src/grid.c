@@ -49,6 +49,7 @@ cgui_grid cgui_grid_placeholder_instance =
 	.areas            = CREF_PLACEHOLDER,
 	.ref              = NULL,
 	.valid            = false,
+	.used             = true,
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -166,6 +167,7 @@ cgui_grid_clone(const cgui_grid *grid)
 	grid_new->total_height_inv = grid->total_height_inv; 
 	grid_new->ref              = grid->ref;
 	grid_new->valid            = true;
+	grid_new->valid            = false;
 
 	return grid_new;
 
@@ -350,6 +352,7 @@ cgui_grid_create(size_t cols, size_t rows)
 	grid->total_height_inv = 0; 
 	grid->ref              = CGUI_GRID_PLACEHOLDER;
 	grid->valid            = true;
+	grid->used             = false;
 
 	return grid;
 
@@ -588,10 +591,23 @@ grid_destroy(cgui_grid *grid)
 		free(cref_ptr(grid->areas, i));
 	}
 
-	cref_pull(main_grids(), grid);
+	main_pull_instance(main_grids(), grid);
 	cref_destroy(grid->areas);
-
 	free(grid->cols);
 	free(grid->rows);
 	free(grid);
+}
+
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+grid_repair(cgui_grid *grid)
+{
+	if (!grid->valid)
+	{
+		return;
+	}
+
+	cref_repair(grid->areas);
 }

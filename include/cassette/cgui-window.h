@@ -25,6 +25,8 @@
 #include <xcb/xcb.h>
 
 #include "cgui-attributes.h"
+#include "cgui-cell.h"
+#include "cgui-grid.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -122,6 +124,27 @@ CGUI_NONNULL(1);
  *
  */
 void
+cgui_window_disable(cgui_window *window)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_window_enable(cgui_window *window)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_window_non_urgent(cgui_window *window)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
 cgui_window_on_close(cgui_window *window, void (*fn)(cgui_window *window))
 CGUI_NONNULL(1);
 
@@ -136,8 +159,36 @@ CGUI_NONNULL(1);
  *
  */
 void
+cgui_window_on_focus(cgui_window *window, void (*fn)(cgui_window *window, cgui_cell *cell))
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_window_on_grid(cgui_window *window, void (*fn)(cgui_window *window, cgui_grid *grid))
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
 cgui_window_on_state(cgui_window *window, void (*fn)(cgui_window *window, enum cgui_window_state_mask mask))
 CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_window_pull_grid(cgui_window *window, cgui_grid *grid)
+CGUI_NONNULL(1, 2);
+
+/**
+ *
+ */
+void
+cgui_window_push_grid(cgui_window *window, cgui_grid *grid)
+CGUI_NONNULL(1, 2);
 
 /**
  *
@@ -152,6 +203,48 @@ CGUI_NONNULL(1);
 void
 cgui_window_rename(cgui_window *window, const char *name)
 CGUI_NONNULL(1, 2);
+
+/**
+ *
+ */
+void
+cgui_window_reset_grid(cgui_window *window)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_window_set_accelerator(cgui_window *window, int id, const char *name, void (*fn)(cgui_window *window, int id))
+CGUI_NONNULL(1, 3);
+
+/**
+ *
+ */
+void
+cgui_window_swap_grid(cgui_window *window, cgui_grid *grid_1, cgui_grid *grid_2)
+CGUI_NONNULL(1, 2, 3);
+
+/**
+ *
+ */
+void
+cgui_window_tack(cgui_window *window, cgui_window *window_under)
+CGUI_NONNULL(1, 2);
+
+/**
+ *
+ */
+void
+cgui_window_untack(cgui_window *window)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_window_urgent(cgui_window *window)
+CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
@@ -176,6 +269,31 @@ CGUI_PURE;
 /**
  *
  */
+bool
+cgui_window_can_push_grid(const cgui_window *window, cgui_grid *grid)
+CGUI_NONNULL(1, 2)
+CGUI_PURE;
+
+/**
+ *
+ */
+bool
+cgui_window_can_swap_grid(const cgui_window *window, cgui_grid *grid_1, cgui_grid *grid_2)
+CGUI_NONNULL(1, 2, 3)
+CGUI_PURE;
+
+/**
+ *
+ */
+cgui_cell *
+cgui_window_focused_cell(const cgui_window *window)
+CGUI_NONNULL_RETURN
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
 uint16_t
 cgui_window_height(const cgui_window *window)
 CGUI_NONNULL(1)
@@ -186,6 +304,15 @@ CGUI_PURE;
  */
 bool
 cgui_window_is_valid(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+cgui_grid *
+cgui_window_shown_grid(const cgui_window *window)
+CGUI_NONNULL_RETURN
 CGUI_NONNULL(1)
 CGUI_PURE;
 

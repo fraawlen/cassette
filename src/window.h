@@ -24,6 +24,8 @@
 #include <cassette/cgui.h>
 #include <stdbool.h>
 
+#include "area.h"
+
 /************************************************************************************************************/
 /* TYPES ****************************************************************************************************/
 /************************************************************************************************************/
@@ -33,6 +35,14 @@ enum window_draw_level
 	WINDOW_DRAW_NONE    = 0,
 	WINDOW_DRAW_PARTIAL = 1, /* cells              */
 	WINDOW_DRAW_FULL    = 2, /* cells + background */
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct window_accel
+{
+	char *name;
+	void (*fn)(cgui_window *, int);
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -53,14 +63,24 @@ struct cgui_window
 	cairo_surface_t *surface;
 	cairo_t *drawable;
 
+	/* data */
+
+	char *name;
+	struct window_accel accels[CGUI_CONFIG_ACCELS];
+	cref *grids;
+
 	/* callbacks */
 
 	void (*fn_close) (cgui_window *);
 	void (*fn_draw)  (cgui_window *);
+	void (*fn_focus) (cgui_window *, cgui_cell *);
+	void (*fn_grid)  (cgui_window *, cgui_grid *);
 	void (*fn_state) (cgui_window *, enum cgui_window_state_mask);
 
 	/* states */
 
+	cgui_grid *shown_grid;
+	struct area focus;
 	struct cgui_window_state_flags state;
 	enum window_draw_level draw;
 	bool wait_present;

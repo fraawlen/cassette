@@ -583,8 +583,6 @@ void
 x11_window_activate(xcb_window_t id)
 {
 	_test_cookie(xcb_map_window_checked(_connection, id));
-	
-	xcb_flush(_connection);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -738,8 +736,6 @@ void
 x11_window_deactivate(xcb_window_t id)
 {
 	_test_cookie(xcb_unmap_window_checked(_connection, id));
-	
-	xcb_flush(_connection);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -749,8 +745,6 @@ x11_window_destroy(xcb_window_t id)
 {
 	_test_cookie(xcb_unmap_window_checked(_connection, id));
 	_test_cookie(xcb_destroy_window_checked(_connection, id));
-	
-	xcb_flush(_connection);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -759,8 +753,6 @@ void
 x11_window_present(xcb_window_t id, uint32_t serial)
 {
 	xcb_present_notify_msc(_connection, id, serial, 0, CONFIG->anim_divider, 0);
-	
-	xcb_flush(_connection);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -780,8 +772,75 @@ x11_window_rename(xcb_window_t id, const char *name)
 	_prop_set(id, _atom_ico,  XCB_ATOM_STRING, n, name);
 	_prop_set(id, _atom_nnam, _atom_utf8,      n, name);
 	_prop_set(id, _atom_nnam, _atom_utf8,      n, name);
-	
-	xcb_flush(_connection);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_set_accel(xcb_window_t id, int accel, const char *name)
+{
+	_test_cookie(xcb_delete_property_checked(_connection, id, _atom_aclx[accel]));
+	if (name)
+	{
+		_prop_set(id, _atom_aclx[accel], _atom_utf8, strlen(name), name);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_set_transient(xcb_window_t id, xcb_window_t id_under)
+{
+	_prop_set(id, XCB_ATOM_WM_TRANSIENT_FOR, XCB_ATOM_WINDOW, 1, &id_under);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_set_urgency(xcb_window_t id, bool set_on)
+{
+	xcb_icccm_wm_hints_t *xhints;
+	xcb_get_property_reply_t *xr;
+	xcb_get_property_cookie_t xc;
+
+	xc = xcb_get_property(_connection, 0, id, XCB_ATOM_WM_HINTS, XCB_ATOM_WM_HINTS, 0, UINT32_MAX);
+	xr = xcb_get_property_reply(_connection, xc, NULL);
+	if (!xr)
+	{
+		main_set_error(CERR_XCB);
+		return;
+	}
+
+	xhints = xcb_get_property_value(xr);
+	if (set_on)
+	{
+		xhints->flags |= XCB_ICCCM_WM_HINT_X_URGENCY;
+	}
+	else
+	{
+		xhints->flags &= ~XCB_ICCCM_WM_HINT_X_URGENCY;
+	}
+
+	_prop_set(id, XCB_ATOM_WM_HINTS, XCB_ATOM_WM_HINTS, sizeof(xcb_icccm_wm_hints_t), xhints);
+
+	free(xr);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_update_size_hints(xcb_window_t id, uint16_t min_width, uint16_t min_height, uint16_t max_width, uint16_t max_height)
+{
+	const xcb_size_hints_t xhints =
+	{
+		.flags      = XCB_ICCCM_SIZE_HINT_P_MIN_SIZE | XCB_ICCCM_SIZE_HINT_P_MAX_SIZE,
+		.min_width  = min_width,
+		.min_height = min_height,
+		.max_width  = max_width,
+		.max_height = max_height,
+	};
+
+	_prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &xhints);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -810,8 +869,6 @@ x11_window_update_state_hints(xcb_window_t id, struct cgui_window_state_flags st
 	{
 		_prop_add(id, _atom_stt, XCB_ATOM_ATOM, 1, &_atom_flck);
 	}
-	
-	xcb_flush(_connection);
 }
 
 /************************************************************************************************************/

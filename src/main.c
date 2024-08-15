@@ -234,6 +234,11 @@ cgui_repair(void)
 	{
 		window_repair((cgui_window*)cref_ptr(_windows, i));
 	}
+
+	CREF_FOR_EACH(_grids, i)
+	{
+		grid_repair((cgui_grid*)cref_ptr(_grids, i));
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

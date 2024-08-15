@@ -21,6 +21,7 @@
 #include <cassette/cgui.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -32,6 +33,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static void _on_accel (cgui_window *, int);
 static void _on_close (cgui_window *);
 static void _on_draw  (cgui_window *);
 static void _on_state (cgui_window *, enum cgui_window_state_mask);
@@ -62,8 +64,10 @@ static cgui_window *_window = CGUI_WINDOW_PLACEHOLDER;
 	_window = cgui_window_create();
 	_grid   = cgui_grid_create(1, 1);
 	_cell   = cgui_cell_create();
-
+	
 	/* Cell setup */
+
+	// TODO
 
 	/* Grid setup */
 
@@ -74,7 +78,10 @@ static cgui_window *_window = CGUI_WINDOW_PLACEHOLDER;
 
 	/* Window setup */
 
+	cgui_window_push_grid(_window, _grid);
 	cgui_window_rename(_window, "Hi");
+	cgui_window_set_accelerator(_window, 1, "Hello", _on_accel);
+	cgui_window_set_accelerator(_window, 2, "World", _on_accel);
 	cgui_window_on_draw(_window, _on_draw);
 	cgui_window_on_close(_window, _on_close);
 	cgui_window_on_state(_window, _on_state);
@@ -103,6 +110,16 @@ static cgui_window *_window = CGUI_WINDOW_PLACEHOLDER;
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
+
+static void
+_on_accel(cgui_window *window, int id)
+{
+	(void)window;
+
+	printf("accelerator %i triggered\n", id);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
 _on_close(cgui_window *window)

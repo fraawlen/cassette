@@ -262,7 +262,7 @@ cell_destroy(cgui_cell *cell)
 		return;
 	}
 
-	cref_pull(main_cells(), cell);
+	main_pull_instance(main_cells(), cell);
 	free(cell);
 }
 

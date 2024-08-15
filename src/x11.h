@@ -79,6 +79,26 @@ x11_window_rename(xcb_window_t id, const char *name);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+x11_window_set_accel(xcb_window_t id, int accel, const char *name);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_set_transient(xcb_window_t id, xcb_window_t id_under);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_set_urgency(xcb_window_t id, bool set_on);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_update_size_hints(xcb_window_t id, uint16_t min_width, uint16_t min_height, uint16_t max_width, uint16_t max_height);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 x11_window_update_state_hints(xcb_window_t id, struct cgui_window_state_flags state);
 
 /************************************************************************************************************/

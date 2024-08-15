@@ -24,8 +24,12 @@
 #include <cassette/cobj.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
+#include "area.h"
+#include "cell.h"
 #include "config.h"
+#include "grid.h"
 #include "main.h"
 #include "window.h"
 #include "x11.h"
@@ -38,8 +42,11 @@
 
 static void _cairo_destroy  (cgui_window *)                              CGUI_NONNULL(1);
 static bool _cairo_setup    (cgui_window *, uint16_t, uint16_t)          CGUI_NONNULL(1);
+static void _dummy_fn_accel (cgui_window *, int)                         CGUI_NONNULL(1);
 static void _dummy_fn_close (cgui_window *)                              CGUI_NONNULL(1);
 static void _dummy_fn_draw  (cgui_window *)                              CGUI_NONNULL(1);
+static void _dummy_fn_focus (cgui_window *, cgui_cell *)                 CGUI_NONNULL(1);
+static void _dummy_fn_grid  (cgui_window *, cgui_grid *)                 CGUI_NONNULL(1);
 static void _dummy_fn_state (cgui_window *, enum cgui_window_state_mask) CGUI_NONNULL(1);
 
 /* pure */
@@ -65,13 +72,34 @@ cgui_window cgui_window_placeholder_instance =
 	.x_id         = 0,
 	.surface      = NULL,
 	.drawable     = NULL,
+	.name         = NULL,
+	.grids        = CREF_PLACEHOLDER,
 	.fn_close     = _dummy_fn_close,
 	.fn_draw      = _dummy_fn_draw,
+	.fn_focus     = _dummy_fn_focus,
+	.fn_grid      = _dummy_fn_grid,
 	.fn_state     = _dummy_fn_state,
 	.state        = _default_states,
+	.shown_grid   = CGUI_GRID_PLACEHOLDER,
+	.focus        = {0, 0, 0, 0, CGUI_CELL_PLACEHOLDER},
 	.draw         = WINDOW_DRAW_NONE,
 	.wait_present = false,
 	.valid        = false,
+	.accels       =
+	{
+		{NULL, _dummy_fn_accel},
+		{NULL, _dummy_fn_accel},
+		{NULL, _dummy_fn_accel},
+		{NULL, _dummy_fn_accel},
+		{NULL, _dummy_fn_accel},
+		{NULL, _dummy_fn_accel},
+		{NULL, _dummy_fn_accel},
+		{NULL, _dummy_fn_accel},
+		{NULL, _dummy_fn_accel},
+		{NULL, _dummy_fn_accel},
+		{NULL, _dummy_fn_accel},
+		{NULL, _dummy_fn_accel},
+	}
 };
 
 /************************************************************************************************************/
@@ -81,7 +109,7 @@ cgui_window cgui_window_placeholder_instance =
 void
 cgui_window_activate(cgui_window *window)
 {
-	if (cgui_error() || !window->valid || window->state.active)
+	if (cgui_error() || !window->valid || window->state.active || cref_length(window->grids) == 0)
 	{
 		return;
 	}
@@ -122,6 +150,57 @@ cgui_window_cairo_surface(const cgui_window *window)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+bool
+cgui_window_can_push_grid(const cgui_window *window, cgui_grid *grid)
+{
+	if (cgui_error()
+	 || !window->valid
+	 || !grid->valid
+	 || cref_find(window->grids, grid, NULL)
+	 || cgui_grid_compare_flex((cgui_grid*)cref_ptr(window->grids, 0), grid) == CGUI_GRID_FLEX_DIFFERENT)
+	{
+		return false;
+	}
+
+	CREF_FOR_EACH(window->grids, i)
+	{
+		switch (cgui_grid_compare_size((cgui_grid*)cref_ptr(window->grids, i), grid))
+		{
+			case CGUI_GRID_SIZE_EQUAL:
+			case CGUI_GRID_SIZE_UNDEFINED:
+			case CGUI_GRID_SIZE_INVALID:
+				return false;
+
+			default:
+				break;
+		}
+	}
+
+	return true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+cgui_window_can_swap_grid(const cgui_window *window, cgui_grid *grid_1, cgui_grid *grid_2)
+{
+	if (cgui_error()
+	 || !window->valid
+	 || !grid_1->valid
+	 || !grid_2->valid
+	 ||  grid_2->used
+	 || !cref_find(window->grids, grid_1, NULL)
+	 ||  cref_find(window->grids, grid_2, NULL))
+	{
+		return false;
+	}
+
+	return cgui_grid_compare_flex(grid_1, grid_2) == CGUI_GRID_FLEX_SAME
+	    && cgui_grid_compare_size(grid_1, grid_2) == CGUI_GRID_SIZE_EQUAL;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 cgui_window *
 cgui_window_create(void)
 {
@@ -142,6 +221,11 @@ cgui_window_create(void)
 		goto fail_alloc;
 	}
 
+	if ((window->grids = cref_create()) == CREF_PLACEHOLDER)
+	{
+		goto fail_grids;
+	}
+
 	if (!x11_window_create(&window->x_id, x, y, width, height))
 	{
 		goto fail_backend;
@@ -157,15 +241,28 @@ cgui_window_create(void)
 		goto fail_push;
 	}
 
+	for (size_t i = 0; i < CGUI_CONFIG_ACCELS; i++)
+	{
+		window->accels[i].name = NULL;
+		window->accels[i].fn   = _dummy_fn_accel;
+	}
+
+	cref_set_default_ptr(window->grids, CGUI_GRID_PLACEHOLDER);
+
 	window->x            = x;
 	window->y            = y;
 	window->width        = width;
 	window->height       = height;
 	window->x_serial     = 0;
+	window->name         = NULL;
 	window->fn_close     = _dummy_fn_close;
 	window->fn_draw      = _dummy_fn_draw;
+	window->fn_focus     = _dummy_fn_focus;
+	window->fn_grid      = _dummy_fn_grid;
 	window->fn_state     = _dummy_fn_state;
 	window->state        = _default_states;
+	window->shown_grid   = CGUI_GRID_PLACEHOLDER;
+	window->focus        = AREA_PLACEHOLDER;
 	window->draw         = WINDOW_DRAW_NONE;
 	window->wait_present = false;
 	window->valid        = true;
@@ -179,6 +276,8 @@ fail_push:
 fail_cairo:
 	x11_window_destroy(window->x_id);
 fail_backend:
+	cref_destroy(window->grids);
+fail_grids:
 	free(window);
 fail_alloc:
 	main_set_error(CERR_INSTANCE);
@@ -214,6 +313,51 @@ cgui_window_destroy(cgui_window *window)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void
+cgui_window_disable(cgui_window *window)
+{
+	if (cgui_error() || !window->valid || window->state.disabled)
+	{
+		return;
+	}
+
+	window_update_state(window, CGUI_WINDOW_DISABLED,    true);
+	window_update_state(window, CGUI_WINDOW_LOCKED_GRID, false);
+
+	// TODO set focus
+	// TODO send event to all cells
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_enable(cgui_window *window)
+{
+	if (cgui_error() || !window->valid || !window->state.disabled)
+	{
+		return;
+	}
+
+	window_update_state(window, CGUI_WINDOW_DISABLED,    false);
+
+	// TODO send event to all cells
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cgui_cell *
+cgui_window_focused_cell(const cgui_window *window)
+{
+	if (cgui_error() || !window->valid || !window->focus.cell->valid)
+	{
+		return CGUI_CELL_PLACEHOLDER;
+	}
+
+	return window->focus.cell;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 uint16_t
 cgui_window_height(const cgui_window *window)
 {
@@ -236,6 +380,19 @@ cgui_window_is_valid(const cgui_window *window)
 	}
 
 	return window->valid;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_non_urgent(cgui_window *window)
+{
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+
+	x11_window_set_urgency(window->x_id, false);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -267,6 +424,19 @@ cgui_window_on_draw(cgui_window *window, void (*fn)(cgui_window *window))
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cgui_window_on_grid(cgui_window *window, void (*fn)(cgui_window *window, cgui_grid *grid))
+{
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+	
+	window->fn_grid = fn ? fn : _dummy_fn_grid;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cgui_window_on_state(cgui_window *window, void (*fn)(cgui_window *window, enum cgui_window_state_mask mask))
 {
 	if (cgui_error() || !window->valid)
@@ -275,6 +445,47 @@ cgui_window_on_state(cgui_window *window, void (*fn)(cgui_window *window, enum c
 	}
 	
 	window->fn_state = fn ? fn : _dummy_fn_state;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_pull_grid(cgui_window *window, cgui_grid *grid)
+{
+	size_t i;
+
+	if (cgui_error()
+	 || !grid->valid
+	 || !window->valid
+	 ||  window->state.active
+	 || !cref_find(window->grids, grid, &i))
+	{
+		return;
+	}
+
+	if (window->shown_grid == grid)
+	{
+		cgui_window_reset_grid(window);
+	}
+
+	cref_pull(window->grids, i);
+	grid->used = false;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_push_grid(cgui_window *window, cgui_grid *grid)
+{
+	if (!cgui_window_can_push_grid(window, grid) || window->state.active)
+	{
+		return;
+	}
+
+	cref_push(window->grids, grid);
+	grid->used = true;
+
+	main_set_error(cref_error(window->grids));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -295,12 +506,83 @@ cgui_window_redraw(cgui_window *window)
 void
 cgui_window_rename(cgui_window *window, const char *name)
 {
+	char *tmp;
+
 	if (cgui_error() || !window->valid)
 	{
 		return;
 	}
 
+	if (!(tmp = strdup(name)))
+	{
+		main_set_error(CERR_MEMORY);
+		return;
+	}
+
+	free(window->name);
+	window->name = tmp;
+
 	x11_window_rename(window->x_id, name);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_reset_grid(cgui_window *window)
+{
+	if (cgui_error() || !window->valid || window->state.active || !window->shown_grid->valid)
+	{
+		return;
+	}
+
+	window->shown_grid = CGUI_GRID_PLACEHOLDER;
+	window->fn_grid(window, window->shown_grid);
+
+	// TODO set focus
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_set_accelerator(cgui_window *window, int id, const char *name, void (*fn)(cgui_window *window, int id))
+{
+	char *tmp;
+
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+
+	if (id < 1 || id > 12)
+	{
+		main_set_error(CERR_PARAM);
+		return;
+	}
+
+	if (!(tmp = strdup(name)))
+	{
+		main_set_error(CERR_MEMORY);
+		return;
+	}
+
+	free(window->accels[--id].name);
+	window->accels[id].name = tmp;
+	window->accels[id].fn   = fn;
+
+	x11_window_set_accel(window->x_id, id, fn ? name : NULL);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cgui_grid *
+cgui_window_shown_grid(const cgui_window *window)
+{
+	if (cgui_error() || !window->valid || !window->shown_grid->valid)
+	{
+		return CGUI_GRID_PLACEHOLDER;
+	}
+
+	return window->shown_grid;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -314,6 +596,76 @@ cgui_window_state(const cgui_window *window)
 	}
 
 	return window->state;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_swap_grid(cgui_window *window, cgui_grid *grid_1, cgui_grid *grid_2)
+{
+	if (!cgui_window_can_swap_grid(window, grid_1, grid_2))
+	{
+		return;
+	}
+
+	cref_pull(window->grids, grid_1);
+	cref_push(window->grids, grid_2);
+
+	grid_1->used = false;
+	grid_2->used = true;
+
+	/* extra ops when the swap happens on a visible grid */
+
+	if (window->shown_grid != grid_1)
+	{
+		return;
+	}
+
+	window->shown_grid = grid_2;
+	window->fn_grid(window, grid_2);
+	window_set_draw_level(window, WINDOW_DRAW_FULL);
+
+	// TODO refocus
+	// TODO update geometries
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_tack(cgui_window *window, cgui_window *window_under)
+{
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+
+	x11_window_set_transient(window->x_id, window_under->x_id);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_untack(cgui_window *window)
+{
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+	
+	x11_window_set_transient(window->x_id, XCB_WINDOW_NONE);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_urgent(cgui_window *window)
+{
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+
+	x11_window_set_urgency(window->x_id, false);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -380,9 +732,16 @@ window_destroy(cgui_window *window)
 		return;
 	}
 
+	for (size_t i = 0; i < CGUI_CONFIG_ACCELS; i++)
+	{
+		free(window->accels[i].name);
+	}
+
 	_cairo_destroy(window);
 	main_pull_instance(main_windows(), window);
 	x11_window_destroy(window->x_id);
+	cref_destroy(window->grids);
+	free(window->name);
 	free(window);
 }
 
@@ -461,9 +820,15 @@ window_repair(cgui_window *window)
 		_cairo_setup(window, window->width, window->height);
 	}
 
+	cref_repair(window->grids);
 	window_set_draw_level(window, WINDOW_DRAW_FULL);
 	window_resize(window, window->width, window->height);
 	x11_window_update_state_hints(window->x_id, window->state);
+	x11_window_rename(window->x_id, window->name);
+	for (size_t i = 0; i < CGUI_CONFIG_ACCELS; i++)
+	{
+		x11_window_set_accel(window->x_id, i, window->accels[i].fn ? window->accels[i].name : NULL);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -631,6 +996,15 @@ _cairo_setup(cgui_window *window, uint16_t width, uint16_t height)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
+_dummy_fn_accel(cgui_window *window, int id)
+{
+	(void)window;
+	(void)id;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 _dummy_fn_close(cgui_window *window)
 {
 	cgui_window_deactivate(window);
@@ -642,6 +1016,24 @@ static void
 _dummy_fn_draw(cgui_window *window)
 {
 	(void)window;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_dummy_fn_focus(cgui_window *window, cgui_cell *cell)
+{
+	(void)window;
+	(void)cell;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_dummy_fn_grid(cgui_window *window, cgui_grid *grid)
+{
+	(void)window;
+	(void)grid;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
