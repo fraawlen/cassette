@@ -187,7 +187,7 @@ CGUI_PURE;
  *
  */
 uint16_t
-cgui_grid_min_height(const cgui_grid *grid)
+cgui_grid_height(const cgui_grid *grid)
 CGUI_NONNULL(1)
 CGUI_PURE;
 
@@ -195,7 +195,7 @@ CGUI_PURE;
  *
  */
 uint16_t
-cgui_grid_min_width(const cgui_grid *grid)
+cgui_grid_width(const cgui_grid *grid)
 CGUI_NONNULL(1)
 CGUI_PURE;
 

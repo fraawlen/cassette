@@ -988,7 +988,8 @@ _event_button(xcb_button_press_event_t *xcb_event)
 {
 	struct cgui_event event = {0};
 
-	(void)xcb_event; // TODO
+	if (xcb_event->detail == 1)
+		cgui_window_deactivate(_find_window(xcb_event->event)); // TMP
 
 	main_update(&event);
 }

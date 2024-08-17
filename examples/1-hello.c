@@ -88,9 +88,9 @@ static struct cgui_screen _screen;
 	cgui_window_on_draw(_window, _on_draw);
 	cgui_window_on_close(_window, _on_close);
 	cgui_window_on_state(_window, _on_state);
-	cgui_window_set_type(_window, CGUI_WINDOW_OVERLAY);
-	cgui_window_move(_window, _screen.x, _screen.y);
-	cgui_window_resize(_window, _screen.width, _screen.height / 2);
+//	cgui_window_set_type(_window, CGUI_WINDOW_OVERLAY);
+//	cgui_window_move(_window, _screen.x, _screen.y);
+//	cgui_window_resize(_window, _screen.width, _screen.height);
 	cgui_window_activate(_window);
 
 	/* Run */

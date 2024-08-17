@@ -26,9 +26,16 @@
 
 #include "area.h"
 #include "cell.h"
+#include "config.h"
 #include "main.h"
 #include "grid.h"
 #include "safe.h"
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+//static void _update_geometry (cgui_grid *);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -38,12 +45,12 @@ cgui_grid cgui_grid_placeholder_instance =
 {
 	.n_cols           = 0,
 	.n_rows           = 0,
-	.total_col_flex   = 0,
-	.total_row_flex   = 0,
-	.total_width      = 0,
-	.total_width_inv  = 0,
-	.total_height     = 0,
-	.total_height_inv = 0,
+	.col_flex   = 0,
+	.row_flex   = 0,
+	.width_units      = 0,
+	.width_units_inv  = 0,
+	.height_units     = 0,
+	.height_units_inv = 0,
 	.cols             = NULL,
 	.rows             = NULL,
 	.areas            = CREF_PLACEHOLDER,
@@ -159,12 +166,12 @@ cgui_grid_clone(const cgui_grid *grid)
 
 	grid_new->n_cols           = grid->n_cols;
 	grid_new->n_rows           = grid->n_rows;
-	grid_new->total_col_flex   = grid->total_col_flex;
-	grid_new->total_row_flex   = grid->total_row_flex;
-	grid_new->total_width      = grid->total_width;
-	grid_new->total_width_inv  = grid->total_width_inv;
-	grid_new->total_height     = grid->total_height;
-	grid_new->total_height_inv = grid->total_height_inv; 
+	grid_new->col_flex         = grid->col_flex;
+	grid_new->row_flex         = grid->row_flex;
+	grid_new->width_units      = grid->width_units;
+	grid_new->width_units_inv  = grid->width_units_inv;
+	grid_new->height_units     = grid->height_units;
+	grid_new->height_units_inv = grid->height_units_inv; 
 	grid_new->ref              = grid->ref;
 	grid_new->valid            = true;
 	grid_new->valid            = false;
@@ -208,10 +215,10 @@ cgui_grid_compare_flex(const cgui_grid *grid_1, const cgui_grid *grid_2)
 		return CGUI_GRID_FLEX_INVALID;
 	}
 
-	x1 = grid_1->total_col_flex > 0.0;
-	x2 = grid_2->total_col_flex > 0.0;
-	y1 = grid_1->total_row_flex > 0.0;
-	y2 = grid_2->total_row_flex > 0.0;
+	x1 = grid_1->col_flex > 0.0;
+	x2 = grid_2->col_flex > 0.0;
+	y1 = grid_1->row_flex > 0.0;
+	y2 = grid_2->row_flex > 0.0;
 
 	if ((x1 == x2) && (y1 == y2))
 	{
@@ -239,22 +246,22 @@ cgui_grid_compare_size(const cgui_grid *grid_1, const cgui_grid *grid_2)
 	/* compare x axis */
 
 	if (grid_1->n_cols          == grid_2->n_cols
-	 && grid_1->total_width     == grid_2->total_width
-	 && grid_1->total_width_inv == grid_2->total_width_inv)
+	 && grid_1->width_units     == grid_2->width_units
+	 && grid_1->width_units_inv == grid_2->width_units_inv)
 	{
 		x = CGUI_GRID_SIZE_EQUAL;
 	}
 	else if (
 	    grid_1->n_cols          >= grid_2->n_cols
-	 && grid_1->total_width     >= grid_2->total_width
-	 && grid_1->total_width_inv >= grid_2->total_width_inv)
+	 && grid_1->width_units     >= grid_2->width_units
+	 && grid_1->width_units_inv >= grid_2->width_units_inv)
 	{
 		x = CGUI_GRID_SIZE_BIGGER;
 	}
 	else if (
 	    grid_1->n_cols          <= grid_2->n_cols
-	 && grid_1->total_width     <= grid_2->total_width
-	 && grid_1->total_width_inv <= grid_2->total_width_inv)
+	 && grid_1->width_units     <= grid_2->width_units
+	 && grid_1->width_units_inv <= grid_2->width_units_inv)
 	{
 		x = CGUI_GRID_SIZE_SMALLER;
 	}
@@ -262,22 +269,22 @@ cgui_grid_compare_size(const cgui_grid *grid_1, const cgui_grid *grid_2)
 	/* compare y axis */
 
 	if (grid_1->n_rows           == grid_2->n_rows
-	 && grid_1->total_height     == grid_2->total_height
-	 && grid_1->total_height_inv == grid_2->total_height_inv)
+	 && grid_1->height_units     == grid_2->height_units
+	 && grid_1->height_units_inv == grid_2->height_units_inv)
 	{
 		y = CGUI_GRID_SIZE_EQUAL;
 	}
 	else if (
 	    grid_1->n_rows           >= grid_2->n_rows
-	 && grid_1->total_height     >= grid_2->total_height
-	 && grid_1->total_height_inv >= grid_2->total_height_inv)
+	 && grid_1->height_units     >= grid_2->height_units
+	 && grid_1->height_units_inv >= grid_2->height_units_inv)
 	{
 		y = CGUI_GRID_SIZE_BIGGER;
 	}
 	else if (
 	    grid_1->n_rows           <= grid_2->n_rows
-	 && grid_1->total_height     <= grid_2->total_height
-	 && grid_1->total_height_inv <= grid_2->total_height_inv)
+	 && grid_1->height_units     <= grid_2->height_units
+	 && grid_1->height_units_inv <= grid_2->height_units_inv)
 	{
 		y = CGUI_GRID_SIZE_SMALLER;
 	}
@@ -344,12 +351,12 @@ cgui_grid_create(size_t cols, size_t rows)
 
 	grid->n_cols           = cols;
 	grid->n_rows           = rows;
-	grid->total_col_flex   = 0.0;
-	grid->total_row_flex   = 0.0;
-	grid->total_width      = 0;
-	grid->total_width_inv  = cols;
-	grid->total_height     = rows;
-	grid->total_height_inv = 0; 
+	grid->col_flex         = 0.0;
+	grid->row_flex         = 0.0;
+	grid->width_units      = 0;
+	grid->width_units_inv  = cols;
+	grid->height_units     = rows;
+	grid->height_units_inv = 0; 
 	grid->ref              = CGUI_GRID_PLACEHOLDER;
 	grid->valid            = true;
 	grid->used             = false;
@@ -394,7 +401,7 @@ cgui_grid_flex_horizontal(const cgui_grid *grid)
 		return 0.0;
 	}
 
-	return grid->total_col_flex;
+	return grid->col_flex;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -407,41 +414,39 @@ cgui_grid_flex_vertical(const cgui_grid *grid)
 		return 0.0;
 	}
 
-	return grid->total_row_flex;
+	return grid->row_flex;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 uint16_t
-cgui_grid_min_height(const cgui_grid *grid)
+cgui_grid_height(const cgui_grid *grid)
 {
-	struct cseg h = CSEG_I16;
+	size_t   n = 0;
+	uint16_t h = 0;
+	int16_t  s;
 
 	if (cgui_error() || !grid->valid)
 	{
 		return 0;
 	}
 
-	// TODO
-
-	return h.length;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-uint16_t
-cgui_grid_min_width(const cgui_grid *grid)
-{
-	struct cseg w = CSEG_I16;
-
-	if (cgui_error() || !grid->valid)
+	for (size_t i = 0; i < grid->n_rows; i++)
 	{
-		return 0;
+		if ((s = grid->rows[i].size) != 0)
+		{
+			h += s > 0 ? cgui_config_str_height(s) : cgui_config_str_width(-s);
+			h += 2 * CONFIG->grid_padding;
+			n++;
+		}
 	}
 
-	// TODO
+	if (n > 0)
+	{
+		h += CONFIG->grid_spacing * (n - 1);
+	}
 
-	return w.length;
+	return h;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -449,8 +454,6 @@ cgui_grid_min_width(const cgui_grid *grid)
 void
 cgui_grid_resize_col(cgui_grid *grid, size_t col, int16_t width)
 {
-	struct cseg w = CSEG_I16;
-
 	if (cgui_error() || !grid->valid || col >= grid->n_cols)
 	{
 		return;
@@ -458,24 +461,20 @@ cgui_grid_resize_col(cgui_grid *grid, size_t col, int16_t width)
 
 	if (grid->cols[col].size > 0)
 	{
-		grid->total_width -= grid->cols[col].size;
+		grid->width_units -= grid->cols[col].size;
 	}
 	else
 	{
-		grid->total_width_inv += grid->cols[col].size;
+		grid->width_units_inv += grid->cols[col].size;
 	}
 
 	if (width > 0)
 	{
-		w.length = grid->total_width;
-		cseg_grow(&w, width);
-		grid->total_width = w.length;
+		grid->width_units += width;
 	}
 	else
 	{
-		w.length = grid->total_width_inv;
-		cseg_grow(&w, -width);
-		grid->total_width_inv = w.length;
+		grid->width_units_inv -= width;
 	}
 
 	grid->cols[col].size = width;
@@ -486,8 +485,6 @@ cgui_grid_resize_col(cgui_grid *grid, size_t col, int16_t width)
 void
 cgui_grid_resize_row(cgui_grid *grid, size_t row, int16_t height)
 {
-	struct cseg h = CSEG_I16;
-
 	if (cgui_error() || !grid->valid || row >= grid->n_rows)
 	{
 		return;
@@ -495,24 +492,20 @@ cgui_grid_resize_row(cgui_grid *grid, size_t row, int16_t height)
 
 	if (grid->rows[row].size > 0)
 	{
-		grid->total_height -= grid->rows[row].size;
+		grid->height_units -= grid->rows[row].size;
 	}
 	else
 	{
-		grid->total_height_inv += grid->rows[row].size;
+		grid->height_units_inv += grid->rows[row].size;
 	}
 
 	if (height > 0)
 	{
-		h.length = grid->total_height;
-		cseg_grow(&h, height);
-		grid->total_height = h.length;
+		grid->height_units += height;
 	}
 	else
 	{
-		h.length = grid->total_height_inv;
-		cseg_grow(&h, -height);
-		grid->total_height_inv = h.length;
+		grid->height_units_inv -= height;
 	}
 
 	grid->rows[row].size = height;
@@ -534,7 +527,7 @@ cgui_grid_set_col_flex(cgui_grid *grid, size_t col, double flex)
 		return;
 	}	
 
-	grid->total_col_flex += flex - grid->cols[col].flex;
+	grid->col_flex += flex - grid->cols[col].flex;
 	grid->cols[col].flex  = flex;
 }
 
@@ -570,8 +563,40 @@ cgui_grid_set_row_flex(cgui_grid *grid, size_t row, double flex)
 		return;
 	}	
 
-	grid->total_row_flex += flex - grid->rows[row].flex;
+	grid->row_flex += flex - grid->rows[row].flex;
 	grid->rows[row].flex  = flex;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint16_t
+cgui_grid_width(const cgui_grid *grid)
+{
+	size_t   n = 0;
+	uint16_t w = 0;
+	int16_t  s;
+
+	if (cgui_error() || !grid->valid)
+	{
+		return 0;
+	}
+
+	for (size_t i = 0; i < grid->n_cols; i++)
+	{
+		if ((s = grid->cols[i].size) != 0)
+		{
+			w += s > 0 ? cgui_config_str_width(s) : cgui_config_str_height(-s);
+			w += 2 * CONFIG->grid_padding;
+			n++;
+		}
+	}
+
+	if (n > 0)
+	{
+		w += CONFIG->grid_spacing * (n - 1);
+	}
+
+	return w;
 }
 
 /************************************************************************************************************/
@@ -611,3 +636,15 @@ grid_repair(cgui_grid *grid)
 
 	cref_repair(grid->areas);
 }
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+/*
+static void
+_update_geometry(cgui_grid *)
+{
+	
+}
+*/

@@ -38,21 +38,27 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#define WIDTH(GRID)  cgui_grid_width(GRID)  + CONFIG->window_frame.padding * 2
+#define HEIGHT(GRID) cgui_grid_height(GRID) + CONFIG->window_frame.padding * 2
+
 /* impure */
 
-static void _cairo_destroy  (cgui_window *)                              CGUI_NONNULL(1);
-static bool _cairo_setup    (cgui_window *, uint16_t, uint16_t)          CGUI_NONNULL(1);
-static void _dummy_fn_accel (cgui_window *, int)                         CGUI_NONNULL(1);
-static void _dummy_fn_close (cgui_window *)                              CGUI_NONNULL(1);
-static void _dummy_fn_draw  (cgui_window *)                              CGUI_NONNULL(1);
-static void _dummy_fn_focus (cgui_window *, cgui_cell *)                 CGUI_NONNULL(1);
-static void _dummy_fn_grid  (cgui_window *, cgui_grid *)                 CGUI_NONNULL(1);
-static void _dummy_fn_state (cgui_window *, enum cgui_window_state_mask) CGUI_NONNULL(1);
+static void _cairo_destroy     (cgui_window *)                              CGUI_NONNULL(1);
+static bool _cairo_setup       (cgui_window *, uint16_t, uint16_t)          CGUI_NONNULL(1);
+static void _dummy_fn_accel    (cgui_window *, int)                         CGUI_NONNULL(1);
+static void _dummy_fn_close    (cgui_window *)                              CGUI_NONNULL(1);
+static void _dummy_fn_draw     (cgui_window *)                              CGUI_NONNULL(1);
+static void _dummy_fn_focus    (cgui_window *, cgui_cell *)                 CGUI_NONNULL(1);
+static void _dummy_fn_grid     (cgui_window *, cgui_grid *)                 CGUI_NONNULL(1);
+static void _dummy_fn_state    (cgui_window *, enum cgui_window_state_mask) CGUI_NONNULL(1);
+static void _update_shown_grid (cgui_window *)                              CGUI_NONNULL(1);
 
 /* pure */
 
-static struct cgui_box _box         (const cgui_window *) CGUI_NONNULL(1) CGUI_PURE;
-static bool            _cairo_error (const cgui_window *) CGUI_NONNULL(1) CGUI_PURE;
+static struct cgui_box _box         (const cgui_window *)                         CGUI_NONNULL(1) CGUI_PURE;
+static bool            _cairo_error (const cgui_window *)                         CGUI_NONNULL(1) CGUI_PURE;
+static cgui_grid      *_min_grid    (const cgui_window *)                         CGUI_NONNULL(1) CGUI_PURE;
+static void            _min_size    (const cgui_window *, uint16_t *, uint16_t *) CGUI_NONNULL(1, 2, 3);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -64,28 +70,29 @@ static const struct cgui_window_state_flags _default_states = {false};
 
 cgui_window cgui_window_placeholder_instance =
 {
-	.x            = 0,
-	.y            = 0,
-	.width        = 0,
-	.height       = 0,
-	.x_serial     = 0,
-	.x_id         = 0,
-	.surface      = NULL,
-	.drawable     = NULL,
-	.name         = NULL,
-	.grids        = CREF_PLACEHOLDER,
-	.fn_close     = _dummy_fn_close,
-	.fn_draw      = _dummy_fn_draw,
-	.fn_focus     = _dummy_fn_focus,
-	.fn_grid      = _dummy_fn_grid,
-	.fn_state     = _dummy_fn_state,
-	.state        = _default_states,
-	.shown_grid   = CGUI_GRID_PLACEHOLDER,
-	.focus        = {0, 0, 0, 0, CGUI_CELL_PLACEHOLDER},
-	.draw         = WINDOW_DRAW_NONE,
-	.wait_present = false,
-	.valid        = false,
-	.accels       =
+	.x              = 0,
+	.y              = 0,
+	.width          = 0,
+	.height         = 0,
+	.x_serial       = 0,
+	.x_id           = 0,
+	.surface        = NULL,
+	.drawable       = NULL,
+	.name           = NULL,
+	.grids          = CREF_PLACEHOLDER,
+	.fn_close       = _dummy_fn_close,
+	.fn_draw        = _dummy_fn_draw,
+	.fn_focus       = _dummy_fn_focus,
+	.fn_grid        = _dummy_fn_grid,
+	.fn_state       = _dummy_fn_state,
+	.state          = _default_states,
+	.shown_grid     = CGUI_GRID_PLACEHOLDER,
+	.focus          = {0, 0, 0, 0, CGUI_CELL_PLACEHOLDER},
+	.draw           = WINDOW_DRAW_NONE,
+	.wait_present   = false,
+	.valid          = false,
+	.size_requested = false,
+	.accels         =
 	{
 		{NULL, _dummy_fn_accel},
 		{NULL, _dummy_fn_accel},
@@ -114,7 +121,27 @@ cgui_window_activate(cgui_window *window)
 		return;
 	}
 
+	/* if no grid is shown, select the first grid and resize the window */
+	/* (if no custom size has been requested)                           */
+
+	if (!window->shown_grid->valid)
+	{
+		window->shown_grid = (cgui_grid*)cref_ptr(window->grids, 0);
+		if (!window->size_requested)
+		{
+			x11_window_resize(
+				window->x_id,
+				WIDTH(window->shown_grid),
+				HEIGHT(window->shown_grid));
+		}
+	}
+
+	window->size_requested = false;
+
+	/* activate the window */
+
 	x11_window_activate(window->x_id);
+	window_update_size_hints(window);
 	window_update_state(window, CGUI_WINDOW_ACTIVE, true);
 	if (CONFIG->window_focus_on_activation)
 	{
@@ -249,23 +276,24 @@ cgui_window_create(void)
 
 	cref_set_default_ptr(window->grids, CGUI_GRID_PLACEHOLDER);
 
-	window->x            = x;
-	window->y            = y;
-	window->width        = width;
-	window->height       = height;
-	window->x_serial     = 0;
-	window->name         = NULL;
-	window->fn_close     = _dummy_fn_close;
-	window->fn_draw      = _dummy_fn_draw;
-	window->fn_focus     = _dummy_fn_focus;
-	window->fn_grid      = _dummy_fn_grid;
-	window->fn_state     = _dummy_fn_state;
-	window->state        = _default_states;
-	window->shown_grid   = CGUI_GRID_PLACEHOLDER;
-	window->focus        = AREA_PLACEHOLDER;
-	window->draw         = WINDOW_DRAW_NONE;
-	window->wait_present = false;
-	window->valid        = true;
+	window->x              = x;
+	window->y              = y;
+	window->width          = width;
+	window->height         = height;
+	window->x_serial       = 0;
+	window->name           = NULL;
+	window->fn_close       = _dummy_fn_close;
+	window->fn_draw        = _dummy_fn_draw;
+	window->fn_focus       = _dummy_fn_focus;
+	window->fn_grid        = _dummy_fn_grid;
+	window->fn_state       = _dummy_fn_state;
+	window->state          = _default_states;
+	window->shown_grid     = CGUI_GRID_PLACEHOLDER;
+	window->focus          = AREA_PLACEHOLDER;
+	window->draw           = WINDOW_DRAW_NONE;
+	window->wait_present   = false;
+	window->valid          = true;
+	window->size_requested = false;
 
 	return window;
 
@@ -559,6 +587,9 @@ cgui_window_reset_grid(cgui_window *window)
 void
 cgui_window_resize(cgui_window *window, uint16_t width, uint16_t height)
 {
+	uint16_t min_width;
+	uint16_t min_height;
+
 	if (cgui_error() || !window->valid)
 	{
 		return;
@@ -570,7 +601,15 @@ cgui_window_resize(cgui_window *window, uint16_t width, uint16_t height)
 		return;
 	}
 
-	// TODO check against min grid
+	if (!window->state.active)
+	{
+		window->size_requested = true;
+	}
+
+	_min_size(window, &min_width, &min_height);
+
+	width  = width  < min_width  ? min_width  : width;
+	height = height < min_height ? min_height : height;
 
 	x11_window_resize(window->x_id, width, height);
 }
@@ -891,7 +930,10 @@ window_resize(cgui_window *window, uint16_t width, uint16_t height)
 	if (_cairo_error(window))
 	{
 		main_set_error(CERR_CAIRO);
+		return;
 	}
+	
+	_update_shown_grid(window);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -903,6 +945,32 @@ window_set_draw_level(cgui_window *window, enum window_draw_level draw)
 	{
 		window->draw = draw;
 	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+window_update_size_hints(cgui_window *window)
+{
+	uint16_t w_min;
+	uint16_t w_max;
+	uint16_t h_min;
+	uint16_t h_max;
+
+	if (window->state.locked_grid)
+	{
+		w_min = WIDTH(window->shown_grid);
+		h_min = HEIGHT(window->shown_grid);
+	}
+	else
+	{
+		_min_size(window, &w_min, &h_min);
+	}
+
+	w_max = ((cgui_grid*)cref_ptr(window->grids, 0))->col_flex > 0.0 ? UINT16_MAX : w_min;
+	h_max = ((cgui_grid*)cref_ptr(window->grids, 0))->row_flex > 0.0 ? UINT16_MAX : h_min;
+	
+	x11_window_update_size_hints(window->x_id, w_min, h_min, w_max, h_max);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1090,4 +1158,80 @@ _dummy_fn_state(cgui_window *window, enum cgui_window_state_mask mask)
 {
 	(void)window;
 	(void)mask;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static cgui_grid *
+_min_grid(const cgui_window *window)
+{
+	cgui_grid *grid_min;
+	cgui_grid *grid;
+
+	grid_min = (cgui_grid*)cref_ptr(window->grids, 0);
+	for (size_t i = 1; i < cref_length(window->grids); i++)
+	{
+		grid = (cgui_grid*)cref_ptr(window->grids, i);
+		if (cgui_grid_compare_size(grid, grid_min) == CGUI_GRID_SIZE_SMALLER)
+		{
+			grid_min = grid;
+		}
+	}
+
+	return grid_min;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_min_size(const cgui_window *window, uint16_t *width, uint16_t *height)
+{
+	cgui_grid *grid;
+
+	 grid   = _min_grid(window);
+	*width  = WIDTH(grid);
+	*height = HEIGHT(grid);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+_update_shown_grid(cgui_window *window)
+{
+	cgui_grid *grid_old;
+	cgui_grid *grid;
+
+	if (window->state.locked_grid || cref_length(window->grids) < 2)
+	{
+		return;
+	}
+
+	/* find biggest grid that could fit in current window dimensions */
+
+	grid_old           = window->shown_grid;
+	window->shown_grid = _min_grid(window);
+
+	CREF_FOR_EACH(window->grids, i)
+	{
+		grid = (cgui_grid*)cref_ptr(window->grids, i);
+		if (cgui_grid_compare_size(grid, window->shown_grid) == CGUI_GRID_SIZE_BIGGER
+		 && WIDTH(grid)  <= window->width
+		 && HEIGHT(grid) <= window->height)
+		{
+			window->shown_grid = grid;
+		}
+	}
+
+	/* updates to do if the shown grid changed */
+
+	if (grid_old == window->shown_grid)
+	{
+		return;
+	}
+
+	cgui_window_swap_grid(window, grid_old, grid_old->ref);
+	window->fn_grid(window, window->shown_grid);
+	window_set_draw_level(window, WINDOW_DRAW_FULL);
+
+	// TODO refocus
 }

@@ -41,6 +41,18 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#define SCALE(VAL) VAL *= _config.scale;
+
+#define SCALE_BOX(BOX) \
+	SCALE(BOX.corner_size[0]); \
+	SCALE(BOX.corner_size[1]); \
+	SCALE(BOX.corner_size[2]); \
+	SCALE(BOX.corner_size[3]); \
+	SCALE(BOX.thickness);      \
+	SCALE(BOX.padding);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 #define BOX(NAMESPACE, STATE, TARGET) \
 	{ NAMESPACE, #STATE "corner_style",     CORNER_TYPE, &TARGET                  }, \
 	{ NAMESPACE, #STATE "corner_size",      CORNER_SIZE, &TARGET                  }, \
@@ -119,9 +131,6 @@ struct _resource
 static void _dummy_fn_load (ccfg *)                                    CGUI_NONNULL(1);
 static void _fetch         (const struct _resource *)                  CGUI_NONNULL(1);
 static void _fill          (void);
-static void _scale_box     (struct cgui_box *)                         CGUI_NONNULL(1);
-static void _scale_len     (uint16_t *)                                CGUI_NONNULL(1);
-static void _scale_pos     (int16_t  *)                                CGUI_NONNULL(1);
 static void _set_corners   (enum _value, struct cgui_box *)            CGUI_NONNULL(2);
 static void _swap          (const char *, uint8_t, struct cgui_swap *) CGUI_NONNULL(1, 3);
 static void _update_err    (void);
@@ -277,6 +286,32 @@ static const struct _resource _resources[] =
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
+size_t
+cgui_config_fit_cols(uint16_t width)
+{
+	if (cgui_error())
+	{
+		return 0;
+	}
+
+	return (width + _config.font_spacing_horizontal) / (_config.font_width + _config.font_spacing_horizontal);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+cgui_config_fit_rows(uint16_t height)
+{
+	if (cgui_error())
+	{
+		return 0;
+	}
+
+	return (height + _config.font_spacing_vertical) / (_config.font_height + _config.font_spacing_vertical);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 const struct cgui_config *
 cgui_config_get(void)
 {
@@ -294,6 +329,32 @@ cgui_config_on_load(void (*fn)(ccfg *cfg))
 	}
 
 	_fn_load = fn ? fn : _dummy_fn_load;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint16_t
+cgui_config_str_height(size_t rows)
+{
+	if (cgui_error() || rows == 0)
+	{
+		return 0;
+	}
+
+	return _config.font_height * rows + _config.font_spacing_vertical * (rows - 1);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint16_t
+cgui_config_str_width(size_t cols)
+{
+	if (cgui_error() || cols == 0)
+	{
+		return 0;
+	}
+
+	return _config.font_width * cols + _config.font_spacing_horizontal * (cols - 1);
 }
 
 /************************************************************************************************************/
@@ -362,22 +423,6 @@ config_load(void)
 	{
 		_fetch(_resources + i);
 	}
-
-	_scale_len(&_config.font_size);
-	_scale_len(&_config.font_spacing_horizontal);
-	_scale_len(&_config.font_spacing_vertical);
-	_scale_len(&_config.font_override_ascent);
-	_scale_len(&_config.font_override_descent);
-	_scale_len(&_config.font_override_width);
-	_scale_len(&_config.grid_padding);
-	_scale_len(&_config.grid_spacing);
-	_scale_len(&_config.popup_border);
-	_scale_len(&_config.popup_padding);
-
-	_scale_pos(&_config.font_offset_x);
-	_scale_pos(&_config.font_offset_y);
-
-	_scale_box(&_config.window_frame);
 
 	_fill();
 	_fn_load(_parser);
@@ -508,11 +553,27 @@ _fetch(const struct _resource *resource)
 static void
 _fill(void)
 {
-	struct cseg seg = CSEG_U16;
 	cairo_font_extents_t f_e;
 	cairo_text_extents_t t_e;
 	cairo_surface_t *c_srf;
 	cairo_t *c_ctx;
+
+	/* scaling */
+
+	SCALE(_config.font_size);
+	SCALE(_config.font_spacing_horizontal);
+	SCALE(_config.font_spacing_vertical);
+	SCALE(_config.font_override_ascent);
+	SCALE(_config.font_override_descent);
+	SCALE(_config.font_override_width);
+	SCALE(_config.grid_padding);
+	SCALE(_config.grid_spacing);
+	SCALE(_config.popup_border);
+	SCALE(_config.popup_padding);
+	SCALE(_config.font_offset_x);
+	SCALE(_config.font_offset_y);
+
+	SCALE_BOX(_config.window_frame);
 
 	/* set window frame invariants */
 
@@ -566,47 +627,7 @@ skip_font_setup:
 
 skip_auto_font:
 
-	cseg_grow(&seg, _config.font_ascent);
-	cseg_grow(&seg, _config.font_descent);
-
-	_config.font_height = seg.length;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-_scale_box(struct cgui_box *box)
-{
-	_scale_len(&box->corner_size[0]);
-	_scale_len(&box->corner_size[1]);
-	_scale_len(&box->corner_size[2]);
-	_scale_len(&box->corner_size[3]);
-	_scale_len(&box->thickness);
-	_scale_len(&box->padding);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-_scale_len(uint16_t *val)
-{
-	struct cseg seg = CSEG_U16; 
-
-	seg.length = *val;
-	cseg_scale(&seg, _config.scale);
-	*val = seg.length;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-_scale_pos(int16_t *val)
-{
-	struct cseg seg = CSEG_I16;
-
-	seg.length = *val;
-	cseg_scale(&seg, _config.scale);
-	*val = seg.length;
+	_config.font_height = _config.font_ascent + _config.font_descent;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

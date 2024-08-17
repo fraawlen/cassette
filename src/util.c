@@ -60,3 +60,15 @@ util_str_to_long(const char *str, long min, long max)
 
 	return l > max ? max : (l < min ? min : l);
 }
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+unsigned long
+util_time(void)
+{
+	struct timespec ts = {0};
+
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+
+	return ts.tv_sec * 1000000 + ts.tv_sec / 1000;
+}

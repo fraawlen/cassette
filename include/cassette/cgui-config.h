@@ -190,9 +190,37 @@ cgui_config_on_load(void (*fn)(ccfg *cfg));
 /**
  *
  */
+size_t
+cgui_config_fit_cols(uint16_t width)
+CGUI_PURE;
+
+/**
+ *
+ */
+size_t
+cgui_config_fit_rows(uint16_t height)
+CGUI_PURE;
+
+/**
+ *
+ */
 const struct cgui_config *
 cgui_config_get(void)
 CGUI_NONNULL_RETURN
+CGUI_PURE;
+
+/**
+ *
+ */
+uint16_t
+cgui_config_str_height(size_t rows)
+CGUI_PURE;
+
+/**
+ *
+ */
+uint16_t
+cgui_config_str_width(size_t cols)
 CGUI_PURE;
 
 /************************************************************************************************************/

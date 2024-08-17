@@ -85,6 +85,7 @@ struct cgui_window
 	enum window_draw_level draw;
 	bool wait_present;
 	bool valid;
+	bool size_requested;
 };
 
 /************************************************************************************************************/
@@ -125,6 +126,12 @@ CGUI_NONNULL(1);
 
 void
 window_set_draw_level(cgui_window *window, enum window_draw_level draw)
+CGUI_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+window_update_size_hints(cgui_window *window)
 CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

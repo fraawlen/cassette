@@ -41,12 +41,12 @@ struct cgui_grid
 
 	size_t n_cols;
 	size_t n_rows;
-	double total_col_flex;
-	double total_row_flex;
-	int16_t total_width;
-	int16_t total_width_inv;
-	int16_t total_height;
-	int16_t total_height_inv;
+	double col_flex;
+	double row_flex;
+	uint16_t width_units;
+	uint16_t width_units_inv;
+	uint16_t height_units;
+	uint16_t height_units_inv;
 	struct grid_line *cols;
 	struct grid_line *rows;
 	cref *areas;
