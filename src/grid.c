@@ -18,6 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <cairo/cairo.h>
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
 #include <stdbool.h>
@@ -35,7 +36,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-//static void _update_geometry (cgui_grid *);
+static uint16_t _col_width  (struct grid_line);
+static uint16_t _row_height (struct grid_line);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -45,8 +47,8 @@ cgui_grid cgui_grid_placeholder_instance =
 {
 	.n_cols           = 0,
 	.n_rows           = 0,
-	.col_flex   = 0,
-	.row_flex   = 0,
+	.col_flex         = 0,
+	.row_flex         = 0,
 	.width_units      = 0,
 	.width_units_inv  = 0,
 	.height_units     = 0,
@@ -80,13 +82,17 @@ cgui_grid_assign_cell(cgui_grid *grid, cgui_cell *cell, size_t x, size_t y, size
 	struct area *area;
 
 	if (cgui_error()
-	 || !grid->valid
-	 || width  == 0
+	 || !grid->valid)
+	{
+		return;
+	}
+
+	if (width  == 0
 	 || height == 0
 	 || grid->n_cols < width
 	 || grid->n_rows < height
-	 || grid->n_cols - width  > x
-	 || grid->n_rows - height > y)
+	 || grid->n_cols - width  < x
+	 || grid->n_rows - height < y)
 	{
 		main_set_error(CERR_PARAM);
 		return;
@@ -174,7 +180,7 @@ cgui_grid_clone(const cgui_grid *grid)
 	grid_new->height_units_inv = grid->height_units_inv; 
 	grid_new->ref              = grid->ref;
 	grid_new->valid            = true;
-	grid_new->valid            = false;
+	grid_new->used             = false;
 
 	return grid_new;
 
@@ -339,14 +345,18 @@ cgui_grid_create(size_t cols, size_t rows)
 
 	for (size_t i = 0; i < cols; i++)
 	{
-		grid->cols[i].size = -1;
-		grid->cols[i].flex = 0.0;
+		grid->cols[i].units  = -1;
+		grid->cols[i].offset = 0;
+		grid->cols[i].size   = 0;
+		grid->cols[i].flex   = 0.0;
 	}
 
 	for (size_t i = 0; i < rows; i++)
 	{
-		grid->rows[i].size = 1;
-		grid->rows[i].flex = 0.0;
+		grid->rows[i].units  = 1;
+		grid->rows[i].offset = 0;
+		grid->rows[i].size   = 0;
+		grid->rows[i].flex   = 0.0;
 	}
 
 	grid->n_cols           = cols;
@@ -422,9 +432,7 @@ cgui_grid_flex_vertical(const cgui_grid *grid)
 uint16_t
 cgui_grid_height(const cgui_grid *grid)
 {
-	size_t   n = 0;
 	uint16_t h = 0;
-	int16_t  s;
 
 	if (cgui_error() || !grid->valid)
 	{
@@ -433,20 +441,10 @@ cgui_grid_height(const cgui_grid *grid)
 
 	for (size_t i = 0; i < grid->n_rows; i++)
 	{
-		if ((s = grid->rows[i].size) != 0)
-		{
-			h += s > 0 ? cgui_config_str_height(s) : cgui_config_str_width(-s);
-			h += 2 * CONFIG->grid_padding;
-			n++;
-		}
+		h += _row_height(grid->rows[i]);
 	}
 
-	if (n > 0)
-	{
-		h += CONFIG->grid_spacing * (n - 1);
-	}
-
-	return h;
+	return h + CONFIG->grid_spacing * (grid->n_rows - 1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -459,13 +457,19 @@ cgui_grid_resize_col(cgui_grid *grid, size_t col, int16_t width)
 		return;
 	}
 
-	if (grid->cols[col].size > 0)
+	if (width == 0)
 	{
-		grid->width_units -= grid->cols[col].size;
+		main_set_error(CERR_PARAM);
+		return;
+	}
+
+	if (grid->cols[col].units > 0)
+	{
+		grid->width_units -= grid->cols[col].units;
 	}
 	else
 	{
-		grid->width_units_inv += grid->cols[col].size;
+		grid->width_units_inv += grid->cols[col].units;
 	}
 
 	if (width > 0)
@@ -477,7 +481,7 @@ cgui_grid_resize_col(cgui_grid *grid, size_t col, int16_t width)
 		grid->width_units_inv -= width;
 	}
 
-	grid->cols[col].size = width;
+	grid->cols[col].units = width;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -490,13 +494,19 @@ cgui_grid_resize_row(cgui_grid *grid, size_t row, int16_t height)
 		return;
 	}
 
-	if (grid->rows[row].size > 0)
+	if (height == 0)
 	{
-		grid->height_units -= grid->rows[row].size;
+		main_set_error(CERR_PARAM);
+		return;
+	}
+
+	if (grid->rows[row].units > 0)
+	{
+		grid->height_units -= grid->rows[row].units;
 	}
 	else
 	{
-		grid->height_units_inv += grid->rows[row].size;
+		grid->height_units_inv += grid->rows[row].units;
 	}
 
 	if (height > 0)
@@ -508,7 +518,7 @@ cgui_grid_resize_row(cgui_grid *grid, size_t row, int16_t height)
 		grid->height_units_inv -= height;
 	}
 
-	grid->rows[row].size = height;
+	grid->rows[row].units = height;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -528,7 +538,7 @@ cgui_grid_set_col_flex(cgui_grid *grid, size_t col, double flex)
 	}	
 
 	grid->col_flex += flex - grid->cols[col].flex;
-	grid->cols[col].flex  = flex;
+	grid->cols[col].flex = flex;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -562,7 +572,7 @@ cgui_grid_set_row_flex(cgui_grid *grid, size_t row, double flex)
 		main_set_error(CERR_PARAM);
 		return;
 	}	
-
+ 
 	grid->row_flex += flex - grid->rows[row].flex;
 	grid->rows[row].flex  = flex;
 }
@@ -572,9 +582,7 @@ cgui_grid_set_row_flex(cgui_grid *grid, size_t row, double flex)
 uint16_t
 cgui_grid_width(const cgui_grid *grid)
 {
-	size_t   n = 0;
 	uint16_t w = 0;
-	int16_t  s;
 
 	if (cgui_error() || !grid->valid)
 	{
@@ -583,25 +591,42 @@ cgui_grid_width(const cgui_grid *grid)
 
 	for (size_t i = 0; i < grid->n_cols; i++)
 	{
-		if ((s = grid->cols[i].size) != 0)
-		{
-			w += s > 0 ? cgui_config_str_width(s) : cgui_config_str_height(-s);
-			w += 2 * CONFIG->grid_padding;
-			n++;
-		}
+		w += _col_width(grid->cols[i]);
 	}
 
-	if (n > 0)
-	{
-		w += CONFIG->grid_spacing * (n - 1);
-	}
-
-	return w;
+	return w + CONFIG->grid_spacing * (grid->n_cols - 1);
 }
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
+
+struct cgui_zone
+grid_area_zone(const cgui_grid *grid, const struct area *area, cairo_t *drawable)
+{
+	struct cgui_zone zone =
+	{
+		.drawable = drawable,
+		.x        = grid->cols[area->x].offset,
+		.y        = grid->rows[area->y].offset,
+		.width    = CONFIG->grid_spacing * (area->width  - 1),
+		.height   = CONFIG->grid_spacing * (area->height - 1),
+	};
+
+	for (size_t i = area->x; i < area->x + area->width; i++)
+	{
+		zone.width += grid->cols[i].size;	
+	}
+
+	for (size_t i = area->y; i < area->y + area->height; i++)
+	{
+		zone.height += grid->rows[i].size;	
+	}
+
+	return zone;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 grid_destroy(cgui_grid *grid)
@@ -623,7 +648,6 @@ grid_destroy(cgui_grid *grid)
 	free(grid);
 }
 
-
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
@@ -637,14 +661,81 @@ grid_repair(cgui_grid *grid)
 	cref_repair(grid->areas);
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+grid_update_geometry(cgui_grid *grid, uint16_t width, uint16_t height)
+{
+	int16_t  o = 0;
+	uint16_t l;
+	uint16_t n;
+	double   f;
+
+	/* cols */
+
+	f = grid->col_flex;
+	n = width - cgui_grid_width(grid);
+
+	for (size_t i = 0; i < grid->n_cols; i++)
+	{
+		l = n * grid->cols[i].flex / f;
+
+		grid->cols[i].offset = o;
+		grid->cols[i].size   = _col_width(grid->cols[i]) + l;
+
+		o += grid->cols[i].size + CONFIG->grid_spacing;
+		f -= grid->cols[i].flex;
+		n -= l;
+	}
+
+	/* rows */
+
+	o = 0;
+	f = grid->row_flex;
+	n = height - cgui_grid_height(grid);
+
+	for (size_t i = 0; i < grid->n_rows; i++)
+	{
+		l = n * grid->rows[i].flex / f;
+
+		grid->rows[i].offset = o;
+		grid->rows[i].size   = _row_height(grid->rows[i]) + l;
+
+		o += grid->rows[i].size + CONFIG->grid_spacing;
+		f -= grid->rows[i].flex;
+		n -= l;
+	}
+}
+
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-/*
-static void
-_update_geometry(cgui_grid *)
+static uint16_t
+_col_width(struct grid_line col)
 {
-	
+	if (col.units > 0)
+	{
+		return cgui_config_str_width(col.units) + CONFIG->grid_padding * 2;
+	}
+	else
+	{
+		return cgui_config_str_height(-col.units) + CONFIG->grid_padding * 2;
+	}
 }
-*/
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static uint16_t
+_row_height(struct grid_line row)
+{
+	if (row.units > 0)
+	{
+		return cgui_config_str_height(row.units) + CONFIG->grid_padding * 2;
+	}
+	else
+	{
+		return cgui_config_str_width(-row.units) + CONFIG->grid_padding * 2;
+	}
+}
+

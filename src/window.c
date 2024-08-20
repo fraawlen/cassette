@@ -32,6 +32,7 @@
 #include "grid.h"
 #include "main.h"
 #include "window.h"
+#include "util.h"
 #include "x11.h"
 
 /************************************************************************************************************/
@@ -43,15 +44,16 @@
 
 /* impure */
 
-static void _cairo_destroy     (cgui_window *)                              CGUI_NONNULL(1);
-static bool _cairo_setup       (cgui_window *, uint16_t, uint16_t)          CGUI_NONNULL(1);
-static void _dummy_fn_accel    (cgui_window *, int)                         CGUI_NONNULL(1);
-static void _dummy_fn_close    (cgui_window *)                              CGUI_NONNULL(1);
-static void _dummy_fn_draw     (cgui_window *)                              CGUI_NONNULL(1);
-static void _dummy_fn_focus    (cgui_window *, cgui_cell *)                 CGUI_NONNULL(1);
-static void _dummy_fn_grid     (cgui_window *, cgui_grid *)                 CGUI_NONNULL(1);
-static void _dummy_fn_state    (cgui_window *, enum cgui_window_state_mask) CGUI_NONNULL(1);
-static void _update_shown_grid (cgui_window *)                              CGUI_NONNULL(1);
+static void _cairo_destroy     (cgui_window *)                               CGUI_NONNULL(1);
+static bool _cairo_setup       (cgui_window *, uint16_t, uint16_t)           CGUI_NONNULL(1);
+static void _draw_area         (cgui_window *, struct area *, unsigned long) CGUI_NONNULL(1, 2);
+static void _dummy_fn_accel    (cgui_window *, int)                          CGUI_NONNULL(1);
+static void _dummy_fn_close    (cgui_window *)                               CGUI_NONNULL(1);
+static void _dummy_fn_draw     (cgui_window *, unsigned long)                CGUI_NONNULL(1);
+static void _dummy_fn_focus    (cgui_window *, cgui_cell *)                  CGUI_NONNULL(1);
+static void _dummy_fn_grid     (cgui_window *, cgui_grid *)                  CGUI_NONNULL(1);
+static void _dummy_fn_state    (cgui_window *, enum cgui_window_state_mask)  CGUI_NONNULL(1);
+static void _update_shown_grid (cgui_window *)                               CGUI_NONNULL(1);
 
 /* pure */
 
@@ -92,6 +94,7 @@ cgui_window cgui_window_placeholder_instance =
 	.wait_present   = false,
 	.valid          = false,
 	.size_requested = false,
+	.draw_timestamp = 0,
 	.accels         =
 	{
 		{NULL, _dummy_fn_accel},
@@ -136,9 +139,10 @@ cgui_window_activate(cgui_window *window)
 		}
 	}
 
-	window->size_requested = false;
-
 	/* activate the window */
+
+	window->size_requested = false;
+	window->draw_timestamp = 0;
 
 	x11_window_activate(window->x_id);
 	window_update_size_hints(window);
@@ -294,6 +298,7 @@ cgui_window_create(void)
 	window->wait_present   = false;
 	window->valid          = true;
 	window->size_requested = false;
+	window->draw_timestamp = 0;
 
 	return window;
 
@@ -452,7 +457,7 @@ cgui_window_on_close(cgui_window *window, void (*fn)(cgui_window *window))
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_window_on_draw(cgui_window *window, void (*fn)(cgui_window *window))
+cgui_window_on_draw(cgui_window *window, void (*fn)(cgui_window *window, unsigned long delay))
 {
 	if (cgui_error() || !window->valid)
 	{
@@ -836,6 +841,8 @@ window_destroy(cgui_window *window)
 void
 window_draw(cgui_window *window)
 {
+	unsigned long timestamp;
+	unsigned long delay;
 	struct cgui_zone zone =
 	{
 		.drawable = window->drawable,
@@ -850,29 +857,33 @@ window_draw(cgui_window *window)
 		return;
 	}
 
-	cairo_set_operator(window->drawable, CAIRO_OPERATOR_SOURCE);
+	timestamp = util_time();
+	delay     = window->draw_timestamp == 0 ? 0 : timestamp - window->draw_timestamp;
 
 	/* draw background */
 
 	if (window->draw == WINDOW_DRAW_FULL)
 	{
+		cairo_set_operator(window->drawable, CAIRO_OPERATOR_SOURCE);
 		cgui_box_draw(_box(window), zone);
 	}
 
 	/* draw cells */
+	
+	CREF_FOR_EACH(window->shown_grid->areas, i)
+	{
+		_draw_area(window, (struct area*)cref_ptr(window->shown_grid->areas, i), delay);
+	}
+
+	/* check if there is a new draw cycle requested and update states */
+
+	window->draw           = WINDOW_DRAW_NONE;
+	window->wait_present   = false;
+	window->draw_timestamp = timestamp;
 
 	// TODO
 
-	/* check if there is a new draw cycle requested */
-
-	window->draw         = WINDOW_DRAW_NONE;
-	window->wait_present = false;
-
-	// TODO
-
-	/* run callback */
-
-	window->fn_draw(window);
+	window->fn_draw(window, delay);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -934,6 +945,10 @@ window_resize(cgui_window *window, uint16_t width, uint16_t height)
 	}
 	
 	_update_shown_grid(window);
+	grid_update_geometry(
+		window->shown_grid,
+		window->width  - CONFIG->window_frame.padding * 2,
+		window->height - CONFIG->window_frame.padding * 2);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1087,6 +1102,25 @@ _cairo_error(const cgui_window *window)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+static void
+_draw_area(cgui_window *window, struct area *area, unsigned long delay)
+{
+	struct cgui_cell_context context;
+
+	context.delay       = delay;
+	context.zone        = grid_area_zone(window->shown_grid, area, window->drawable);
+	context.zone.x     += CONFIG->window_frame.padding;
+	context.zone.y     += CONFIG->window_frame.padding;
+	context.side.left   = area->x == 0;
+	context.side.top    = area->y == 0;
+	context.side.right  = area->x + area->width == window->shown_grid->n_cols;
+	context.side.bottom = area->y + area->height == window->shown_grid->n_rows;
+
+	area->cell->fn_draw(area->cell, &context);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 static bool
 _cairo_setup(cgui_window *window, uint16_t width, uint16_t height)
 {
@@ -1128,9 +1162,10 @@ _dummy_fn_close(cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_dummy_fn_draw(cgui_window *window)
+_dummy_fn_draw(cgui_window *window, unsigned long delay)
 {
 	(void)window;
+	(void)delay;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

@@ -275,11 +275,12 @@ static const struct _resource _resources[] =
 	BUTTON( 1) BUTTON( 2) BUTTON( 3) BUTTON( 4) BUTTON( 5) BUTTON( 6) BUTTON( 7) BUTTON( 8)
 	BUTTON( 9) BUTTON(10) BUTTON(11) BUTTON(12)
 
-	BOX("window", ,          _config.window_frame)
-	BOX("window", default_,  _config.window_frame)
-	BOX("window", focused_,  _config.window_frame_focused)
-	BOX("window", disabled_, _config.window_frame_disabled)
-	BOX("window", locked_,   _config.window_frame_locked)
+	BOX("window",      ,          _config.window_frame)
+	BOX("window",      default_,  _config.window_frame)
+	BOX("window",      focused_,  _config.window_frame_focused)
+	BOX("window",      disabled_, _config.window_frame_disabled)
+	BOX("window",      locked_,   _config.window_frame_locked)
+	BOX("placeholder", ,          _config.placeholder_frame)
 };
 
 /************************************************************************************************************/

@@ -174,4 +174,17 @@ static const struct cgui_config config_default =
 
 	.buttons[4][CGUI_CONFIG_SWAP_MOD] = { CGUI_INPUT_SWAP_TO_VALUE, 6 },
 	.buttons[5][CGUI_CONFIG_SWAP_MOD] = { CGUI_INPUT_SWAP_TO_VALUE, 7 },
+
+	/* cell - placeholder */
+
+	.placeholder_frame =
+	{
+		.corner_type      = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
+		.corner_size      = {0, 0, 0, 0},
+		.thickness        = 10,
+		.padding          = 20,
+		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.outer_shaping    = true,
+	},
 };

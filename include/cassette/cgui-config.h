@@ -171,6 +171,10 @@ struct cgui_config
 
 	struct cgui_swap    keys[CGUI_CONFIG_KEYS    + 1][3];
 	struct cgui_swap buttons[CGUI_CONFIG_BUTTONS + 1][3];
+
+	/* cell - placeholder */
+
+	struct cgui_box placeholder_frame;
 };
 
 /************************************************************************************************************/

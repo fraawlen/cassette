@@ -20,11 +20,13 @@
 
 #pragma once
 
+#include <cairo/cairo.h>
 #include <cassette/cobj.h>
 #include <stdbool.h>
 #include <stdint.h>
 
 #include "cgui-attributes.h"
+#include "cgui-zone.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,6 +40,17 @@ extern "C" {
  *
  */
 typedef struct cgui_cell cgui_cell;
+
+/**
+ *
+ */
+struct cgui_cell_side
+{
+	bool left;
+	bool right;
+	bool top;
+	bool bottom;
+};
 
 /**
  *
@@ -64,27 +77,9 @@ struct cgui_cell_event
  */
 struct cgui_cell_context
 {
-	int dummy;
-	
-	// TODO
-};
-
-/**
- *
- */
-struct cgui_cell_style
-{
-	/* geometry */
-
-	uint16_t thickness_border;
-	uint16_t thickness_outline;
-	 int16_t margin;
-
-	/* colors */
-
-	struct ccolor color_background;
-	struct ccolor color_border;
-	struct ccolor color_outline;
+	unsigned long delay;
+	struct cgui_cell_side side;
+	struct cgui_zone zone;
 };
 
 /************************************************************************************************************/

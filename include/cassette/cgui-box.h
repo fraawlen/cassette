@@ -25,6 +25,7 @@
 #include <stdint.h>
 
 #include "cgui-attributes.h"
+#include "cgui-cell.h"
 #include "cgui-zone.h"
 
 #ifdef __cplusplus
@@ -62,6 +63,13 @@ struct cgui_box
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
+
+/**
+ *
+ */
+struct cgui_box
+cgui_box_adjust(struct cgui_box box, const struct cgui_cell_context *context)
+CGUI_NONNULL(2);
 
 /**
  *

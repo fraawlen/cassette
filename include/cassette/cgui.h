@@ -38,6 +38,8 @@
 #include "cgui-window.h"
 #include "cgui-zone.h"
 
+#include "cgui-placeholder.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -22,6 +22,8 @@
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
 
+#include "config.h"
+
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -41,6 +43,46 @@ static void _path_4 (struct cgui_box, struct cgui_zone, bool);
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
+
+struct cgui_box
+cgui_box_adjust(struct cgui_box box, const struct cgui_cell_context *context)
+{
+	uint16_t l = 0;
+
+	/* top left */
+
+	if (CONFIG->window_frame.corner_size[0] == 0
+	 || !context->side.left
+	 || !context->side.top)
+	{
+		goto skip_top_left;
+	}
+
+	switch (CONFIG->window_frame.corner_type[0])
+	{
+		case CGUI_BOX_STRAIGHT:
+			goto skip_top_left;
+
+		case CGUI_BOX_RADII:
+			l = CONFIG->window_frame.padding - CONFIG->window_frame.thickness + box.thickness;
+			break;
+
+		case CGUI_BOX_CHAMFER:
+			break;
+	}
+
+	if (l <= CONFIG->window_frame.corner_size[0])
+	{
+		box.corner_type[0] = CONFIG->window_frame.corner_type[0];
+		box.corner_size[0] = CONFIG->window_frame.corner_size[0] - l;
+	}
+
+skip_top_left:
+
+	return box;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 cgui_box_draw(struct cgui_box box, struct cgui_zone zone)
@@ -125,8 +167,8 @@ static void
 _path_2(struct cgui_box box, struct cgui_zone zone, bool outer)
 {
 	cairo_t *d = zone.drawable;
-	uint16_t x = zone.x;
-	uint16_t y = zone.y;
+	 int16_t x = zone.x;
+	 int16_t y = zone.y;
 	uint16_t w = zone.width;
 	uint16_t t = box.thickness;
 	uint16_t r = box.corner_size[1];
@@ -156,8 +198,8 @@ static void
 _path_3(struct cgui_box box, struct cgui_zone zone, bool outer)
 {
 	cairo_t *d = zone.drawable;
-	uint16_t x = zone.x;
-	uint16_t y = zone.y;
+	 int16_t x = zone.x;
+	 int16_t y = zone.y;
 	uint16_t w = zone.width;
 	uint16_t h = zone.height;
 	uint16_t t = box.thickness;
@@ -188,8 +230,8 @@ static void
 _path_4(struct cgui_box box, struct cgui_zone zone, bool outer)
 {
 	cairo_t *d = zone.drawable;
-	uint16_t x = zone.x;
-	uint16_t y = zone.y;
+	 int16_t x = zone.x;
+	 int16_t y = zone.y;
 	uint16_t h = zone.height;
 	uint16_t t = box.thickness;
 	uint16_t r = box.corner_size[3];

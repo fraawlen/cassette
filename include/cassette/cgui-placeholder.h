@@ -18,57 +18,22 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#include <stdbool.h>
-#include <stdlib.h>
+#pragma once
 
-#include "util.h"
+#include "cgui-attributes.h"
+#include "cgui-cell.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /************************************************************************************************************/
-/* PRIVATE **************************************************************************************************/
+/* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
 /************************************************************************************************************/
 
-bool
-util_env_exists(const char *name)
-{
-	char *val;
-
-	val = getenv(name);
-
-	return val && val[0] != '\0';
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-double
-util_str_to_double(const char *str, double min, double max)
-{
-	double d;
-
-	d = strtod(str, NULL);
-
-	return d > max ? max : (d < min ? min : d);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-long
-util_str_to_long(const char *str, long min, long max)
-{
-	long l;
-
-	l = strtoul(str, NULL, 0);
-
-	return l > max ? max : (l < min ? min : l);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-unsigned long
-util_time(void)
-{
-	struct timespec ts = {0};
-
-	clock_gettime(CLOCK_MONOTONIC, &ts);
-
-	return ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
-}
+/**
+ *
+ */
+cgui_cell *
+cgui_placeholder_create(void)
+CGUI_NONNULL_RETURN;

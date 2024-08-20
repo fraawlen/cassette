@@ -169,7 +169,7 @@ CGUI_NONNULL(1);
  *
  */
 void
-cgui_window_on_draw(cgui_window *window, void (*fn)(cgui_window *window))
+cgui_window_on_draw(cgui_window *window, void (*fn)(cgui_window *window, unsigned long delay))
 CGUI_NONNULL(1);
 
 /**
