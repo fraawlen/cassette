@@ -294,7 +294,7 @@ static void _window_update_wm_size_hints  (dg_core_window_t *w);
 
 static dg_core_window_t *_popup_prep_core_input   (xcb_key_press_event_t *x_ev);
 static dg_core_window_t *_popup_prep_motion_input (xcb_motion_notify_event_t *x_ev);
-static dg_core_window_t *_window_create           (bool fixed);
+static dg_core_window_t *_window_create           (bool fixed, bool redirect);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -368,24 +368,26 @@ static void (*_fn_callback_loop_signal) (uint32_t serial) = NULL;
 
 /* common X atoms */
 
-static xcb_atom_t _xa_clip = 0; /* "CLIPBOARD"         */
-static xcb_atom_t _xa_time = 0; /* "TIMESTAMP"         */
-static xcb_atom_t _xa_mult = 0; /* "MULTIPLE"          */
-static xcb_atom_t _xa_trgt = 0; /* "TARGETS"           */
-static xcb_atom_t _xa_utf8 = 0; /* "UTF8_STRING"       */
-static xcb_atom_t _xa_prot = 0; /* "WM_PROTOCOLS"      */
-static xcb_atom_t _xa_del  = 0; /* "WM_DELETE_WINDOW"  */ 
-static xcb_atom_t _xa_foc  = 0; /* "WM_TAKE_FOCUS"     */
-static xcb_atom_t _xa_nam  = 0; /* "WM_NAME"           */
-static xcb_atom_t _xa_ico  = 0; /* "WM_ICON_MANE"      */
-static xcb_atom_t _xa_cls  = 0; /* "WM_CLASS"          */
-static xcb_atom_t _xa_cmd  = 0; /* "WM_COMMAND"        */
-static xcb_atom_t _xa_host = 0; /* "WM_CLIENT_MACHINE" */
-static xcb_atom_t _xa_lead = 0; /* "WM_CLIENT_LEADER"  */
-static xcb_atom_t _xa_ping = 0; /* "_NET_WM_PING"      */
-static xcb_atom_t _xa_pid  = 0; /* "_NET_WM_PID"       */
-static xcb_atom_t _xa_nnam = 0; /* "_NET_WM_NAME"      */
-static xcb_atom_t _xa_nico = 0; /* "_NET_WM_ICON_NAME" */
+static xcb_atom_t _xa_clip = 0; /* "CLIPBOARD"                   */
+static xcb_atom_t _xa_time = 0; /* "TIMESTAMP"                   */
+static xcb_atom_t _xa_mult = 0; /* "MULTIPLE"                    */
+static xcb_atom_t _xa_trgt = 0; /* "TARGETS"                     */
+static xcb_atom_t _xa_utf8 = 0; /* "UTF8_STRING"                 */
+static xcb_atom_t _xa_prot = 0; /* "WM_PROTOCOLS"                */
+static xcb_atom_t _xa_del  = 0; /* "WM_DELETE_WINDOW"            */ 
+static xcb_atom_t _xa_foc  = 0; /* "WM_TAKE_FOCUS"               */
+static xcb_atom_t _xa_nam  = 0; /* "WM_NAME"                     */
+static xcb_atom_t _xa_ico  = 0; /* "WM_ICON_MANE"                */
+static xcb_atom_t _xa_cls  = 0; /* "WM_CLASS"                    */
+static xcb_atom_t _xa_cmd  = 0; /* "WM_COMMAND"                  */
+static xcb_atom_t _xa_host = 0; /* "WM_CLIENT_MACHINE"           */
+static xcb_atom_t _xa_lead = 0; /* "WM_CLIENT_LEADER"            */
+static xcb_atom_t _xa_ping = 0; /* "_NET_WM_PING"                */
+static xcb_atom_t _xa_pid  = 0; /* "_NET_WM_PID"                 */
+static xcb_atom_t _xa_nnam = 0; /* "_NET_WM_NAME"                */
+static xcb_atom_t _xa_nico = 0; /* "_NET_WM_ICON_NAME"           */
+static xcb_atom_t _xa_type = 0; /* "_NET_WM_WINDOW_TYPE"         */
+static xcb_atom_t _xa_fix  = 0; /* "_NET_WM_WINDOW_TYPE_DESKTOP" */
 
 /* DG custom atoms */
 
@@ -554,6 +556,8 @@ dg_core_init(int argc, char *const *argv, const char *class_name, const char *cl
 	_xa_pid  = _x_get_atom("_NET_WM_PID");
 	_xa_nnam = _x_get_atom("_NET_WM_NAME");
 	_xa_nico = _x_get_atom("_NET_WM_ICON_NAME");
+	_xa_type = _x_get_atom("_NET_WM_WINDOW_TYPE");
+	_xa_fix  = _x_get_atom("_NET_WM_WINDOW_TYPE_DESKTOP");
 	_xa_isig = _x_get_atom("_INTERNAL_LOOP_SIGNAL");
 	_xa_sig  = _x_get_atom(DG_CORE_ATOM_SIGNALS);
 	_xa_vers = _x_get_atom(DG_CORE_ATOM_VERSION);
@@ -754,6 +758,8 @@ dg_core_reset(void)
 	_xa_nnam = 0;
 	_xa_nico = 0;
 	_xa_isig = 0;
+	_xa_type = 0;
+	_xa_fix  = 0;
 	_xa_sig  = 0;
 	_xa_vers = 0;
 	_xa_stt  = 0;
@@ -1089,7 +1095,7 @@ dg_core_window_create(dg_core_window_kind_t kind)
 {
 	_IS_INIT;
 
-	return _window_create((kind == DG_CORE_WINDOW_FIXED));
+	return _window_create((kind == DG_CORE_WINDOW_FIXED), false);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -2439,7 +2445,7 @@ dg_core_popup_spawn(dg_core_cell_t *c, dg_core_window_t *w_ref, int16_t px, int1
 
 	/* create window with override redirect */
 
-	p->w = _window_create(true);
+	p->w = _window_create(false, true);
 	if (!p->w) {
 		goto fail_win;
 	}
@@ -4307,7 +4313,7 @@ _window_destroy(dg_core_window_t *w)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static dg_core_window_t *
-_window_create(bool fixed)
+_window_create(bool fixed, bool redirect)
 {
 	xcb_void_cookie_t xc;
 
@@ -4329,7 +4335,7 @@ _window_create(bool fixed)
 	w->name        = _class[0];
 	w->name_icon   = _class[0];
 	w->state       = DG_CORE_WINDOW_STATE_INITIAL;
-	w->fixed       = fixed;
+	w->fixed       = fixed || redirect;
 	w->grids       = DG_CORE_STACK_EMPTY;
 	w->p_container = NULL;
 	w->g_current   = NULL;
@@ -4367,7 +4373,7 @@ _window_create(bool fixed)
 	const uint32_t mask_vals[] = {
 		0x00000000,
 		0x00000000,
-		fixed,
+		redirect,
 		XCB_EVENT_MASK_EXPOSURE              |
 			XCB_EVENT_MASK_POINTER_MOTION    |
 			XCB_EVENT_MASK_BUTTON_PRESS      |
@@ -4483,6 +4489,10 @@ _window_create(bool fixed)
 	_x_set_prop(true,  w->x_win, _xa_prot, XCB_ATOM_ATOM,     1,      &_xa_foc);
 	_x_set_prop(true,  w->x_win, _xa_prot, XCB_ATOM_ATOM,     1,      &_xa_ping);
 	_x_set_prop(true,  w->x_win, _xa_prot, XCB_ATOM_ATOM,     1,      &_xa_sig);
+
+	if (fixed) {
+		_x_set_prop(false, w->x_win, _xa_type, XCB_ATOM_ATOM, 1, &_xa_fix);
+	}
 
 	dg_core_window_rename(w, w->name, w->name_icon);
 
