@@ -714,6 +714,19 @@ dg_core_reset(void)
 
 	dg_core_config_reset();
 
+	/* extra cleanup for debugging */
+
+	if (!_ext_x || dg_core_util_test_env("DG_CORE_DEBUG")) {
+		cairo_debug_reset_static_data();
+		FcFini();
+	}
+
+	/* reset selections */
+
+	for (size_t i = 0; i < 3; i++) {
+		_clipboard_clear(i);
+	}
+
 	/* reset all global variables */
 
 	_x_con   = NULL;
@@ -780,19 +793,6 @@ dg_core_reset(void)
 
 	for (int i = 0; i < sizeof(_sel_targets) / sizeof(xcb_atom_t); i++) {
 		_sel_targets[i] = 0;
-	}
-
-	/* reset selections */
-
-	for (size_t i = 0; i < 3; i++) {
-		_clipboard_clear(i);
-	}
-
-	/* extra cleanup for debugging */
-
-	if (dg_core_util_test_env("DG_CORE_DEBUG")) {
-		cairo_debug_reset_static_data();
-		FcFini();
 	}
 
 	/* end */
