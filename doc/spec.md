@@ -398,7 +398,7 @@ Creates a for-loop that iterates through each token of the given variable. Insid
 ```
 LET var a b c d
 FOR_EACH var
-	% a
+	% var
 FOR_END
 -> a
    b
