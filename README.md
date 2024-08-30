@@ -2,7 +2,7 @@
 
 Cassette Configuration (CCFG) is a configuration language and parser library featuring array based values and short s-like expressions based functions. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
 
-The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems, and except for the compiler and build system, is not dependent on third-party software.
+The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems.
 
 Language Features
 -----------------
@@ -102,9 +102,35 @@ value_B
 
 Check out the `examples` directory for more in depth demonstrations and `include/cassette/*.h` header files for full functions descriptions. For more information about the language usage, features and syntax check out the [language spec](./doc/spec.md).
 
+Fizz Buzz
+---------
+
+Here's a Fizz Buzz example that prints the results to stderr using DEBUG_PRINT sequences. It's important to note that although it is possible, CCFG is not intended to be used for computation. Instead, all language features and functions have been created with dynamic configurations in mind.
+
+```
+LET_ENUM n 1 100
+FOR_EACH n
+
+	SECTION_DEL Fizz Buzz No_Fizz No_Buzz
+
+	SECTION_ADD (== (MOD ((% n) 3) 0 Fizz No_Fizz)
+	SECTION_ADD (== (MOD ((% n) 5) 0 Buzz No_Buzz)
+
+	SECTION Fizz Buzz
+		DEBUG_PRINT "Fizz Buzz"
+	SECTION Fizz No_Buzz
+		DEBUG_PRINT "Fizz"
+	SECTION No_Fizz Buzz
+		DEBUG_PRINT "Buzz"
+	SECTION No_Fizz No_Buzz
+		DEBUG_PRINT (% n)
+	SECTION
+
+FOR_END
+```
+
 Mirrors
 -------
 
 - https://codeberg.org/fraawlen/cassette-configuration
 - https://github.com/fraawlen/cassette-configuration
-

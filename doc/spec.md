@@ -1,4 +1,4 @@
-# CCFG - Specification & Syntax (WIP 80%)
+# CCFG - Specification & Syntax
 
 Cassette Configuration (CCFG) is a configuration language and parser library featuring array based values and short s-like expressions based functions. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
 
@@ -6,17 +6,16 @@ This document specifies and details all of CCFG's features and syntax rules. It'
 
 ## Table of contents <a name="toc"></a>
 
-1. [Use-case & Scope](#scope)
-2. [Fundamentals](#fundamentals)
+1. [Fundamentals](#fundamentals)
 	1. [Sequences](#sequences)
 	2. [Tokens](#tokens)
 	3. [Resources](#resources)
-3. [Tokens Types](#tokens-types)
+2. [Tokens Types](#tokens-types)
 	1. [Invalids](#invalids)
 	2. [Strings](#strings)
 	3. [Numerals](#numerals)
 	4. [Functions](#functions)
-4. [Sequences Leads](#leads)
+3. [Sequences Leads](#leads)
 	1. [Sections](#section)
 	2. [Section Additions](#section-add)
 	3. [Section Deletions](#section-del)
@@ -27,7 +26,7 @@ This document specifies and details all of CCFG's features and syntax rules. It'
 	8. [Child File Inclusion](#include)
 	9. [Seed Override](#seed)
 	10. [Debug Print](#debug)
-5. [Substitutions](#substitutions)
+4. [Substitutions](#substitutions)
 	1. [Comments / End-of-Sequence](#eos)
 	2. [Fillers](#filler)
 	3. [End-of-File](#eof)
@@ -42,21 +41,15 @@ This document specifies and details all of CCFG's features and syntax rules. It'
 	12. [Constants](#const)
 	13. [Timestamp](#time)
 	14. [Random value](#rand)
-6. [Full examples](#examples)
+5. [Full examples](#examples)
 	1. [GUI Configuration](#gui-conf)
 	2. [Network Simulator](#net-sim)
 
-## 1. Use-case & Scope <a name="scope"></a>
-
-TODO
+## 1. Fundamentals <a name="fundamentals"></a>
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-## 2. Fundamentals <a name="fundamentals"></a>
-
-<div align="right">[ <a href="#toc">back to top</a> ]</div>
-
-### 2.1. Sequences <a name="sequences"></a>
+### 1.1. Sequences <a name="sequences"></a>
 
 Every CCFG configuration file is a series of 'sequences' separated by newlines until EOF is reached. Empty lines between sequences are ignored. Leading and trailing white-spaces (either space or tab characters) are ignored too.
 
@@ -69,9 +62,9 @@ sequence
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 2.2. Tokens <a name="tokens"></a>
+### 1.2. Tokens <a name="tokens"></a>
 
-Sequences themselves are a series of 'tokens'. Tokens are 32 bytes words, null terminator included, encoded in ASCII / UTF-8, separated by any amount of white space in-between. If the word's length exceeds 31 bytes, only the first 31 bytes are kept and a null terminator is appended at the 32th byte.
+Sequences themselves are a series of 'tokens'. Tokens are 256 bytes words, null terminator included, encoded in ASCII / UTF-8, separated by any amount of white space in-between. If the word's length exceeds 255 bytes, only the first 255 bytes are kept and a null terminator is appended at the 256th byte.
 
 ```
 token token token
@@ -102,7 +95,7 @@ token'
 ```
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 2.3. Resources <a name="resources"></a>
+### 1.3. Resources <a name="resources"></a>
 
 Sequences that make up a program's configuration are called resources. The first token represents the resource's namespace and the second one is the resource's name. Namespaces help reuse resource names without collisions. The tokens that follow until the end of the sequence are interpreted as values attributed to the resource. Resources definitions with no values are ignored. Therefore, valid resources are sequences of at least 3 tokens. There are no upper token count limit (apart from the system's memory). If the same resource is defined more than once, the latest definition overwrites the previous ones.
 
@@ -130,7 +123,7 @@ button corner-style radii radii radii radii
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-## 3. Tokens Types <a name="tokens-types"></a>
+## 2. Tokens Types <a name="tokens-types"></a>
 
  When parsed, tokens get converted into one of the following 4 types:
 
@@ -141,19 +134,19 @@ button corner-style radii radii radii radii
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 3.1. Invalids <a name="invalids"></a>
+### 2.1. Invalids <a name="invalids"></a>
 
 If any error during token parsing happens, like a failed conversion, wrong or missing function parameters, or a system error, the token will be marked as invalid. If an invalid type token is encountered in the middle of a sequence, the sequence is ended prematurely and the following tokens are skipped until a new sequence begins.
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 3.2. Strings <a name="strings"></a>
+### 2.2. Strings <a name="strings"></a>
 
 String tokens are the default token type, as they are just a text value that represents a resource namespace, resource name, or general purpose value with no language function. 
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 3.3. Numerals <a name="numerals"></a>
+### 2.3. Numerals <a name="numerals"></a>
 
 Numeral tokens are double-floating IEEE-754 values. Tokens are only interpreted as numerals when a language function requires it. They can be represented in 3 styles:
 
@@ -193,7 +186,7 @@ An RGBA color hexadecimal number consists of a '#' followed by 6 or 8 hexadecima
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 3.4. Functions <a name="functions"></a>
+### 2.4. Functions <a name="functions"></a>
 
 Function tokens are defined by an exact, case-sensitive ASCII sequence of non-white-space characters. As soon as they're read, they should trigger a language function. If the function fails due to invalid input parameters or internal memory issues, an invalid token is returned. Functions tokens can be separated into two sub-types: transformation tokens and sequences leads.
 
@@ -239,11 +232,11 @@ a INCLUDE path1 path2
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-## 4. Sequences Leads <a name="leads"></a>
+## 3. Sequences Leads <a name="leads"></a>
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 4.1. Sections <a name="section"></a>
+### 3.1. Sections <a name="section"></a>
 
 ```
 SECTION [section_name] [section_name] ...
@@ -278,7 +271,7 @@ SECTION
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 4.2. Section Additions <a name="section-add"></a>
+### 3.2. Section Additions <a name="section-add"></a>
 
 ```
 SECTION_ADD [section_name] [section_name] ...
@@ -288,7 +281,7 @@ Sequences belonging to a section will only be parsed and processed if said secti
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 4.3. Section Deletions <a name="section-del"></a>
+### 3.3. Section Deletions <a name="section-del"></a>
 
 ```
 SECTION_DEL [section_name] [section_name] ...
@@ -298,13 +291,13 @@ Sequences belonging to a section will only be parsed and processed if said secti
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 4.4. Variable Declaration <a name="let"></a>
+### 3.4. Variable Declaration <a name="let"></a>
 
 ```
 LET [new_variable_name] [value] [value] ...
 ```
 
-The CCFG configuration language offers support for user-defined variables. Similarly to resources, variables are arrays of values. They can be declared with a section starting with the token `LET` followed by the name of the variable (that will be used to reference it in other parts of the file), then by any number of tokens. After that, when a variable is invoked in another sequence with [`$`](#var) or [`VAR`](var) the variable values will be injected into that sequence.
+The CCFG configuration language offers support for user-defined variables. Similarly to resources, variables are arrays of values. They can be declared with a sequence starting with the token `LET` followed by the name of the variable (that will be used to reference it in other parts of the file), then by any number of tokens. After that, when a variable is invoked in another sequence with [`$`](#var) or [`VAR`](var) the variable values will be injected into that sequence.
 
 ```
 LET var a b c
@@ -329,7 +322,7 @@ $ var_b 1 2 3 $ var_a
 -> ab c 1 2 3 a b
 ```
 
-Finally,  if the same variable is declared more than once, the latest declaration overwrites the previous ones.
+Finally, if the same variable is declared more than once, the latest declaration overwrites the previous ones.
 
 ```
 LET var a b c d
@@ -340,7 +333,7 @@ $ var
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 4.5. Enumerations Declaration <a name="enum"></a>
+### 3.5. Enumerations Declaration <a name="enum"></a>
 
 ```
 LET_ENUM [new_variable_name] [min] [max] [steps] [precision]
@@ -353,14 +346,32 @@ Enumerations are variables whose values are not written down strings but instead
 
 - min : value to start from
 - max : value to end at
-- steps : 
+- steps : amount of intervals between min and max
 - precision : the amount of decimals, because numbers are stored as doubles
 
-TODO
+The `min`, `steps` and `precision` tokens are optional. If ommited they will assume the following default values:
+
+- min = 0.0
+- steps = max - min
+- precision = 0
+
+```
+LET_ENUM enum_1 5
+-> 0 1 2 3 4 5
+
+LET_ENUM enum_2 3 5
+-> 3 4 5
+
+LET_ENUM enum_3 0 6 3
+-> 0 2 4 6
+
+LET_ENUM enum_4 1 5 8 1
+-> 1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0 
+```
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 4.6. Combination of variables <a name="combine"></a>
+### 3.6. Combination of variables <a name="combine"></a>
 
 ```
 LET_APPEND  [new_variable_name] [variable_name] [string]
@@ -368,28 +379,42 @@ LET_PREPEND [new_variable_name] [variable_name] [string]
 LET_MERGE   [new_variable_name] [variable_name] [variable_name]
 ```
 
-TODO
+Append or prepend a string to each value of a given variable or merge the values of two variables. Then save the resulting token into a new variable.
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 4.7. Iterations <a name="iterate"></a>
+### 3.7. Iterations <a name="iterate"></a>
 
 ```
-ITERATE_RAW [variable_name] [token] [token] ...
-ITERATE     [variable_name] [token] [token] ...
+FOR_EACH [variable_name] [alt_variable_name]
+	sequence
+	sequence
+	...
+FOR_END
 ```
 
-TODO
+Creates a for-loop that iterates through each token of the given variable. Inside the loop, the current iteration token can be accessed with the [`%`](#var) or [`ITER`](var) substitution tokens followed by the `alt_variable_name`. `alt_variable_name` is an optional token. If not provided, its value would be assumed to be the same as the given variable name. Loops can be nested. To close a loop, a sequence with a `FOR_END` leading token needs to be added; otherwise, the parser will assume the loop lasts until the end of the file or the parent loop.
+
+```
+LET var a b c d
+FOR_EACH var
+	% a
+FOR_END
+-> a
+   b
+   c
+   d
+```
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 4.8. Child File Inclusion <a name="include"></a>
+### 3.8. Child File Inclusion <a name="include"></a>
 
 ```
 INCLUDE [filename] [filename] ...
 ```
 
-Alongside sections, resources can also be put in separate files that can be opened and parsed with an inclusion sequence that starts with an `INCLUDE` token followed by filenames of files to include. The filenames are relative to the location of the file the sequence is read from. Unless they start with '/' in which case the given filename are absolute.
+Alongside sections, resources can also be split into separate files that can be opened and parsed with an inclusion sequence that starts with an `INCLUDE` token followed by filenames of files to include. The filenames are relative to the location of the file the sequence is read from. Unless they start with '/' in which case the given filename are absolute.
 
 The contents of the included files are treated as if they've been copy-pasted into the parent file at the position of the inclusion sequence. In other words, declared variables, enumerations, and section states are carried over to the included child file. And any modifications that happen in inclusions are also brought back to the parent file.
 
@@ -413,7 +438,7 @@ Are equivalent to a single file like this :
 SECTION_ADD Sa
 SECTION Sa
 	LET var a b c
-	1 2 3 % var
+	1 2 3 $ var
 ```
 
 That gets resolved into :
@@ -423,17 +448,17 @@ That gets resolved into :
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 4.9. Seed Override <a name="seed"></a>
+### 3.9. Seed Override <a name="seed"></a>
 
 ```
 SEED_OVERRIDE [seed_value]
 ```
 
-Resets and sets the seed of the parser's random number LCG. Can be used to shuffle the values returned by [`RAND`](#rand). However, this sequence is an override. It can conflict with software that sets its own parser seed. Check the software's documentation before using it.
+Resets and sets the seed of the parser's random number LCG. Can be used to shuffle the values returned by [`RAND`](#rand). 
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 4.10. Debug Print <a name="debug"></a>
+### 3.10. Debug Print <a name="debug"></a>
 
 ```
 DEBUG_PRINT [token] [token] ...
@@ -443,11 +468,11 @@ Prints to `stderr` the resolved sequence that follows the lead token.
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-## 5. Substitutions <a name="substitutions"></a>
+## 4. Substitutions <a name="substitutions"></a>
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 5.1. Comments / End-of-Sequence <a name="eos"></a>
+### 4.1. Comments / End-of-Sequence <a name="eos"></a>
 
 ```
 //
@@ -466,7 +491,7 @@ a b //not a comment
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 5.2. Fillers <a name="filler"></a>
+### 4.2. Fillers <a name="filler"></a>
 
 ```
 =
@@ -484,7 +509,7 @@ namespace property := value
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 5.3. End-of-File <a name="eof"></a>
+### 4.3. End-of-File <a name="eof"></a>
 
 ```
 EOF
@@ -494,7 +519,7 @@ Ends a sequence and file early. If the file this token is read from happens to b
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 5.4. Escape <a name="esc"></a>
+### 4.4. Escape <a name="esc"></a>
 
 ```
 \ [token]
@@ -520,7 +545,7 @@ sequence
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 5.5. Variable Injection <a name="var"></a>
+### 4.5. Variable Injection <a name="var"></a>
 
 ```
 $   [variable_name]
@@ -537,7 +562,7 @@ LET var a b c
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 5.6. Parameter Injection <a name="param"></a>
+### 4.6. Parameter Injection <a name="param"></a>
 
 ```
 $$    [parameter_name]
@@ -548,7 +573,7 @@ Returns the value of a parameter defined within the calling program. If the para
 
 ```c
 /* inside caller program */
-ccfg_push_parameter(cfg, "param_a", "abc");
+ccfg_push_param(cfg, "param_a", "abc");
 ```
 
 ```
@@ -561,7 +586,7 @@ $$ param_b
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 5.7. Iteration Injection <a name="iter"></a>
+### 4.7. Iteration Injection <a name="iter"></a>
 
 ```
 %
@@ -572,7 +597,7 @@ Within an iterated sequence, this token returns a value of the iteration's varia
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 5.8. Join <a name="join"></a>
+### 4.8. Join <a name="join"></a>
 
 ```
 JOIN [string] [string]
@@ -587,18 +612,19 @@ JOIN a b
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 5.9. Conditions <a name="if"></a>
+### 4.9. Conditions <a name="if"></a>
 
 ```
-<  [double] [double] [token_if_true] [token_if_false]
-<= [doudle] [double] [token_if_true] [token_if_false]
->  [double] [double] [token_if_true] [token_if_false]
->= [double] [double] [token_if_true] [token_if_false]
-== [double] [double] [token_if_true] [token_if_false]
-!= [double] [double] [token_if_true] [token_if_false]
+<     [double] [double] [token_if_true] [token_if_false]
+<=    [doudle] [double] [token_if_true] [token_if_false]
+>     [double] [double] [token_if_true] [token_if_false]
+>=    [double] [double] [token_if_true] [token_if_false]
+==    [double] [double] [token_if_true] [token_if_false]
+!=    [double] [double] [token_if_true] [token_if_false]
+STREQ [string] [string] [token_if_true] [token_if_false]
 ```
 
-Compares two doubles. Depending on the result, either the 3rd or 4th token is returned.
+Compares two doubles or two strings. Depending on the result, either the 3rd or 4th token is returned.
 
 ```
 != 0.3 0.5 a b
@@ -618,7 +644,7 @@ $ == 0.0 1.0 var_a var_b
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 5.10. Math Operations <a name="math"></a>
+### 4.10. Math Operations <a name="math"></a>
 
 ```
 SQRT  [double]
@@ -645,7 +671,7 @@ MOD   [double] [mod]
 POW   [double] [exponent]
 BIG   [double] [double]
 SMALL [double] [double]
-ITRPL [double] [double] [0.0-1.0] // Interpolation
+ITRPL [double] [double] [0.0-1.0] // Linear interpolation
 LIMIT [double] [min] [max]
 ```
 
@@ -653,10 +679,10 @@ Performs a mathematical operation and returns the resulting double value.
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 5.11. Color Operations <a name="color"></a>
+### 4.11. Color Operations <a name="color"></a>
 
 ```
-CITRPL [color] [color] [0.0-1.0]       // Color interpolation
+CITRPL [color] [color] [0.0-1.0]       // Linear color interpolation
 RGB    [0-255] [0-255] [0-255]         // Composes a color
 RGBA   [0-255] [0-255] [0-255] [0-255] // Composes a color
 ```
@@ -665,7 +691,7 @@ Performs color specific operations and returns a double value representing a col
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 5.12. Constants <a name="const"></a>
+### 4.12. Constants <a name="const"></a>
 
 ```
 PI    // 3.1415926535897932
@@ -678,7 +704,7 @@ Returns a constant value in double format.
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 5.13. Timestamp <a name="time"></a>
+### 4.13. Timestamp <a name="time"></a>
 
 ```
 TIME
@@ -688,7 +714,7 @@ Returns a UNIX timestamp in seconds.
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 5.14. Random value <a name="rand"></a>
+### 4.14. Random value <a name="rand"></a>
 
 ```
 RAND [min] [max]
@@ -699,11 +725,11 @@ Because the internal RNG is an LCG, as long as the initial seed is not modified 
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-## 6. Full Examples <a name="examples"></a>
+## 5. Full Examples <a name="examples"></a>
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 6.1. GUI Configuration <a name="gui-conf"></a>
+### 5.1. GUI Configuration <a name="gui-conf"></a>
 
 In this first example, we consider a hypothetical GUI tooklit or application that lets its end-users customize the appearance of its widgets. Thanks to CCFG's sections, different themes can co-exist in the same source file. Moreover, the themes are selected automatically depending on the value of a brightness variable. Said variable could be then set by an external program that tracks the values of a light sensor. Hence, with this kind of configuration, an application or toolkit can switch between a light and dark theme depending on the amount of light hitting the device they're running from.
 
@@ -741,7 +767,7 @@ label  background_color #ccccccff
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 6.2. Network Simulator <a name="net-sim"></a>
+### 5.2. Network Simulator <a name="net-sim"></a>
 
 This second example shows off a possible simulation description/input file for some sort of wireless network simulator. Said simulation requires a list of communication nodes to be declared and set up. Here, a linear wireless network consisting of 5 nodes is created. Each node is then attributed a (simplified) mac address, an x-y position, and a random communication range. Thanks to the usage of variables and iterations, that same simulation can be scaled up to hundreds of nodes by just changing the `number_of_nodes` value.
 
@@ -758,7 +784,6 @@ FOR_EACH nodes_ids id
 	(JOIN "n_" (% id)) y       0	
 	(JOIN "n_" (% id)) range   (ROUND (RAND 15 35))
 FOR_END
-
 ```
 
 Resolved resources :
