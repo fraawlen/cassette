@@ -30,7 +30,7 @@ Dependencies
 
 - First-party libraries :
 
-	- [Cassette-Objects (COBJ)](https://codeberg.org/fraawlen/cassette-objects)
+	- [Cassette-Objects (COBJ)](/../../../../fraawlen/cassette-objects)
 
 Installation
 ------------
