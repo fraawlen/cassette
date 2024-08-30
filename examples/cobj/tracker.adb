@@ -26,9 +26,7 @@ with Interfaces.C;    use Interfaces.C;
 
 procedure Tracker
 is
-
 	Tracker : Inputs.T;
-
 begin
 
 	Tracker.Create (10);

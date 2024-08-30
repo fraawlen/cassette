@@ -32,8 +32,8 @@ is
 	
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 	
-	procedure Sequence (Seed : in Rand.Seed_Value; Min : in Float; Max : in Float) is
-	begin
+	procedure Sequence (Seed : in Rand.Seed_Value; Min : in Float; Max : in Float)
+	is begin
 
 		R.Seed (Seed);
 

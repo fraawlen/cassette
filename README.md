@@ -199,9 +199,9 @@ Dependencies
 
 - First-party libraries :
 
-	- [Cassette-Objects (COBJ)](https://codeberg.org/fraawlen/cassette-objects)
-	- [Cassette-Configuration (CCFG)](https://codeberg.org/fraawlen/cassette-configuration)
-	- [Cassette-Graphics (CGUI)](https://codeberg.org/fraawlen/cassette-graphics)
+	- [Cassette-Objects (COBJ)](/../../../../fraawlen/cassette-objects)
+	- [Cassette-Configuration (CCFG)](/../../../../fraawlen/cassette-configuration)
+	- [Cassette-Graphics (CGUI)](/../../../../fraawlen/cassette-graphics)
 
 Build
 -----

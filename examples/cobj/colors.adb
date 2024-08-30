@@ -34,8 +34,8 @@ is
 	
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 	
-	function To_Str (Val : Color.Channel) return String is
-	begin
+	function To_Str (Val : Color.Channel) return String
+	is begin
 
 		S.Clear;
 		S.Append (Float(Val) * 255.0);
@@ -47,8 +47,8 @@ is
 	
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Print (Cl : Color.T) is
-	begin
+	procedure Print (Cl : Color.T)
+	is begin
 
 		Put (  "R =" & To_Str(Cl.R));
 		Put (", G =" & To_Str(Cl.G));

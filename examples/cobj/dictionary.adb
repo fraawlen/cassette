@@ -32,8 +32,8 @@ is
 	
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 	
-	procedure Print_Stats is
-	begin
+	procedure Print_Stats
+	is begin
 
 		S.Clear;
 		S.Append (D.Load_Factor);
