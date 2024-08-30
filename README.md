@@ -29,8 +29,8 @@ Dependencies
 
 - First-party libraries :
 
-	- [Cassette-Configuration](https://codeberg.org/fraawlen/cassette-configuration)
-	- [Cassette-Objects](https://codeberg.org/fraawlen/cassette-objects)
+	- [Cassette-Configuration](/../../../../fraawlen/cassette-configuration)
+	- [Cassette-Objects](/../../../../fraawlen/cassette-objects)
 
 - Third-party libraries :
 
@@ -158,5 +158,3 @@ Mirrors
 
 - https://codeberg.org/fraawlen/cassette-graphics
 - https://github.com/fraawlen/cassette-graphics
-
-
