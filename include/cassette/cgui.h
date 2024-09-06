@@ -86,7 +86,7 @@ cgui_setup_app_name(const char *name);
  *
  */
 void
-cgui_setup_threading(pthread_mutex_t *mutex);
+cgui_setup_threading(pthread_mutex_t *mut);
 
 /**
  *

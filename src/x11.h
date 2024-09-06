@@ -30,7 +30,7 @@
 /************************************************************************************************************/
 
 void
-x11_init(int argc, char **argv, const char *class_name, const char *class_class, xcb_connection_t *connection)
+x11_init(int argc, char **argv, const char *class_name, const char *class_class, xcb_connection_t *conn)
 CGUI_NONNULL(3, 4);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

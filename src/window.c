@@ -44,29 +44,29 @@
 
 /* impure */
 
-static void _cairo_destroy     (cgui_window *)                               CGUI_NONNULL(1);
-static bool _cairo_setup       (cgui_window *, uint16_t, uint16_t)           CGUI_NONNULL(1);
-static void _draw_area         (cgui_window *, struct area *, unsigned long) CGUI_NONNULL(1, 2);
-static void _dummy_fn_accel    (cgui_window *, int)                          CGUI_NONNULL(1);
-static void _dummy_fn_close    (cgui_window *)                               CGUI_NONNULL(1);
-static void _dummy_fn_draw     (cgui_window *, unsigned long)                CGUI_NONNULL(1);
-static void _dummy_fn_focus    (cgui_window *, cgui_cell *)                  CGUI_NONNULL(1);
-static void _dummy_fn_grid     (cgui_window *, cgui_grid *)                  CGUI_NONNULL(1);
-static void _dummy_fn_state    (cgui_window *, enum cgui_window_state_mask)  CGUI_NONNULL(1);
-static void _update_shown_grid (cgui_window *)                               CGUI_NONNULL(1);
+static void cairo_data_destroy (cgui_window *)                               CGUI_NONNULL(1);
+static bool cairo_setup        (cgui_window *, uint16_t, uint16_t)           CGUI_NONNULL(1);
+static void draw_area          (cgui_window *, struct area *, unsigned long) CGUI_NONNULL(1, 2);
+static void dummy_fn_accel     (cgui_window *, int)                          CGUI_NONNULL(1);
+static void dummy_fn_close     (cgui_window *)                               CGUI_NONNULL(1);
+static void dummy_fn_draw      (cgui_window *, unsigned long)                CGUI_NONNULL(1);
+static void dummy_fn_focus     (cgui_window *, cgui_cell *)                  CGUI_NONNULL(1);
+static void dummy_fn_grid      (cgui_window *, cgui_grid *)                  CGUI_NONNULL(1);
+static void dummy_fn_state     (cgui_window *, enum cgui_window_state_mask)  CGUI_NONNULL(1);
+static void update_shown_grid  (cgui_window *)                               CGUI_NONNULL(1);
 
 /* pure */
 
-static struct cgui_box _box         (const cgui_window *)                         CGUI_NONNULL(1) CGUI_PURE;
-static bool            _cairo_error (const cgui_window *)                         CGUI_NONNULL(1) CGUI_PURE;
-static cgui_grid      *_min_grid    (const cgui_window *)                         CGUI_NONNULL(1) CGUI_PURE;
-static void            _min_size    (const cgui_window *, uint16_t *, uint16_t *) CGUI_NONNULL(1, 2, 3);
+static struct cgui_box box         (const cgui_window *)                         CGUI_NONNULL(1) CGUI_PURE;
+static bool            cairo_error (const cgui_window *)                         CGUI_NONNULL(1) CGUI_PURE;
+static cgui_grid      *min_grid    (const cgui_window *)                         CGUI_NONNULL(1) CGUI_PURE;
+static void            min_size    (const cgui_window *, uint16_t *, uint16_t *) CGUI_NONNULL(1, 2, 3);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static const struct cgui_window_state_flags _default_states = {false};
+static const struct cgui_window_state_flags default_states = {false};
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -82,12 +82,12 @@ cgui_window cgui_window_placeholder_instance =
 	.drawable       = NULL,
 	.name           = NULL,
 	.grids          = CREF_PLACEHOLDER,
-	.fn_close       = _dummy_fn_close,
-	.fn_draw        = _dummy_fn_draw,
-	.fn_focus       = _dummy_fn_focus,
-	.fn_grid        = _dummy_fn_grid,
-	.fn_state       = _dummy_fn_state,
-	.state          = _default_states,
+	.fn_close       = dummy_fn_close,
+	.fn_draw        = dummy_fn_draw,
+	.fn_focus       = dummy_fn_focus,
+	.fn_grid        = dummy_fn_grid,
+	.fn_state       = dummy_fn_state,
+	.state          = default_states,
 	.shown_grid     = CGUI_GRID_PLACEHOLDER,
 	.focus          = {0, 0, 0, 0, CGUI_CELL_PLACEHOLDER},
 	.draw           = WINDOW_DRAW_NONE,
@@ -97,18 +97,18 @@ cgui_window cgui_window_placeholder_instance =
 	.draw_timestamp = 0,
 	.accels         =
 	{
-		{NULL, _dummy_fn_accel},
-		{NULL, _dummy_fn_accel},
-		{NULL, _dummy_fn_accel},
-		{NULL, _dummy_fn_accel},
-		{NULL, _dummy_fn_accel},
-		{NULL, _dummy_fn_accel},
-		{NULL, _dummy_fn_accel},
-		{NULL, _dummy_fn_accel},
-		{NULL, _dummy_fn_accel},
-		{NULL, _dummy_fn_accel},
-		{NULL, _dummy_fn_accel},
-		{NULL, _dummy_fn_accel},
+		{NULL, dummy_fn_accel},
+		{NULL, dummy_fn_accel},
+		{NULL, dummy_fn_accel},
+		{NULL, dummy_fn_accel},
+		{NULL, dummy_fn_accel},
+		{NULL, dummy_fn_accel},
+		{NULL, dummy_fn_accel},
+		{NULL, dummy_fn_accel},
+		{NULL, dummy_fn_accel},
+		{NULL, dummy_fn_accel},
+		{NULL, dummy_fn_accel},
+		{NULL, dummy_fn_accel},
 	}
 };
 
@@ -262,7 +262,7 @@ cgui_window_create(void)
 		goto fail_backend;
 	}
 
-	if (!_cairo_setup(window, width, height))
+	if (!cairo_setup(window, width, height))
 	{
 		goto fail_cairo;
 	}
@@ -275,7 +275,7 @@ cgui_window_create(void)
 	for (size_t i = 0; i < CGUI_CONFIG_ACCELS; i++)
 	{
 		window->accels[i].name = NULL;
-		window->accels[i].fn   = _dummy_fn_accel;
+		window->accels[i].fn   = dummy_fn_accel;
 	}
 
 	cref_set_default_ptr(window->grids, CGUI_GRID_PLACEHOLDER);
@@ -286,12 +286,12 @@ cgui_window_create(void)
 	window->height         = height;
 	window->x_serial       = 0;
 	window->name           = NULL;
-	window->fn_close       = _dummy_fn_close;
-	window->fn_draw        = _dummy_fn_draw;
-	window->fn_focus       = _dummy_fn_focus;
-	window->fn_grid        = _dummy_fn_grid;
-	window->fn_state       = _dummy_fn_state;
-	window->state          = _default_states;
+	window->fn_close       = dummy_fn_close;
+	window->fn_draw        = dummy_fn_draw;
+	window->fn_focus       = dummy_fn_focus;
+	window->fn_grid        = dummy_fn_grid;
+	window->fn_state       = dummy_fn_state;
+	window->state          = default_states;
 	window->shown_grid     = CGUI_GRID_PLACEHOLDER;
 	window->focus          = AREA_PLACEHOLDER;
 	window->draw           = WINDOW_DRAW_NONE;
@@ -305,7 +305,7 @@ cgui_window_create(void)
 	/* errors */
 
 fail_push:
-	_cairo_destroy(window);
+	cairo_data_destroy(window);
 fail_cairo:
 	x11_window_destroy(window->x_id);
 fail_backend:
@@ -451,7 +451,7 @@ cgui_window_on_close(cgui_window *window, void (*fn)(cgui_window *window))
 		return;
 	}
 	
-	window->fn_close = fn ? fn : _dummy_fn_close;
+	window->fn_close = fn ? fn : dummy_fn_close;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -464,7 +464,7 @@ cgui_window_on_draw(cgui_window *window, void (*fn)(cgui_window *window, unsigne
 		return;
 	}
 	
-	window->fn_draw = fn ? fn : _dummy_fn_draw;
+	window->fn_draw = fn ? fn : dummy_fn_draw;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -477,7 +477,7 @@ cgui_window_on_grid(cgui_window *window, void (*fn)(cgui_window *window, cgui_gr
 		return;
 	}
 	
-	window->fn_grid = fn ? fn : _dummy_fn_grid;
+	window->fn_grid = fn ? fn : dummy_fn_grid;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -490,7 +490,7 @@ cgui_window_on_state(cgui_window *window, void (*fn)(cgui_window *window, enum c
 		return;
 	}
 	
-	window->fn_state = fn ? fn : _dummy_fn_state;
+	window->fn_state = fn ? fn : dummy_fn_state;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -611,7 +611,7 @@ cgui_window_resize(cgui_window *window, uint16_t width, uint16_t height)
 		window->size_requested = true;
 	}
 
-	_min_size(window, &min_width, &min_height);
+	min_size(window, &min_width, &min_height);
 
 	width  = width  < min_width  ? min_width  : width;
 	height = height < min_height ? min_height : height;
@@ -683,7 +683,7 @@ cgui_window_state(const cgui_window *window)
 {
 	if (cgui_error() || !window->valid)
 	{
-		return _default_states;
+		return default_states;
 	}
 
 	return window->state;
@@ -828,7 +828,7 @@ window_destroy(cgui_window *window)
 		free(window->accels[i].name);
 	}
 
-	_cairo_destroy(window);
+	cairo_data_destroy(window);
 	main_pull_instance(main_windows(), window);
 	x11_window_destroy(window->x_id);
 	cref_destroy(window->grids);
@@ -865,14 +865,14 @@ window_draw(cgui_window *window)
 	if (window->draw == WINDOW_DRAW_FULL)
 	{
 		cairo_set_operator(window->drawable, CAIRO_OPERATOR_SOURCE);
-		cgui_box_draw(_box(window), zone);
+		cgui_box_draw(box(window), zone);
 	}
 
 	/* draw cells */
 	
 	CREF_FOR_EACH(window->shown_grid->areas, i)
 	{
-		_draw_area(window, (struct area*)cref_ptr(window->shown_grid->areas, i), delay);
+		draw_area(window, (struct area*)cref_ptr(window->shown_grid->areas, i), delay);
 	}
 
 	/* check if there is a new draw cycle requested and update states */
@@ -911,10 +911,10 @@ window_repair(cgui_window *window)
 		return;
 	}
 
-	if (_cairo_error(window))
+	if (cairo_error(window))
 	{
-		_cairo_destroy(window);
-		_cairo_setup(window, window->width, window->height);
+		cairo_data_destroy(window);
+		cairo_setup(window, window->width, window->height);
 	}
 
 	cref_repair(window->grids);
@@ -938,13 +938,13 @@ window_resize(cgui_window *window, uint16_t width, uint16_t height)
 
 	cairo_surface_flush(window->surface);
 	cairo_xcb_surface_set_size(window->surface, width, height);
-	if (_cairo_error(window))
+	if (cairo_error(window))
 	{
 		main_set_error(CERR_CAIRO);
 		return;
 	}
 	
-	_update_shown_grid(window);
+	update_shown_grid(window);
 	grid_update_geometry(
 		window->shown_grid,
 		window->width  - CONFIG->window_frame.padding * 2,
@@ -979,7 +979,7 @@ window_update_size_hints(cgui_window *window)
 	}
 	else
 	{
-		_min_size(window, &w_min, &h_min);
+		min_size(window, &w_min, &h_min);
 	}
 
 	w_max = ((cgui_grid*)cref_ptr(window->grids, 0))->col_flex > 0.0 ? UINT16_MAX : w_min;
@@ -1057,7 +1057,7 @@ window_update_state(cgui_window *window, enum cgui_window_state_mask mask, bool 
 /************************************************************************************************************/
 
 static struct cgui_box
-_box(const cgui_window *window)
+box(const cgui_window *window)
 {
 	if (!window->state.focused)
 	{
@@ -1085,7 +1085,7 @@ _box(const cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_cairo_destroy(cgui_window *window)
+cairo_data_destroy(cgui_window *window)
 {
 	cairo_destroy(window->drawable);
 	cairo_surface_destroy(window->surface);
@@ -1094,7 +1094,7 @@ _cairo_destroy(cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-_cairo_error(const cgui_window *window)
+cairo_error(const cgui_window *window)
 {
 	return cairo_surface_status(window->surface) != CAIRO_STATUS_SUCCESS
 	    || cairo_status(window->drawable)        != CAIRO_STATUS_SUCCESS;
@@ -1103,7 +1103,7 @@ _cairo_error(const cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_draw_area(cgui_window *window, struct area *area, unsigned long delay)
+draw_area(cgui_window *window, struct area *area, unsigned long delay)
 {
 	struct cgui_cell_context context;
 
@@ -1122,7 +1122,7 @@ _draw_area(cgui_window *window, struct area *area, unsigned long delay)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-_cairo_setup(cgui_window *window, uint16_t width, uint16_t height)
+cairo_setup(cgui_window *window, uint16_t width, uint16_t height)
 {
 	window->surface = cairo_xcb_surface_create(
 		x11_connection(),
@@ -1133,7 +1133,7 @@ _cairo_setup(cgui_window *window, uint16_t width, uint16_t height)
 
 	window->drawable = cairo_create(window->surface);
 
-	if (_cairo_error(window))
+	if (cairo_error(window))
 	{
 		main_set_error(CERR_CAIRO);
 		return false;
@@ -1145,7 +1145,7 @@ _cairo_setup(cgui_window *window, uint16_t width, uint16_t height)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_dummy_fn_accel(cgui_window *window, int id)
+dummy_fn_accel(cgui_window *window, int id)
 {
 	(void)window;
 	(void)id;
@@ -1154,7 +1154,7 @@ _dummy_fn_accel(cgui_window *window, int id)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_dummy_fn_close(cgui_window *window)
+dummy_fn_close(cgui_window *window)
 {
 	cgui_window_deactivate(window);
 }
@@ -1162,7 +1162,7 @@ _dummy_fn_close(cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_dummy_fn_draw(cgui_window *window, unsigned long delay)
+dummy_fn_draw(cgui_window *window, unsigned long delay)
 {
 	(void)window;
 	(void)delay;
@@ -1171,7 +1171,7 @@ _dummy_fn_draw(cgui_window *window, unsigned long delay)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_dummy_fn_focus(cgui_window *window, cgui_cell *cell)
+dummy_fn_focus(cgui_window *window, cgui_cell *cell)
 {
 	(void)window;
 	(void)cell;
@@ -1180,7 +1180,7 @@ _dummy_fn_focus(cgui_window *window, cgui_cell *cell)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_dummy_fn_grid(cgui_window *window, cgui_grid *grid)
+dummy_fn_grid(cgui_window *window, cgui_grid *grid)
 {
 	(void)window;
 	(void)grid;
@@ -1189,7 +1189,7 @@ _dummy_fn_grid(cgui_window *window, cgui_grid *grid)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_dummy_fn_state(cgui_window *window, enum cgui_window_state_mask mask)
+dummy_fn_state(cgui_window *window, enum cgui_window_state_mask mask)
 {
 	(void)window;
 	(void)mask;
@@ -1198,7 +1198,7 @@ _dummy_fn_state(cgui_window *window, enum cgui_window_state_mask mask)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static cgui_grid *
-_min_grid(const cgui_window *window)
+min_grid(const cgui_window *window)
 {
 	cgui_grid *grid_min;
 	cgui_grid *grid;
@@ -1219,11 +1219,11 @@ _min_grid(const cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_min_size(const cgui_window *window, uint16_t *width, uint16_t *height)
+min_size(const cgui_window *window, uint16_t *width, uint16_t *height)
 {
 	cgui_grid *grid;
 
-	 grid   = _min_grid(window);
+	 grid   = min_grid(window);
 	*width  = WIDTH(grid);
 	*height = HEIGHT(grid);
 }
@@ -1231,7 +1231,7 @@ _min_size(const cgui_window *window, uint16_t *width, uint16_t *height)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_update_shown_grid(cgui_window *window)
+update_shown_grid(cgui_window *window)
 {
 	cgui_grid *grid_old;
 	cgui_grid *grid;
@@ -1244,7 +1244,7 @@ _update_shown_grid(cgui_window *window)
 	/* find biggest grid that could fit in current window dimensions */
 
 	grid_old           = window->shown_grid;
-	window->shown_grid = _min_grid(window);
+	window->shown_grid = min_grid(window);
 
 	CREF_FOR_EACH(window->grids, i)
 	{

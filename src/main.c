@@ -42,13 +42,13 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define SET_ERR(ERR) if (!_err) { _err = ERR; }
+#define SET_ERR(ERR) if (!err) { err = ERR; }
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _is_any_window_activated (void);
+static bool is_any_window_activated (void);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -56,22 +56,22 @@ static bool _is_any_window_activated (void);
 
 /* pre-init args */
 
-static xcb_connection_t *_ext_connection = NULL;
-static pthread_mutex_t  *_mutex          = NULL;
-static const char       *_app_name       = NULL;
-static const char       *_app_class      = NULL;
+static xcb_connection_t *ext_connection = NULL;
+static pthread_mutex_t  *mutex          = NULL;
+static const char       *app_name       = NULL;
+static const char       *app_class      = NULL;
 
 /* objects trackers */
 
-static cref *_cells   = CREF_PLACEHOLDER;
-static cref *_grids   = CREF_PLACEHOLDER;
-static cref *_windows = CREF_PLACEHOLDER;
+static cref *cells   = CREF_PLACEHOLDER;
+static cref *grids   = CREF_PLACEHOLDER;
+static cref *windows = CREF_PLACEHOLDER;
 
 /* session states */
 
-static bool _running  = false;
-static bool _usr_exit = true;
-static enum cerr _err = CERR_INVALID;
+static bool running  = false;
+static bool usr_exit = true;
+static enum cerr err = CERR_INVALID;
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -80,12 +80,12 @@ static enum cerr _err = CERR_INVALID;
 void
 cgui_allow_user_exit(void)
 {
-	if (_err)
+	if (err)
 	{
 		return;
 	}
 
-	_usr_exit = true;
+	usr_exit = true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -93,12 +93,12 @@ cgui_allow_user_exit(void)
 void
 cgui_block_user_exit(void)
 {
-	if (_err)
+	if (err)
 	{
 		return;
 	}
 
-	_usr_exit = false;
+	usr_exit = false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -106,7 +106,7 @@ cgui_block_user_exit(void)
 enum cerr
 cgui_error(void)
 {
-	return _err;
+	return err;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -114,12 +114,12 @@ cgui_error(void)
 void
 cgui_exit(void)
 {
-	if (_err)
+	if (err)
 	{
 		return;
 	}
 
-	_running = false;
+	running = false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -127,40 +127,40 @@ cgui_exit(void)
 void
 cgui_init(int argc, char **argv)
 {
-	if (!_err)
+	if (!err)
 	{
 		return;
 	}
 
-	if (!_app_class)
+	if (!app_class)
 	{
-		_app_class = argc > 0 && argv ? argv[0] : "cgui";
+		app_class = argc > 0 && argv ? argv[0] : "cgui";
 	}
 
-	if (!_app_name)
+	if (!app_name)
 	{
-		_app_name = _app_class;
+		app_name = app_class;
 	}
 
-	_cells   = cref_create();
-	_grids   = cref_create();
-	_windows = cref_create();
-	_err     = CERR_NONE;
+	cells   = cref_create();
+	grids   = cref_create();
+	windows = cref_create();
+	err     = CERR_NONE;
 
-	cref_set_default_ptr(_cells,   CGUI_CELL_PLACEHOLDER);
-	cref_set_default_ptr(_grids,   CGUI_GRID_PLACEHOLDER);
-	cref_set_default_ptr(_windows, CGUI_WINDOW_PLACEHOLDER);
+	cref_set_default_ptr(cells,   CGUI_CELL_PLACEHOLDER);
+	cref_set_default_ptr(grids,   CGUI_GRID_PLACEHOLDER);
+	cref_set_default_ptr(windows, CGUI_WINDOW_PLACEHOLDER);
 
-	SET_ERR(cref_error(_cells));
-	SET_ERR(cref_error(_grids));
-	SET_ERR(cref_error(_windows));
+	SET_ERR(cref_error(cells));
+	SET_ERR(cref_error(grids));
+	SET_ERR(cref_error(windows));
 
-	x11_init(argc, argv, _app_name, _app_class, _ext_connection);
-	config_init(_app_name, _app_class);
+	x11_init(argc, argv, app_name, app_class, ext_connection);
+	config_init(app_name, app_class);
 	config_load();
 	main_lock();
 
-	if (_err)
+	if (err)
 	{
 		cgui_reset();
 	}
@@ -171,7 +171,7 @@ cgui_init(int argc, char **argv)
 bool
 cgui_is_init(void)
 {
-	return _err == CERR_NONE;
+	return err == CERR_NONE;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -179,7 +179,7 @@ cgui_is_init(void)
 bool
 cgui_is_running(void)
 {
-	return _running;
+	return running;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -191,16 +191,16 @@ cgui_reconfig(void)
 	cgui_grid *grid;
 	cgui_grid *grid_min;
 
-	if (_err)
+	if (err)
 	{
 		return;
 	}
 
 	config_load();
 
-	CREF_FOR_EACH(_windows, i)
+	CREF_FOR_EACH(windows, i)
 	{
-		window = (cgui_window*)cref_ptr(_windows, i);
+		window = (cgui_window*)cref_ptr(windows, i);
 		if (!window->valid)
 		{
 			continue;
@@ -218,26 +218,26 @@ cgui_reconfig(void)
 void
 cgui_repair(void)
 {
-	if (_err == CERR_INVALID)
+	if (err == CERR_INVALID)
 	{
 		return;
 	}
 
-	cref_repair(_cells);
-	cref_repair(_grids);
-	cref_repair(_windows);
+	cref_repair(cells);
+	cref_repair(grids);
+	cref_repair(windows);
 	config_repair();
 
-	_err = CERR_NONE;
+	err = CERR_NONE;
 
-	CREF_FOR_EACH(_windows, i)
+	CREF_FOR_EACH(windows, i)
 	{
-		window_repair((cgui_window*)cref_ptr(_windows, i));
+		window_repair((cgui_window*)cref_ptr(windows, i));
 	}
 
-	CREF_FOR_EACH(_grids, i)
+	CREF_FOR_EACH(grids, i)
 	{
-		grid_repair((cgui_grid*)cref_ptr(_grids, i));
+		grid_repair((cgui_grid*)cref_ptr(grids, i));
 	}
 }
 
@@ -246,44 +246,44 @@ cgui_repair(void)
 void
 cgui_reset(void)
 {
-	CREF_FOR_EACH(_windows, i)
+	CREF_FOR_EACH(windows, i)
 	{
-		((cgui_window*)cref_ptr(_windows, i))->valid = false;
+		((cgui_window*)cref_ptr(windows, i))->valid = false;
 	}
 
-	CREF_FOR_EACH(_grids, i)
+	CREF_FOR_EACH(grids, i)
 	{
-		((cgui_grid*)cref_ptr(_grids, i))->valid = false;
+		((cgui_grid*)cref_ptr(grids, i))->valid = false;
 	}
 
-	CREF_FOR_EACH(_cells, i)
+	CREF_FOR_EACH(cells, i)
 	{
-		((cgui_cell*)cref_ptr(_cells, i))->valid = false;
+		((cgui_cell*)cref_ptr(cells, i))->valid = false;
 	}
 
-	if (!_ext_connection || util_env_exists(ENV_FORCE_CLEAN))
+	if (!ext_connection || util_env_exists(ENV_FORCE_CLEAN))
 	{
 		cairo_debug_reset_static_data();
 		FcFini();
 	}
 
-	cref_destroy(_cells);
-	cref_destroy(_grids);
-	cref_destroy(_windows);
-	x11_reset(!_ext_connection);
+	cref_destroy(cells);
+	cref_destroy(grids);
+	cref_destroy(windows);
+	x11_reset(!ext_connection);
 	config_reset();
 	main_unlock();
 
-	_cells          = CREF_PLACEHOLDER;
-	_grids          = CREF_PLACEHOLDER;
-	_windows        = CREF_PLACEHOLDER;
-	_ext_connection = NULL;
-	_mutex          = NULL;
-	_app_class      = NULL;
-	_app_name       = NULL;
-	_usr_exit       = true;
-	_running        = false;	
-	_err            = CERR_INVALID;
+	cells          = CREF_PLACEHOLDER;
+	grids          = CREF_PLACEHOLDER;
+	windows        = CREF_PLACEHOLDER;
+	ext_connection = NULL;
+	mutex          = NULL;
+	app_class      = NULL;
+	app_name       = NULL;
+	usr_exit       = true;
+	running        = false;	
+	err            = CERR_INVALID;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -291,19 +291,19 @@ cgui_reset(void)
 void
 cgui_run(void)
 {
-	if (_err || _running)
+	if (err || running)
 	{
 		return;
 	}
 
-	_running = true;
+	running = true;
 
-	while (_running && _is_any_window_activated())
+	while (running && is_any_window_activated())
 	{
 		 x11_update();
 	}
 
-	_running = false;
+	running = false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -311,12 +311,12 @@ cgui_run(void)
 void
 cgui_setup_app_class(const char *class_name)
 {
-	if (_err != CERR_INVALID)
+	if (err != CERR_INVALID)
 	{
 		return;
 	}
 
-	_app_class = class_name;
+	app_class = class_name;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -324,25 +324,25 @@ cgui_setup_app_class(const char *class_name)
 void
 cgui_setup_app_name(const char *name)
 {
-	if (_err != CERR_INVALID)
+	if (err != CERR_INVALID)
 	{
 		return;
 	}
 
-	_app_name = name;
+	app_name = name;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_setup_threading(pthread_mutex_t *mutex)
+cgui_setup_threading(pthread_mutex_t *mut)
 {
-	if (_err != CERR_INVALID)
+	if (err != CERR_INVALID)
 	{
 		return;
 	}
 
-	_mutex = mutex;
+	mutex = mut;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -350,12 +350,12 @@ cgui_setup_threading(pthread_mutex_t *mutex)
 void
 cgui_setup_x11_connection(xcb_connection_t *connection)
 {
-	if (_err != CERR_INVALID)
+	if (err != CERR_INVALID)
 	{
 		return;
 	}
 
-	_ext_connection = connection;
+	ext_connection = connection;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -364,7 +364,6 @@ xcb_connection_t *
 cgui_x11_connection(void)
 {
 	return x11_connection();
-	return NULL;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -373,7 +372,6 @@ xcb_window_t
 cgui_x11_leader_window(void)
 {
 	return  x11_leader_window();
-	return 0;
 }
 
 /************************************************************************************************************/
@@ -383,7 +381,7 @@ cgui_x11_leader_window(void)
 cref *
 main_cells(void)
 {
-	return _cells;
+	return cells;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -391,7 +389,7 @@ main_cells(void)
 cref *
 main_grids(void)
 {
-	return _grids;
+	return grids;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -399,12 +397,12 @@ main_grids(void)
 void
 main_lock(void)
 {
-	if (!_mutex)
+	if (!mutex)
 	{
 		return;
 	}
 
-	if ((pthread_mutex_lock(_mutex) & ~EDEADLK) != 0)
+	if ((pthread_mutex_lock(mutex) & ~EDEADLK) != 0)
 	{
 		SET_ERR(CERR_MUTEX);
 	}
@@ -431,9 +429,9 @@ main_push_instance(cref *ref, void *ptr)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-main_set_error(enum cerr err)
+main_set_error(enum cerr error)
 {
-	SET_ERR(err);
+	SET_ERR(error);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -441,7 +439,7 @@ main_set_error(enum cerr err)
 cref *
 main_windows(void)
 {
-	return _windows;
+	return windows;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -449,12 +447,12 @@ main_windows(void)
 void
 main_unlock(void)
 {
-	if (!_mutex)
+	if (!mutex)
 	{
 		return;
 	}
 	
-	if ((pthread_mutex_unlock(_mutex) & ~EPERM) != 0)
+	if ((pthread_mutex_unlock(mutex) & ~EPERM) != 0)
 	{
 		SET_ERR(CERR_MUTEX);
 	}
@@ -467,20 +465,20 @@ main_update(struct cgui_event *event)
 {
 	event_process(event);
 
-	CREF_FOR_EACH_REV(_windows, i)
+	CREF_FOR_EACH_REV(windows, i)
 	{
-		window_present((cgui_window*)cref_ptr(_windows, i));
-		window_destroy((cgui_window*)cref_ptr(_windows, i));
+		window_present((cgui_window*)cref_ptr(windows, i));
+		window_destroy((cgui_window*)cref_ptr(windows, i));
 	}
 
-	CREF_FOR_EACH_REV(_grids, i)
+	CREF_FOR_EACH_REV(grids, i)
 	{
-		grid_destroy((cgui_grid*)cref_ptr(_grids, i));
+		grid_destroy((cgui_grid*)cref_ptr(grids, i));
 	}
 
-	CREF_FOR_EACH_REV(_cells, i)
+	CREF_FOR_EACH_REV(cells, i)
 	{
-		cell_destroy((cgui_cell*)cref_ptr(_cells, i));
+		cell_destroy((cgui_cell*)cref_ptr(cells, i));
 	}
 }
 
@@ -489,11 +487,11 @@ main_update(struct cgui_event *event)
 /************************************************************************************************************/
 
 static bool
-_is_any_window_activated(void)
+is_any_window_activated(void)
 {
-	CREF_FOR_EACH(_windows, i)
+	CREF_FOR_EACH(windows, i)
 	{
-		if (((cgui_window*)cref_ptr(_windows, i))->state.active)
+		if (((cgui_window*)cref_ptr(windows, i))->state.active)
 		{
 			return true;
 		}

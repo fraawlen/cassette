@@ -41,7 +41,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define SCALE(VAL) VAL *= _config.scale;
+#define SCALE(VAL) VAL *= config.scale;
 
 #define SCALE_BOX(BOX) \
 	SCALE(BOX.corner_size[0]); \
@@ -63,18 +63,18 @@
 	{ NAMESPACE, #STATE "outer_shaping",    BOOL,        &TARGET.outer_shaping    },
 
 #define KEY(VALUE) \
-	{ "key",     #VALUE, MAP_KEY, &_config.keys[VALUE][CGUI_CONFIG_SWAP_DIRECT] }, \
-	{ "key", "M" #VALUE, MAP_KEY, &_config.keys[VALUE][CGUI_CONFIG_SWAP_MOD]    }, \
-	{ "key", "S" #VALUE, MAP_KEY, &_config.keys[VALUE][CGUI_CONFIG_SWAP_SHIFT]  },
+	{ "key",     #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_CONFIG_SWAP_DIRECT] }, \
+	{ "key", "M" #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_CONFIG_SWAP_MOD]    }, \
+	{ "key", "S" #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_CONFIG_SWAP_SHIFT]  },
 
 #define BUTTON(VALUE) \
-	{ "button",     #VALUE, MAP_BUTTON, &_config.buttons[VALUE][CGUI_CONFIG_SWAP_DIRECT] }, \
-	{ "button", "M" #VALUE, MAP_BUTTON, &_config.buttons[VALUE][CGUI_CONFIG_SWAP_MOD]    }, \
-	{ "button", "S" #VALUE, MAP_BUTTON, &_config.buttons[VALUE][CGUI_CONFIG_SWAP_SHIFT]  },
+	{ "button",     #VALUE, MAP_BUTTON, &config.buttons[VALUE][CGUI_CONFIG_SWAP_DIRECT] }, \
+	{ "button", "M" #VALUE, MAP_BUTTON, &config.buttons[VALUE][CGUI_CONFIG_SWAP_MOD]    }, \
+	{ "button", "S" #VALUE, MAP_BUTTON, &config.buttons[VALUE][CGUI_CONFIG_SWAP_SHIFT]  },
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum _value
+enum value
 {
 	/* primitives */
 
@@ -107,20 +107,20 @@ enum _value
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-struct _word
+struct word
 {
 	const char *name;
-	enum _value type;
+	enum value type;
 	size_t value;
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-struct _resource
+struct resource
 {
 	const char *namespace;
 	const char *name;
-	enum _value type;
+	enum value type;
 	void *target;
 };
 
@@ -128,25 +128,25 @@ struct _resource
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _dummy_fn_load (ccfg *)                                    CGUI_NONNULL(1);
-static void _fetch         (const struct _resource *)                  CGUI_NONNULL(1);
-static void _fill          (void);
-static void _set_corners   (enum _value, struct cgui_box *)            CGUI_NONNULL(2);
-static void _swap          (const char *, uint8_t, struct cgui_swap *) CGUI_NONNULL(1, 3);
-static void _update_err    (void);
+static void dummy_fn_load (ccfg *)                                    CGUI_NONNULL(1);
+static void fetch         (const struct resource *)                   CGUI_NONNULL(1);
+static void fill          (void);
+static void set_corners   (enum value, struct cgui_box *)             CGUI_NONNULL(2);
+static void swap          (const char *, uint8_t, struct cgui_swap *) CGUI_NONNULL(1, 3);
+static void update_err    (void);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static struct cgui_config _config  = config_default;
-static void (*_fn_load)(ccfg *cfg) = _dummy_fn_load;
-static ccfg  *_parser              = CCFG_PLACEHOLDER;
-static cdict *_dict                = CDICT_PLACEHOLDER;
+static struct cgui_config config  = config_default;
+static void (*fn_load)(ccfg *cfg) = dummy_fn_load;
+static ccfg  *parser              = CCFG_PLACEHOLDER;
+static cdict *dict                = CDICT_PLACEHOLDER;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static const struct _word _words[] =
+static const struct word words[] =
 {
 	{ "mod1",       MOD_KEY,     CGUI_CONFIG_MOD_1                  },
 	{ "mod4",       MOD_KEY,     CGUI_CONFIG_MOD_4                  },
@@ -212,51 +212,51 @@ static const struct _word _words[] =
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static const struct _resource _resources[] =
+static const struct resource resources[] =
 {
-	{ "global",   "scale",                       UDOUBLE,   &_config.scale                          },
-	{ "global",   "modkey",                      MOD_KEY,   &_config.modkey                         },
+	{ "global",   "scale",                       UDOUBLE,   &config.scale                          },
+	{ "global",   "modkey",                      MOD_KEY,   &config.modkey                         },
 
-	{ "font",     "face",                        STRING,     _config.font_face                      },
-	{ "font",     "size",                        LENGTH,    &_config.font_size                      },
-	{ "font",     "horizontal_spacing",          LENGTH,    &_config.font_spacing_horizontal        },
-	{ "font",     "vertical_spacing",            LENGTH,    &_config.font_spacing_vertical          },
-	{ "font",     "width_override",              LENGTH,    &_config.font_override_width            },
-	{ "font",     "ascent_override",             LENGTH,    &_config.font_override_ascent           },
-	{ "font",     "descent_override",            LENGTH,    &_config.font_override_descent          },
-	{ "font",     "x_offset",                    POSITION,  &_config.font_offset_x                  },
-	{ "font",     "y_offset",                    POSITION,  &_config.font_offset_y                  },
-	{ "font",     "enable_overrides",            BOOL,      &_config.font_enable_overrides          },
-	{ "font",     "enable_hint_metrics",         BOOL,      &_config.font_enable_hint_metrics       },
-	{ "font",     "antialias_mode",              ANTIALIAS, &_config.font_antialias                 },
-	{ "font",     "subpixel_mode",               SUBPIXEL,  &_config.font_subpixel                  },
+	{ "font",     "face",                        STRING,     config.font_face                      },
+	{ "font",     "size",                        LENGTH,    &config.font_size                      },
+	{ "font",     "horizontal_spacing",          LENGTH,    &config.font_spacing_horizontal        },
+	{ "font",     "vertical_spacing",            LENGTH,    &config.font_spacing_vertical          },
+	{ "font",     "width_override",              LENGTH,    &config.font_override_width            },
+	{ "font",     "ascent_override",             LENGTH,    &config.font_override_ascent           },
+	{ "font",     "descent_override",            LENGTH,    &config.font_override_descent          },
+	{ "font",     "x_offset",                    POSITION,  &config.font_offset_x                  },
+	{ "font",     "y_offset",                    POSITION,  &config.font_offset_y                  },
+	{ "font",     "enable_overrides",            BOOL,      &config.font_enable_overrides          },
+	{ "font",     "enable_hint_metrics",         BOOL,      &config.font_enable_hint_metrics       },
+	{ "font",     "antialias_mode",              ANTIALIAS, &config.font_antialias                 },
+	{ "font",     "subpixel_mode",               SUBPIXEL,  &config.font_subpixel                  },
 
-	{ "grid",     "padding",                     LENGTH,    &_config.grid_padding                   },
-	{ "grid",     "spacing",                     LENGTH,    &_config.grid_spacing                   },
+	{ "grid",     "padding",                     LENGTH,    &config.grid_padding                   },
+	{ "grid",     "spacing",                     LENGTH,    &config.grid_spacing                   },
 
-	{ "window",   "enable_disabled_substyle",    BOOL,      &_config.window_enable_disabled         },
-	{ "window",   "enable_focused_substyle",     BOOL,      &_config.window_enable_focused          },
-	{ "window",   "enable_locked_substyle",      BOOL,      &_config.window_enable_locked           },
-	{ "window",   "focus_on_activation",         BOOL,      &_config.window_focus_on_activation     },
+	{ "window",   "enable_disabled_substyle",    BOOL,      &config.window_enable_disabled         },
+	{ "window",   "enable_focused_substyle",     BOOL,      &config.window_enable_focused          },
+	{ "window",   "enable_locked_substyle",      BOOL,      &config.window_enable_locked           },
+	{ "window",   "focus_on_activation",         BOOL,      &config.window_focus_on_activation     },
 
-	{ "popup",    "border_thickness",            LENGTH,    &_config.popup_border                   },
-	{ "popup",    "padding",                     LENGTH,    &_config.popup_padding                  },
-	{ "popup",    "color_background",            COLOR,     &_config.popup_color_background         },
-	{ "popup",    "color_border",                COLOR,     &_config.popup_color_border             },
-	{ "popup",    "max_width",                   LENGTH,    &_config.popup_max_width                },
-	{ "popup",    "max_height",                  LENGTH,    &_config.popup_max_height               },
-	{ "popup",    "width_override",              LENGTH,    &_config.popup_override_width           },
-	{ "popup",    "height_override",             LENGTH,    &_config.popup_override_height          },
-	{ "popup",    "x_position_override",         POSITION,  &_config.popup_override_x               },
-	{ "popup",    "y_position_override",         POSITION,  &_config.popup_override_y               },
-	{ "popup",    "enable_position_overrides",   BOOL,      &_config.popup_enable_override_position },
-	{ "popup",    "enable_width_override",       BOOL,      &_config.popup_enable_override_width    },
-	{ "popup",    "ennable_height_override",     BOOL,      &_config.popup_enable_override_height   },
+	{ "popup",    "border_thickness",            LENGTH,    &config.popup_border                   },
+	{ "popup",    "padding",                     LENGTH,    &config.popup_padding                  },
+	{ "popup",    "color_background",            COLOR,     &config.popup_color_background         },
+	{ "popup",    "color_border",                COLOR,     &config.popup_color_border             },
+	{ "popup",    "max_width",                   LENGTH,    &config.popup_max_width                },
+	{ "popup",    "max_height",                  LENGTH,    &config.popup_max_height               },
+	{ "popup",    "width_override",              LENGTH,    &config.popup_override_width           },
+	{ "popup",    "height_override",             LENGTH,    &config.popup_override_height          },
+	{ "popup",    "x_position_override",         POSITION,  &config.popup_override_x               },
+	{ "popup",    "y_position_override",         POSITION,  &config.popup_override_y               },
+	{ "popup",    "enable_position_overrides",   BOOL,      &config.popup_enable_override_position },
+	{ "popup",    "enable_width_override",       BOOL,      &config.popup_enable_override_width    },
+	{ "popup",    "ennable_height_override",     BOOL,      &config.popup_enable_override_height   },
 	
-	{ "behavior", "enable_cell_auto_lock",       BOOL,      &_config.cell_auto_lock                 },
-	{ "behavior", "enable_persistent_pointer",   BOOL,      &_config.input_persistent_pointer       },
-	{ "behavior", "enable_persistent_touch",     BOOL,      &_config.input_persistent_touch         },
-	{ "behavior", "animation_framerate_divider", ULONG,     &_config.anim_divider                   },
+	{ "behavior", "enable_cell_auto_lock",       BOOL,      &config.cell_auto_lock                 },
+	{ "behavior", "enable_persistent_pointer",   BOOL,      &config.input_persistent_pointer       },
+	{ "behavior", "enable_persistent_touch",     BOOL,      &config.input_persistent_touch         },
+	{ "behavior", "animation_framerate_divider", ULONG,     &config.anim_divider                   },
 
 	KEY(  1) KEY(  2) KEY(  3) KEY(  4) KEY(  5) KEY(  6) KEY(  7) KEY(  8) KEY(  9) KEY( 10)
 	KEY( 11) KEY( 12) KEY( 13) KEY( 14) KEY( 15) KEY( 16) KEY( 17) KEY( 18) KEY( 19) KEY( 20)
@@ -275,12 +275,12 @@ static const struct _resource _resources[] =
 	BUTTON( 1) BUTTON( 2) BUTTON( 3) BUTTON( 4) BUTTON( 5) BUTTON( 6) BUTTON( 7) BUTTON( 8)
 	BUTTON( 9) BUTTON(10) BUTTON(11) BUTTON(12)
 
-	BOX("window",      ,          _config.window_frame)
-	BOX("window",      default_,  _config.window_frame)
-	BOX("window",      focused_,  _config.window_frame_focused)
-	BOX("window",      disabled_, _config.window_frame_disabled)
-	BOX("window",      locked_,   _config.window_frame_locked)
-	BOX("placeholder", ,          _config.placeholder_frame)
+	BOX("window",      ,          config.window_frame)
+	BOX("window",      default_,  config.window_frame)
+	BOX("window",      focused_,  config.window_frame_focused)
+	BOX("window",      disabled_, config.window_frame_disabled)
+	BOX("window",      locked_,   config.window_frame_locked)
+	BOX("placeholder", ,          config.placeholder_frame)
 };
 
 /************************************************************************************************************/
@@ -295,7 +295,7 @@ cgui_config_fit_cols(uint16_t width)
 		return 0;
 	}
 
-	return (width + _config.font_spacing_horizontal) / (_config.font_width + _config.font_spacing_horizontal);
+	return (width + config.font_spacing_horizontal) / (config.font_width + config.font_spacing_horizontal);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -308,7 +308,7 @@ cgui_config_fit_rows(uint16_t height)
 		return 0;
 	}
 
-	return (height + _config.font_spacing_vertical) / (_config.font_height + _config.font_spacing_vertical);
+	return (height + config.font_spacing_vertical) / (config.font_height + config.font_spacing_vertical);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -316,7 +316,7 @@ cgui_config_fit_rows(uint16_t height)
 const struct cgui_config *
 cgui_config_get(void)
 {
-	return &_config;
+	return &config;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -329,7 +329,7 @@ cgui_config_on_load(void (*fn)(ccfg *cfg))
 		return;
 	}
 
-	_fn_load = fn ? fn : _dummy_fn_load;
+	fn_load = fn ? fn : dummy_fn_load;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -342,7 +342,7 @@ cgui_config_str_height(size_t rows)
 		return 0;
 	}
 
-	return _config.font_height * rows + _config.font_spacing_vertical * (rows - 1);
+	return config.font_height * rows + config.font_spacing_vertical * (rows - 1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -355,7 +355,7 @@ cgui_config_str_width(size_t cols)
 		return 0;
 	}
 
-	return _config.font_width * cols + _config.font_spacing_horizontal * (cols - 1);
+	return config.font_width * cols + config.font_spacing_horizontal * (cols - 1);
 }
 
 /************************************************************************************************************/
@@ -374,36 +374,36 @@ config_init(const char *app_name, const char *app_class)
 
 	/* instantiation */
 
-	 home   = cstr_create();
-	_parser = ccfg_create();
-	_dict   = cdict_create();
+	home   = cstr_create();
+	parser = ccfg_create();
+	dict   = cdict_create();
 
 	/* parser setup */
 
 	cstr_append(home, util_env_exists("HOME") ? getenv("HOME") : getpwuid(getuid())->pw_dir);
 	cstr_append(home, "/.config/cgui.conf");
 
-	ccfg_push_source(_parser, util_env_exists(ENV_CONF_SOURCE) ? getenv(ENV_CONF_SOURCE) : "");
-	ccfg_push_source(_parser, cstr_chars(home));
-	ccfg_push_source(_parser, "/usr/share/cgui/cgui.conf");
-	ccfg_push_source(_parser, "/etc/cgui.conf");
+	ccfg_push_source(parser, util_env_exists(ENV_CONF_SOURCE) ? getenv(ENV_CONF_SOURCE) : "");
+	ccfg_push_source(parser, cstr_chars(home));
+	ccfg_push_source(parser, "/usr/share/cgui/cgui.conf");
+	ccfg_push_source(parser, "/etc/cgui.conf");
 
-	ccfg_push_param(_parser, "app_name",  app_name);
-	ccfg_push_param(_parser, "app_class", app_class);
+	ccfg_push_param(parser, "app_name",  app_name);
+	ccfg_push_param(parser, "app_class", app_class);
 
 	cstr_destroy(home);
 
 	/* dict setup */
 
-	cdict_prealloc(_dict,  sizeof(_words) / sizeof(struct _word));
-	for (size_t i = 0; i < sizeof(_words) / sizeof(struct _word); i++)
+	cdict_prealloc(dict,   sizeof(words) / sizeof(struct word));
+	for (size_t i = 0; i < sizeof(words) / sizeof(struct word); i++)
 	{
-		cdict_write(_dict, _words[i].name, _words[i].type, _words[i].value);
+		cdict_write(dict, words[i].name, words[i].type, words[i].value);
 	}
 	
 	/* end */
 
-	_update_err();
+	update_err();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -411,23 +411,23 @@ config_init(const char *app_name, const char *app_class)
 void
 config_load(void)
 {
-	_config      = config_default;
-	_config.init = true;
+	config      = config_default;
+	config.init = true;
 
 	if (cgui_error() || util_env_exists(ENV_NO_PARSING))
 	{
 		return;
 	}
 
-	ccfg_load(_parser);
-	for (size_t i = 0; i < sizeof(_resources) / sizeof(struct _resource); i++)
+	ccfg_load(parser);
+	for (size_t i = 0; i < sizeof(resources) / sizeof(struct resource); i++)
 	{
-		_fetch(_resources + i);
+		fetch(resources + i);
 	}
 
-	_fill();
-	_fn_load(_parser);
-	_update_err();
+	fill();
+	fn_load(parser);
+	update_err();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -435,8 +435,8 @@ config_load(void)
 void
 config_repair(void)
 {
-	ccfg_repair(_parser);
-	cdict_repair(_dict);
+	ccfg_repair(parser);
+	cdict_repair(dict);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -444,13 +444,13 @@ config_repair(void)
 void
 config_reset(void)
 {
-	ccfg_destroy(_parser);
-	cdict_destroy(_dict);
+	ccfg_destroy(parser);
+	cdict_destroy(dict);
 
-	_fn_load = _dummy_fn_load;
-	_config  = config_default;
-	_parser  = CCFG_PLACEHOLDER;
-	_dict    = CDICT_PLACEHOLDER;
+	fn_load = dummy_fn_load;
+	config  = config_default;
+	parser  = CCFG_PLACEHOLDER;
+	dict    = CDICT_PLACEHOLDER;
 }
 
 /************************************************************************************************************/
@@ -458,7 +458,7 @@ config_reset(void)
 /************************************************************************************************************/
 
 static void
-_dummy_fn_load (ccfg *cfg)
+dummy_fn_load (ccfg *cfg)
 {
 	(void)cfg;
 }
@@ -466,14 +466,14 @@ _dummy_fn_load (ccfg *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_fetch(const struct _resource *resource)
+fetch(const struct resource *resource)
 {
 	const char *str;
 
-	ccfg_fetch(_parser, resource->namespace, resource->name);
-	if (ccfg_iterate(_parser))
+	ccfg_fetch(parser, resource->namespace, resource->name);
+	if (ccfg_iterate(parser))
 	{
-		str = ccfg_resource(_parser);
+		str = ccfg_resource(parser);
 	}
 	else
 	{
@@ -525,23 +525,23 @@ _fetch(const struct _resource *resource)
 		case MOD_KEY:
 		case ANTIALIAS:
 		case SUBPIXEL:
-			cdict_find(_dict, str, resource->type, (size_t*)resource->target);
+			cdict_find(dict, str, resource->type, (size_t*)resource->target);
 			break;
 
 		case MAP_KEY:
-			_swap(str, CGUI_CONFIG_KEYS, (struct cgui_swap*)resource->target);
+			swap(str, CGUI_CONFIG_KEYS, (struct cgui_swap*)resource->target);
 			break;
 
 		case MAP_BUTTON:
-			_swap(str, CGUI_CONFIG_BUTTONS, (struct cgui_swap*)resource->target);
+			swap(str, CGUI_CONFIG_BUTTONS, (struct cgui_swap*)resource->target);
 			break;
 
 		case CORNER_TYPE:
-			_set_corners(CORNER_TYPE, (struct cgui_box*)resource->target);
+			set_corners(CORNER_TYPE, (struct cgui_box*)resource->target);
 			break;
 
 		case CORNER_SIZE:
-			_set_corners(CORNER_SIZE, (struct cgui_box*)resource->target);
+			set_corners(CORNER_SIZE, (struct cgui_box*)resource->target);
 			break;
 
 		default:
@@ -552,7 +552,7 @@ _fetch(const struct _resource *resource)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_fill(void)
+fill(void)
 {
 	cairo_font_extents_t f_e;
 	cairo_text_extents_t t_e;
@@ -561,39 +561,39 @@ _fill(void)
 
 	/* scaling */
 
-	SCALE(_config.font_size);
-	SCALE(_config.font_spacing_horizontal);
-	SCALE(_config.font_spacing_vertical);
-	SCALE(_config.font_override_ascent);
-	SCALE(_config.font_override_descent);
-	SCALE(_config.font_override_width);
-	SCALE(_config.grid_padding);
-	SCALE(_config.grid_spacing);
-	SCALE(_config.popup_border);
-	SCALE(_config.popup_padding);
-	SCALE(_config.font_offset_x);
-	SCALE(_config.font_offset_y);
+	SCALE(config.font_size);
+	SCALE(config.font_spacing_horizontal);
+	SCALE(config.font_spacing_vertical);
+	SCALE(config.font_override_ascent);
+	SCALE(config.font_override_descent);
+	SCALE(config.font_override_width);
+	SCALE(config.grid_padding);
+	SCALE(config.grid_spacing);
+	SCALE(config.popup_border);
+	SCALE(config.popup_padding);
+	SCALE(config.font_offset_x);
+	SCALE(config.font_offset_y);
 
-	SCALE_BOX(_config.window_frame);
+	SCALE_BOX(config.window_frame);
 
 	/* set window frame invariants */
 
-	_config.window_frame.outer_shaping          = false;
-	_config.window_frame_focused.outer_shaping  = false;
-	_config.window_frame_disabled.outer_shaping = false;
-	_config.window_frame_locked.outer_shaping   = false;
+	config.window_frame.outer_shaping          = false;
+	config.window_frame_focused.outer_shaping  = false;
+	config.window_frame_disabled.outer_shaping = false;
+	config.window_frame_locked.outer_shaping   = false;
 
-	_config.window_frame_focused.padding  = _config.window_frame.padding;
-	_config.window_frame_locked.padding   = _config.window_frame.padding;
-	_config.window_frame_disabled.padding = _config.window_frame.padding;
+	config.window_frame_focused.padding  = config.window_frame.padding;
+	config.window_frame_locked.padding   = config.window_frame.padding;
+	config.window_frame_disabled.padding = config.window_frame.padding;
 
 	/* get font geometry with cairo */
 
-	if (_config.font_enable_overrides)
+	if (config.font_enable_overrides)
 	{
-		_config.font_descent = _config.font_override_descent;
-		_config.font_ascent  = _config.font_override_ascent;
-		_config.font_width   = _config.font_override_width;
+		config.font_descent = config.font_override_descent;
+		config.font_ascent  = config.font_override_ascent;
+		config.font_width   = config.font_override_width;
 		goto skip_auto_font;
 	}
 
@@ -606,20 +606,19 @@ _fill(void)
 		goto skip_font_setup;
 	}
 	
-	cairo_set_font_size(c_ctx, _config.font_size);
+	cairo_set_font_size(c_ctx, config.font_size);
 	cairo_select_font_face(
 		c_ctx,
-		_config.font_face,
+		config.font_face,
 		CAIRO_FONT_SLANT_NORMAL,
 		CAIRO_FONT_WEIGHT_NORMAL);
 	
-
 	cairo_font_extents(c_ctx, &f_e);
 	cairo_text_extents(c_ctx, "A", &t_e);
 
-	_config.font_descent = f_e.descent;
-	_config.font_ascent  = f_e.ascent;
-	_config.font_width   = t_e.width;
+	config.font_descent = f_e.descent;
+	config.font_ascent  = f_e.ascent;
+	config.font_width   = t_e.width;
 
 skip_font_setup:
 
@@ -628,13 +627,13 @@ skip_font_setup:
 
 skip_auto_font:
 
-	_config.font_height = _config.font_ascent + _config.font_descent;
+	config.font_height = config.font_ascent + config.font_descent;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_set_corners(enum _value variant, struct cgui_box *box)
+set_corners(enum value variant, struct cgui_box *box)
 {
 	const char *str;
 	size_t tmp;
@@ -644,11 +643,11 @@ _set_corners(enum _value variant, struct cgui_box *box)
 
 	do
 	{
-		str = ccfg_resource(_parser);
+		str = ccfg_resource(parser);
 		switch (variant)
 		{
 			case CORNER_TYPE:
-				cdict_find(_dict, str, CORNER_TYPE, &tmp);
+				cdict_find(dict, str, CORNER_TYPE, &tmp);
 				box->corner_type[n] = tmp;
 				break;
 
@@ -660,7 +659,7 @@ _set_corners(enum _value variant, struct cgui_box *box)
 				return;
 		}
 	}
-	while (++n < 4 && ccfg_iterate(_parser));
+	while (++n < 4 && ccfg_iterate(parser));
 
 	/* fill remaining value with last set value */
 
@@ -685,7 +684,7 @@ _set_corners(enum _value variant, struct cgui_box *box)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_swap(const char *str, uint8_t limit, struct cgui_swap *target)
+swap(const char *str, uint8_t limit, struct cgui_swap *target)
 {
 	char *str_copy;
 	char *ctx;
@@ -707,7 +706,7 @@ _swap(const char *str, uint8_t limit, struct cgui_swap *target)
 		return;
 	}
 
-	cdict_find(_dict, l, SWAP_KIND, &tmp);
+	cdict_find(dict, l, SWAP_KIND, &tmp);
 	target->type = tmp;
 
 	switch (target->type)
@@ -731,7 +730,7 @@ _swap(const char *str, uint8_t limit, struct cgui_swap *target)
 		case CGUI_INPUT_SWAP_TO_ACTION_WINDOW:
 		case CGUI_INPUT_SWAP_TO_ACTION_MISC:
 			tmp = 0;
-			cdict_find(_dict, r, SWAP_KIND, &tmp);
+			cdict_find(dict, r, SWAP_KIND, &tmp);
 			target->value = tmp;
 			break;
 
@@ -747,9 +746,9 @@ _swap(const char *str, uint8_t limit, struct cgui_swap *target)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_update_err(void)
+update_err(void)
 {
-	if (ccfg_error(_parser) || cdict_error(_dict))
+	if (ccfg_error(parser) || cdict_error(dict))
 	{
 		main_set_error(CERR_CONFIG);
 	}

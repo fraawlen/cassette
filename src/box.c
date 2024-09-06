@@ -35,10 +35,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _path_1 (struct cgui_box, struct cgui_zone, bool);
-static void _path_2 (struct cgui_box, struct cgui_zone, bool);
-static void _path_3 (struct cgui_box, struct cgui_zone, bool);
-static void _path_4 (struct cgui_box, struct cgui_zone, bool);
+static void path_1 (struct cgui_box, struct cgui_zone, bool);
+static void path_2 (struct cgui_box, struct cgui_zone, bool);
+static void path_3 (struct cgui_box, struct cgui_zone, bool);
+static void path_4 (struct cgui_box, struct cgui_zone, bool);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -100,10 +100,10 @@ cgui_box_draw(struct cgui_box box, struct cgui_zone zone)
 
 	if (box.outer_shaping)
 	{
-		_path_1(box, zone, true);
-		_path_2(box, zone, true);
-		_path_3(box, zone, true);
-		_path_4(box, zone, true);
+		path_1(box, zone, true);
+		path_2(box, zone, true);
+		path_3(box, zone, true);
+		path_4(box, zone, true);
 	}
 	else
 	{
@@ -119,10 +119,10 @@ skip_outer:
 
 	cl = box.color_background;
 
-	_path_1(box, zone, false);
-	_path_2(box, zone, false);
-	_path_3(box, zone, false);
-	_path_4(box, zone, false);
+	path_1(box, zone, false);
+	path_2(box, zone, false);
+	path_3(box, zone, false);
+	path_4(box, zone, false);
 
 	cairo_set_source_rgba(zone.drawable, cl.r, cl.g, cl.b, cl.a);
 	cairo_fill(zone.drawable);
@@ -133,7 +133,7 @@ skip_outer:
 /************************************************************************************************************/
 
 static void
-_path_1(struct cgui_box box, struct cgui_zone zone, bool outer)
+path_1(struct cgui_box box, struct cgui_zone zone, bool outer)
 {
 	cairo_t *d = zone.drawable;
 	 int16_t x = zone.x;
@@ -164,7 +164,7 @@ _path_1(struct cgui_box box, struct cgui_zone zone, bool outer)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_path_2(struct cgui_box box, struct cgui_zone zone, bool outer)
+path_2(struct cgui_box box, struct cgui_zone zone, bool outer)
 {
 	cairo_t *d = zone.drawable;
 	 int16_t x = zone.x;
@@ -195,7 +195,7 @@ _path_2(struct cgui_box box, struct cgui_zone zone, bool outer)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_path_3(struct cgui_box box, struct cgui_zone zone, bool outer)
+path_3(struct cgui_box box, struct cgui_zone zone, bool outer)
 {
 	cairo_t *d = zone.drawable;
 	 int16_t x = zone.x;
@@ -227,7 +227,7 @@ _path_3(struct cgui_box box, struct cgui_zone zone, bool outer)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_path_4(struct cgui_box box, struct cgui_zone zone, bool outer)
+path_4(struct cgui_box box, struct cgui_zone zone, bool outer)
 {
 	cairo_t *d = zone.drawable;
 	 int16_t x = zone.x;

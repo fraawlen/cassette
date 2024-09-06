@@ -26,7 +26,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static struct cgui_screen _screen_zero = {0, 0, 0, 0, false};
+static struct cgui_screen screen_zero = {0, 0, 0, 0, false};
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -59,7 +59,7 @@ cgui_screen_primary_specs(void)
 
 	if (cgui_error())
 	{
-		return _screen_zero;
+		return screen_zero;
 	}
 
 	x11_screen(SIZE_MAX, &n, &p);
@@ -77,7 +77,7 @@ cgui_screen_specs(size_t i)
 
 	if (cgui_error())
 	{
-		return _screen_zero;
+		return screen_zero;
 	}
 
 	return x11_screen(i, &n, &p);

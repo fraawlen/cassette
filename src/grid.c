@@ -36,8 +36,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static uint16_t _col_width  (struct grid_line);
-static uint16_t _row_height (struct grid_line);
+static uint16_t col_width  (struct grid_line);
+static uint16_t row_height (struct grid_line);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -63,7 +63,7 @@ cgui_grid cgui_grid_placeholder_instance =
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static const enum cgui_grid_relative_size _compare_size[4][4] =
+static const enum cgui_grid_relative_size compare_size[4][4] =
 {
 	/* EQUAL                     BIGGER                    SMALLER                   UNDEFINED  */
 	{CGUI_GRID_SIZE_EQUAL,     CGUI_GRID_SIZE_BIGGER,    CGUI_GRID_SIZE_SMALLER,   CGUI_GRID_SIZE_UNDEFINED}, /* EQUAL    */
@@ -297,7 +297,7 @@ cgui_grid_compare_size(const cgui_grid *grid_1, const cgui_grid *grid_2)
 
 	/* result */
 
-	return _compare_size[x][y];
+	return compare_size[x][y];
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -441,7 +441,7 @@ cgui_grid_height(const cgui_grid *grid)
 
 	for (size_t i = 0; i < grid->n_rows; i++)
 	{
-		h += _row_height(grid->rows[i]);
+		h += row_height(grid->rows[i]);
 	}
 
 	return h + CONFIG->grid_spacing * (grid->n_rows - 1);
@@ -591,7 +591,7 @@ cgui_grid_width(const cgui_grid *grid)
 
 	for (size_t i = 0; i < grid->n_cols; i++)
 	{
-		w += _col_width(grid->cols[i]);
+		w += col_width(grid->cols[i]);
 	}
 
 	return w + CONFIG->grid_spacing * (grid->n_cols - 1);
@@ -681,7 +681,7 @@ grid_update_geometry(cgui_grid *grid, uint16_t width, uint16_t height)
 		l = n * grid->cols[i].flex / f;
 
 		grid->cols[i].offset = o;
-		grid->cols[i].size   = _col_width(grid->cols[i]) + l;
+		grid->cols[i].size   = col_width(grid->cols[i]) + l;
 
 		o += grid->cols[i].size + CONFIG->grid_spacing;
 		f -= grid->cols[i].flex;
@@ -699,7 +699,7 @@ grid_update_geometry(cgui_grid *grid, uint16_t width, uint16_t height)
 		l = n * grid->rows[i].flex / f;
 
 		grid->rows[i].offset = o;
-		grid->rows[i].size   = _row_height(grid->rows[i]) + l;
+		grid->rows[i].size   = row_height(grid->rows[i]) + l;
 
 		o += grid->rows[i].size + CONFIG->grid_spacing;
 		f -= grid->rows[i].flex;
@@ -712,7 +712,7 @@ grid_update_geometry(cgui_grid *grid, uint16_t width, uint16_t height)
 /************************************************************************************************************/
 
 static uint16_t
-_col_width(struct grid_line col)
+col_width(struct grid_line col)
 {
 	if (col.units > 0)
 	{
@@ -727,7 +727,7 @@ _col_width(struct grid_line col)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static uint16_t
-_row_height(struct grid_line row)
+row_height(struct grid_line row)
 {
 	if (row.units > 0)
 	{

@@ -26,7 +26,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _draw(cgui_cell *cell, struct cgui_cell_context *context) CGUI_NONNULL(1, 2);
+static void draw(cgui_cell *cell, struct cgui_cell_context *context) CGUI_NONNULL(1, 2);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -39,7 +39,7 @@ cgui_placeholder_create(void)
 
 	cell = cgui_cell_create();
 
-	cgui_cell_on_draw(cell, _draw);
+	cgui_cell_on_draw(cell, draw);
 
 	return cell;
 }
@@ -49,7 +49,7 @@ cgui_placeholder_create(void)
 /************************************************************************************************************/
 
 static void
-_draw(cgui_cell *cell, struct cgui_cell_context *context)
+draw(cgui_cell *cell, struct cgui_cell_context *context)
 {
 	(void)cell;
 
