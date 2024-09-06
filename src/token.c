@@ -27,7 +27,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-struct _slot
+struct slot
 {
 	const char *key;
 	enum token type;
@@ -37,7 +37,7 @@ struct _slot
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static const struct _slot _map[] =
+static const struct slot map[] =
 {
 	/* substitution tokens */
 
@@ -131,10 +131,10 @@ token_dict_create(void)
 
 	dict = cdict_create();
 
-	cdict_prealloc(dict,   sizeof(_map) / sizeof(struct _slot));
-	for (size_t i = 0; i < sizeof(_map) / sizeof(struct _slot); i++)
+	cdict_prealloc(dict,   sizeof(map) / sizeof(struct slot));
+	for (size_t i = 0; i < sizeof(map) / sizeof(struct slot); i++)
 	{
-		cdict_write(dict, _map[i].key, 0, _map[i].type);
+		cdict_write(dict, map[i].key, 0, map[i].type);
 	}
 
 	return dict;

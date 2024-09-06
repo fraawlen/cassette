@@ -34,22 +34,22 @@
 
 /* sequences handlers */
 
-static void _combine_var      (struct context *, enum token)   CCFG_NONNULL(1);
-static void _declare_enum     (struct context *)               CCFG_NONNULL(1);
-static void _declare_resource (struct context *, const char *) CCFG_NONNULL(1);
-static void _declare_variable (struct context *)               CCFG_NONNULL(1);
-static void _include          (struct context *)               CCFG_NONNULL(1);
-static void _iterate          (struct context *)               CCFG_NONNULL(1);
-static void _print            (struct context *)               CCFG_NONNULL(1);
-static void _section_add      (struct context *)               CCFG_NONNULL(1);
-static void _section_begin    (struct context *)               CCFG_NONNULL(1);
-static void _section_del      (struct context *)               CCFG_NONNULL(1);
-static void _seed             (struct context *)               CCFG_NONNULL(1);
+static void combine_var      (struct context *, enum token)   CCFG_NONNULL(1);
+static void declare_enum     (struct context *)               CCFG_NONNULL(1);
+static void declare_resource (struct context *, const char *) CCFG_NONNULL(1);
+static void declare_variable (struct context *)               CCFG_NONNULL(1);
+static void include          (struct context *)               CCFG_NONNULL(1);
+static void iterate          (struct context *)               CCFG_NONNULL(1);
+static void print            (struct context *)               CCFG_NONNULL(1);
+static void section_add      (struct context *)               CCFG_NONNULL(1);
+static void section_begin    (struct context *)               CCFG_NONNULL(1);
+static void section_del      (struct context *)               CCFG_NONNULL(1);
+static void seed             (struct context *)               CCFG_NONNULL(1);
 
 /* iteration sequence preprocessing */
 
-static void   _preproc_iter_new  (struct context *)         CCFG_NONNULL(1);
-static size_t _preproc_iter_nest (struct context *, size_t) CCFG_NONNULL(1);
+static void   preproc_iter_new  (struct context *)         CCFG_NONNULL(1);
+static size_t preproc_iter_nest (struct context *, size_t) CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -78,43 +78,43 @@ sequence_parse(struct context *ctx)
 		case TOKEN_VAR_APPEND:
 		case TOKEN_VAR_PREPEND:
 		case TOKEN_VAR_MERGE:
-			_combine_var(ctx, type);
+			combine_var(ctx, type);
 			break;
 
 		case TOKEN_VAR_DECLARATION:
-			_declare_variable(ctx);
+			declare_variable(ctx);
 			break;
 
 		case TOKEN_ENUM_DECLARATION:
-			_declare_enum(ctx);
+			declare_enum(ctx);
 			break;
 		
 		case TOKEN_SECTION_BEGIN:
-			_section_begin(ctx);
+			section_begin(ctx);
 			break;
 
 		case TOKEN_SECTION_ADD:
-			_section_add(ctx);
+			section_add(ctx);
 			break;
 
 		case TOKEN_SECTION_DEL:
-			_section_del(ctx);
+			section_del(ctx);
 			break;
 
 		case TOKEN_INCLUDE:
-			_include(ctx);
+			include(ctx);
 			break;
 
 		case TOKEN_FOR_BEGIN:
-			_iterate(ctx);
+			iterate(ctx);
 			break;
 
 		case TOKEN_SEED:
-			_seed(ctx);
+			seed(ctx);
 			break;
 
 		case TOKEN_PRINT:
-			_print(ctx);
+			print(ctx);
 			break;
 
 		case TOKEN_INVALID:
@@ -123,7 +123,7 @@ sequence_parse(struct context *ctx)
 		case TOKEN_STRING:
 		case TOKEN_NUMBER:
 		default:
-			_declare_resource(ctx, token);
+			declare_resource(ctx, token);
 			break;
 	}
 
@@ -137,7 +137,7 @@ sequence_parse(struct context *ctx)
 /************************************************************************************************************/
 
 static void
-_combine_var(struct context *ctx, enum token type)
+combine_var(struct context *ctx, enum token type)
 {
 	cstr *val;
 	char name[TOKEN_MAX_LEN];
@@ -197,7 +197,7 @@ _combine_var(struct context *ctx, enum token type)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_declare_enum(struct context *ctx)
+declare_enum(struct context *ctx)
 {
 	char name[TOKEN_MAX_LEN];
 	char token[TOKEN_MAX_LEN];
@@ -267,10 +267,8 @@ _declare_enum(struct context *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_declare_resource(struct context *ctx, const char *namespace)
+declare_resource(struct context *ctx, const char *namespace)
 {
-	// TODO
-
 	char name[TOKEN_MAX_LEN];
 	char value[TOKEN_MAX_LEN];
 	size_t i;
@@ -315,7 +313,7 @@ _declare_resource(struct context *ctx, const char *namespace)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_declare_variable(struct context *ctx)
+declare_variable(struct context *ctx)
 {
 	char name[TOKEN_MAX_LEN];
 	char value[TOKEN_MAX_LEN];
@@ -351,7 +349,7 @@ _declare_variable(struct context *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_include(struct context *ctx)
+include(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
 	cstr *filename;
@@ -380,7 +378,7 @@ _include(struct context *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_iterate(struct context *ctx)
+iterate(struct context *ctx)
 {
 	char name[TOKEN_MAX_LEN];
 	char token[TOKEN_MAX_LEN];
@@ -414,11 +412,11 @@ _iterate(struct context *ctx)
 	if (nested)
 	{
 		group_start = ctx->it_group + 1;
-		group_end   = _preproc_iter_nest(ctx, group_start);
+		group_end   = preproc_iter_nest(ctx, group_start);
 	}
 	else
 	{
-		_preproc_iter_new(ctx);
+		preproc_iter_new(ctx);
 		group_start = 0;
 		group_end   = cbook_groups_number(ctx->iteration);
 	}
@@ -455,7 +453,7 @@ _iterate(struct context *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static size_t
-_preproc_iter_nest(struct context *ctx, size_t start_group)
+preproc_iter_nest(struct context *ctx, size_t start_group)
 {
 	char token[TOKEN_MAX_LEN];
 	size_t n = 0;
@@ -494,7 +492,7 @@ _preproc_iter_nest(struct context *ctx, size_t start_group)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_preproc_iter_new(struct context *ctx)
+preproc_iter_new(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
 	size_t n = 0;
@@ -545,7 +543,7 @@ _preproc_iter_new(struct context *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_print(struct context *ctx)
+print(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
 	
@@ -560,7 +558,7 @@ _print(struct context *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_section_add(struct context *ctx)
+section_add(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
 
@@ -573,7 +571,7 @@ _section_add(struct context *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_section_begin(struct context *ctx)
+section_begin(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
 
@@ -592,7 +590,7 @@ _section_begin(struct context *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_section_del(struct context *ctx)
+section_del(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
 
@@ -605,7 +603,7 @@ _section_del(struct context *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_seed(struct context *ctx)
+seed(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
 	double d;

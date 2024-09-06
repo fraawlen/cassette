@@ -38,8 +38,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static const char * _select_source (const ccfg *, size_t *) CCFG_NONNULL_RETURN CCFG_NONNULL(1);
-static enum cerr    _update_err    (ccfg *)                                     CCFG_NONNULL(1);
+static const char * select_source (const ccfg *, size_t *) CCFG_NONNULL_RETURN CCFG_NONNULL(1);
+static enum cerr    update_err    (ccfg *)                                     CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -70,7 +70,7 @@ ccfg_can_open_sources(const ccfg *cfg, size_t *index)
 		return false;
 	}
 
-	return _select_source(cfg, index)[0] != '\0';
+	return select_source(cfg, index)[0] != '\0';
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -136,7 +136,7 @@ ccfg_clone(ccfg *cfg)
 	cfg_new->it             = cfg->it;
 	cfg_new->err            = CERR_NONE;
 
-	if (_update_err(cfg_new))
+	if (update_err(cfg_new))
 	{
 		ccfg_destroy(cfg_new);
 		return CCFG_PLACEHOLDER;
@@ -167,7 +167,7 @@ ccfg_create(void)
 	cfg->it             = SIZE_MAX;
 	cfg->err            = CERR_NONE;
 
-	if (_update_err(cfg))
+	if (update_err(cfg))
 	{
 		ccfg_destroy(cfg);
 		return CCFG_PLACEHOLDER;
@@ -248,7 +248,7 @@ ccfg_load(ccfg *cfg)
 {
 	const char *source;
 
-	if (cfg->err || (source = _select_source(cfg, NULL))[0] == '\0')
+	if (cfg->err || (source = select_source(cfg, NULL))[0] == '\0')
 	{
 		return;
 	}
@@ -257,7 +257,7 @@ ccfg_load(ccfg *cfg)
 	cdict_clear(cfg->keys_sequences);
 	file_parse_root(cfg, source);
 
-	_update_err(cfg);
+	update_err(cfg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -300,7 +300,7 @@ ccfg_push_param_str(ccfg *cfg, const char *name, const char *str)
 		cdict_write(cfg->keys_params, name, 0, cbook_words_number(cfg->params) - 1);
 	}
 
-	_update_err(cfg);
+	update_err(cfg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -315,7 +315,7 @@ ccfg_push_source(ccfg *cfg, const char *filename)
 
 	cbook_write(cfg->sources, filename);
 
-	_update_err(cfg);
+	update_err(cfg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -337,7 +337,7 @@ ccfg_repair(ccfg *cfg)
 	
 	cfg->err = CERR_NONE;
 
-	_update_err(cfg);
+	update_err(cfg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -371,7 +371,7 @@ ccfg_resource_length(const ccfg *cfg)
 /************************************************************************************************************/
 
 static const char *
-_select_source(const ccfg *cfg, size_t *index)
+select_source(const ccfg *cfg, size_t *index)
 {
 	FILE *f;
 	const char *str;
@@ -396,7 +396,7 @@ _select_source(const ccfg *cfg, size_t *index)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum cerr
-_update_err(ccfg *cfg)
+update_err(ccfg *cfg)
 {
 	SET_ERR(cbook_error(cfg->params))
 	SET_ERR(cbook_error(cfg->sequences))

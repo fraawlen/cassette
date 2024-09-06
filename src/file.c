@@ -39,9 +39,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _has_err    (struct context *)                                       CCFG_NONNULL(1);
-static bool _open_file  (struct context *, const struct context *, const char *) CCFG_NONNULL(1, 3);
-static void _parse_file (struct context *)                                       CCFG_NONNULL(1);
+static bool has_err    (struct context *)                                       CCFG_NONNULL(1);
+static bool open_file  (struct context *, const struct context *, const char *) CCFG_NONNULL(1, 3);
+static void parse_file (struct context *)                                       CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -54,7 +54,7 @@ file_parse_child(struct context *ctx_parent, const char *filename)
 	size_t var_i;
 	size_t var_group;
 	
-	if (ctx_parent->depth >= CONTEXT_MAX_DEPTH || !_open_file(&ctx, ctx_parent, filename))
+	if (ctx_parent->depth >= CONTEXT_MAX_DEPTH || !open_file(&ctx, ctx_parent, filename))
 	{
 		return;
 	}
@@ -81,7 +81,7 @@ file_parse_child(struct context *ctx_parent, const char *filename)
 	ctx.parent         = ctx_parent;
 	ctx.rand           = ctx_parent->rand;
 
-	_parse_file(&ctx);
+	parse_file(&ctx);
 
 	ctx.var_i     = var_i;
 	ctx.var_group = var_group;
@@ -97,7 +97,7 @@ file_parse_root(ccfg *cfg, const char *filename)
 	struct context ctx;
 	crand r = 0;
 
-	if (!_open_file(&ctx, NULL, filename))
+	if (!open_file(&ctx, NULL, filename))
 	{
 		return;
 	}
@@ -123,15 +123,15 @@ file_parse_root(ccfg *cfg, const char *filename)
 	ctx.parent         = NULL;
 	ctx.rand           = &r;
 
-	if (_has_err(&ctx))
+	if (has_err(&ctx))
 	{	
 		cfg->err = CERR_MEMORY;
 		return;
 	}
 
-	_parse_file(&ctx);
+	parse_file(&ctx);
 
-	if (_has_err(&ctx))
+	if (has_err(&ctx))
 	{	
 		cfg->err = CERR_MEMORY;
 	}
@@ -148,7 +148,7 @@ file_parse_root(ccfg *cfg, const char *filename)
 /************************************************************************************************************/
 
 static bool
-_has_err(struct context *ctx)
+has_err(struct context *ctx)
 {
 	return cbook_error(ctx->iteration) || cbook_error(ctx->vars) || cdict_error(ctx->keys_vars);
 }
@@ -156,7 +156,7 @@ _has_err(struct context *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-_open_file(struct context *ctx, const struct context *ctx_parent, const char *filename)
+open_file(struct context *ctx, const struct context *ctx_parent, const char *filename)
 {
 	struct stat fs;
 
@@ -187,7 +187,7 @@ _open_file(struct context *ctx, const struct context *ctx_parent, const char *fi
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_parse_file(struct context *ctx)
+parse_file(struct context *ctx)
 {
 	while (!ctx->eof_reached)
 	{

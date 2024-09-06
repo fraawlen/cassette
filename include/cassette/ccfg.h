@@ -65,7 +65,7 @@ typedef struct ccfg ccfg;
  * related functions. However, any function called with a handle set to this value will return early without
  * any side effects.
  */
-#define CCFG_PLACEHOLDER &ccfg_placeholder_instance
+#define CCFG_PLACEHOLDER (&ccfg_placeholder_instance)
 
 /**
  * Global string object instance with the error state set to CERR_INVALID. This instance is only made

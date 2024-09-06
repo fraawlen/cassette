@@ -34,7 +34,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool _read_word (struct context *, char [static TOKEN_MAX_LEN]) CCFG_NONNULL(1);
+static bool read_word (struct context *, char [static TOKEN_MAX_LEN]) CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -96,7 +96,7 @@ context_get_token_raw(struct context *ctx, char token[static TOKEN_MAX_LEN])
 	{
 		snprintf(token, TOKEN_MAX_LEN, "%s", cbook_word_in_group(ctx->iteration, ctx->it_group, ctx->it_i++));
 	}
-	else if (!_read_word(ctx, token))
+	else if (!read_word(ctx, token))
 	{
 		return TOKEN_INVALID;
 	}
@@ -135,7 +135,7 @@ context_goto_eol(struct context *ctx)
 /************************************************************************************************************/
 
 static bool
-_read_word(struct context *ctx, char token[static TOKEN_MAX_LEN])
+read_word(struct context *ctx, char token[static TOKEN_MAX_LEN])
 {
 	size_t i = 0;
 	bool quotes_1 = false;

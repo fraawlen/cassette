@@ -36,17 +36,17 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static enum token _comment       (void);
-static enum token _eof           (struct context *)                                                            CCFG_NONNULL(1);
-static enum token _escape        (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
-static enum token _filler        (struct context *, char [static TOKEN_MAX_LEN], double *)                     CCFG_NONNULL(1);
-static enum token _if            (struct context *, char [static TOKEN_MAX_LEN], double *, enum token)         CCFG_NONNULL(1);
-static enum token _join          (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
-static enum token _math          (struct context *, char [static TOKEN_MAX_LEN], double *, enum token, size_t) CCFG_NONNULL(1);
-static enum token _math_cl       (struct context *, char [static TOKEN_MAX_LEN], double *, enum token, size_t) CCFG_NONNULL(1);
-static enum token _param         (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
-static enum token _variable      (struct context *, char [static TOKEN_MAX_LEN], double *)                     CCFG_NONNULL(1);
-static enum token _variable_iter (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
+static enum token comment       (void);
+static enum token condition     (struct context *, char [static TOKEN_MAX_LEN], double *, enum token)         CCFG_NONNULL(1);
+static enum token eof           (struct context *)                                                            CCFG_NONNULL(1);
+static enum token escape        (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
+static enum token filler        (struct context *, char [static TOKEN_MAX_LEN], double *)                     CCFG_NONNULL(1);
+static enum token join          (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
+static enum token math          (struct context *, char [static TOKEN_MAX_LEN], double *, enum token, size_t) CCFG_NONNULL(1);
+static enum token math_cl       (struct context *, char [static TOKEN_MAX_LEN], double *, enum token, size_t) CCFG_NONNULL(1);
+static enum token param         (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
+static enum token variable      (struct context *, char [static TOKEN_MAX_LEN], double *)                     CCFG_NONNULL(1);
+static enum token variable_iter (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -67,35 +67,35 @@ substitution_apply(struct context *ctx, char token[static TOKEN_MAX_LEN], double
 	switch (type = token_match(ctx->tokens, token))
 	{
 		case TOKEN_COMMENT:
-			type = _comment();
+			type = comment();
 			break;
 
 		case TOKEN_EOF:
-			type = _eof(ctx);
+			type = eof(ctx);
 			break;
 
 		case TOKEN_ESCAPE:
-			type = _escape(ctx, token);
+			type = escape(ctx, token);
 			break;
 
 		case TOKEN_FILLER:
-			type = _filler(ctx, token, math_result);
+			type = filler(ctx, token, math_result);
 			break;
 
 		case TOKEN_JOIN:
-			type = _join(ctx, token);
+			type = join(ctx, token);
 			break;
 
 		case TOKEN_VAR_INJECTION:
-			type = _variable(ctx, token, math_result);
+			type = variable(ctx, token, math_result);
 			break;
 
 		case TOKEN_ITER_INJECTION:
-			type = _variable_iter(ctx, token);
+			type = variable_iter(ctx, token);
 			break;
 
 		case TOKEN_PARAM_INJECTION:
-			type = _param(ctx, token);
+			type = param(ctx, token);
 			break;
 
 		case TOKEN_IF_LESS:
@@ -105,7 +105,7 @@ substitution_apply(struct context *ctx, char token[static TOKEN_MAX_LEN], double
 		case TOKEN_IF_EQ:
 		case TOKEN_IF_EQ_NOT:
 		case TOKEN_IF_STR_EQ:
-			type = _if(ctx, token, math_result, type);
+			type = condition(ctx, token, math_result, type);
 			break;
 
 		case TOKEN_TIMESTAMP:
@@ -113,7 +113,7 @@ substitution_apply(struct context *ctx, char token[static TOKEN_MAX_LEN], double
 		case TOKEN_CONST_EULER:
 		case TOKEN_CONST_TRUE:
 		case TOKEN_CONST_FALSE:
-			type = _math(ctx, token, math_result, type, 0);
+			type = math(ctx, token, math_result, type, 0);
 			break;
 
 		case TOKEN_OP_SQRT:
@@ -132,7 +132,7 @@ substitution_apply(struct context *ctx, char token[static TOKEN_MAX_LEN], double
 		case TOKEN_OP_SINH:
 		case TOKEN_OP_LN:
 		case TOKEN_OP_LOG:
-			type = _math(ctx, token, math_result, type, 1);
+			type = math(ctx, token, math_result, type, 1);
 			break;
 
 		case TOKEN_OP_ADD:
@@ -144,21 +144,21 @@ substitution_apply(struct context *ctx, char token[static TOKEN_MAX_LEN], double
 		case TOKEN_OP_BIGGEST:
 		case TOKEN_OP_SMALLEST:
 		case TOKEN_OP_RANDOM:
-			type = _math(ctx, token, math_result, type, 2);
+			type = math(ctx, token, math_result, type, 2);
 			break;
 
 		case TOKEN_OP_LIMIT:
 		case TOKEN_OP_INTERPOLATE:
-			type = _math(ctx, token, math_result, type, 3);
+			type = math(ctx, token, math_result, type, 3);
 			break;
 
 		case TOKEN_CL_RGB:
 		case TOKEN_CL_INTERPOLATE:
-			type = _math_cl(ctx, token, math_result, type, 3);
+			type = math_cl(ctx, token, math_result, type, 3);
 			break;
 
 		case TOKEN_CL_RGBA:
-			type = _math_cl(ctx, token, math_result, type, 4);
+			type = math_cl(ctx, token, math_result, type, 4);
 			break;
 
 		default:
@@ -175,7 +175,7 @@ substitution_apply(struct context *ctx, char token[static TOKEN_MAX_LEN], double
 /************************************************************************************************************/
 
 static enum token
-_comment(void)
+comment(void)
 {
 	return TOKEN_INVALID;
 }
@@ -183,36 +183,7 @@ _comment(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-_eof(struct context *ctx)
-{
-	ctx->eof_reached = true;
-	ctx->eol_reached = true;
-
-	return TOKEN_INVALID;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static enum token
-_escape(struct context *ctx, char token[TOKEN_MAX_LEN])
-{
-	ctx->eol_reached = false;
-
-	return context_get_token_raw(ctx, token);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static enum token
-_filler(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
-{
-	return context_get_token(ctx, token, math_result);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static enum token
-_if(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type)
+condition(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type)
 {
 	char token_2[TOKEN_MAX_LEN];
 	bool result;
@@ -281,7 +252,36 @@ _if(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-_join(struct context *ctx, char token[static TOKEN_MAX_LEN])
+eof(struct context *ctx)
+{
+	ctx->eof_reached = true;
+	ctx->eol_reached = true;
+
+	return TOKEN_INVALID;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static enum token
+escape(struct context *ctx, char token[TOKEN_MAX_LEN])
+{
+	ctx->eol_reached = false;
+
+	return context_get_token_raw(ctx, token);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static enum token
+filler(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
+{
+	return context_get_token(ctx, token, math_result);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static enum token
+join(struct context *ctx, char token[static TOKEN_MAX_LEN])
 {
 	char token_a[TOKEN_MAX_LEN];
 	char token_b[TOKEN_MAX_LEN];
@@ -299,7 +299,7 @@ _join(struct context *ctx, char token[static TOKEN_MAX_LEN])
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-_math(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type, size_t n)
+math(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type, size_t n)
 {
 	double result;
 	double d[3] = {0};
@@ -477,7 +477,7 @@ _math(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-_math_cl(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type, size_t n)
+math_cl(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type, size_t n)
 {
 	struct ccolor result;
 	struct ccolor cl[4] = {0};
@@ -538,7 +538,7 @@ _math_cl(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_res
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-_param(struct context *ctx, char token[static TOKEN_MAX_LEN])
+param(struct context *ctx, char token[static TOKEN_MAX_LEN])
 {
 	size_t i; 
 
@@ -556,7 +556,7 @@ _param(struct context *ctx, char token[static TOKEN_MAX_LEN])
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-_variable(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
+variable(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
 {
 	if (context_get_token(ctx, token, NULL) == TOKEN_INVALID
 	 || !cdict_find(ctx->keys_vars, token, CONTEXT_DICT_VARIABLE, &ctx->var_group))
@@ -572,7 +572,7 @@ _variable(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_re
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-_variable_iter(struct context *ctx, char token[static TOKEN_MAX_LEN])
+variable_iter(struct context *ctx, char token[static TOKEN_MAX_LEN])
 {
 	size_t i;
 
