@@ -26,18 +26,17 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _print_stats (void);
-static void _print_value (const char *key, unsigned int group);
+static void print_stats (void);
+static void print_value (const char *key, unsigned int group);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static cbook *_book = CBOOK_PLACEHOLDER;
-static cdict *_dict = CDICT_PLACEHOLDER;
+static cdict *dict = CDICT_PLACEHOLDER;
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* MAIN *****************************************************************************************************/
 /************************************************************************************************************/
 
 int
@@ -45,112 +44,59 @@ main(void)
 {
 	/* Setup */
 
-	_book = cbook_create();
-	_dict = cdict_create();
+	dict = cdict_create();
 
-	/* Book operations */
+	/* Operations */
 
-	printf(">> %zu\n", cbook_group_length(_book, 0));
-	printf(">> %s\n", cbook_word_in_group(_book, 0, 0));
+	cdict_write(dict, "test", 0, 12);
+	cdict_write(dict, "test", 1, 32);
+	cdict_write(dict, "test", 1, 44);
+	cdict_write(dict, "AAAA", 0, 99);
+	cdict_write(dict, "ASXC", 0, 56);
 
-	cbook_write(_book, "test1");
-	cbook_write(_book, "test2");
-	cbook_write(_book, "test3");
+	cdict_erase(dict, "AAAA", 0);
+	cdict_clear_group(dict, 0);
 
-	cbook_prepare_new_group(_book);
-	cbook_write(_book, "test4");
-	cbook_write(_book, "test5");
-	cbook_write(_book, "test6");
-	cbook_write(_book, "test7");
+	print_stats();
 
-	cbook_prepare_new_group(_book);
-	cbook_write(_book, "test8");
-
-	cbook_prepare_new_group(_book);
-	cbook_undo_new_group(_book);
-	cbook_write(_book, "test9");
-	cbook_write(_book, "test0");
-
-	for (size_t i = 0; i < cbook_groups_number(_book); i++)
-	{
-		printf("[ GROUP %zu ]\n", i);
-		CBOOK_FOR_EACH_REV(_book, i, j)
-		{
-			printf("\t%s\n", cbook_word(_book, j));
-		}
-	}
-
-	printf(">> %zu\n", cbook_group_length(_book, 0));
-	printf(">> %zu\n", cbook_group_length(_book, 1));
-	printf(">> %zu\n", cbook_group_length(_book, 2));
-	printf(">> %zu\n", cbook_group_length(_book, 3));
-	printf(">> %zu\n", cbook_group_length(_book, 4));
-
-	printf(">> %s\n", cbook_word_in_group(_book, 3, 0));
-
-	/* Dict operations */
-
-	cdict_write(_dict, "test", 0, 12);
-	cdict_write(_dict, "test", 1, 32);
-	cdict_write(_dict, "test", 1, 44);
-	cdict_write(_dict, "AAAA", 0, 99);
-	cdict_write(_dict, "ASXC", 0, 56);
-
-	cdict_erase(_dict, "AAAA", 0);
-	cdict_clear_group(_dict, 0);
-
-	_print_stats();
-
-	_print_value("test", 0);
-	_print_value("test", 1);
-	_print_value("AAAA", 0);
-	_print_value("ASXC", 0);
+	print_value("test", 0);
+	print_value("test", 1);
+	print_value("AAAA", 0);
+	print_value("ASXC", 0);
 
 	/* End */
 
-	if (cbook_error(_book))
-	{
-		printf("Book errored during operation\n");	
-	}
-
-	if (cdict_error(_dict))
+	if (cdict_error(dict))
 	{
 		printf("Dictionary errored during operation\n");	
 	}
 
-	cbook_destroy(_book);
-	cdict_destroy(_dict);
+	cdict_destroy(dict);
 
 	return 0;
 }
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 static void
-_print_stats(void)
+print_stats(void)
 {
 	printf(
-		"DICT\t%zu used slots (%f load factor)\n",
-		cdict_load(_dict),
-		cdict_load_factor(_dict));
-
-	printf(
-		"BOOK\t%zu groups / %zu words / %zu chars\n",
-		cbook_groups_number(_book),
-		cbook_words_number(_book),
-		cbook_length(_book));
+		"%zu used slots (%f load factor)\n",
+		cdict_load(dict),
+		cdict_load_factor(dict));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_print_value(const char *key, unsigned int group)
+print_value(const char *key, unsigned int group)
 {
 	size_t value = 0;
 
-	if (cdict_find(_dict, key, group, &value))
+	if (cdict_find(dict, key, group, &value))
 	{
 		printf("%s\t%u\t%zu\n", key, group, value);
 	}

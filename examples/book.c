@@ -26,72 +26,86 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void        print_cl (struct ccolor cl);
-static const char *to_str   (double val);
+static void print_stats (void);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static struct ccolor cl_1;
-static struct ccolor cl_2;
-static struct ccolor cl_3;
-static struct ccolor cl_4;
-
-static cstr *str  = CSTR_PLACEHOLDER;
+static cbook *book = CBOOK_PLACEHOLDER;
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* MAIN *****************************************************************************************************/
 /************************************************************************************************************/
 
 int
 main(void)
 {
-	str = cstr_create();
+	/* Setup */
 
-	cstr_set_precision(str, 0);
+	book = cbook_create();
 
-	cl_1 = CCOLOR_BLUE;
-	cl_2 = ccolor_from_str("#FF0000", NULL);
-	cl_3 = ccolor_from_rgba(128, 128, 128, 255);
-	cl_4 = ccolor_interpolate(cl_1, cl_2, 0.5);
+	/* Operations */
 
-	print_cl(cl_1);
-	print_cl(cl_2);
-	print_cl(cl_3);
-	print_cl(cl_4);
-	
-	if (cstr_error(str))
+	cbook_write(book, "test1");
+	cbook_write(book, "test2");
+	cbook_write(book, "test3");
+
+	cbook_prepare_new_group(book);
+	cbook_write(book, "test4");
+	cbook_write(book, "test5");
+	cbook_write(book, "test6");
+	cbook_write(book, "test7");
+
+	cbook_prepare_new_group(book);
+	cbook_write(book, "test8");
+
+	cbook_prepare_new_group(book);
+	cbook_undo_new_group(book);
+	cbook_write(book, "test9");
+	cbook_write(book, "test0");
+
+	print_stats();
+
+	for (size_t i = 0; i < cbook_groups_number(book); i++)
 	{
-		printf("String errored during operation\n");	
+		printf("[ GROUP %zu ]\n", i);
+		CBOOK_FOR_EACH_REV(book, i, j)
+		{
+			printf("\t%s\n", cbook_word(book, j));
+		}
 	}
 
-	cstr_destroy(str);
+	printf("%zu\n", cbook_group_length(book, 0));
+	printf("%zu\n", cbook_group_length(book, 1));
+	printf("%zu\n", cbook_group_length(book, 2));
+	printf("%zu\n", cbook_group_length(book, 3));
+	printf("%zu\n", cbook_group_length(book, 4));
+
+	printf("%s\n", cbook_word_in_group(book, 3, 0));
+
+	/* End */
+
+	if (cbook_error(book))
+	{
+		printf("Book errored during operation\n");	
+	}
+
+	cbook_destroy(book);
 
 	return 0;
 }
 
 /************************************************************************************************************/
+/* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
-/************************************************************************************************************/
 
-static void 
-print_cl(struct ccolor cl)
+static void
+print_stats(void)
 {
-	printf("R = %s, ",to_str(cl.r));
-	printf("G = %s, ",to_str(cl.g));
-	printf("B = %s, ",to_str(cl.b));
-	printf("A = %s\n",to_str(cl.a));
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static const char *
-to_str(double val)
-{
-	cstr_clear(str);
-	cstr_append(str, val * 255.0);
-	cstr_pad(str, " ", 0, 4);
-
-	return cstr_chars(str);
+	printf(
+		"%zu groups / %zu words / %zu chars\n",
+		cbook_groups_number(book),
+		cbook_words_number(book),
+		cbook_length(book));
 }

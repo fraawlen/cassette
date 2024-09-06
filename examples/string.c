@@ -26,20 +26,20 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _insert_2d   (const char *text, size_t row, size_t col);
-static void _update_wrap (void);
+static void insert_2d   (const char *text, size_t row, size_t col);
+static void update_wrap (void);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static cstr *_str_ref  = CSTR_PLACEHOLDER;
-static cstr *_str_wrap = CSTR_PLACEHOLDER;
+static cstr *str_ref  = CSTR_PLACEHOLDER;
+static cstr *str_wrap = CSTR_PLACEHOLDER;
 
 static size_t columns = 10; /* size of a supposed widget */
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* MAIN *****************************************************************************************************/
 /************************************************************************************************************/
 
 /**
@@ -67,48 +67,45 @@ main(void)
 {
 	/* Setup */
 
-	_str_ref  = cstr_create();
-	_str_wrap = cstr_create();
+	str_ref  = cstr_create();
+	str_wrap = cstr_create();
 
-	cstr_append(_str_ref, "This is a lͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲng line Ͳf text!");
-
-	_update_wrap();
+	cstr_append(str_ref, "This is a lͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲng line Ͳf text!");
+	update_wrap();
 
 	/* We assume the end-user wrote 'NEW' into the widget at the 3rd row and 6th column          */
 	/* (index 2 and 5). Once the new text has been added to the reference string, the wrapped    */
 	/* string is updated to display the changes.                                                 */
 
-	_insert_2d("NEW", 2, 5);
-
-	_update_wrap();
+	insert_2d("NEW", 2, 5);
+	update_wrap();
 
 	/* We now assume that the widget's width changes. The reference string is unchanged, but the */
 	/* wrapped string needs to be updated to use of all the new available space.                 */
 
 	columns = 25;
-
-	_update_wrap();
+	update_wrap();
 
 	/* End */
 
-	if (cstr_error(_str_ref))
+	if (cstr_error(str_ref))
 	{
 		printf("Reference string errored during operation\n");
 	}
 
-	if (cstr_error(_str_wrap))
+	if (cstr_error(str_wrap))
 	{
 		printf("Wrapped string errored during operation\n");
 	}
 
-	cstr_destroy(_str_ref);
-	cstr_destroy(_str_wrap);
+	cstr_destroy(str_ref);
+	cstr_destroy(str_wrap);
 
 	return 0;
 }
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 /**
@@ -120,31 +117,31 @@ main(void)
  */
 
 static void
-_insert_2d(const char *text, size_t row, size_t col)
+insert_2d(const char *text, size_t row, size_t col)
 {
 	size_t offset_ref;
 	size_t offset_wrap;
 
-	offset_wrap = cstr_coords_offset(_str_wrap, row, col);
-	offset_ref  = cstr_unwrapped_offset(_str_ref, _str_wrap, offset_wrap);
+	offset_wrap = cstr_coords_offset(str_wrap, row, col);
+	offset_ref  = cstr_unwrapped_offset(str_ref, str_wrap, offset_wrap);
 
-	cstr_insert(_str_ref, text, offset_ref);	
+	cstr_insert(str_ref, text, offset_ref);	
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_update_wrap()
+update_wrap()
 {
-	cstr_clear(_str_wrap);
-	cstr_append(_str_wrap, _str_ref);
-	cstr_wrap(_str_wrap, columns);
+	cstr_clear(str_wrap);
+	cstr_append(str_wrap, str_ref);
+	cstr_wrap(str_wrap, columns);
 
 	printf(
 		"%s\n\t-> %zu rows x %zu cols / %zu utf8-characters / %zu bytes\n\n",
-		cstr_chars(_str_wrap),
-		cstr_height(_str_wrap),
-		cstr_width(_str_wrap),
-		cstr_length(_str_wrap),
-		cstr_byte_length(_str_wrap));
+		cstr_chars(str_wrap),
+		cstr_height(str_wrap),
+		cstr_width(str_wrap),
+		cstr_length(str_wrap),
+		cstr_byte_length(str_wrap));
 }
