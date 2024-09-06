@@ -710,7 +710,7 @@ Returns a constant value in double format.
 TIME
 ```
 
-Returns a UNIX timestamp in seconds.
+Returns an UNIX timestamp in seconds.
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
@@ -721,7 +721,7 @@ RAND [min] [max]
 ```
 
 Returns a pseudo-random double ranging from `min` to `max`.
-Because the internal RNG is an LCG, as long as the initial seed is not modified (either by the caller program or with [`SEED_OVERRIDE`](#seed)), the same value will be returned between different reloads.
+Because the internal RNG is an LCG, as long as the initial seed is not modified with [`SEED_OVERRIDE`](#seed), the same value will be returned between different reloads.
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
