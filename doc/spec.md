@@ -73,7 +73,7 @@ token token token token token
 token token token token
 ```
 
-In CCFG, there is no concept of priority based on the presence of parentheses, brackets, or braces. In fact, parentheses get interpreted as white space, so even if they can be used to visually group tokens together, they bear no effect. Instead, tokens are strictly parsed from left to right and any language function that gets triggered should happen as the tokens are read. Thanks to that, words read from a source configuration file only need to be parsed and processed once. The only exception to this rule is the [iteration-type sequences]().
+In CCFG, there is no concept of priority based on the presence of parentheses, brackets, or braces. In fact, parentheses get interpreted as white space, so even if they can be used to visually group tokens together, they bear no effect. Instead, tokens are strictly parsed from left to right and any language function that gets triggered should happen as the tokens are read. Thanks to that, words read from a source configuration file only need to be parsed and processed once. The only exception to this rule is the [iteration-type sequences](#iterate).
 
 ```
 These 3 sequences are parsed the same way
