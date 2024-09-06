@@ -54,11 +54,11 @@ struct cstr
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static size_t      _byte_offset     (const cstr *, size_t) CSTR_NONNULL(1) CSTR_PURE;
-static bool        _is_head_byte    (uint8_t)              CSTR_CONST;
-static const char *_next_codepoint  (const char *)         CSTR_NONNULL(1) CSTR_PURE;
-static size_t      _tab_real_width  (const cstr *, size_t) CSTR_NONNULL(1) CSTR_PURE;
-static void        _update_n_values (cstr *)               CSTR_NONNULL(1);
+static size_t      byte_offset     (const cstr *, size_t) CSTR_NONNULL(1) CSTR_PURE;
+static bool        is_head_byte    (uint8_t)              CSTR_CONST;
+static const char *next_codepoint  (const char *)         CSTR_NONNULL(1) CSTR_PURE;
+static size_t      tab_real_width  (const cstr *, size_t) CSTR_NONNULL(1) CSTR_PURE;
+static void        update_n_values (cstr *)               CSTR_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -102,7 +102,7 @@ cstr_byte_offset(const cstr *str, size_t offset)
 		return 0;
 	}
 
-	return _byte_offset(str, offset);
+	return byte_offset(str, offset);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -128,7 +128,7 @@ cstr_chars_at_coords(const cstr *str, size_t row, size_t col)
 		return "";
 	}
 
-	return str->chars + _byte_offset(str, cstr_coords_offset(str, row, col));
+	return str->chars + byte_offset(str, cstr_coords_offset(str, row, col));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -141,7 +141,7 @@ cstr_chars_at_offset(const cstr *str, size_t offset)
 		return "";
 	}
 
-	return str->chars + _byte_offset(str, offset);
+	return str->chars + byte_offset(str, offset);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -156,7 +156,7 @@ cstr_clear(cstr *str)
 
 	str->chars[0] = '\0';
 
-	_update_n_values(str);
+	update_n_values(str);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -224,7 +224,7 @@ cstr_coords_offset(const cstr *str, size_t row, size_t col)
 		{
 			row--;
 		}
-		codepoint = _next_codepoint(codepoint);
+		codepoint = next_codepoint(codepoint);
 		offset++;
 	}
 
@@ -239,18 +239,18 @@ cstr_coords_offset(const cstr *str, size_t row, size_t col)
 				return offset;
 
 			case '\t':
-				if (col <= _tab_real_width(str, offset))
+				if (col <= tab_real_width(str, offset))
 				{
 					return offset;
 				}
-				col -= _tab_real_width(str, offset);
+				col -= tab_real_width(str, offset);
 				break;
 
 			default:
 				col--;
 				break;
 		}
-		codepoint = _next_codepoint(codepoint);
+		codepoint = next_codepoint(codepoint);
 		offset++;
 	}
 
@@ -281,7 +281,7 @@ cstr_create(void)
 	str->precision = 0;
 	str->err       = CERR_NONE;
 	
-	_update_n_values(str);
+	update_n_values(str);
 
 	return str;
 }
@@ -303,12 +303,12 @@ cstr_cut(cstr *str, size_t offset, size_t length)
 		length = str->n_codepoints - offset;
 	}
 
-	offset_2 = _byte_offset(str, offset + length);
-	offset   = _byte_offset(str, offset);
+	offset_2 = byte_offset(str, offset + length);
+	offset   = byte_offset(str, offset);
 
 	memmove(str->chars + offset, str->chars + offset_2, str->n_chars - offset_2);
 
-	_update_n_values(str);
+	update_n_values(str);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -432,13 +432,13 @@ cstr_insert_raw(cstr *str, const char *raw_str, size_t offset)
 
 	/* insert */
 
-	offset = _byte_offset(str, offset);
+	offset = byte_offset(str, offset);
 
 	memmove(str->chars + offset + n, str->chars + offset, str->n_chars - offset);
 	memcpy(str->chars + offset, raw_str, n);
 	free(tmp_src);
 	
-	_update_n_values(str);
+	update_n_values(str);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -492,7 +492,7 @@ cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 	
 	for (i = 0, j = 0;;)
 	{
-		if (_is_head_byte(pattern[j]))
+		if (is_head_byte(pattern[j]))
 		{
 			if (pattern[j] == '\0')
 			{
@@ -614,7 +614,7 @@ cstr_test_wrap(const cstr *str, size_t max_width)
 		return str->n_rows;
 	}
 
-	for (const char *codepoint = str->chars; *codepoint != '\0'; codepoint = _next_codepoint(codepoint))
+	for (const char *codepoint = str->chars; *codepoint != '\0'; codepoint = next_codepoint(codepoint))
 	{
 		if (*codepoint == '\n')
 		{
@@ -623,7 +623,7 @@ cstr_test_wrap(const cstr *str, size_t max_width)
 		}
 		else if (*codepoint == '\t')
 		{
-			col += _tab_real_width(str, col);
+			col += tab_real_width(str, col);
 		}
 		else if (col >= max_width)
 		{
@@ -721,10 +721,10 @@ cstr_unwrapped_offset(const cstr *str, const cstr *str_wrap, size_t offset)
 		}
 		else
 		{
-			codepoint_1 = _next_codepoint(codepoint_1);
+			codepoint_1 = next_codepoint(codepoint_1);
 		}
 
-		codepoint_2 = _next_codepoint(codepoint_2);
+		codepoint_2 = next_codepoint(codepoint_2);
 	}
 
 	return offset - diff;
@@ -790,7 +790,7 @@ cstr_wrap(cstr *str, size_t max_width)
 
 	for (size_t i = 0;; i++)
 	{
-		if (_is_head_byte(str->chars[i]))
+		if (is_head_byte(str->chars[i]))
 		{
 			if (str->chars[i] == '\0')
 			{
@@ -804,7 +804,7 @@ cstr_wrap(cstr *str, size_t max_width)
 			}
 			else if (str->chars[i] == '\t')
 			{
-				col += _tab_real_width(str, col);
+				col += tab_real_width(str, col);
 			}
 			else if (col >= max_width)
 			{
@@ -840,7 +840,7 @@ cstr_zero(cstr *str)
 
 	memset(str->chars, '\0', str->n_alloc);
 
-	_update_n_values(str);
+	update_n_values(str);
 }
 
 /************************************************************************************************************/
@@ -848,11 +848,11 @@ cstr_zero(cstr *str)
 /************************************************************************************************************/
 
 static size_t
-_byte_offset(const cstr *str, size_t offset)
+byte_offset(const cstr *str, size_t offset)
 {
 	const char *codepoint = str->chars;
 
-	while (offset > 0 && *(codepoint = _next_codepoint(codepoint)) != '\0')
+	while (offset > 0 && *(codepoint = next_codepoint(codepoint)) != '\0')
 	{
 		offset--;
 	}
@@ -863,7 +863,7 @@ _byte_offset(const cstr *str, size_t offset)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-_is_head_byte(uint8_t c)
+is_head_byte(uint8_t c)
 {
 	/*
 	 * UTF-8 :
@@ -880,7 +880,7 @@ _is_head_byte(uint8_t c)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static const char *
-_next_codepoint(const char *codepoint)
+next_codepoint(const char *codepoint)
 {
 	if (*codepoint != '\0')
 	{
@@ -888,7 +888,7 @@ _next_codepoint(const char *codepoint)
 		{
 			codepoint++;
 		}
-		while (!_is_head_byte(*codepoint));
+		while (!is_head_byte(*codepoint));
 	}
 
 	return codepoint;
@@ -897,7 +897,7 @@ _next_codepoint(const char *codepoint)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static size_t
-_tab_real_width(const cstr *str, size_t col)
+tab_real_width(const cstr *str, size_t col)
 {
 	return str->tab_width - (col % str->tab_width);
 }
@@ -905,7 +905,7 @@ _tab_real_width(const cstr *str, size_t col)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_update_n_values(cstr *str)
+update_n_values(cstr *str)
 {
 	size_t col = 0;
 
@@ -932,11 +932,11 @@ _update_n_values(cstr *str)
 
 			case '\t':
 				str->n_codepoints++;
-				col += _tab_real_width(str, col);
+				col += tab_real_width(str, col);
 				break;
 
 			default:
-				if (_is_head_byte(str->chars[str->n_chars]))
+				if (is_head_byte(str->chars[str->n_chars]))
 				{
 					str->n_codepoints++;
 					col++;

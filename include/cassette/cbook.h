@@ -63,7 +63,7 @@ typedef struct cbook cbook;
  * functions. However, any function called with a handle set to this value will return early and without any
  * side effects.
  */
-#define CBOOK_PLACEHOLDER &cbook_placeholder_instance
+#define CBOOK_PLACEHOLDER (&cbook_placeholder_instance)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

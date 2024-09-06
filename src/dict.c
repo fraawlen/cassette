@@ -35,7 +35,7 @@
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-enum _state
+enum state
 {
 	UNUSED  = 0,
 	DELETED = 1,
@@ -44,19 +44,19 @@ enum _state
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-struct _slot
+struct slot
 {
 	uint64_t hash;
 	size_t value;
 	size_t group;
-	enum _state state;
+	enum state state;
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct cdict
 {
-	struct _slot *slots;
+	struct slot *slots;
 	size_t n;
 	size_t n_alloc;
 	double max_load;
@@ -67,9 +67,9 @@ struct cdict
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static struct _slot *_find (const cdict *, uint64_t, enum _state) CDICT_NONNULL(1) CDICT_PURE;
-static bool          _grow (cdict *, size_t)                      CDICT_NONNULL(1);
-static uint64_t      _hash (const char *, size_t)                 CDICT_NONNULL(1) CDICT_PURE;
+static struct slot *find     (const cdict *, uint64_t, enum state) CDICT_NONNULL(1) CDICT_PURE;
+static uint64_t     get_hash (const char *, size_t)                CDICT_NONNULL(1) CDICT_PURE;
+static bool         grow     (cdict *, size_t)                     CDICT_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -96,7 +96,7 @@ cdict_clear(cdict *dict)
 		return;
 	}
 
-	memset(dict->slots, 0, dict->n_alloc * sizeof(struct _slot));
+	memset(dict->slots, 0, dict->n_alloc * sizeof(struct slot));
 	dict->n = 0;
 }
 
@@ -132,13 +132,13 @@ cdict_clone(const cdict *dict)
 		return CDICT_PLACEHOLDER;
 	}
 
-	if (!(dict_new->slots = malloc(dict->n_alloc * sizeof(struct _slot))))
+	if (!(dict_new->slots = malloc(dict->n_alloc * sizeof(struct slot))))
 	{
 		free(dict_new);
 		return CDICT_PLACEHOLDER;
 	}
 
-	memcpy(dict_new->slots, dict->slots, dict->n_alloc * sizeof(struct _slot));
+	memcpy(dict_new->slots, dict->slots, dict->n_alloc * sizeof(struct slot));
 
 	dict_new->n        = dict->n;
 	dict_new->n_alloc  = dict->n_alloc;
@@ -160,7 +160,7 @@ cdict_create(void)
 		return CDICT_PLACEHOLDER;
 	}
 
-	if (!(dict->slots = calloc(1, sizeof(struct _slot))))
+	if (!(dict->slots = calloc(1, sizeof(struct slot))))
 	{
 		free(dict);
 		return CDICT_PLACEHOLDER;
@@ -193,14 +193,14 @@ cdict_destroy(cdict *dict)
 void
 cdict_erase(cdict *dict, const char *key, size_t group)
 {
-	struct _slot *slot;
+	struct slot *slot;
 
 	if (dict->err)
 	{
 		return;
 	}
 
-	if ((slot = _find(dict, _hash(key, group), UNUSED)) && slot->state == ACTIVE)
+	if ((slot = find(dict, get_hash(key, group), UNUSED)) && slot->state == ACTIVE)
 	{
 		slot->state = DELETED;
 		dict->n--;
@@ -220,9 +220,9 @@ cdict_error(const cdict *dict)
 bool
 cdict_find(const cdict *dict, const char *key, size_t group, size_t *value)
 {
-	struct _slot *slot;
+	struct slot *slot;
 
-	if (dict->err || !(slot = _find(dict, _hash(key, group), UNUSED)) || slot->state != ACTIVE)
+	if (dict->err || !(slot = find(dict, get_hash(key, group), UNUSED)) || slot->state != ACTIVE)
 	{
 		return false;
 	}
@@ -277,7 +277,7 @@ cdict_prealloc(cdict *dict, size_t slots_number)
 		return;
 	}
 
-	_grow(dict, slots_number / dict->max_load);
+	grow(dict, slots_number / dict->max_load);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -313,7 +313,7 @@ cdict_set_max_load(cdict *dict, double load_factor)
 		return;
 	}
 
-	if (_grow(dict, dict->n / load_factor))
+	if (grow(dict, dict->n / load_factor))
 	{
 		dict->max_load = load_factor;
 	}
@@ -324,8 +324,8 @@ cdict_set_max_load(cdict *dict, double load_factor)
 void
 cdict_write(cdict *dict, const char *key, size_t group, size_t value)
 {
-	struct _slot *slot;
-	struct _slot *slot_2;
+	struct slot *slot;
+	struct slot *slot_2;
 	uint64_t hash;
 
 	if (dict->err)
@@ -340,19 +340,19 @@ cdict_write(cdict *dict, const char *key, size_t group, size_t value)
 			dict->err = CERR_OVERFLOW;
 			return;
 		}
-		if (!_grow(dict, dict->n_alloc * 2))
+		if (!grow(dict, dict->n_alloc * 2))
 		{
 			return;
 		}
 	}
 
-	hash = _hash(key, group);
-	slot = _find(dict, hash, DELETED);
+	hash = get_hash(key, group);
+	slot = find(dict, hash, DELETED);
 
 	switch (slot->state)
 	{
 		case DELETED:
-			if ((slot_2 = _find(dict, hash, UNUSED)) && slot_2->state == ACTIVE)
+			if ((slot_2 = find(dict, hash, UNUSED)) && slot_2->state == ACTIVE)
 			{
 				slot_2->state = DELETED;
 				dict->n--;
@@ -376,10 +376,10 @@ cdict_write(cdict *dict, const char *key, size_t group, size_t value)
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-static struct _slot *
-_find(const cdict *dict, uint64_t hash, enum _state state_cutoff)
+static struct slot *
+find(const cdict *dict, uint64_t hash, enum state state_cutoff)
 {
-	struct _slot *slot;
+	struct slot *slot;
 	uint64_t i0;
 	uint64_t i;
 
@@ -405,11 +405,31 @@ _find(const cdict *dict, uint64_t hash, enum _state state_cutoff)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static bool
-_grow(cdict *dict, size_t n)
+static uint64_t
+get_hash(const char *str, size_t group)
 {
-	struct _slot *tmp;
-	struct _slot *tmp_2;
+	uint64_t h = HASH_OFFSET;
+
+	for (size_t i = 0; i < sizeof(group); i++)
+	{
+		h = (h ^ (group & (0xFF << i))) * HASH_PRIME;
+	}
+
+	for (size_t i = 0; str[i] != '\0'; i++)
+	{
+		h = (h ^ str[i]) * HASH_PRIME;
+	}
+
+	return h;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static bool
+grow(cdict *dict, size_t n)
+{
+	struct slot *tmp;
+	struct slot *tmp_2;
 	size_t n_2;
 
 	if (n <= dict->n_alloc)
@@ -417,13 +437,13 @@ _grow(cdict *dict, size_t n)
 		return true;
 	}
 
-	if (!safe_mul(NULL, n, sizeof(struct _slot)))
+	if (!safe_mul(NULL, n, sizeof(struct slot)))
 	{
 		dict->err = CERR_OVERFLOW;
 		return false;
 	}
 
-	if (!(tmp = calloc(n, sizeof(struct _slot))))
+	if (!(tmp = calloc(n, sizeof(struct slot))))
 	{
 		dict->err = CERR_MEMORY;
 		return false;
@@ -439,31 +459,11 @@ _grow(cdict *dict, size_t n)
 	{
 		if (tmp_2[i].state == ACTIVE)
 		{
-			*_find(dict, tmp_2[i].hash, UNUSED) = tmp_2[i];
+			*find(dict, tmp_2[i].hash, UNUSED) = tmp_2[i];
 		}
 	}
 
 	free(tmp_2);
 
 	return true;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static uint64_t
-_hash(const char *str, size_t group)
-{
-	uint64_t h = HASH_OFFSET;
-
-	for (size_t i = 0; i < sizeof(group); i++)
-	{
-		h = (h ^ (group & (0xFF << i))) * HASH_PRIME;
-	}
-
-	for (size_t i = 0; str[i] != '\0'; i++)
-	{
-		h = (h ^ str[i]) * HASH_PRIME;
-	}
-
-	return h;
 }

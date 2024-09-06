@@ -148,11 +148,11 @@ CSEG_NONNULL(1);
 /**
  * Mutilplies the origin and length.
  *
- * @param seg   : Segment to interact with
- * @param scale : Multiplier value
+ * @param seg    : Segment to interact with
+ * @param factor : Multiplier value
  */
 void
-cseg_scale(struct cseg *seg, double scale)
+cseg_scale(struct cseg *seg, double factor)
 CSEG_NONNULL(1);
 
 /************************************************************************************************************/

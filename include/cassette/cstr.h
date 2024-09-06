@@ -65,7 +65,7 @@ typedef struct cstr cstr;
  * related functions. However, any function called with a handle set to this value will return early and
  * without any side effects.
  */
-#define CSTR_PLACEHOLDER &cstr_placeholder_instance
+#define CSTR_PLACEHOLDER (&cstr_placeholder_instance)
 
 /**
  * Global string object instance with the error state set to CERR_INVALID. This instance is only made

@@ -63,7 +63,7 @@ typedef struct cdict cdict;
  * related functions. However, any function called with a handle set to this value will return early and
  * without any side effects.
  */
-#define CDICT_PLACEHOLDER &cdict_placeholder_instance
+#define CDICT_PLACEHOLDER (&cdict_placeholder_instance)
 
 /**
  * Global dictionary instance with the error state set to CERR_INVALID. This instance is made available to

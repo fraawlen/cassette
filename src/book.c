@@ -49,8 +49,8 @@ struct cbook
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static size_t _group_size (const cbook *, size_t) CBOOK_PURE CBOOK_NONNULL(1);
-static bool   _grow       (cbook *, size_t, size_t, size_t)  CBOOK_NONNULL(1);
+static size_t group_size (const cbook *, size_t) CBOOK_PURE CBOOK_NONNULL(1);
+static bool   grow       (cbook *, size_t, size_t, size_t)  CBOOK_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -101,7 +101,7 @@ cbook_clone(const cbook *book)
 		return CBOOK_PLACEHOLDER;
 	}
 
-	if (!_grow(book_new, book->n_alloc_chars, book->n_alloc_words, book->n_alloc_groups))
+	if (!grow(book_new, book->n_alloc_chars, book->n_alloc_words, book->n_alloc_groups))
 	{
 		free(book_new->chars);
 		free(book_new->words);
@@ -135,7 +135,7 @@ cbook_create(void)
 		return CBOOK_PLACEHOLDER;
 	}
 
-	if (!_grow(book, 1, 1, 1))
+	if (!grow(book, 1, 1, 1))
 	{
 		free(book->chars);
 		free(book->words);
@@ -187,7 +187,7 @@ cbook_group_length(const cbook *book, size_t group_index)
 		return 0;
 	}
 
-	return _group_size(book, group_index);
+	return group_size(book, group_index);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -266,7 +266,7 @@ cbook_prealloc(cbook *book, size_t bytes_number, size_t words_number, size_t gro
 		return;
 	}
 
-	_grow(book, bytes_number, words_number, groups_number);
+	grow(book, bytes_number, words_number, groups_number);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -325,8 +325,8 @@ const char *
 cbook_word_in_group(const cbook *book, size_t group_index, size_t word_local_index)
 {
 	if (book->err
-	 || _group_size(book, group_index) == 0
-	 || _group_size(book, group_index) <= word_local_index)
+	 || group_size(book, group_index) == 0
+	 || group_size(book, group_index) <= word_local_index)
 	{
 		return "";
 	}
@@ -340,8 +340,8 @@ size_t
 cbook_word_index(const cbook *book, size_t group_index, size_t word_local_index)
 {
 	if (book->err
-	 || _group_size(book, group_index) == 0
-	 || _group_size(book, group_index) <= word_local_index)
+	 || group_size(book, group_index) == 0
+	 || group_size(book, group_index) <= word_local_index)
 	{
 		return 0;
 	}
@@ -391,7 +391,7 @@ cbook_write(cbook *book, const char *str)
 		}
 	}
 
-	if (!_grow(book, nc, nw, ng))
+	if (!grow(book, nc, nw, ng))
 	{
 		return;
 	}
@@ -429,7 +429,7 @@ cbook_zero(cbook *book)
 /************************************************************************************************************/
 
 static size_t
-_group_size(const cbook *book, size_t i)
+group_size(const cbook *book, size_t i)
 {
 	if (i >= book->n_groups)
 	{
@@ -448,7 +448,7 @@ _group_size(const cbook *book, size_t i)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-_grow(cbook *book, size_t n_chars, size_t n_words, size_t n_groups)
+grow(cbook *book, size_t n_chars, size_t n_words, size_t n_groups)
 {
 	void *tmp;
 

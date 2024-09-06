@@ -27,11 +27,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
  
-static void          _bind_color (struct ccolor *);
-static void          _bind_d     (double *);
-static uint8_t       _hex_to_int (char)                 CCOLOR_CONST; 
-static struct ccolor _from_hex   (const char *, bool *) CCOLOR_NONNULL(1);
-static struct ccolor _from_ulong (const char *, bool *) CCOLOR_NONNULL(1);
+static void          bind_color  (struct ccolor *);
+static void          bind_double (double *);
+static uint8_t       hex_to_int  (char)                 CCOLOR_CONST; 
+static struct ccolor from_hex    (const char *, bool *) CCOLOR_NONNULL(1);
+static struct ccolor from_ulong  (const char *, bool *) CCOLOR_NONNULL(1);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -71,7 +71,7 @@ ccolor_from_str(const char *str, bool *err)
 
 	bool fail = false;
 
-	color = str[0] == '#' ? _from_hex(str + 1, &fail) : _from_ulong(str, &fail);
+	color = str[0] == '#' ? from_hex(str + 1, &fail) : from_ulong(str, &fail);
 	
 	if (err)
 	{
@@ -88,9 +88,9 @@ ccolor_interpolate(struct ccolor color_1, struct ccolor color_2, double ratio)
 {
 	struct ccolor color;
 
-	_bind_color(&color_1);
-	_bind_color(&color_2);
-	_bind_d(&ratio);
+	bind_color(&color_1);
+	bind_color(&color_2);
+	bind_double(&ratio);
 
 	color.r = color_2.r * ratio + color_1.r * (1.0 - ratio);
 	color.g = color_2.g * ratio + color_1.g * (1.0 - ratio);
@@ -110,7 +110,7 @@ ccolor_to_argb_uint(struct ccolor color)
 	uint32_t g;
 	uint32_t b;
 
-	_bind_color(&color);
+	bind_color(&color);
 
 	a = color.a * 255;
 	r = color.r * 255;
@@ -125,18 +125,18 @@ ccolor_to_argb_uint(struct ccolor color)
 /************************************************************************************************************/
 
 static void
-_bind_color(struct ccolor *color)
+bind_color(struct ccolor *color)
 {
-	_bind_d(&color->r);
-	_bind_d(&color->g);
-	_bind_d(&color->b);
-	_bind_d(&color->a);
+	bind_double(&color->r);
+	bind_double(&color->g);
+	bind_double(&color->b);
+	bind_double(&color->a);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_bind_d(double *d)
+bind_double(double *d)
 {
 	if (*d > 1.0)
 	{
@@ -151,14 +151,14 @@ _bind_d(double *d)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct ccolor
-_from_hex(const char *str, bool *err)
+from_hex(const char *str, bool *err)
 {
 	uint8_t v[8] = {0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xF, 0xF};
 	size_t  i;
 
 	for (i = 0; i < 8 && str[i] != '\0'; i++)
 	{
-		v[i] = _hex_to_int(str[i]);
+		v[i] = hex_to_int(str[i]);
 		if (v[i] == UINT8_MAX)
 		{
 			*err = true;
@@ -182,7 +182,7 @@ _from_hex(const char *str, bool *err)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct ccolor
-_from_ulong(const char *str, bool *err)
+from_ulong(const char *str, bool *err)
 {
 	char *endptr = NULL;
 	uint32_t u = 0;
@@ -199,7 +199,7 @@ _from_ulong(const char *str, bool *err)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static uint8_t
-_hex_to_int(char c)
+hex_to_int(char c)
 {
 	switch (c)
 	{

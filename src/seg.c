@@ -26,10 +26,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void    _bind_length (struct cseg *)   CSEG_NONNULL(1);
-static void    _bind_origin (struct cseg *)   CSEG_NONNULL(1);
-static int64_t _scale       (int64_t, double) CSEG_CONST;
-static void    _swap_bounds (struct cseg *)   CSEG_NONNULL(1);
+static void    bind_length (struct cseg *)   CSEG_NONNULL(1);
+static void    bind_origin (struct cseg *)   CSEG_NONNULL(1);
+static int64_t scale       (int64_t, double) CSEG_CONST;
+static void    swap_bounds (struct cseg *)   CSEG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -38,9 +38,9 @@ static void    _swap_bounds (struct cseg *)   CSEG_NONNULL(1);
 void
 cseg_bind(struct cseg *seg)
 {
-	_swap_bounds(seg);
-	_bind_origin(seg);
-	_bind_length(seg);
+	swap_bounds(seg);
+	bind_origin(seg);
+	bind_length(seg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -57,7 +57,7 @@ cseg_grow(struct cseg *seg, int64_t length)
 		seg->length = seg->length < INT64_MIN - length ? INT64_MIN : seg->length + length;
 	}
 
-	_bind_length(seg);
+	bind_length(seg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -83,9 +83,9 @@ cseg_limit(struct cseg *seg, int64_t lim_1, int64_t lim_2)
 	seg->min = lim_1;
 	seg->max = lim_2;
 
-	_swap_bounds(seg);
-	_bind_origin(seg);
-	_bind_length(seg);
+	swap_bounds(seg);
+	bind_origin(seg);
+	bind_length(seg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -95,8 +95,8 @@ cseg_move(struct cseg *seg, int64_t origin)
 {
 	seg->origin = origin;
 
-	_bind_origin(seg);
-	_bind_length(seg);
+	bind_origin(seg);
+	bind_length(seg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -113,8 +113,8 @@ cseg_offset(struct cseg *seg, int64_t length)
 		seg->origin = seg->origin < INT64_MIN - length ? INT64_MIN : seg->origin + length;
 	}
 	
-	_bind_origin(seg);
-	_bind_length(seg);
+	bind_origin(seg);
+	bind_length(seg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -137,26 +137,26 @@ cseg_pad(struct cseg *seg, int64_t length)
 	cseg_grow(seg, -len_2);
 }
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+/* - - - - - -factor- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 cseg_resize(struct cseg *seg, int64_t length)
 {
 	seg->length = length;
 
-	_bind_length(seg);
+	bind_length(seg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cseg_scale(struct cseg *seg, double scale)
+cseg_scale(struct cseg *seg, double factor)
 {
-	seg->origin = _scale(seg->origin, scale);
-	seg->length = _scale(seg->length, scale);
+	seg->origin = scale(seg->origin, factor);
+	seg->length = scale(seg->length, factor);
 
-	_bind_origin(seg);
-	_bind_length(seg);
+	bind_origin(seg);
+	bind_length(seg);
 }
 
 /************************************************************************************************************/
@@ -164,7 +164,7 @@ cseg_scale(struct cseg *seg, double scale)
 /************************************************************************************************************/
 
 static void
-_bind_length(struct cseg *seg)
+bind_length(struct cseg *seg)
 {
 	if (seg->length > 0)
 	{
@@ -205,7 +205,7 @@ _bind_length(struct cseg *seg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_bind_origin(struct cseg *seg)
+bind_origin(struct cseg *seg)
 {
 	if (seg->origin < seg->min)
 	{
@@ -220,33 +220,33 @@ _bind_origin(struct cseg *seg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static int64_t
-_scale(int64_t a, double scale)
+scale(int64_t a, double factor)
 {
-	if (scale > 1.0)
+	if (factor > 1.0)
 	{
 		if (a > 0)
 		{
-			a = a > INT64_MAX / scale ? INT64_MAX : a * scale;
+			a = a > INT64_MAX / factor ? INT64_MAX : a * factor;
 		}
 		else
 		{
-			a = a < INT64_MIN / scale ? INT64_MIN : a * scale;
+			a = a < INT64_MIN / factor ? INT64_MIN : a * factor;
 		}
 	}
-	else if (scale < -1.0)
+	else if (factor < -1.0)
 	{
 		if (a > 0)
 		{
-			a = a > INT64_MIN / scale ? INT64_MIN : a * scale;
+			a = a > INT64_MIN / factor ? INT64_MIN : a * factor;
 		}
 		else
 		{
-			a = a < INT64_MAX / scale ? INT64_MAX : a * scale;
+			a = a < INT64_MAX / factor ? INT64_MAX : a * factor;
 		}
 	}
 	else
 	{
-		a *= scale;
+		a *= factor;
 	}
 
 	return a;
@@ -255,7 +255,7 @@ _scale(int64_t a, double scale)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_swap_bounds(struct cseg *seg)
+swap_bounds(struct cseg *seg)
 {
 	int64_t tmp;
 
