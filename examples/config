@@ -22,15 +22,13 @@ SECTION Sb
 	// Resources for example program 2-widgets
 
 	LET widget \
-		label  \
+		label \
 		button \
-		switch \
-		gauge  \
+		gauge
 
 	label  background_color #126DD0
 	button background_color #A155CC
-	switch background_color #111111
-	gauge  background_color #AACC00
+	gauge  background_color #111111
 
 	FOR_EACH widget
 		(% widget) border_width 5

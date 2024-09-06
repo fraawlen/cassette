@@ -45,20 +45,19 @@ struct widget
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _generate_source (void);
-static void _widget_config   (struct widget *w);
-static void _widget_print    (const struct widget *w);
+static void generate_source (void);
+static void widget_config   (struct widget *w);
+static void widget_print    (const struct widget *w);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static ccfg *_cfg = CCFG_PLACEHOLDER;
+static ccfg *cfg = CCFG_PLACEHOLDER;
 
-struct widget _label  = {.name = "label",  .border_width = 0, .border_color = {0} , .background_color = {0}};
-struct widget _button = {.name = "button", .border_width = 0, .border_color = {0} , .background_color = {0}};
-struct widget _switch = {.name = "switch", .border_width = 0, .border_color = {0} , .background_color = {0}};
-struct widget _gauge  = {.name = "gauge",  .border_width = 0, .border_color = {0} , .background_color = {0}};
+struct widget label  = {.name = "label",  .border_width = 0, .border_color = {0} , .background_color = {0}};
+struct widget button = {.name = "button", .border_width = 0, .border_color = {0} , .background_color = {0}};
+struct widget gauge  = {.name = "gauge",  .border_width = 0, .border_color = {0} , .background_color = {0}};
 
 /************************************************************************************************************/
 /* MAIN *****************************************************************************************************/
@@ -78,29 +77,27 @@ main(void)
 {
 	/* Setup */
 
-	_cfg = ccfg_create();
+	cfg = ccfg_create();
 
-	_generate_source();
+	generate_source();
 
-	ccfg_push_source(_cfg, SAMPLE_CONFIG_PATH);
+	ccfg_push_source(cfg, SAMPLE_CONFIG_PATH);
 
 	/* Operations */
 
-	ccfg_load(_cfg);
+	ccfg_load(cfg);
 
-	_widget_config(&_label);
-	_widget_config(&_button);
-	_widget_config(&_switch);
-	_widget_config(&_gauge);
+	widget_config(&label);
+	widget_config(&button);
+	widget_config(&gauge);
 
-	_widget_print(&_label);
-	_widget_print(&_button);
-	_widget_print(&_switch);
-	_widget_print(&_gauge);
+	widget_print(&label);
+	widget_print(&button);
+	widget_print(&gauge);
 
 	/* End */
 
-	if (ccfg_error(_cfg))
+	if (ccfg_error(cfg))
 	{
 		printf("Configuration parser failed during operation.\n");
 	}
@@ -113,7 +110,7 @@ main(void)
 /************************************************************************************************************/
 
 static void
-_generate_source(void)
+generate_source(void)
 {
 	FILE *f;
 
@@ -130,37 +127,37 @@ _generate_source(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_widget_config(struct widget *w)
+widget_config(struct widget *w)
 {
 	/* background color */
 
-	ccfg_fetch(_cfg, w->name, "background_color");
-	if (ccfg_iterate(_cfg))
+	ccfg_fetch(cfg, w->name, "background_color");
+	if (ccfg_iterate(cfg))
 	{
-		w->background_color = ccolor_from_str(ccfg_resource(_cfg), NULL);
+		w->background_color = ccolor_from_str(ccfg_resource(cfg), NULL);
 	}
 
 	/* border color */
 
-	ccfg_fetch(_cfg, w->name, "border_color");
-	if (ccfg_iterate(_cfg))
+	ccfg_fetch(cfg, w->name, "border_color");
+	if (ccfg_iterate(cfg))
 	{
-		w->border_color = ccolor_from_str(ccfg_resource(_cfg), NULL);
+		w->border_color = ccolor_from_str(ccfg_resource(cfg), NULL);
 	}
 
 	/* border width */
 	
-	ccfg_fetch(_cfg, w->name, "border_width");
-	if (ccfg_iterate(_cfg))
+	ccfg_fetch(cfg, w->name, "border_width");
+	if (ccfg_iterate(cfg))
 	{
-		w->border_width = strtoul(ccfg_resource(_cfg), NULL, 0);
+		w->border_width = strtoul(ccfg_resource(cfg), NULL, 0);
 	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_widget_print(const struct widget *w)
+widget_print(const struct widget *w)
 {
 	printf("%s:\n", w->name);
 

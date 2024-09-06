@@ -30,15 +30,15 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define _SAMPLE_CONFIG_PATH "/tmp/ccfg_sample"
-#define _N_SIMULATIONS       10
+#define SAMPLE_CONFIG_PATH "/tmp/ccfg_sample"
+#define N_SIMULATIONS       10
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void  _generate_source   (void);
-static void *_simulation_thread (void *param);
+static void  generate_source   (void);
+static void *simulation_thread (void *param);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -58,23 +58,23 @@ static void *_simulation_thread (void *param);
 int
 main(void)
 {
-	pthread_t threads[_N_SIMULATIONS];
+	pthread_t threads[N_SIMULATIONS];
 
-	unsigned int ids[_N_SIMULATIONS];
+	unsigned int ids[N_SIMULATIONS];
 
 	/* Init */
 
-	_generate_source();
+	generate_source();
 
 	/* Run pseudo-simulations */
 
-	for (unsigned int i = 0; i < _N_SIMULATIONS; i++)
+	for (unsigned int i = 0; i < N_SIMULATIONS; i++)
 	{
 		ids[i] = i;
-		pthread_create(threads + i, NULL, _simulation_thread, ids + i);
+		pthread_create(threads + i, NULL, simulation_thread, ids + i);
 	}
 	
-	for (unsigned int i = 0; i < _N_SIMULATIONS; i++)
+	for (unsigned int i = 0; i < N_SIMULATIONS; i++)
 	{
 		pthread_join(threads[i], NULL);
 	}
@@ -87,13 +87,13 @@ main(void)
 /************************************************************************************************************/
 
 static void
-_generate_source(void)
+generate_source(void)
 {
 	FILE *f;
 
-	if (!(f = fopen(_SAMPLE_CONFIG_PATH, "w")))
+	if (!(f = fopen(SAMPLE_CONFIG_PATH, "w")))
 	{
-		printf("sample configuration in %s could not be generated\n", _SAMPLE_CONFIG_PATH);
+		printf("sample configuration in %s could not be generated\n", SAMPLE_CONFIG_PATH);
 		return;
 	}
 
@@ -105,7 +105,7 @@ _generate_source(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void *
-_simulation_thread(void *param)
+simulation_thread(void *param)
 {
 	ccfg *cfg;
 
@@ -117,7 +117,7 @@ _simulation_thread(void *param)
 	cfg = ccfg_create();
 	id  = *(unsigned int*)param;
 
-	ccfg_push_source(cfg, _SAMPLE_CONFIG_PATH);
+	ccfg_push_source(cfg, SAMPLE_CONFIG_PATH);
 	ccfg_push_param(cfg, "sim_id", id);
 	ccfg_load(cfg);
 

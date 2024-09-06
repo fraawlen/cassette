@@ -33,14 +33,14 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _generate_source (void);
-static void _print_resources (const char *namespace, const char *property);
+static void generate_source (void);
+static void print_resources (const char *namespace, const char *property);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static ccfg *_cfg = CCFG_PLACEHOLDER;
+static ccfg *cfg = CCFG_PLACEHOLDER;
 
 /************************************************************************************************************/
 /* MAIN *****************************************************************************************************/
@@ -56,33 +56,33 @@ main(void)
 {
 	/* Setup */
 
-	_cfg = ccfg_create();
+	cfg = ccfg_create();
 
-	_generate_source();
+	generate_source();
 
-	ccfg_push_source(_cfg, SAMPLE_CONFIG_PATH);
-	ccfg_push_param(_cfg, "example_param", "value_from_executable");
+	ccfg_push_source(cfg, SAMPLE_CONFIG_PATH);
+	ccfg_push_param(cfg, "example_param", "value_from_executable");
 
 	/* Operations */
 
-	ccfg_load(_cfg);
+	ccfg_load(cfg);
 
 	printf("namespace\tprop\traw_values\n");
 	printf("---------\t----\t----------\n");
 
-	_print_resources("example-1", "a");
-	_print_resources("example-1", "b");
-	_print_resources("example-1", "c");
-	_print_resources("example-1", "d");
-	_print_resources("example-1", "e");
-	_print_resources("example-1", "f");
-	_print_resources("example-1", "g");
-	_print_resources("example-1", "h");
-	_print_resources("example-9", "i"); /* expected to not be found */
+	print_resources("example-1", "a");
+	print_resources("example-1", "b");
+	print_resources("example-1", "c");
+	print_resources("example-1", "d");
+	print_resources("example-1", "e");
+	print_resources("example-1", "f");
+	print_resources("example-1", "g");
+	print_resources("example-1", "h");
+	print_resources("example-9", "i"); /* expected to not be found */
 
 	/* End */
 
-	if (ccfg_error(_cfg))
+	if (ccfg_error(cfg))
 	{
 		printf("Configuration parser failed during operation.\n");
 	}
@@ -95,7 +95,7 @@ main(void)
 /************************************************************************************************************/
 
 static void
-_generate_source(void)
+generate_source(void)
 {
 	FILE *f;
 
@@ -112,14 +112,14 @@ _generate_source(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_print_resources(const char *namespace, const char *property)
+print_resources(const char *namespace, const char *property)
 {
 	printf("%s\t%s", namespace, property);
 
-	ccfg_fetch(_cfg, namespace, property);
-	while (ccfg_iterate(_cfg))
+	ccfg_fetch(cfg, namespace, property);
+	while (ccfg_iterate(cfg))
 	{
-		printf("\t%s", ccfg_resource(_cfg));
+		printf("\t%s", ccfg_resource(cfg));
 	}
 
 	printf("\n");
