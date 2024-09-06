@@ -26,7 +26,6 @@ Dependencies
 
 	- C99 compiler with a stdlib + POSIX 200809L
 	- Make
-	- Xxd (optional, is only needed to build examples)
 
 - First-party libraries :
 
@@ -63,7 +62,7 @@ As well as this compilation flag :
 Minimal Example
 ---------------
 
-The following code snippet shows a minimal example of the library usage. When compiled and run, it will look for the file `/tmp/ccfg` and load its contents. It then attempts to fetch a resource named `property` under the namespace `namespace`, and if found, prints its values.
+The following code snippet shows a minimal example of the library usage. When compiled and run, it will look for `/tmp/data.conf` or `data.conf` and load their contents. It then attempts to fetch a resource named `property` under the namespace `namespace`, and if found, prints its values.
 
 ```c
 #include <stdio.h>
@@ -74,7 +73,8 @@ main(void)
 {
 	ccfg *cfg = ccfg_create();
 
-	ccfg_push_source(cfg, "/tmp/ccfg");
+	ccfg_push_source(cfg, "/tmp/data.conf"); /* primary  source */
+	ccfg_push_source(cfg,      "data.conf"); /* fallback source */
 	ccfg_load(cfg);
 
 	ccfg_fetch(cfg, "namespace", "property");
@@ -87,7 +87,7 @@ main(void)
 }
 ```
 
-A matching minimal CCFG configuration in `/tmp/ccfg` will then look like this :
+A matching minimal CCFG configuration in `/tmp/data.conf` or `data.conf` will then look like this :
 
 ```
 namespace property value_A value_B

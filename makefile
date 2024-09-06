@@ -31,18 +31,17 @@ FLAGS  := -std=c11 -O3 -D_POSIX_C_SOURCE=200809L -pedantic -pedantic-errors -Wer
           -Wnested-externs -Wpointer-arith -Wredundant-decls -Wsequence-point -Wshadow -Wstrict-prototypes \
           -Wswitch -Wundef -Wunreachable-code -Wunused-but-set-parameter -Wwrite-strings
 
-
 #############################################################################################################
 # PUBLIC TARGETS ############################################################################################
 #############################################################################################################
 
 all: lib examples
 
-lib: --prep_lib $(LIST_OBJ)
+lib: --prep $(LIST_OBJ)
 	cc -shared $(DIR_OBJ)/*.o -o $(DIR_LIB)/lib$(OUTPUT).so $(DIR_LIBS)
 	ar rcs $(DIR_LIB)/lib$(OUTPUT).a $(DIR_OBJ)/*.o
 
-examples: --prep_lib --prep_examples lib $(LIST_BIN)
+examples: --prep lib $(LIST_BIN)
 
 install:
 	mkdir -p $(DEST_HEADERS)
@@ -58,13 +57,10 @@ force: clean all
 # PRIVATE TARGETS ###########################################################################################
 #############################################################################################################
 
---prep_lib:
+--prep:
 	mkdir -p $(DIR_LIB)
 	mkdir -p $(DIR_OBJ)
-
---prep_examples:
 	mkdir -p $(DIR_BIN)
-	xxd -i $(DIR_DEMOS)/config > $(DIR_DEMOS)/config.h
 
 $(DIR_OBJ)/%.o: $(DIR_SRC)/%.c $(LIST_HEAD)
 	$(CC) -c -fPIC $(FLAGS) -c $< -o $@ -I$(DIR_INC) $(LIBS)

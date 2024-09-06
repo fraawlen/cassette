@@ -36,11 +36,15 @@
 
 struct context
 {
-	/* file data */
+	/* file data if buffer is NULL */
 
 	ino_t file_inode;
 	char  file_dir[PATH_MAX];
 	FILE *file;
+
+	/* internal buffer to parse from (if non-NULL) */
+
+	const char *buffer; 
 
 	/* context states */
 

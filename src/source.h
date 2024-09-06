@@ -31,13 +31,13 @@
 /************************************************************************************************************/
 
 void
-file_parse_child(struct context *ctx_parent, const char *filename)
+source_parse_child(struct context *ctx_parent, const char *source)
 CCFG_NONNULL(1, 2)
 CCFG_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-file_parse_root(ccfg *cfg, const char *filename)
+source_parse_root(ccfg *cfg, const char *source, bool internal)
 CCFG_NONNULL(1, 2)
 CCFG_HIDDEN;

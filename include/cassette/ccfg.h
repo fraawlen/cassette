@@ -203,6 +203,22 @@ ccfg_load(ccfg *cfg)
 CCFG_NONNULL(1);
 
 /**
+ * Similar to ccfg_load() except that no source file is opened. Instead, the resources will be parsed from
+ * the given buffer. The only different behavior from standard parsing is the interpretation of relative 
+ * paths when an INCLUDE sequence is processed as these will be ignored if they get declared in the given
+ * buffer.
+ *
+ * @param cfg    : Config instance to interact with
+ * @param buffer : NUL terminated C-string to parse
+ *
+ * @error CERR_OVERFLOW : The size of an internal components was about to overflow
+ * @error CERR_MEMORY   : Failed memory allocation during parsing
+ */
+void
+ccfg_load_internal(ccfg *cfg, const char *buffer)
+CCFG_NONNULL(1, 2);
+
+/**
  * Adds a double as a config parameter. This parameter's value can then be accessed from a config source
  * file. Unlike user-defined variables, only one value per parameter can be defined.
  *

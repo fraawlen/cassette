@@ -34,7 +34,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool read_word (struct context *, char [static TOKEN_MAX_LEN]) CCFG_NONNULL(1);
+static int  read_char    (struct context *)                              CCFG_NONNULL(1);
+static bool read_word    (struct context *, char [static TOKEN_MAX_LEN]) CCFG_NONNULL(1);
+static void update_state (struct context *, char)                        CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -111,19 +113,7 @@ context_goto_eol(struct context *ctx)
 {
 	while (!ctx->eol_reached)
 	{
-		switch (fgetc(ctx->file))
-		{
-			case EOF:
-				ctx->eof_reached = true;
-				/* fallthrough */
-
-			case '\n':
-				ctx->eol_reached = true;
-				break;
-
-			default:
-				break;
-		}
+		update_state(ctx, read_char(ctx));
 	}
 
 	ctx->var_i = SIZE_MAX;
@@ -133,6 +123,24 @@ context_goto_eol(struct context *ctx)
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
+
+static int
+read_char(struct context *ctx)
+{
+	if (!ctx->buffer)
+	{
+		return fgetc(ctx->file);
+	}
+
+	if (*ctx->buffer != '\0')
+	{
+		return *(ctx->buffer++);
+	}
+	
+	return EOF;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
 read_word(struct context *ctx, char token[static TOKEN_MAX_LEN])
@@ -151,7 +159,7 @@ read_word(struct context *ctx, char token[static TOKEN_MAX_LEN])
 
 	for (;;)
 	{
-		switch ((c = fgetc(ctx->file)))
+		switch ((c = read_char(ctx)))
 		{
 			case ' ' :
 			case '(' :
@@ -169,11 +177,12 @@ exit_lead:
 
 	/* read word */
 
-	for (;; c = fgetc(ctx->file))
+	for (;; c = read_char(ctx))
 	{
 		switch (c)
 		{
 			case EOF :
+			case '\0':
 				goto exit_word;
 
 			case ' ' :
@@ -215,39 +224,33 @@ exit_lead:
 	}
 
 exit_word:
-
-	/* forward stream pointer until next word, newline or EOF */
-
-	for (;; c = fgetc(ctx->file))
-	{
-		switch (c)
-		{
-			case ' ' :
-			case '(' :
-			case ')' :
-			case '\t':
-			case '\v':
-				break;
-	
-			case EOF :
-				ctx->eof_reached = true;
-				/* fallthrough */
-
-			case '\n':
-				ctx->eol_reached = true;
-				goto exit_tail;
-		
-			default:
-				fseek(ctx->file, -1, SEEK_CUR);
-				goto exit_tail;
-		}
-	}
-
-exit_tail:
 	
 	/* end */
+
+	update_state(ctx, c);
 
 	token[i] = '\0';
 
 	return i;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+update_state(struct context *ctx, char c)
+{
+	switch (c)
+	{
+		case EOF :
+		case '\0':
+			ctx->eof_reached = true;
+			/* fallthrough */
+
+		case '\n':
+			ctx->eol_reached = true;
+			/* fallthrough */	
+
+		default:
+			break;
+	}
 }

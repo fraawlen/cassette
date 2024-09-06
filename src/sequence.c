@@ -24,8 +24,8 @@
 #include <stdlib.h>
 
 #include "context.h"
-#include "file.h"
 #include "sequence.h"
+#include "source.h"
 #include "util.h"
 
 /************************************************************************************************************/
@@ -360,15 +360,18 @@ include(struct context *ctx)
 	{
 		if (token[0] != '/')
 		{
-			cstr_clear(filename);
-			cstr_append(filename, ctx->file_dir);
-			cstr_append(filename, "/");
-			cstr_append(filename, token);
-			file_parse_child(ctx, cstr_chars(filename));
+			if (ctx->buffer)
+			{
+				cstr_clear(filename);
+				cstr_append(filename, ctx->file_dir);
+				cstr_append(filename, "/");
+				cstr_append(filename, token);
+				source_parse_child(ctx, cstr_chars(filename));
+			}
 		}
 		else
 		{	
-			file_parse_child(ctx, token);
+			source_parse_child(ctx, token);
 		}
 	}
 

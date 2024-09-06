@@ -24,8 +24,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "file.h"
 #include "main.h"
+#include "source.h"
 #include "token.h"
 
 /************************************************************************************************************/
@@ -255,7 +255,24 @@ ccfg_load(ccfg *cfg)
 
 	cbook_clear(cfg->sequences);
 	cdict_clear(cfg->keys_sequences);
-	file_parse_root(cfg, source);
+	source_parse_root(cfg, source, false);
+
+	update_err(cfg);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+ccfg_load_internal(ccfg *cfg, const char *buffer)
+{
+	if (cfg->err)
+	{
+		return;
+	}
+
+	cbook_clear(cfg->sequences);
+	cdict_clear(cfg->keys_sequences);
+	source_parse_root(cfg, buffer, true);
 
 	update_err(cfg);
 }

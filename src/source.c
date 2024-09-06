@@ -30,31 +30,31 @@
 #include <sys/types.h>
 
 #include "context.h"
-#include "file.h"
 #include "main.h"
 #include "sequence.h"
+#include "source.h"
 #include "token.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool has_err    (struct context *)                                       CCFG_NONNULL(1);
-static bool open_file  (struct context *, const struct context *, const char *) CCFG_NONNULL(1, 3);
-static void parse_file (struct context *)                                       CCFG_NONNULL(1);
+static bool has_err   (struct context *)                                       CCFG_NONNULL(1);
+static bool open_file (struct context *, const struct context *, const char *) CCFG_NONNULL(1, 3);
+static void parse     (struct context *)                                       CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
 void
-file_parse_child(struct context *ctx_parent, const char *filename)
+source_parse_child(struct context *ctx_parent, const char *source)
 {
 	struct context ctx;
 	size_t var_i;
 	size_t var_group;
 	
-	if (ctx_parent->depth >= CONTEXT_MAX_DEPTH || !open_file(&ctx, ctx_parent, filename))
+	if (ctx_parent->depth >= CONTEXT_MAX_DEPTH || !open_file(&ctx, ctx_parent, source))
 	{
 		return;
 	}
@@ -62,6 +62,7 @@ file_parse_child(struct context *ctx_parent, const char *filename)
 	var_i     = ctx_parent->var_i;
 	var_group = ctx_parent->var_group;
 
+	ctx.buffer         = NULL;
 	ctx.eol_reached    = false;
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
@@ -81,7 +82,7 @@ file_parse_child(struct context *ctx_parent, const char *filename)
 	ctx.parent         = ctx_parent;
 	ctx.rand           = ctx_parent->rand;
 
-	parse_file(&ctx);
+	parse(&ctx);
 
 	ctx.var_i     = var_i;
 	ctx.var_group = var_group;
@@ -92,18 +93,19 @@ file_parse_child(struct context *ctx_parent, const char *filename)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-file_parse_root(ccfg *cfg, const char *filename)
+source_parse_root(ccfg *cfg, const char *source, bool internal)
 {
 	struct context ctx;
 	crand r = 0;
 
-	if (!open_file(&ctx, NULL, filename))
+	if (!internal && !open_file(&ctx, NULL, source))
 	{
 		return;
 	}
 
 	crand_seed(&r, 0);
 
+	ctx.buffer         = internal ? source : NULL;
 	ctx.eol_reached    = false;
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
@@ -123,24 +125,21 @@ file_parse_root(ccfg *cfg, const char *filename)
 	ctx.parent         = NULL;
 	ctx.rand           = &r;
 
+	parse(&ctx);
+
 	if (has_err(&ctx))
 	{	
 		cfg->err = CERR_MEMORY;
-		return;
 	}
 
-	parse_file(&ctx);
-
-	if (has_err(&ctx))
-	{	
-		cfg->err = CERR_MEMORY;
+	if (!internal)
+	{
+		fclose(ctx.file);
 	}
 
 	cbook_destroy(ctx.iteration);
 	cbook_destroy(ctx.vars);
 	cdict_destroy(ctx.keys_vars);
-
-	fclose(ctx.file);
 }
 
 /************************************************************************************************************/
@@ -187,7 +186,7 @@ open_file(struct context *ctx, const struct context *ctx_parent, const char *fil
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-parse_file(struct context *ctx)
+parse(struct context *ctx)
 {
 	while (!ctx->eof_reached)
 	{
