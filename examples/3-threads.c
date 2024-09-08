@@ -41,7 +41,7 @@ static void *simulation_thread (void *param);
 
 static const char *data =
 	"SEED ($$ sim_id)\n"
-	"example-3 coordinates (RAND 10 90) (RAND 10 90) (RAND 10 90)";
+	"sim coordinates (RAND 10 90) (RAND 10 90) (RAND 10 90)";
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -100,7 +100,7 @@ simulation_thread(void *param)
 	ccfg_push_param(cfg, "sim_id", id);
 	ccfg_load_internal(cfg, data);
 
-	ccfg_fetch(cfg, "example-3", "coordinates");
+	ccfg_fetch(cfg, "sim", "coordinates");
 	for (unsigned int i = 0; i < 3 && ccfg_iterate(cfg); i++)
 	{
 		coords[i] = strtoul(ccfg_resource(cfg), NULL, 0);

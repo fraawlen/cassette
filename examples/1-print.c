@@ -38,14 +38,14 @@ static ccfg *cfg = CCFG_PLACEHOLDER;
 static const char *data =
 	"LET ratio 0.5\n"
 	"\n"
-	"example-1 a TIME\n"
-	"example-1 b 45.5\n"
-	"example-1 c 50 60 70\n"
-	"example-1 d TRUE FALSE\n"
-	"example-1 e new_value\n"
-	"example-1 f ($$ example_param)\n"
-	"example-1 g (CITRPL #000000 #ffff8000 ($ ratio))\n"
-	"example-1 h ($ ratio)";
+	"example a TIME\n"
+	"example b 45.5\n"
+	"example c 50 60 70\n"
+	"example d TRUE FALSE\n"
+	"example e new_value\n"
+	"example f ($$ example_param)\n"
+	"example g (CITRPL #000000 #ffff8000 ($ ratio))\n"
+	"example h ($ ratio)";
 
 /************************************************************************************************************/
 /* MAIN *****************************************************************************************************/

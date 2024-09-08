@@ -1,0 +1,35 @@
+	// This is a sample configuration file
+
+	SECTION_ADD Sa Sb Sc
+
+SECTION Sa
+
+	LET ratio 0.5
+
+	example a 1
+	example b 45.5
+	example c 50 60 70
+	example d TRUE FALSE
+	example e new_value
+	example f ($$ example_param)
+	example g (CITRPL #000000 #ffff8000 ($ ratio))
+	example h ($ ratio)
+
+SECTION Sb
+
+	LET widget \
+		label  \
+		button \
+		switch \
+		gauge  \
+
+	label  background_color #126DD0
+	button background_color #A155CC
+	switch background_color #111111
+	gauge  background_color #AACC00
+
+	FOR_EACH widget
+		(% widget) border_width 5
+		(% widget) border_color #050505
+	FOR_END	
+

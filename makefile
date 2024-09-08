@@ -13,9 +13,11 @@ DEST_BUILD   := build
 DIR_DEMOS := examples
 DIR_SRC   := src
 DIR_INC   := include
+DIR_TEST  := test
 DIR_LIB   := $(DEST_BUILD)/lib
 DIR_OBJ   := $(DEST_BUILD)/obj
 DIR_BIN   := $(DEST_BUILD)/bin
+DIR_FUZZ  := $(DEST_BUILD)/fuzzing
 
 LIST_DEMOS := $(wildcard $(DIR_DEMOS)/*.c)
 LIST_SRC   := $(wildcard $(DIR_SRC)/*.c)
@@ -41,7 +43,11 @@ lib: --prep $(LIST_OBJ)
 	cc -shared $(DIR_OBJ)/*.o -o $(DIR_LIB)/lib$(OUTPUT).so $(DIR_LIBS)
 	ar rcs $(DIR_LIB)/lib$(OUTPUT).a $(DIR_OBJ)/*.o
 
-examples: --prep lib $(LIST_BIN)
+examples: lib $(LIST_BIN)
+
+test: lib
+	afl-gcc-fast -g3 $(DIR_TEST)/fuzz.c -o $(DIR_BIN)/fuzz -I$(DIR_INC) -I$(DIR_SRC) $(LIBS)
+	afl-fuzz -i$(DIR_TEST)/samples -o$(DIR_FUZZ) $(DIR_BIN)/fuzz
 
 install:
 	mkdir -p $(DEST_HEADERS)

@@ -26,6 +26,7 @@ Dependencies
 
 	- C99 compiler with a stdlib + POSIX 200809L
 	- Make
+	- [AFL++](https://aflplus.plus/) (Optional, only needed to [tests](#fuzzing))
 
 - First-party libraries :
 
@@ -127,6 +128,15 @@ FOR_EACH n
 	SECTION
 
 FOR_END
+```
+
+Fuzzing <a name="fuzzing"></a>
+-------
+
+This project comes with an integrated fuzz test case. First make sure to have AFL++ and the necessary utilities (afl-gcc-fast) installed. Then build and run it with the following command:
+
+```
+make test
 ```
 
 Mirrors
