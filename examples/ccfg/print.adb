@@ -16,8 +16,9 @@
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-with Ada.Text_IO;     use Ada.Text_IO;
-with Cassette.Config; use Cassette;
+with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
+with Ada.Text_IO;            use Ada.Text_IO;
+with Cassette.Config;        use Cassette;
 
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
@@ -29,8 +30,17 @@ with Cassette.Config; use Cassette;
 procedure Print
 is
 
-	Path : String := "/tmp/ccfg_sample";
 	Conf : Config.T;
+	Data : String :=
+		       "LET ratio 0.5"
+		& LF & "example a TIME"
+		& LF & "example b 45.5"
+		& LF & "example c 50 60 70"
+		& LF & "example d TRUE FALSE"
+		& LF & "example e new_value"
+		& LF & "example f ($$ example_param)"
+		& LF & "example g (CITRPL #000000 #ffff8000 ($ ratio))"
+		& LF & "example h ($ ratio)";
 	
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
@@ -54,23 +64,21 @@ begin
 	-- Setup
 
 	Conf.Create;
-
-	Conf.Push_Source (Path);
-	Conf.Push_Param  ("example_param", "value from executable");
+	Conf.Push_Param ("example_param", "value from executable");
 
 	-- Operations
 
-	Conf.Load;
+	Conf.Load_Internal (Data);
 
-	Print_Resource ("example-1", "a");
-	Print_Resource ("example-1", "b");
-	Print_Resource ("example-1", "c");
-	Print_Resource ("example-1", "d");
-	Print_Resource ("example-1", "e");
-	Print_Resource ("example-1", "f");
-	Print_Resource ("example-1", "g");
-	Print_Resource ("example-1", "h");
-	Print_Resource ("example-1", "i"); -- Expected to not be found
+	Print_Resource ("example", "a");
+	Print_Resource ("example", "b");
+	Print_Resource ("example", "c");
+	Print_Resource ("example", "d");
+	Print_Resource ("example", "e");
+	Print_Resource ("example", "f");
+	Print_Resource ("example", "g");
+	Print_Resource ("example", "h");
+	Print_Resource ("example", "i"); -- Expected to not be found
 
 	-- End
 

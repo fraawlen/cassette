@@ -181,6 +181,25 @@ package Cassette.Config is
 	procedure Load (
 		Cfg : in out T);
 
+	-- Similar to Load() except that no source file is opened. Instead, the resources will be parsed
+	-- from the given buffer. The only different behavior from standard parsing is the interpretation
+	-- of relative paths when an INCLUDE sequence is processed as these will be ignored if they get
+	-- declared in the given buffer.
+	--
+	-- [Params]
+	--
+	-- 	Cfg    : Config instance to interact with
+	--	Buffer : String to use as source
+	--
+	-- [Errors]
+	--
+	-- 	Error_Overflow : The size of an internal components was about to overflow
+	-- 	Error_Memory   : Failed memory allocation
+	--
+	procedure Load_Internal (
+		Cfg    : in out T;
+		Buffer : in String);
+
 	-- Adds an floating value as a config parameter. This parameter's value can then be accessed from
 	-- a config source file. Unlike user-defined variables, only one value per parameter can be
 	-- defined.
@@ -265,6 +284,24 @@ package Cassette.Config is
 	-- 	Cfg : Config to interact with
 	--
 	procedure Repair (
+		Cfg : in out T);
+
+	-- Enables the restricted parsing mode.
+	--
+	-- [Params]
+	--
+	-- 	Cfg : Config to interact with
+	--
+	procedure Restrict (
+		Cfg : in out T);
+
+	-- Disables the restricted parsing mode.
+	--
+	-- [Params]
+	--
+	-- 	Cfg : Config to interact with
+	--
+	procedure Unrestrict (
 		Cfg : in out T);
 
 	-------------------------------------------------------------------------------------------------
@@ -375,11 +412,14 @@ private
 	procedure C_Destroy           (Cfg : System.Address);
 	procedure C_Fetch             (Cfg : System.Address; Namespace : C.Strings.chars_ptr; Property : C.Strings.chars_ptr);
 	procedure C_Load              (Cfg : System.Address);
+	procedure C_Load_Internal     (Cfg : System.Address; Buffer : C.Strings.chars_ptr);
 	procedure C_Push_Param_Double (Cfg : System.Address; Name : C.Strings.chars_ptr; Value : C.double);
 	procedure C_Push_Param_Long   (Cfg : System.Address; Name : C.Strings.chars_ptr; Value : Long_Long_Integer);
 	procedure C_Push_Param_Str    (Cfg : System.Address; Name : C.Strings.chars_ptr; Value : C.Strings.chars_ptr);
 	procedure C_Push_Source       (Cfg : System.Address; Filename : C.Strings.chars_ptr);
 	procedure C_Repair            (Cfg : System.Address);
+	procedure C_Restrict          (Cfg : System.Address);
+	procedure C_Unrestrict        (Cfg : System.Address);
 
 	function  C_Can_Open_Sources  (Cfg : System.Address; Rank : access C.size_t) return C.Extensions.bool;
 	function  C_Clone             (Cfg : System.Address)                         return System.Address;
@@ -400,6 +440,7 @@ private
 	pragma Import (C, C_Fetch,             "ccfg_fetch");
 	pragma Import (C, C_Iterate,           "ccfg_iterate");
 	pragma Import (C, C_Load,              "ccfg_load");
+	pragma Import (C, C_Load_Internal,     "ccfg_load_internal");
 	pragma Import (C, C_Placeholder,       "ccfg_placeholder_instance");
 	pragma Import (C, C_Push_Param_Double, "ccfg_push_param_double");
 	pragma Import (C, C_Push_Param_Long,   "ccfg_push_param_long");
@@ -408,5 +449,7 @@ private
 	pragma Import (C, C_Repair,            "ccfg_repair");
 	pragma Import (C, C_Resource,          "ccfg_resource");
 	pragma Import (C, C_Resource_Length,   "ccfg_resource_length");
+	pragma Import (C, C_Restrict,          "ccfg_restrict");
+	pragma Import (C, C_Unrestrict,        "ccfg_unrestrict");
 
 end Cassette.Config;

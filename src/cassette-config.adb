@@ -123,6 +123,19 @@ package body Cassette.Config is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
+	procedure Load_Internal (Cfg : in out T; Buffer : in String)
+	is
+		S : C.Strings.chars_ptr := C.Strings.New_String (Buffer);
+	begin
+
+		C_Load_Internal (Cfg.Data, S);
+		C.Strings.Free (S);
+		Cfg.Raise_Error;
+
+	end Load_Internal;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
 	procedure Push_Param (Cfg : in out T; Name : in String; Value : in Float)
 	is
 		S : C.Strings.chars_ptr := C.Strings.New_String (Name);
@@ -183,6 +196,24 @@ package body Cassette.Config is
 		C_Repair (Cfg.Data);
 
 	end Repair;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	procedure Restrict (Cfg : in out T)
+	is begin
+
+		C_Restrict (Cfg.Data);
+
+	end Restrict;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	procedure Unrestrict (Cfg : in out T)
+	is begin
+
+		C_Unrestrict (Cfg.Data);
+
+	end Unrestrict;
 
 	-------------------------------------------------------------------------------------------------
 	-- PURE METHODS --------------------------------------------------------------------------------- 
