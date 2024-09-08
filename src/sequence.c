@@ -48,8 +48,8 @@ static void seed             (struct context *)               CCFG_NONNULL(1);
 
 /* iteration sequence preprocessing */
 
-static void   preproc_iter_new  (struct context *)         CCFG_NONNULL(1);
-static size_t preproc_iter_nest (struct context *, size_t) CCFG_NONNULL(1);
+static void   preproc_iter_new  (struct context *, bool *)         CCFG_NONNULL(1);
+static size_t preproc_iter_nest (struct context *, size_t, bool *) CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -390,7 +390,7 @@ iterate(struct context *ctx)
 	size_t i;
 	size_t j;
 	bool nested;
-	bool name_exists = false;
+	bool fail = false;
 
 	/* get iteration params and detect if it's nested */
 
@@ -404,9 +404,13 @@ iterate(struct context *ctx)
 	{
 		snprintf(name, TOKEN_MAX_LEN, "%s", token);
 	}
+	
+	if (cdict_find(ctx->keys_vars, name, CONTEXT_DICT_ITERATION, &j))
+	{
+		return;
+	}
 
-	nested      = cbook_length(ctx->iteration);
-	name_exists = nested && cdict_find(ctx->keys_vars, name, CONTEXT_DICT_ITERATION, &j);
+	nested = cbook_length(ctx->iteration);
 
 	/* In the case of a new iteration, read the file and write raw sequences into the iteration book,    */
 	/* but do not do that for nested iterations since the data is already written in the iteration book. */
@@ -415,13 +419,18 @@ iterate(struct context *ctx)
 	if (nested)
 	{
 		group_start = ctx->it_group + 1;
-		group_end   = preproc_iter_nest(ctx, group_start);
+		group_end   = preproc_iter_nest(ctx, group_start, &fail);
 	}
 	else
 	{
-		preproc_iter_new(ctx);
+		preproc_iter_new(ctx, &fail);
 		group_start = 0;
 		group_end   = cbook_groups_number(ctx->iteration);
+	}
+
+	if (fail)
+	{
+		goto skip;
 	}
 
 	/* run iterated sequences */
@@ -438,14 +447,9 @@ iterate(struct context *ctx)
 
 	/* restore iterator state */
 
-	if (name_exists)
-	{
-		cdict_write(ctx->keys_vars, name, CONTEXT_DICT_ITERATION, j);
-	}
-	else
-	{
-		cdict_erase(ctx->keys_vars, name, CONTEXT_DICT_ITERATION);
-	}
+	cdict_erase(ctx->keys_vars, name, CONTEXT_DICT_ITERATION);
+
+skip:
 
 	if (!nested)
 	{
@@ -456,7 +460,7 @@ iterate(struct context *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static size_t
-preproc_iter_nest(struct context *ctx, size_t start_group)
+preproc_iter_nest(struct context *ctx, size_t start_group, bool *fail)
 {
 	char token[TOKEN_MAX_LEN];
 	size_t n = 0;
@@ -489,13 +493,15 @@ preproc_iter_nest(struct context *ctx, size_t start_group)
 		}
 	}
 
+	*fail = true;
+
 	return i;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-preproc_iter_new(struct context *ctx)
+preproc_iter_new(struct context *ctx, bool *fail)
 {
 	char token[TOKEN_MAX_LEN];
 	size_t n = 0;
@@ -541,6 +547,8 @@ preproc_iter_new(struct context *ctx)
 			cbook_write(ctx->iteration, token);
 		}
 	}
+
+	*fail = true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

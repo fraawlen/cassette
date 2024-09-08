@@ -393,7 +393,9 @@ FOR_EACH [variable_name] [alt_variable_name]
 FOR_END
 ```
 
-Creates a for-loop that iterates through each token of the given variable. Inside the loop, the current iteration token can be accessed with the [`%`](#var) or [`ITER`](var) substitution tokens followed by the `alt_variable_name`. `alt_variable_name` is an optional token. If not provided, its value would be assumed to be the same as the given variable name. Loops can be nested. To close a loop, a sequence with a `FOR_END` leading token needs to be added; otherwise, the parser will assume the loop lasts until the end of the file or the parent loop.
+Creates a for-loop that iterates through each token of the given variable. Inside the loop, the current iteration token can be accessed with the [`%`](#var) or [`ITER`](var) substitution tokens followed by the `alt_variable_name`. `alt_variable_name` is an optional token. If not provided, its value would be assumed to be the same as the given variable name. Loops can be nested. if the given or assumed `alt_variable_name` is already taken by a parent loop, this the definition of the nested loop is deemed invalid.
+
+To close a loop, a sequence with a `FOR_END` leading token needs to be added; otherwise, the opening sequence is invalid. Furthermore, if it's not a nested definition, all sequences following it until the end of the current file are skipped.
 
 ```
 LET var a b c d
