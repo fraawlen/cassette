@@ -288,9 +288,9 @@ static const struct resource resources[] =
 /************************************************************************************************************/
 
 size_t
-cgui_config_fit_cols(uint16_t width)
+cgui_config_fit_cols(double width)
 {
-	if (cgui_error())
+	if (cgui_error() || width <= 0.0)
 	{
 		return 0;
 	}
@@ -301,9 +301,9 @@ cgui_config_fit_cols(uint16_t width)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-cgui_config_fit_rows(uint16_t height)
+cgui_config_fit_rows(double height)
 {
-	if (cgui_error())
+	if (cgui_error() || height <= 0.0)
 	{
 		return 0;
 	}
@@ -334,7 +334,7 @@ cgui_config_on_load(void (*fn)(ccfg *cfg))
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-uint16_t
+double
 cgui_config_str_height(size_t rows)
 {
 	if (cgui_error() || rows == 0)
@@ -347,7 +347,7 @@ cgui_config_str_height(size_t rows)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-uint16_t
+double
 cgui_config_str_width(size_t cols)
 {
 	if (cgui_error() || cols == 0)
@@ -495,11 +495,11 @@ fetch(const struct resource *resource)
 			break;
 
 		case POSITION:
-			*(int16_t*)resource->target = util_str_to_long(str, INT16_MIN, INT16_MAX);
+			*(double*)resource->target = util_str_to_double(str, DBL_MIN, DBL_MAX);
 			break;
 
 		case LENGTH:
-			*(uint16_t*)resource->target = util_str_to_long(str, 0, UINT16_MAX);
+			*(double*)resource->target = util_str_to_double(str, 0.0, DBL_MAX);
 			break;
 
 		case LONG:

@@ -116,14 +116,14 @@ CGUI_NONNULL(1, 2);
  *
  */
 void
-cgui_grid_resize_col(cgui_grid *grid, size_t col, int16_t width)
+cgui_grid_resize_col(cgui_grid *grid, size_t col, ssize_t width)
 CGUI_NONNULL(1);
 
 /**
  *
  */
 void
-cgui_grid_resize_row(cgui_grid *grid, size_t row, int16_t height)
+cgui_grid_resize_row(cgui_grid *grid, size_t row, ssize_t height)
 CGUI_NONNULL(1);
 
 /**
@@ -186,7 +186,7 @@ CGUI_PURE;
 /**
  *
  */
-uint16_t
+double
 cgui_grid_height(const cgui_grid *grid)
 CGUI_NONNULL(1)
 CGUI_PURE;
@@ -194,7 +194,7 @@ CGUI_PURE;
 /**
  *
  */
-uint16_t
+double
 cgui_grid_width(const cgui_grid *grid)
 CGUI_NONNULL(1)
 CGUI_PURE;

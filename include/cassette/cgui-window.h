@@ -148,7 +148,7 @@ CGUI_NONNULL(1);
  *
  */
 void
-cgui_window_move(cgui_window *window, int16_t x, int16_t y)
+cgui_window_move(cgui_window *window, double x, double y)
 CGUI_NONNULL(1);
 
 /**
@@ -232,7 +232,7 @@ CGUI_NONNULL(1);
  *
  */
 void
-cgui_window_resize(cgui_window *window, uint16_t width, uint16_t height)
+cgui_window_resize(cgui_window *window, double width, double height)
 CGUI_NONNULL(1);
 
 /**
@@ -325,7 +325,7 @@ CGUI_PURE;
 /**
  *
  */
-uint16_t
+double
 cgui_window_height(const cgui_window *window)
 CGUI_NONNULL(1)
 CGUI_PURE;
@@ -358,7 +358,7 @@ CGUI_PURE;
 /**
  *
  */
-uint16_t
+double
 cgui_window_width(const cgui_window *window)
 CGUI_NONNULL(1)
 CGUI_PURE;
@@ -366,7 +366,7 @@ CGUI_PURE;
 /**
  *
  */
-int16_t
+double
 cgui_window_x(const cgui_window *window)
 CGUI_NONNULL(1)
 CGUI_PURE;
@@ -382,7 +382,7 @@ CGUI_PURE;
 /**
  *
  */
-int16_t
+double
 cgui_window_y(const cgui_window *window)
 CGUI_NONNULL(1)
 CGUI_PURE;

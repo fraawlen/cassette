@@ -19,6 +19,8 @@
 /************************************************************************************************************/
 
 #include <cassette/cgui.h>
+#include <float.h>
+#include <math.h>
 #include <xcb/xcb.h>
 
 #include "event.h"
@@ -375,8 +377,8 @@ transform(struct cgui_event *event)
 	w->x = event->transform_x;
 	w->y = event->transform_y;
 
-	if (w->width  == event->transform_width
-	 && w->height == event->transform_height)
+	if (fabs(w->width  - event->transform_width)  < DBL_EPSILON
+	 && fabs(w->height - event->transform_height) < DBL_EPSILON)
 	{
 		return;
 	}

@@ -21,6 +21,7 @@
 #include <cairo/cairo.h>
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
+#include <float.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,8 +37,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static uint16_t col_width  (struct grid_line);
-static uint16_t row_height (struct grid_line);
+static double col_width  (struct grid_line);
+static double row_height (struct grid_line);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -314,8 +315,6 @@ cgui_grid_create(size_t cols, size_t rows)
 
 	if (cols == 0
 	 || rows == 0
-	 || cols > INT16_MAX
-	 || rows > INT16_MAX
 	 || !safe_mul(NULL, cols, sizeof(struct grid_line))
 	 || !safe_mul(NULL, rows, sizeof(struct grid_line))
 	 || !(grid = malloc(sizeof(cgui_grid))))
@@ -429,10 +428,10 @@ cgui_grid_flex_vertical(const cgui_grid *grid)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-uint16_t
+double
 cgui_grid_height(const cgui_grid *grid)
 {
-	uint16_t h = 0;
+	double h = 0;
 
 	if (cgui_error() || !grid->valid)
 	{
@@ -450,7 +449,7 @@ cgui_grid_height(const cgui_grid *grid)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_grid_resize_col(cgui_grid *grid, size_t col, int16_t width)
+cgui_grid_resize_col(cgui_grid *grid, size_t col, ssize_t width)
 {
 	if (cgui_error() || !grid->valid || col >= grid->n_cols)
 	{
@@ -487,7 +486,7 @@ cgui_grid_resize_col(cgui_grid *grid, size_t col, int16_t width)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_grid_resize_row(cgui_grid *grid, size_t row, int16_t height)
+cgui_grid_resize_row(cgui_grid *grid, size_t row, ssize_t height)
 {
 	if (cgui_error() || !grid->valid || row >= grid->n_rows)
 	{
@@ -579,10 +578,10 @@ cgui_grid_set_row_flex(cgui_grid *grid, size_t row, double flex)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-uint16_t
+double
 cgui_grid_width(const cgui_grid *grid)
 {
-	uint16_t w = 0;
+	double w = 0;
 
 	if (cgui_error() || !grid->valid)
 	{
@@ -664,12 +663,12 @@ grid_repair(cgui_grid *grid)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-grid_update_geometry(cgui_grid *grid, uint16_t width, uint16_t height)
+grid_update_geometry(cgui_grid *grid, double width, double height)
 {
-	int16_t  o = 0;
-	uint16_t l;
-	uint16_t n;
-	double   f;
+	double o = 0.0;
+	double l;
+	double n;
+	double f;
 
 	/* cols */
 
@@ -678,7 +677,7 @@ grid_update_geometry(cgui_grid *grid, uint16_t width, uint16_t height)
 
 	for (size_t i = 0; i < grid->n_cols; i++)
 	{
-		l = n * grid->cols[i].flex / f;
+		l = f < DBL_EPSILON ? 0.0 : n * grid->cols[i].flex / f;
 
 		grid->cols[i].offset = o;
 		grid->cols[i].size   = col_width(grid->cols[i]) + l;
@@ -690,13 +689,13 @@ grid_update_geometry(cgui_grid *grid, uint16_t width, uint16_t height)
 
 	/* rows */
 
-	o = 0;
+	o = 0.0;
 	f = grid->row_flex;
 	n = height - cgui_grid_height(grid);
 
 	for (size_t i = 0; i < grid->n_rows; i++)
 	{
-		l = n * grid->rows[i].flex / f;
+		l = f < DBL_EPSILON ? 0.0 : n * grid->rows[i].flex / f;
 
 		grid->rows[i].offset = o;
 		grid->rows[i].size   = row_height(grid->rows[i]) + l;
@@ -711,7 +710,7 @@ grid_update_geometry(cgui_grid *grid, uint16_t width, uint16_t height)
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-static uint16_t
+static double
 col_width(struct grid_line col)
 {
 	if (col.units > 0)
@@ -726,7 +725,7 @@ col_width(struct grid_line col)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static uint16_t
+static double
 row_height(struct grid_line row)
 {
 	if (row.units > 0)

@@ -107,18 +107,18 @@ struct cgui_config
 
 	char font_face[CGUI_CONFIG_STR_LEN];
 
-	uint16_t font_size;
-	uint16_t font_width;
-	uint16_t font_height;
-	uint16_t font_ascent;
-	uint16_t font_descent;
-	uint16_t font_spacing_horizontal;
-	uint16_t font_spacing_vertical;
-	uint16_t font_override_width;
-	uint16_t font_override_ascent;
-	uint16_t font_override_descent;
-	 int16_t font_offset_x;
- 	 int16_t font_offset_y;
+	double font_size;
+	double font_width;
+	double font_height;
+	double font_ascent;
+	double font_descent;
+	double font_spacing_horizontal;
+	double font_spacing_vertical;
+	double font_override_width;
+	double font_override_ascent;
+	double font_override_descent;
+	double font_offset_x;
+ 	double font_offset_y;
 
 	bool font_enable_overrides;
 	bool font_enable_hint_metrics;
@@ -127,8 +127,8 @@ struct cgui_config
 
 	/* grid */
 
-	uint16_t grid_padding;
-	uint16_t grid_spacing;
+	double grid_padding;
+	double grid_spacing;
 
 	/* window */
 
@@ -147,14 +147,14 @@ struct cgui_config
 	struct ccolor popup_color_background;
 	struct ccolor popup_color_border;
 
-	uint16_t popup_border;
-	uint16_t popup_padding;
-	uint16_t popup_max_width;
-	uint16_t popup_max_height;
-	uint16_t popup_override_width;
-	uint16_t popup_override_height;
-	 int16_t popup_override_x;
-	 int16_t popup_override_y;
+	double popup_border;
+	double popup_padding;
+	double popup_max_width;
+	double popup_max_height;
+	double popup_override_width;
+	double popup_override_height;
+	double popup_override_x;
+	double popup_override_y;
 
 	bool popup_enable_override_position;
 	bool popup_enable_override_width;
@@ -195,14 +195,14 @@ cgui_config_on_load(void (*fn)(ccfg *cfg));
  *
  */
 size_t
-cgui_config_fit_cols(uint16_t width)
+cgui_config_fit_cols(double width)
 CGUI_PURE;
 
 /**
  *
  */
 size_t
-cgui_config_fit_rows(uint16_t height)
+cgui_config_fit_rows(double height)
 CGUI_PURE;
 
 /**
@@ -216,14 +216,14 @@ CGUI_PURE;
 /**
  *
  */
-uint16_t
+double
 cgui_config_str_height(size_t rows)
 CGUI_PURE;
 
 /**
  *
  */
-uint16_t
+double
 cgui_config_str_width(size_t cols)
 CGUI_PURE;
 

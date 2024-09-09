@@ -33,21 +33,21 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void _on_accel (cgui_window *, int);
-static void _on_close (cgui_window *);
-static void _on_draw  (cgui_window *, unsigned long);
-static void _on_state (cgui_window *, enum cgui_window_state_mask);
+static void on_accel (cgui_window *, int);
+static void on_close (cgui_window *);
+static void on_draw  (cgui_window *, unsigned long);
+static void on_state (cgui_window *, enum cgui_window_state_mask);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static cgui_cell   *_cell   = CGUI_CELL_PLACEHOLDER;
-static cgui_grid   *_grid_1 = CGUI_GRID_PLACEHOLDER;
-static cgui_grid   *_grid_2 = CGUI_GRID_PLACEHOLDER;
-static cgui_window *_window = CGUI_WINDOW_PLACEHOLDER;
+static cgui_cell   *cell   = CGUI_CELL_PLACEHOLDER;
+static cgui_grid   *grid_1 = CGUI_GRID_PLACEHOLDER;
+static cgui_grid   *grid_2 = CGUI_GRID_PLACEHOLDER;
+static cgui_window *window = CGUI_WINDOW_PLACEHOLDER;
 
-static struct cgui_screen _screen;
+static struct cgui_screen screen;
 
 /************************************************************************************************************/
 /* MAIN *****************************************************************************************************/
@@ -64,11 +64,11 @@ static struct cgui_screen _screen;
 
 	cgui_init(argc, argv);
 
-	_window = cgui_window_create();
-	_grid_1 = cgui_grid_create(1, 1);
-	_grid_2 = cgui_grid_create(2, 2);
-	_cell   = cgui_placeholder_create();
-	_screen = cgui_screen_primary_specs();
+	window = cgui_window_create();
+	grid_1 = cgui_grid_create(1, 1);
+	grid_2 = cgui_grid_create(2, 2);
+	cell   = cgui_placeholder_create();
+	screen = cgui_screen_primary_specs();
 
 	/* Cell setup */
 
@@ -76,33 +76,33 @@ static struct cgui_screen _screen;
 
 	/* Grid 1 setup */
 
-	cgui_grid_resize_col(_grid_1, 0, strlen(MSG));
-	cgui_grid_set_col_flex(_grid_1, 0, 1.0);
-	cgui_grid_set_row_flex(_grid_1, 0, 1.0);
-	cgui_grid_assign_cell(_grid_1, _cell, 0, 0, 1, 1);
+	cgui_grid_resize_col(grid_1, 0, strlen(MSG));
+	cgui_grid_set_col_flex(grid_1, 0, 1.0);
+	cgui_grid_set_row_flex(grid_1, 0, 1.0);
+	cgui_grid_assign_cell(grid_1, cell, 0, 0, 1, 1);
 	
 	/* Grid 2 setup */
 
-	cgui_grid_resize_col(_grid_2, 0, strlen(MSG));
-	cgui_grid_resize_col(_grid_2, 1, 10);
-	cgui_grid_set_col_flex(_grid_2, 1, 1.0);
-	cgui_grid_set_row_flex(_grid_2, 0, 1.0);
+	cgui_grid_resize_col(grid_2, 0, strlen(MSG));
+	cgui_grid_resize_col(grid_2, 1, 10);
+	cgui_grid_set_col_flex(grid_2, 1, 1.0);
+	cgui_grid_set_row_flex(grid_2, 0, 1.0);
 
-	cgui_grid_assign_cell(_grid_2, _cell, 0, 0, 1, 1);
-	cgui_grid_assign_cell(_grid_2, _cell, 0, 1, 1, 1);
-	cgui_grid_assign_cell(_grid_2, _cell, 1, 0, 1, 2);
+	cgui_grid_assign_cell(grid_2, cell, 0, 0, 1, 1);
+	cgui_grid_assign_cell(grid_2, cell, 0, 1, 1, 1);
+	cgui_grid_assign_cell(grid_2, cell, 1, 0, 1, 2);
 	
 	/* Window setup */
 
-	cgui_window_push_grid(_window, _grid_1);
-	cgui_window_push_grid(_window, _grid_2);
-	cgui_window_rename(_window, "Hi");
-	cgui_window_set_accelerator(_window, 1, "Hello", _on_accel);
-	cgui_window_set_accelerator(_window, 2, "World", _on_accel);
-	cgui_window_on_draw(_window, _on_draw);
-	cgui_window_on_close(_window, _on_close);
-	cgui_window_on_state(_window, _on_state);
-	cgui_window_activate(_window);
+	cgui_window_push_grid(window, grid_1);
+	cgui_window_push_grid(window, grid_2);
+	cgui_window_rename(window, "Hi");
+	cgui_window_set_accelerator(window, 1, "Hello", on_accel);
+	cgui_window_set_accelerator(window, 2, "World", on_accel);
+	cgui_window_on_draw(window, on_draw);
+	cgui_window_on_close(window, on_close);
+	cgui_window_on_state(window, on_state);
+	cgui_window_activate(window);
 
 	/* Run */
 
@@ -115,10 +115,10 @@ static struct cgui_screen _screen;
 		printf("Gui has failed during operation.\n");
 	}
 
-	cgui_window_destroy(_window);
-	cgui_grid_destroy(_grid_1);
-	cgui_grid_destroy(_grid_2);
-	cgui_cell_destroy(_cell);
+	cgui_window_destroy(window);
+	cgui_grid_destroy(grid_1);
+	cgui_grid_destroy(grid_2);
+	cgui_cell_destroy(cell);
 
 	cgui_reset();
 
@@ -130,9 +130,9 @@ static struct cgui_screen _screen;
 /************************************************************************************************************/
 
 static void
-_on_accel(cgui_window *window, int id)
+on_accel(cgui_window *w, int id)
 {
-	(void)window;
+	(void)w;
 
 	printf("accelerator %i triggered\n", id);
 }
@@ -140,9 +140,9 @@ _on_accel(cgui_window *window, int id)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_on_close(cgui_window *window)
+on_close(cgui_window *w)
 {
-	cgui_window_deactivate(window);
+	cgui_window_deactivate(w);
 	
 	printf("window closed\n");
 }
@@ -150,9 +150,9 @@ _on_close(cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_on_draw(cgui_window *window, unsigned long delay)
+on_draw(cgui_window *w, unsigned long delay)
 {
-	(void)window;
+	(void)w;
 
 	printf("window redrawn (%lu)\n", delay);
 }
@@ -160,11 +160,11 @@ _on_draw(cgui_window *window, unsigned long delay)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-_on_state(cgui_window *window, enum cgui_window_state_mask mask)
+on_state(cgui_window *w, enum cgui_window_state_mask mask)
 {
 	struct cgui_window_state_flags state;
 
-	state = cgui_window_state(window);
+	state = cgui_window_state(w);
 
 	switch (mask)
 	{

@@ -74,18 +74,18 @@ struct cgui_event
 		/* CGUI_EVENT_TRANSFORM */
 		struct
 		{
-			 int16_t transform_x;
-			 int16_t transform_y;
-			uint16_t transform_width;
-			uint16_t transform_height;
+			double transform_x;
+			double transform_y;
+			double transform_width;
+			double transform_height;
 		};
 		/* CGUI_EVENT_TOUCH_BEGIN  */
 		/* CGUI_EVENT_TOUCH_UPDATE */
 		/* CGUI_EVENT_TOUCH_END    */
 		struct
 		{
-			 int16_t touch_x;
-			 int16_t touch_y;
+			double touch_x;
+			double touch_y;
 			uint32_t touch_id;
 		};
 		/* CGUI_EVENT_REDRAW   */

@@ -51,10 +51,10 @@ struct cgui_window
 {
 	/* geometry */
 
-	int16_t x;
-	int16_t y;
-	uint16_t width;
-	uint16_t height;
+	double x;
+	double y;
+	double width;
+	double height;
 
 	/* backend stuff */
 
@@ -120,7 +120,7 @@ CGUI_NONNULL(1);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-window_resize(cgui_window *window, uint16_t width, uint16_t height)
+window_resize(cgui_window *window, double width, double height)
 CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

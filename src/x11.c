@@ -37,6 +37,7 @@
 #include "config.h"
 #include "main.h"
 #include "window.h"
+#include "util.h"
 #include "x11.h"
 
 /************************************************************************************************************/
@@ -72,6 +73,11 @@ struct xi_input_mask
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
+
+/* conversion */
+
+#define TO_INT(D)  util_limit(D, INT16_MIN,  INT16_MAX)
+#define TO_UINT(D) util_limit(D,       0.0, UINT16_MAX)
 
 /* helpers */
 
@@ -642,7 +648,7 @@ x11_window_activate(xcb_window_t id)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-x11_window_create(xcb_window_t *id, int16_t x, int16_t y, uint16_t width, uint16_t height)
+x11_window_create(xcb_window_t *id, double x, double y, double width, double height)
 {
 	xcb_void_cookie_t xc;
 	char   host[256] = "";
@@ -690,10 +696,10 @@ x11_window_create(xcb_window_t *id, int16_t x, int16_t y, uint16_t width, uint16
 		depth->depth,
 		*id,
 		screen->root,
-		x,
-		y,
-		width,
-		height,
+		TO_INT(x),
+		TO_INT(y),
+		TO_UINT(width),
+		TO_UINT(height),
 		0,
 		XCB_WINDOW_CLASS_INPUT_OUTPUT,
 		visual->visual_id,
@@ -803,14 +809,14 @@ x11_window_destroy(xcb_window_t id)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_move(xcb_window_t id, int16_t x, int16_t y)
+x11_window_move(xcb_window_t id, double x, double y)
 {
 	test_cookie(
 		xcb_configure_window_checked(
 			connection,
 			id,
 			XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y,
-			(uint32_t[2]){x, y}));
+			(uint32_t[2]){TO_INT(x), TO_INT(y)}));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -843,14 +849,14 @@ x11_window_rename(xcb_window_t id, const char *name)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_resize(xcb_window_t id, uint16_t width, uint16_t height)
+x11_window_resize(xcb_window_t id, double width, double height)
 {
 	test_cookie(
 		xcb_configure_window_checked(
 			connection,
 			id,
 			XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT,
-			(uint32_t[2]){width, height}));
+			(uint32_t[2]){TO_UINT(width), TO_UINT(height)}));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -936,15 +942,15 @@ x11_window_set_urgency(xcb_window_t id, bool set_on)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_update_size_hints(xcb_window_t id, uint16_t min_width, uint16_t min_height, uint16_t max_width, uint16_t max_height)
+x11_window_update_size_hints(xcb_window_t id, double min_width, double min_height, double max_width, double max_height)
 {
 	const xcb_size_hints_t xhints =
 	{
 		.flags      = XCB_ICCCM_SIZE_HINT_P_MIN_SIZE | XCB_ICCCM_SIZE_HINT_P_MAX_SIZE,
-		.min_width  = min_width,
-		.min_height = min_height,
-		.max_width  = max_width,
-		.max_height = max_height,
+		.min_width  = TO_UINT(min_width),
+		.min_height = TO_UINT(min_height),
+		.max_width  = TO_UINT(max_width),
+		.max_height = TO_UINT(max_height),
 	};
 
 	prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &xhints);

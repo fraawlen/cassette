@@ -52,9 +52,9 @@ enum cgui_box_corner
 struct cgui_box
 {
 	enum cgui_box_corner corner_type[4];
-	uint16_t corner_size[4];
-	uint16_t thickness;
-	uint16_t padding;
+	double corner_size[4];
+	double thickness;
+	double padding;
 	struct ccolor color_border;
 	struct ccolor color_background;
 	bool outer_shaping;

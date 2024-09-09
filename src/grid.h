@@ -32,10 +32,10 @@
 
 struct grid_line
 {
-	int16_t offset; /* pixel offset cache */
-	uint16_t size;  /* pixel length cache */
-	int16_t units;  /* amount of chars    */
+	double offset;  /* pixel offset cache */
+	double size;    /* pixel length cache */
 	double flex;    /* flex factor        */
+	ssize_t units;  /* amount of chars    */
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -46,12 +46,12 @@ struct cgui_grid
 
 	size_t n_cols;
 	size_t n_rows;
+	size_t width_units;
+	size_t width_units_inv;
+	size_t height_units;
+	size_t height_units_inv;
 	double col_flex;
 	double row_flex;
-	uint16_t width_units;
-	uint16_t width_units_inv;
-	uint16_t height_units;
-	uint16_t height_units_inv;
 	struct grid_line *cols;
 	struct grid_line *rows;
 	cref *areas;
@@ -82,7 +82,7 @@ CGUI_NONNULL(1);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-grid_update_geometry(cgui_grid *grid, uint16_t width, uint16_t height)
+grid_update_geometry(cgui_grid *grid, double width, double height)
 CGUI_NONNULL(1);
 
 /************************************************************************************************************/

@@ -156,5 +156,5 @@ In these screenshots, the following third-party resources were used :
 Mirrors
 -------
 
-- https://codeberg.org/fraawlen/cassette-graphics
-- https://github.com/fraawlen/cassette-graphics
+- [Codeberg](https://codeberg.org/fraawlen/cassette-graphics)
+- [Github](https://github.com/fraawlen/cassette-graphics)

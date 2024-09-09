@@ -40,13 +40,17 @@ util_env_exists(const char *name)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
+util_limit(double d, double min, double max)
+{
+	return d > max ? max : (d < min ? min : d);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+double
 util_str_to_double(const char *str, double min, double max)
 {
-	double d;
-
-	d = strtod(str, NULL);
-
-	return d > max ? max : (d < min ? min : d);
+	return util_limit(strtof(str, NULL), min, max);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

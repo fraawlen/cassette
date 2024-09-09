@@ -59,7 +59,7 @@ x11_window_activate(xcb_window_t id);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-x11_window_create(xcb_window_t *id, int16_t x, int16_t y, uint16_t width, uint16_t height)
+x11_window_create(xcb_window_t *id, double x, double y, double width, double height)
 CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -75,7 +75,7 @@ x11_window_destroy(xcb_window_t id);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_move(xcb_window_t id, int16_t x, int16_t y);
+x11_window_move(xcb_window_t id, double x, double y);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -90,7 +90,7 @@ x11_window_rename(xcb_window_t id, const char *name);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_resize(xcb_window_t id, uint16_t width, uint16_t height);
+x11_window_resize(xcb_window_t id, double width, double height);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -115,7 +115,7 @@ x11_window_set_urgency(xcb_window_t id, bool set_on);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_update_size_hints(xcb_window_t id, uint16_t min_width, uint16_t min_height, uint16_t max_width, uint16_t max_height);
+x11_window_update_size_hints(xcb_window_t id, double min_width, double min_height, double max_width, double max_height);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
