@@ -32,6 +32,12 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#define RESTRICT if (ctx->restricted) { return; }
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
 /* sequences handlers */
 
 static void combine_var      (struct context *, enum token)   CCFG_NONNULL(1);
@@ -41,6 +47,7 @@ static void declare_variable (struct context *)               CCFG_NONNULL(1);
 static void include          (struct context *)               CCFG_NONNULL(1);
 static void iterate          (struct context *)               CCFG_NONNULL(1);
 static void print            (struct context *)               CCFG_NONNULL(1);
+static void restrict_mode    (struct context *)               CCFG_NONNULL(1);
 static void section_add      (struct context *)               CCFG_NONNULL(1);
 static void section_begin    (struct context *)               CCFG_NONNULL(1);
 static void section_del      (struct context *)               CCFG_NONNULL(1);
@@ -72,7 +79,7 @@ sequence_parse(struct context *ctx)
 	{
 		type = TOKEN_INVALID;
 	}
-
+	
 	switch (type)
 	{
 		case TOKEN_VAR_APPEND:
@@ -117,6 +124,10 @@ sequence_parse(struct context *ctx)
 			print(ctx);
 			break;
 
+		case TOKEN_RESTRICT:
+			restrict_mode(ctx);
+			break;
+
 		case TOKEN_INVALID:
 			break;
 
@@ -145,6 +156,8 @@ combine_var(struct context *ctx, enum token type)
 	char token_2[TOKEN_MAX_LEN];
 	size_t i;
 	size_t j;
+
+	RESTRICT;
 
 	val = cstr_create();
 
@@ -207,6 +220,8 @@ declare_enum(struct context *ctx)
 	double precision;
 	double ratio;
 	int n = 0;
+
+	RESTRICT;
 
 	/* get enum name and params, set defaults on missing params */
 
@@ -319,6 +334,8 @@ declare_variable(struct context *ctx)
 	char value[TOKEN_MAX_LEN];
 	size_t n = 0;
 
+	RESTRICT;
+
 	/* get variable's name */
 
 	if (context_get_token(ctx, name, NULL) == TOKEN_INVALID)
@@ -353,6 +370,8 @@ include(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
 	cstr *filename;
+
+	RESTRICT;
 
 	filename = cstr_create();
 
@@ -391,6 +410,8 @@ iterate(struct context *ctx)
 	size_t j;
 	bool nested;
 	bool fail = false;
+
+	RESTRICT;
 
 	/* get iteration params and detect if it's nested */
 
@@ -558,6 +579,8 @@ print(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
 	
+	RESTRICT;
+
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
 		fprintf(stderr, "%s,\t", token);
@@ -569,9 +592,19 @@ print(struct context *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
+restrict_mode(struct context *ctx)
+{
+	ctx->restricted = true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 section_add(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
+
+	RESTRICT;
 
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
@@ -585,6 +618,8 @@ static void
 section_begin(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
+
+	RESTRICT;
 
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
@@ -605,6 +640,8 @@ section_del(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
 
+	RESTRICT;
+
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
 		cdict_erase(ctx->keys_vars, token, CONTEXT_DICT_SECTION);
@@ -619,6 +656,8 @@ seed(struct context *ctx)
 	char token[TOKEN_MAX_LEN];
 	double d;
 	
+	RESTRICT;
+
 	if (context_get_token_numeral(ctx, token, &d) != TOKEN_INVALID)
 	{
 		crand_seed(ctx->rand, d);

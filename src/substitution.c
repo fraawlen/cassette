@@ -61,6 +61,11 @@ substitution_apply(struct context *ctx, char token[static TOKEN_MAX_LEN], double
 	{
 		return TOKEN_INVALID;
 	}
+
+	if (ctx->restricted)
+	{
+		return TOKEN_STRING;
+	}
 	
 	ctx->depth++;
 	

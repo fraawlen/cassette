@@ -55,6 +55,7 @@ ccfg ccfg_placeholder_instance =
 	.tokens         = CDICT_PLACEHOLDER,
 	.it_group       = SIZE_MAX,
 	.it             = SIZE_MAX,
+	.restricted     = false,
 	.err            = CERR_INVALID,
 };
 
@@ -134,6 +135,7 @@ ccfg_clone(ccfg *cfg)
 	cfg_new->tokens         = cdict_clone(cfg->tokens);
 	cfg_new->it_group       = cfg->it_group;
 	cfg_new->it             = cfg->it;
+	cfg_new->restricted     = cfg->restricted;
 	cfg_new->err            = CERR_NONE;
 
 	if (update_err(cfg_new))
@@ -165,6 +167,7 @@ ccfg_create(void)
 	cfg->tokens         = token_dict_create();
 	cfg->it_group       = SIZE_MAX;
 	cfg->it             = SIZE_MAX;
+	cfg->restricted     = false;
 	cfg->err            = CERR_NONE;
 
 	if (update_err(cfg))
@@ -381,6 +384,32 @@ ccfg_resource_length(const ccfg *cfg)
 	}
 
 	return cbook_group_length(cfg->sequences, cfg->it_group);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+ccfg_restrict(ccfg *cfg)
+{
+	if (cfg->err)
+	{
+		return;
+	}
+
+	cfg->restricted = true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+ccfg_unrestrict(ccfg *cfg)
+{
+	if (cfg->err)
+	{
+		return;
+	}
+
+	cfg->restricted = false;
 }
 
 /************************************************************************************************************/

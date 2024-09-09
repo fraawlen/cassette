@@ -37,5 +37,6 @@ struct ccfg
 	cdict *tokens;
 	size_t it_group;
 	size_t it;
+	bool restricted;
 	enum cerr err;
 };

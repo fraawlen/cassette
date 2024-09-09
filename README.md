@@ -26,7 +26,7 @@ Dependencies
 
 	- C99 compiler with a stdlib + POSIX 200809L
 	- Make
-	- [AFL++](https://aflplus.plus/) (Optional, only needed to [tests](#fuzzing))
+	- [AFL++](https://aflplus.plus/) (Optional, only needed for [fuzzing](#fuzzing))
 
 - First-party libraries :
 
@@ -137,6 +137,12 @@ This project comes with an integrated fuzz test case. First make sure to have AF
 
 ```
 make test
+```
+
+By default, CCFG will run without restrictions; thus, some language functions can generate hangs during fuzzing. CCFG provides a restricted mode ([Section 2.5](./doc/spec.md)). In restricted mode, only resources definitions are valid, and all language functions are disabled. To run the fuzz test case in restricted mode, run the following command:
+
+```
+CCFG_RESTRICT= make test
 ```
 
 Mirrors

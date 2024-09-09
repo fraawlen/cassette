@@ -118,6 +118,7 @@ static const struct slot map[] =
 	{ "DEBUG_PRINT",   TOKEN_PRINT            },
 	{ "FOR_EACH",      TOKEN_FOR_BEGIN        },
 	{ "FOR_END",       TOKEN_FOR_END          },
+	{ "RESTRICT",      TOKEN_RESTRICT         },
 };
 
 /************************************************************************************************************/

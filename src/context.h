@@ -75,8 +75,9 @@ struct context
 	cdict *tokens;
 
 	/* misc */
-	
+
 	struct context *parent;
+	bool restricted;
 	crand *rand;
 };
 

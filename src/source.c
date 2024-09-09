@@ -79,6 +79,7 @@ source_parse_child(struct context *ctx_parent, const char *source)
 	ctx.keys_sequences = ctx_parent->keys_sequences;
 	ctx.keys_vars      = ctx_parent->keys_vars;
 	ctx.tokens         = ctx_parent->tokens;
+	ctx.restricted     = ctx_parent->restricted;
 	ctx.parent         = ctx_parent;
 	ctx.rand           = ctx_parent->rand;
 
@@ -122,6 +123,7 @@ source_parse_root(ccfg *cfg, const char *source, bool internal)
 	ctx.keys_sequences = cfg->keys_sequences;
 	ctx.keys_vars      = cdict_create();
 	ctx.tokens         = cfg->tokens;
+	ctx.restricted     = cfg->restricted || getenv("CCFG_RESTRICT");
 	ctx.parent         = NULL;
 	ctx.rand           = &r;
 

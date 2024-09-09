@@ -72,15 +72,15 @@ main(void)
 	printf("namespace\tprop\tsize\traw_values\n");
 	printf("---------\t----\t----\t----------\n");
 
-	print_resources("example-1", "a");
-	print_resources("example-1", "b");
-	print_resources("example-1", "c");
-	print_resources("example-1", "d");
-	print_resources("example-1", "e");
-	print_resources("example-1", "f");
-	print_resources("example-1", "g");
-	print_resources("example-1", "h");
-	print_resources("example-1", "i"); /* expected to not be found */
+	print_resources("example", "a");
+	print_resources("example", "b");
+	print_resources("example", "c");
+	print_resources("example", "d");
+	print_resources("example", "e");
+	print_resources("example", "f");
+	print_resources("example", "g");
+	print_resources("example", "h");
+	print_resources("example", "i"); /* expected to not be found */
 
 	/* End */
 

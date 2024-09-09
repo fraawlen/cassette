@@ -15,6 +15,7 @@ This document specifies and details all of CCFG's features and syntax rules. It'
 	2. [Strings](#strings)
 	3. [Numerals](#numerals)
 	4. [Functions](#functions)
+	5. [Restricted Mode](#restrict-mode)
 3. [Sequences Leads](#leads)
 	1. [Sections](#section)
 	2. [Section Additions](#section-add)
@@ -25,7 +26,8 @@ This document specifies and details all of CCFG's features and syntax rules. It'
 	7. [Iterations](#iterate)
 	8. [Child File Inclusion](#include)
 	9. [Seed Override](#seed)
-	10. [Debug Print](#debug)
+	10. [Restric](#restrict)
+	11. [Debug Print](#debug)
 4. [Substitutions](#substitutions)
 	1. [Comments / End-of-Sequence](#eos)
 	2. [Fillers](#filler)
@@ -229,6 +231,18 @@ INCLUDE path1 path2
 a INCLUDE path1 path2
 -> not an inclusion because INCLUDE is not first, instead the sequence is now a resource definition with a resource namespace "a", resource name "INCLUDE", and assigned resource values "path_1" and "path_2"
 ```
+
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 2.5. Restricted Mode <a name="restrict-mode"></a>
+
+Because CCFG is an almost Turing-complete language, it can create execution loops with unknown resolution times. It can, therefore, hang. It is, however, protected from crashes. This is undesirable in some siturations. To answer that issue, CCFG provides a restricted execution mode, which, when enabled, will turn off all languages [functions](#functions). Ergo, in restricted mode, only resource definitions are valid sequences, and all substitutions are ignored.
+
+Three methods can enable restricted mode:
+
+- Inside the configuration source, with a [`RESTRICT`](#restrict) sequence.
+- With the environment variable `CCFG_RESTRICT`, any value is valid.
+- By the caller program, with `ccfg_restrict();`.
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
@@ -460,7 +474,17 @@ Resets and sets the seed of the parser's random number LCG. Can be used to shuff
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
-### 3.10. Debug Print <a name="debug"></a>
+### 3.10. Restrict <a name="debug"></a>
+
+```
+RESTRICT
+```
+
+Enables the restricted mode until the source's end.
+
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 3.11. Debug Print <a name="debug"></a>
 
 ```
 DEBUG_PRINT [token] [token] ...

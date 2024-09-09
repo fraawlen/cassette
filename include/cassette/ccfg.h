@@ -286,6 +286,24 @@ void
 ccfg_repair(ccfg *cfg)
 CCFG_NONNULL(1);
 
+/**
+ * Enables the restricted parsing mode.
+ *
+ * @param cfg : Config instance to interact with
+ */
+void
+ccfg_restrict(ccfg *cfg)
+CCFG_NONNULL(1);
+
+/**
+ * Disables the restricted parsing mode.
+ *
+ * @param cfg : Config instance to interact with
+ */
+void
+ccfg_unrestrict(ccfg *cfg)
+CCFG_NONNULL(1);
+
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
 /************************************************************************************************************/
