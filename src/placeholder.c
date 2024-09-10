@@ -51,7 +51,22 @@ cgui_placeholder_create(void)
 static void
 draw(cgui_cell *cell, struct cgui_cell_context *context)
 {
+	const double t = CONFIG->placeholder_frame.size_border + 10;
+	const double x = context->zone.x;
+	const double y = context->zone.y;
+	const double w = context->zone.width;
+	const double h = context->zone.height;
+	cairo_t     *d = context->zone.drawable;
+
 	(void)cell;
 
-	cgui_box_draw(cgui_box_adjust(CONFIG->placeholder_frame, context), context->zone);
+	cgui_box_draw(CONFIG->placeholder_frame, context->zone);
+	cgui_box_clip(CONFIG->placeholder_frame, context->zone, t);
+
+	cairo_move_to(d, x + t,     y + t);
+	cairo_line_to(d, x - t + w, y - t + h);
+	cairo_set_source_rgb(d, 0.0, 0.15, 0.15);
+	cairo_set_line_width(d, 30.0);
+	cairo_stroke(d);
+	cairo_reset_clip(d);
 }

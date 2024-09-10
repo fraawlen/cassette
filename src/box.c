@@ -36,51 +36,22 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void path_1 (struct cgui_box, struct cgui_zone, bool);
-static void path_2 (struct cgui_box, struct cgui_zone, bool);
-static void path_3 (struct cgui_box, struct cgui_zone, bool);
-static void path_4 (struct cgui_box, struct cgui_zone, bool);
+static void paint     (struct cgui_zone, struct ccolor color);
+static void path      (struct cgui_box,  struct cgui_zone, bool shape, double pad);
+static void subpath_1 (struct cgui_box,  struct cgui_zone);
+static void subpath_2 (struct cgui_box,  struct cgui_zone);
+static void subpath_3 (struct cgui_box,  struct cgui_zone);
+static void subpath_4 (struct cgui_box,  struct cgui_zone);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-struct cgui_box
-cgui_box_adjust(struct cgui_box box, const struct cgui_cell_context *context)
+void
+cgui_box_clip(struct cgui_box box, struct cgui_zone zone, double pad)
 {
-	double l = 0;
-
-	/* top left */
-
-	if (CONFIG->window_frame.corner_size[0] < DBL_EPSILON
-	 || !context->side.left
-	 || !context->side.top)
-	{
-		goto skip_top_left;
-	}
-
-	switch (CONFIG->window_frame.corner_type[0])
-	{
-		case CGUI_BOX_STRAIGHT:
-			goto skip_top_left;
-
-		case CGUI_BOX_RADII:
-			l = CONFIG->window_frame.padding - CONFIG->window_frame.thickness + box.thickness;
-			break;
-
-		case CGUI_BOX_CHAMFER:
-			break;
-	}
-
-	if (l <= CONFIG->window_frame.corner_size[0])
-	{
-		box.corner_type[0] = CONFIG->window_frame.corner_type[0];
-		box.corner_size[0] = CONFIG->window_frame.corner_size[0] - l;
-	}
-
-skip_top_left:
-
-	return box;
+	path(box, zone, true, pad);
+	cairo_clip(zone.drawable);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -88,45 +59,31 @@ skip_top_left:
 void
 cgui_box_draw(struct cgui_box box, struct cgui_zone zone)
 {
-	struct ccolor cl = box.color_border;
-
-	/* outer path */
-
-	if (box.thickness < DBL_EPSILON)
+	if (!box.draw)
 	{
-		goto skip_outer;
+		return;
 	}
 
-	cl = box.color_border;
+	/* outline */
 
-	if (box.outer_shaping)
+	if (box.size_outline > 0.0)
 	{
-		path_1(box, zone, true);
-		path_2(box, zone, true);
-		path_3(box, zone, true);
-		path_4(box, zone, true);
-	}
-	else
-	{
-		cairo_rectangle(zone.drawable, zone.x, zone.y, zone.width, zone.height);
+		path(box, zone, box.shape_outline, -box.size_outline);
+		paint(zone, box.color_outline);
 	}
 
-	cairo_set_source_rgba(zone.drawable, cl.r, cl.g, cl.b, cl.a);
-	cairo_fill(zone.drawable);
+	/* border */
 
-skip_outer:
+	if (box.size_border > 0.0)
+	{
+		path(box, zone, box.shape_border || box.shape_outline, 0);
+		paint(zone, box.color_border);
+	}
 
-	/* inner path */
+	/* background */
 
-	cl = box.color_background;
-
-	path_1(box, zone, false);
-	path_2(box, zone, false);
-	path_3(box, zone, false);
-	path_4(box, zone, false);
-
-	cairo_set_source_rgba(zone.drawable, cl.r, cl.g, cl.b, cl.a);
-	cairo_fill(zone.drawable);
+	path(box, zone, true, box.size_border);
+	paint(zone, box.color_background);
 }
 
 /************************************************************************************************************/
@@ -134,30 +91,72 @@ skip_outer:
 /************************************************************************************************************/
 
 static void
-path_1(struct cgui_box box, struct cgui_zone zone, bool outer)
+paint(struct cgui_zone zone, struct ccolor color)
 {
-	cairo_t *d = zone.drawable;
-	double x = zone.x;
-	double y = zone.y;
-	double t = box.thickness;
-	double r = box.corner_size[0];
-	double o = outer ? t : 0;
-	double u = outer ? t * U : 0;
+	cairo_set_source_rgba(zone.drawable, color.r, color.g, color.b, color.a);
+	cairo_fill(zone.drawable);
+}
 
-	switch (box.corner_type[0])
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+path(struct cgui_box box, struct cgui_zone zone, bool shape, double pad)
+{
+	zone.x      += pad;
+	zone.y      += pad;
+	zone.width  -= pad * 2;
+	zone.height -= pad * 2;
+
+	if (zone.width < 1.0 || zone.height < 1.0)
+	{
+		return;
+	}
+
+	if (!shape)
+	{
+		cairo_rectangle(zone.drawable, zone.x, zone.y, zone.width, zone.height);
+		return;
+	}
+
+	for (size_t i = 0; i < 4; i++)
+	{
+		box.size_corner[i] -= pad * (1 - (box.corner[i] == CGUI_BOX_CHAMFER ? U : 0));
+		if (box.size_corner[i] < 0.0)
+		{
+			box.size_corner[i] = 0.0;
+		}
+	}
+
+	subpath_1(box, zone);
+	subpath_2(box, zone);
+	subpath_3(box, zone);
+	subpath_4(box, zone);	
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+subpath_1(struct cgui_box box, struct cgui_zone zone)
+{
+	const double r = box.size_corner[0];
+	const double x = zone.x;
+	const double y = zone.y;
+	cairo_t     *d = zone.drawable;
+
+	switch (box.corner[0])
 	{
 		case CGUI_BOX_STRAIGHT:
-			cairo_move_to(d, x + t - o, y + t - o);
+			cairo_move_to(d, x, y);
 			break;
 
 		case CGUI_BOX_RADII:
 			cairo_new_sub_path(d);
-			cairo_arc(d, x + t + r, y + t + r, r + o, PI, -PI / 2);
+			cairo_arc(d, x + r, y + r, r, PI, -PI / 2);
 			break;
 
 		case CGUI_BOX_CHAMFER:
-			cairo_move_to(d, x + t - o, y + t + r - u);
-			cairo_line_to(d, x + t + r - u, y + t - o);
+			cairo_move_to(d, x,     y + r);
+			cairo_line_to(d, x + r, y);
 			break;
 	}
 }
@@ -165,30 +164,27 @@ path_1(struct cgui_box box, struct cgui_zone zone, bool outer)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-path_2(struct cgui_box box, struct cgui_zone zone, bool outer)
+subpath_2(struct cgui_box box, struct cgui_zone zone)
 {
-	cairo_t *d = zone.drawable;
-	double x = zone.x;
-	double y = zone.y;
-	double w = zone.width;
-	double t = box.thickness;
-	double r = box.corner_size[1];
-	double o = outer ? t : 0;
-	double u = outer ? t * U : 0;
+	const double r = box.size_corner[1];
+	const double x = zone.x;
+	const double y = zone.y;
+	const double w = zone.width;
+	cairo_t     *d = zone.drawable;
 
-	switch (box.corner_type[1])
+	switch (box.corner[1])
 	{
 		case CGUI_BOX_STRAIGHT:
-			cairo_line_to(d, w + x - t + o, y + t - o);
+			cairo_line_to(d, x + w, y);
 			break;
 
 		case CGUI_BOX_RADII:
-			cairo_arc(d, w + x - t - r, y + t + r, r + o, -PI / 2, 0);
+			cairo_arc(d, x + w - r, y + r, r, -PI / 2, 0);
 			break;
 
 		case CGUI_BOX_CHAMFER:
-			cairo_line_to(d, w + x - t - r + u, y + t - o);
-			cairo_line_to(d, w + x - t + o, y + t + r - u);
+			cairo_line_to(d, x + w - r, y);
+			cairo_line_to(d, x + w,     y + r);
 			break;
 	}
 }
@@ -196,31 +192,28 @@ path_2(struct cgui_box box, struct cgui_zone zone, bool outer)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-path_3(struct cgui_box box, struct cgui_zone zone, bool outer)
+subpath_3(struct cgui_box box, struct cgui_zone zone)
 {
-	cairo_t *d = zone.drawable;
-	double x = zone.x;
-	double y = zone.y;
-	double w = zone.width;
-	double h = zone.height;
-	double t = box.thickness;
-	double r = box.corner_size[2];
-	double o = outer ? t : 0;
-	double u = outer ? t * U : 0;
+	const double r = box.size_corner[2];
+	const double x = zone.x;
+	const double y = zone.y;
+	const double w = zone.width;
+	const double h = zone.height;
+	cairo_t     *d = zone.drawable;
 
-	switch (box.corner_type[2])
+	switch (box.corner[2])
 	{
 		case CGUI_BOX_STRAIGHT:
-			cairo_line_to(d, w + x - t + o, h + y - t + o);
+			cairo_line_to(d, x + w, y + h);
 			break;
 
 		case CGUI_BOX_RADII:
-			cairo_arc(d, w + x - t - r, h + y - t - r, r + o, 0, PI / 2);
+			cairo_arc(d, x + w - r, y + h - r, r, 0, PI / 2);
 			break;
 
 		case CGUI_BOX_CHAMFER:
-			cairo_line_to(d, w + x - t + o, h + y - t - r + u);
-			cairo_line_to(d, w + x - t - r + u, h + y - t + o);
+			cairo_line_to(d, x + w,     y + h - r);
+			cairo_line_to(d, x + w - r, y + h);
 			break;
 	}
 }
@@ -228,30 +221,27 @@ path_3(struct cgui_box box, struct cgui_zone zone, bool outer)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-path_4(struct cgui_box box, struct cgui_zone zone, bool outer)
+subpath_4(struct cgui_box box, struct cgui_zone zone)
 {
-	cairo_t *d = zone.drawable;
-	double x = zone.x;
-	double y = zone.y;
-	double h = zone.height;
-	double t = box.thickness;
-	double r = box.corner_size[3];
-	double o = outer ? t : 0;
-	double u = outer ? t * U : 0;
+	const double r = box.size_corner[3];
+	const double x = zone.x;
+	const double y = zone.y;
+	const double h = zone.height;
+	cairo_t     *d = zone.drawable;
 
-	switch (box.corner_type[3])
+	switch (box.corner[3])
 	{
 		case CGUI_BOX_STRAIGHT:
-			cairo_line_to(d, x + t - o, h + y - t + o);
+			cairo_line_to(d, x, y + h);
 			break;
 
 		case CGUI_BOX_RADII:
-			cairo_arc(d, x + t + r, h + y - t - r, r + o, PI / 2, PI);
+			cairo_arc(d, x + r, y + h - r, r, PI / 2, PI);
 			break;
 
 		case CGUI_BOX_CHAMFER:
-			cairo_line_to(d, x + t + r - u, h + y - t + o);
-			cairo_line_to(d, x + t - o, h + y - t - r + u);
+			cairo_line_to(d, x + r, y + h);
+			cairo_line_to(d, x,     y + h - r);
 			break;
 	}
 	

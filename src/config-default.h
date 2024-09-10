@@ -55,49 +55,16 @@ static const struct cgui_config config_default =
 
 	/* window */
 
-	.window_frame =
-	{
-		.corner_type      = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
-		.corner_size      = {0, 0, 0, 0},
-		.thickness        = 10,
-		.padding          = 20,
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
-		.outer_shaping    = false,
-	},
+	.window_corner      = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
+	.window_size_corner = {0, 0, 0, 0},
+	.window_size_border = 10,
+	.window_padding     = 20,
 
-	.window_frame_focused =
-	{
-		.corner_type      = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
-		.corner_size      = {0, 0, 0, 0},
-		.thickness        = 10,
-		.padding          = 20,
-		.color_border     = { .r = 0.671, .g = 0.671, .b = 0.671, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
-		.outer_shaping    = false,
-	},
-
-	.window_frame_disabled =
-	{
-		.corner_type      = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
-		.corner_size      = {0, 0, 0, 0},
-		.thickness        = 10,
-		.padding          = 20,
-		.color_border     = { .r = 0.400, .g = 0.400, .b = 0.400, .a = 1.000 },
-		.color_background = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.outer_shaping    = false,
-	},
-
-	.window_frame_locked =
-	{
-		.corner_type      = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
-		.corner_size      = {0, 0, 0, 0},
-		.thickness        = 10,
-		.padding          = 20,
-		.color_border     = { .r = 0.500, .g = 0.100, .b = 0.100, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
-		.outer_shaping    = false,
-	},
+	.window_color_border          = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.window_color_border_focused  = { .r = 0.671, .g = 0.671, .b = 0.671, .a = 1.000 },
+	.window_color_border_disabled = { .r = 0.400, .g = 0.400, .b = 0.400, .a = 1.000 },
+	.window_color_border_locked   = { .r = 0.500, .g = 0.100, .b = 0.100, .a = 1.000 },
+	.window_color_background      = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
 
 	.window_enable_disabled     = true,
 	.window_enable_focused      = true,
@@ -179,12 +146,15 @@ static const struct cgui_config config_default =
 
 	.placeholder_frame =
 	{
-		.corner_type      = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
-		.corner_size      = {0, 0, 0, 0},
-		.thickness        = 10,
-		.padding          = 20,
+		.corner           = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
+		.size_corner      = {0, 0, 0, 0},
+		.size_outline     =  0,
+		.size_border      = 10,
+		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
 		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
 		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.outer_shaping    = true,
+		.shape_outline    = true,
+		.shape_border     = true,
+		.draw             = true,
 	},
 };

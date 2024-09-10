@@ -132,10 +132,17 @@ struct cgui_config
 
 	/* window */
 
-	struct cgui_box window_frame;
-	struct cgui_box window_frame_focused;
-	struct cgui_box window_frame_disabled;
-	struct cgui_box window_frame_locked;
+	enum cgui_box_corner window_corner[4];
+
+	double window_size_corner[4];
+	double window_size_border;
+	double window_padding;
+
+	struct ccolor window_color_border;
+	struct ccolor window_color_border_focused;
+	struct ccolor window_color_border_disabled;
+	struct ccolor window_color_border_locked;
+	struct ccolor window_color_background;
 
 	bool window_focus_on_activation;
 	bool window_enable_disabled;

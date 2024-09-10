@@ -51,13 +51,19 @@ enum cgui_box_corner
  */
 struct cgui_box
 {
-	enum cgui_box_corner corner_type[4];
-	double corner_size[4];
-	double thickness;
-	double padding;
+	enum cgui_box_corner corner[4];
+
+	double size_corner[4];
+	double size_outline;
+	double size_border;
+	
+	struct ccolor color_outline;
 	struct ccolor color_border;
 	struct ccolor color_background;
-	bool outer_shaping;
+
+	bool draw;
+	bool shape_outline;
+	bool shape_border;
 };
 
 /************************************************************************************************************/
@@ -67,9 +73,8 @@ struct cgui_box
 /**
  *
  */
-struct cgui_box
-cgui_box_adjust(struct cgui_box box, const struct cgui_cell_context *context)
-CGUI_NONNULL(2);
+void
+cgui_box_clip(struct cgui_box box, struct cgui_zone zone, double pad);
 
 /**
  *

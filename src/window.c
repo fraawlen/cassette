@@ -41,8 +41,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define WIDTH(GRID)  cgui_grid_width(GRID)  + CONFIG->window_frame.padding * 2
-#define HEIGHT(GRID) cgui_grid_height(GRID) + CONFIG->window_frame.padding * 2
+#define WIDTH(GRID)  cgui_grid_width(GRID)  + CONFIG->window_padding * 2
+#define HEIGHT(GRID) cgui_grid_height(GRID) + CONFIG->window_padding * 2
 
 /* impure */
 
@@ -59,10 +59,10 @@ static void update_shown_grid  (cgui_window *)                               CGU
 
 /* pure */
 
-static struct cgui_box box         (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
-static bool            cairo_error (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
-static cgui_grid      *min_grid    (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
-static void            size_limits (const cgui_window *, double *, double *, double *, double *) CGUI_NONNULL(1, 2, 3);
+static struct ccolor border      (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
+static bool          cairo_error (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
+static cgui_grid    *min_grid    (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
+static void          size_limits (const cgui_window *, double *, double *, double *, double *) CGUI_NONNULL(1, 2, 3);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -840,6 +840,19 @@ window_draw(cgui_window *window)
 {
 	unsigned long timestamp;
 	unsigned long delay;
+
+	struct cgui_box box =
+	{
+		.size_outline     =  0.0,
+		.size_border      = CONFIG->window_size_border,
+		.color_outline    = {0.0},
+		.color_border     = border(window),
+		.color_background = CONFIG->window_color_background,
+		.shape_outline    = false,
+		.shape_border     = false,
+		.draw             = true,
+	};
+	
 	struct cgui_zone zone =
 	{
 		.drawable = window->drawable,
@@ -857,12 +870,18 @@ window_draw(cgui_window *window)
 	timestamp = util_time();
 	delay     = window->draw_timestamp == 0 ? 0 : timestamp - window->draw_timestamp;
 
-	/* draw background */
+	/* draw border and background */
+
+	for (size_t i = 0; i < 4; i++)
+	{
+		box.corner[i]      = CONFIG->window_corner[i];
+		box.size_corner[i] = CONFIG->window_size_corner[i];
+	}
 
 	if (window->draw == WINDOW_DRAW_FULL)
 	{
 		cairo_set_operator(window->drawable, CAIRO_OPERATOR_SOURCE);
-		cgui_box_draw(box(window), zone);
+		cgui_box_draw(box, zone);
 	}
 
 	/* draw cells */
@@ -944,8 +963,8 @@ window_resize(cgui_window *window, double width, double height)
 	update_shown_grid(window);
 	grid_update_geometry(
 		window->shown_grid,
-		window->width  - CONFIG->window_frame.padding * 2,
-		window->height - CONFIG->window_frame.padding * 2);
+		window->width  - CONFIG->window_padding * 2,
+		window->height - CONFIG->window_padding * 2);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1047,30 +1066,30 @@ window_update_state(cgui_window *window, enum cgui_window_state_mask mask, bool 
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-static struct cgui_box
-box(const cgui_window *window)
+static struct ccolor
+border(const cgui_window *window)
 {
 	if (!window->state.focused)
 	{
-		return CONFIG->window_frame;
+		return CONFIG->window_color_border;
 	}
 
 	if (CONFIG->window_enable_disabled && window->state.disabled)
 	{
-		return CONFIG->window_frame_disabled;
+		return CONFIG->window_color_border_disabled;
 	}
 
 	if (CONFIG->window_enable_locked && window->state.locked_grid)
 	{
-		return CONFIG->window_frame_locked;
+		return CONFIG->window_color_border_locked;
 	}
 
 	if (CONFIG->window_enable_focused)
 	{
-		return CONFIG->window_frame_focused;
+		return CONFIG->window_color_border_focused;
 	}
 
-	return CONFIG->window_frame;
+	return CONFIG->window_color_border;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1100,8 +1119,8 @@ draw_area(cgui_window *window, struct area *area, unsigned long delay)
 
 	context.delay       = delay;
 	context.zone        = grid_area_zone(window->shown_grid, area, window->drawable);
-	context.zone.x     += CONFIG->window_frame.padding;
-	context.zone.y     += CONFIG->window_frame.padding;
+	context.zone.x     += CONFIG->window_padding;
+	context.zone.y     += CONFIG->window_padding;
 	context.side.left   = area->x == 0;
 	context.side.top    = area->y == 0;
 	context.side.right  = area->x + area->width  == window->shown_grid->n_cols;
