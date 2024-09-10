@@ -154,6 +154,7 @@ static xcb_atom_t atom_wtyp = 0; /* "_NET_WM_WINDOW_TYPE"         */
 static xcb_atom_t atom_wnom = 0; /* "_NET_WM_WINDOW_TYPE_NORMAL"  */
 static xcb_atom_t atom_wdsk = 0; /* "_NET_WM_WINDOW_TYPE_DESKTOP" */
 static xcb_atom_t atom_wovr = 0; /* "_NET_WM_WINDOW_TYPE_OVERLAY" */
+static xcb_atom_t atom_wdlg = 0; /* "_NET_WM_WINDOW_TYPE_DIALOG"  */
 
 /* CGUI custom atoms */
 
@@ -344,6 +345,7 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 	atom_wnom = get_atom("_NET_WM_WINDOW_TYPE_NORMAL");
 	atom_wdsk = get_atom("_NET_WM_WINDOW_TYPE_DESKTOP");
 	atom_wovr = get_atom("_NET_WM_WINDOW_TYPE_DOCK");
+	atom_wdlg = get_atom("_NET_WM_WINDOW_TYPE_DIALOG");
 
 	atom_sig  = get_atom(_ATOM_SIGNALS);
 	atom_vers = get_atom(_ATOM_VERSION);
@@ -890,6 +892,10 @@ x11_window_set_type(xcb_window_t id, enum cgui_window_type type)
 	{
 		case CGUI_WINDOW_NORMAL:
 			atom = atom_wnom;
+			break;
+
+		case CGUI_WINDOW_DIALOG:
+			atom = atom_wdlg;
 			break;
 
 		case CGUI_WINDOW_DESKTOP:

@@ -47,6 +47,7 @@ typedef struct cgui_window cgui_window;
 enum cgui_window_type
 {
 	CGUI_WINDOW_NORMAL,
+	CGUI_WINDOW_DIALOG,
 	CGUI_WINDOW_DESKTOP,
 	CGUI_WINDOW_OVERLAY,
 };
