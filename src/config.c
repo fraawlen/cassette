@@ -49,7 +49,8 @@
 	SCALE(BOX.size_corner[2]); \
 	SCALE(BOX.size_corner[3]); \
 	SCALE(BOX.size_outline);   \
-	SCALE(BOX.size_border);
+	SCALE(BOX.size_border);    \
+	SCALE(BOX.margin);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -58,6 +59,7 @@
 	{ NAMESPACE, #STATE "corner_size",       CORNER_SIZE,  TARGET.size_corner      }, \
 	{ NAMESPACE, #STATE "outline_thickness", LENGTH,      &TARGET.size_outline     }, \
 	{ NAMESPACE, #STATE "border_thickness",  LENGTH,      &TARGET.size_border      }, \
+	{ NAMESPACE, #STATE "margin",            POSITION,    &TARGET.margin           }, \
 	{ NAMESPACE, #STATE "color_outline",     COLOR,       &TARGET.color_outline    }, \
 	{ NAMESPACE, #STATE "color_border",      COLOR,       &TARGET.color_border     }, \
 	{ NAMESPACE, #STATE "color_background",  COLOR,       &TARGET.color_background }, \
@@ -502,7 +504,7 @@ fetch(const struct resource *resource)
 			break;
 
 		case POSITION:
-			*(double*)resource->target = ceil(util_str_to_double(str, DBL_MIN, DBL_MAX));
+			*(double*)resource->target = ceil(util_str_to_double(str, -DBL_MAX, DBL_MAX));
 			break;
 
 		case LENGTH:
@@ -518,7 +520,7 @@ fetch(const struct resource *resource)
 			break;
 
 		case DOUBLE:
-			*(double*)resource->target = util_str_to_double(str, DBL_MIN, DBL_MAX);
+			*(double*)resource->target = util_str_to_double(str, -DBL_MAX, DBL_MAX);
 			break;
 
 		case UDOUBLE:

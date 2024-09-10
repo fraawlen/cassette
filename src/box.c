@@ -68,7 +68,7 @@ cgui_box_draw(struct cgui_box box, struct cgui_zone zone)
 
 	if (box.size_outline > 0.0)
 	{
-		path(box, zone, box.shape_outline, -box.size_outline);
+		path(box, zone, box.shape_outline, box.size_outline);
 		paint(zone, box.color_outline);
 	}
 
@@ -76,7 +76,7 @@ cgui_box_draw(struct cgui_box box, struct cgui_zone zone)
 
 	if (box.size_border > 0.0)
 	{
-		path(box, zone, box.shape_border || box.shape_outline, 0);
+		path(box, zone, box.shape_border || box.shape_outline, 0.0);
 		paint(zone, box.color_border);
 	}
 
@@ -102,6 +102,7 @@ paint(struct cgui_zone zone, struct ccolor color)
 static void
 path(struct cgui_box box, struct cgui_zone zone, bool shape, double pad)
 {
+	pad         += box.margin;
 	zone.x      += pad;
 	zone.y      += pad;
 	zone.width  -= pad * 2;

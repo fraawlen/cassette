@@ -56,6 +56,7 @@ struct cgui_box
 	double size_corner[4];
 	double size_outline;
 	double size_border;
+	double margin;
 	
 	struct ccolor color_outline;
 	struct ccolor color_border;

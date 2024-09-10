@@ -51,7 +51,7 @@ cgui_placeholder_create(void)
 static void
 draw(cgui_cell *cell, struct cgui_cell_context *context)
 {
-	const double t = CONFIG->placeholder_frame.size_border + 10;
+	const double t = CONFIG->placeholder_frame.size_border + CONFIG->placeholder_frame.margin + 10;
 	const double x = context->zone.x;
 	const double y = context->zone.y;
 	const double w = context->zone.width;

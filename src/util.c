@@ -50,7 +50,7 @@ util_limit(double d, double min, double max)
 double
 util_str_to_double(const char *str, double min, double max)
 {
-	return util_limit(strtof(str, NULL), min, max);
+	return util_limit(strtod(str, NULL), min, max);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

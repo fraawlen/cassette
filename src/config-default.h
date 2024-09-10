@@ -150,6 +150,7 @@ static const struct cgui_config config_default =
 		.size_corner      = {0, 0, 0, 0},
 		.size_outline     =  0,
 		.size_border      = 10,
+		.margin           =  0,
 		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
 		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
 		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
