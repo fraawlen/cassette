@@ -26,6 +26,7 @@
 #include <stdint.h>
 
 #include "cgui-attributes.h"
+#include "cgui-box.h"
 #include "cgui-zone.h"
 
 #ifdef __cplusplus
@@ -40,17 +41,6 @@ extern "C" {
  *
  */
 typedef struct cgui_cell cgui_cell;
-
-/**
- *
- */
-struct cgui_cell_side
-{
-	bool left;
-	bool right;
-	bool top;
-	bool bottom;
-};
 
 /**
  *
@@ -78,8 +68,8 @@ struct cgui_cell_event
 struct cgui_cell_context
 {
 	unsigned long delay;
-	struct cgui_cell_side side;
 	struct cgui_zone zone;
+	struct cgui_box frame;
 };
 
 /************************************************************************************************************/
@@ -146,6 +136,13 @@ CGUI_NONNULL(1);
  *
  */
 void
+cgui_cell_on_frame(cgui_cell *cell, void (fn)(cgui_cell *cell, struct cgui_box *box))
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
 cgui_cell_redraw(cgui_cell *cell)
 CGUI_NONNULL(1);
 
@@ -198,6 +195,15 @@ CGUI_PURE;
  */
 void
 (*cgui_cell_fn_event(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_event *event)
+CGUI_NONNULL_RETURN
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+void
+(*cgui_cell_fn_frame(cgui_cell *cell))(cgui_cell *cell, struct cgui_box *box)
 CGUI_NONNULL_RETURN
 CGUI_NONNULL(1)
 CGUI_PURE;

@@ -25,7 +25,6 @@
 #include <stdint.h>
 
 #include "cgui-attributes.h"
-#include "cgui-cell.h"
 #include "cgui-zone.h"
 
 #ifdef __cplusplus
@@ -82,6 +81,13 @@ cgui_box_clip(struct cgui_box box, struct cgui_zone zone, double pad);
  */
 void
 cgui_box_draw(struct cgui_box box, struct cgui_zone zone);
+
+/**
+ *
+ */
+void
+cgui_box_pad_corner(struct cgui_box *box, struct cgui_box box_parent, double pad, int id)
+CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

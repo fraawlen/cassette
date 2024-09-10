@@ -68,7 +68,7 @@ cgui_box_draw(struct cgui_box box, struct cgui_zone zone)
 
 	if (box.size_outline > 0.0)
 	{
-		path(box, zone, box.shape_outline, box.size_outline);
+		path(box, zone, box.shape_outline && box.shape_border, -box.size_outline);
 		paint(zone, box.color_outline);
 	}
 
@@ -76,7 +76,7 @@ cgui_box_draw(struct cgui_box box, struct cgui_zone zone)
 
 	if (box.size_border > 0.0)
 	{
-		path(box, zone, box.shape_border || box.shape_outline, 0.0);
+		path(box, zone, box.shape_border, 0.0);
 		paint(zone, box.color_border);
 	}
 
@@ -84,6 +84,21 @@ cgui_box_draw(struct cgui_box box, struct cgui_zone zone)
 
 	path(box, zone, true, box.size_border);
 	paint(zone, box.color_background);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_box_pad_corner(struct cgui_box *box, struct cgui_box box_parent, double pad, int id)
+{
+	if (!CONFIG->smart_corners || box_parent.corner[id] == CGUI_BOX_STRAIGHT)
+	{
+		return;
+	}
+	
+	box->corner[id]      = box_parent.corner[id];
+	box->size_corner[id] = box_parent.size_corner[id]
+	                       - pad * (1 - (box_parent.corner[id] == CGUI_BOX_CHAMFER ? U : 0));
 }
 
 /************************************************************************************************************/
@@ -124,7 +139,7 @@ path(struct cgui_box box, struct cgui_zone zone, bool shape, double pad)
 		box.size_corner[i] -= pad * (1 - (box.corner[i] == CGUI_BOX_CHAMFER ? U : 0));
 		if (box.size_corner[i] < 0.0)
 		{
-			box.size_corner[i] = 0.0;
+			box.corner[i] = CGUI_BOX_STRAIGHT;
 		}
 	}
 

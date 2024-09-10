@@ -169,6 +169,7 @@ struct cgui_config
 
 	/* behavior */
 
+	bool smart_corners;
 	bool cell_auto_lock;
 	bool input_persistent_pointer;
 	bool input_persistent_touch;

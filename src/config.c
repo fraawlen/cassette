@@ -267,6 +267,7 @@ static const struct resource resources[] =
 	{ "popup",    "enable_width_override",       BOOL,        &config.popup_enable_override_width    },
 	{ "popup",    "ennable_height_override",     BOOL,        &config.popup_enable_override_height   },
 	
+	{ "behavior", "smart_corner",                BOOL,        &config.smart_corners                  },
 	{ "behavior", "enable_cell_auto_lock",       BOOL,        &config.cell_auto_lock                 },
 	{ "behavior", "enable_persistent_pointer",   BOOL,        &config.input_persistent_pointer       },
 	{ "behavior", "enable_persistent_touch",     BOOL,        &config.input_persistent_touch         },

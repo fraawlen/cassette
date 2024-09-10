@@ -46,16 +46,16 @@
 
 /* impure */
 
-static void cairo_data_destroy (cgui_window *)                               CGUI_NONNULL(1);
-static bool cairo_setup        (cgui_window *, double, double)               CGUI_NONNULL(1);
-static void draw_area          (cgui_window *, struct area *, unsigned long) CGUI_NONNULL(1, 2);
-static void dummy_fn_accel     (cgui_window *, int)                          CGUI_NONNULL(1);
-static void dummy_fn_close     (cgui_window *)                               CGUI_NONNULL(1);
-static void dummy_fn_draw      (cgui_window *, unsigned long)                CGUI_NONNULL(1);
-static void dummy_fn_focus     (cgui_window *, cgui_cell *)                  CGUI_NONNULL(1);
-static void dummy_fn_grid      (cgui_window *, cgui_grid *)                  CGUI_NONNULL(1);
-static void dummy_fn_state     (cgui_window *, enum cgui_window_state_mask)  CGUI_NONNULL(1);
-static void update_shown_grid  (cgui_window *)                               CGUI_NONNULL(1);
+static void cairo_data_destroy (cgui_window *)                                                CGUI_NONNULL(1);
+static bool cairo_setup        (cgui_window *, double, double)                                CGUI_NONNULL(1);
+static void draw_area          (cgui_window *, struct area *, struct cgui_box, unsigned long) CGUI_NONNULL(1, 2);
+static void dummy_fn_accel     (cgui_window *, int)                                           CGUI_NONNULL(1);
+static void dummy_fn_close     (cgui_window *)                                                CGUI_NONNULL(1);
+static void dummy_fn_draw      (cgui_window *, unsigned long)                                 CGUI_NONNULL(1);
+static void dummy_fn_focus     (cgui_window *, cgui_cell *)                                   CGUI_NONNULL(1);
+static void dummy_fn_grid      (cgui_window *, cgui_grid *)                                   CGUI_NONNULL(1);
+static void dummy_fn_state     (cgui_window *, enum cgui_window_state_mask)                   CGUI_NONNULL(1);
+static void update_shown_grid  (cgui_window *)                                                CGUI_NONNULL(1);
 
 /* pure */
 
@@ -888,7 +888,7 @@ window_draw(cgui_window *window)
 	
 	CREF_FOR_EACH(window->shown_grid->areas, i)
 	{
-		draw_area(window, (struct area*)cref_ptr(window->shown_grid->areas, i), delay);
+		draw_area(window, (struct area*)cref_ptr(window->shown_grid->areas, i), box, delay);
 	}
 
 	/* check if there is a new draw cycle requested and update states */
@@ -1113,18 +1113,58 @@ cairo_error(const cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-draw_area(cgui_window *window, struct area *area, unsigned long delay)
+draw_area(cgui_window *window, struct area *area, struct cgui_box box_window, unsigned long delay)
 {
 	struct cgui_cell_context context;
+	struct cgui_box box =
+	{
+		.corner           =   {0},
+		.size_corner      = {0.0},
+		.size_outline     =  0.0,
+		.size_border      =  0.0,
+		.color_outline    = {0.0},
+		.color_border     = {0.0},
+		.color_background = {0.0},
+		.shape_outline    = false,
+		.shape_border     = false,
+		.draw             = false,
+	};
 
-	context.delay       = delay;
-	context.zone        = grid_area_zone(window->shown_grid, area, window->drawable);
-	context.zone.x     += CONFIG->window_padding;
-	context.zone.y     += CONFIG->window_padding;
-	context.side.left   = area->x == 0;
-	context.side.top    = area->y == 0;
-	context.side.right  = area->x + area->width  == window->shown_grid->n_cols;
-	context.side.bottom = area->y + area->height == window->shown_grid->n_rows;
+	/* get and adjust cell frame */
+
+	area->cell->fn_frame(area->cell, &box);
+
+	if (area->x == 0 && area->y == 0)
+	{
+		cgui_box_pad_corner(&box, box_window, CONFIG->window_padding, 0);
+	}
+
+	if (area->x + area->width == window->shown_grid->n_cols && area->y == 0)
+	{
+		cgui_box_pad_corner(&box, box_window, CONFIG->window_padding, 1);
+	}
+
+	if (area->x + area->width  == window->shown_grid->n_cols
+	 && area->y + area->height == window->shown_grid->n_rows)
+	{
+		cgui_box_pad_corner(&box, box_window, CONFIG->window_padding, 2);
+	}
+
+
+	if (area->x == 0 && area->y + area->height == window->shown_grid->n_rows)
+	{
+		cgui_box_pad_corner(&box, box_window, CONFIG->window_padding, 3);
+	}
+
+	/* compose context */
+
+	context.delay   = delay;
+	context.zone    = grid_area_zone(window->shown_grid, area, window->drawable);
+	context.zone.x += CONFIG->window_padding;
+	context.zone.y += CONFIG->window_padding;
+	context.frame   = box;
+
+	/* draw */
 
 	area->cell->fn_draw(area->cell, &context);
 }
