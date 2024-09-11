@@ -162,4 +162,28 @@ static const struct cgui_config config_default =
 		.draw             = true,
 		.draw_foreground  = true,
 	},
+
+	/* cell - stripes */
+
+	.stripes_frame =
+	{
+		.corner           = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
+		.size_corner      = {0, 0, 0, 0},
+		.size_outline     =  0,
+		.size_border      = 10,
+		.padding          = 10,
+		.margin           =  0,
+		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_foreground = { .r = 0.000, .g = 0.200, .b = 0.200, .a = 1.000 },
+		.shape_outline    = true,
+		.shape_border     = true,
+		.draw             = true,
+		.draw_foreground  = true,
+	},
+
+	.stripes_color   = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.stripes_width   = 20,
+	.stripes_spacing = 20,
 };

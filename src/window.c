@@ -1159,15 +1159,23 @@ draw_area(cgui_window *window, struct area *area, struct cgui_box box_window, un
 
 	/* compose context */
 
-	context.delay   = delay;
-	context.zone    = grid_area_zone(window->shown_grid, area, window->drawable);
-	context.zone.x += CONFIG->window_padding;
-	context.zone.y += CONFIG->window_padding;
-	context.frame   = box;
+	context.delay    = delay;
+	context.zone     = grid_area_zone(window->shown_grid, area, window->drawable);
+	context.zone.x  += CONFIG->window_padding;
+	context.zone.y  += CONFIG->window_padding;
+	context.frame    = box;
+
+	context.drawable = context.zone.drawable;
+	context.x        = context.zone.x;
+	context.y        = context.zone.y;
+	context.width    = context.zone.width;
+	context.height   = context.zone.height;
 
 	/* draw */
 
+	cairo_save(window->drawable);
 	area->cell->fn_draw(area->cell, &context);
+	cairo_restore(window->drawable);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

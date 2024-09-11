@@ -41,20 +41,6 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define SCALE(VAL) VAL *= config.scale;
-
-#define SCALE_BOX(BOX) \
-	SCALE(BOX.size_corner[0]); \
-	SCALE(BOX.size_corner[1]); \
-	SCALE(BOX.size_corner[2]); \
-	SCALE(BOX.size_corner[3]); \
-	SCALE(BOX.size_outline);   \
-	SCALE(BOX.size_border);    \
-	SCALE(BOX.padding);        \
-	SCALE(BOX.margin);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 #define BOX(NAMESPACE, STATE, TARGET) \
 	{ NAMESPACE, #STATE "corner_type",       CORNER_TYPE,  TARGET.corner           }, \
 	{ NAMESPACE, #STATE "corner_size",       CORNER_SIZE,  TARGET.size_corner      }, \
@@ -97,6 +83,7 @@ enum value
 	DOUBLE,
 	UDOUBLE,
 	RATIO,
+	SCALE,
 
 	/* dict based */
 
@@ -139,7 +126,8 @@ struct resource
 
 static void dummy_fn_load (ccfg *)                                    CGUI_NONNULL(1);
 static void fetch         (const struct resource *)                   CGUI_NONNULL(1);
-static void fill          (void);
+static void font_setup    (void);
+static void scale         (const struct resource *)                   CGUI_NONNULL(1);
 static void set_corners   (enum value, void *)                        CGUI_NONNULL(2);
 static void swap          (const char *, uint8_t, struct cgui_swap *) CGUI_NONNULL(1, 3);
 static void update_err    (void);
@@ -223,7 +211,7 @@ static const struct word words[] =
 
 static const struct resource resources[] =
 {
-	{ "global",   "scale",                       UDOUBLE,     &config.scale                          },
+	{ "global",   "scale",                       SCALE,       &config.scale                          },
 	{ "global",   "modkey",                      MOD_KEY,     &config.modkey                         },
 
 	{ "font",     "face",                        STRING,       config.font_face                      },
@@ -277,6 +265,10 @@ static const struct resource resources[] =
 	{ "behavior", "enable_persistent_touch",     BOOL,        &config.input_persistent_touch         },
 	{ "behavior", "animation_framerate_divider", ULONG,       &config.anim_divider                   },
 
+	{ "stripes",  "color",                       COLOR,       &config.stripes_color                  },
+	{ "stripes",  "width",                       LENGTH,      &config.stripes_width                  },
+	{ "stripes",  "spacing",                     LENGTH,      &config.stripes_spacing                },
+
 	KEY(  1) KEY(  2) KEY(  3) KEY(  4) KEY(  5) KEY(  6) KEY(  7) KEY(  8) KEY(  9) KEY( 10)
 	KEY( 11) KEY( 12) KEY( 13) KEY( 14) KEY( 15) KEY( 16) KEY( 17) KEY( 18) KEY( 19) KEY( 20)
 	KEY( 21) KEY( 22) KEY( 23) KEY( 24) KEY( 25) KEY( 26) KEY( 27) KEY( 28) KEY( 29) KEY( 30)
@@ -295,6 +287,7 @@ static const struct resource resources[] =
 	BUTTON( 9) BUTTON(10) BUTTON(11) BUTTON(12)
 
 	BOX("placeholder", , config.placeholder_frame)
+	BOX("stripes",     , config.stripes_frame)
 };
 
 /************************************************************************************************************/
@@ -434,12 +427,18 @@ config_load(void)
 	}
 
 	ccfg_load(parser);
+
 	for (size_t i = 0; i < sizeof(resources) / sizeof(struct resource); i++)
 	{
 		fetch(resources + i);
 	}
 
-	fill();
+	for (size_t i = 0; i < sizeof(resources) / sizeof(struct resource); i++)
+	{
+		scale(resources + i);
+	}
+
+	font_setup();
 	fn_load(parser);
 	update_err();
 }
@@ -528,6 +527,7 @@ fetch(const struct resource *resource)
 			*(double*)resource->target = util_str_to_double(str, -DBL_MAX, DBL_MAX);
 			break;
 
+		case SCALE:
 		case UDOUBLE:
 			*(double*)resource->target = util_str_to_double(str, 0.0, DBL_MAX);
 			break;
@@ -566,35 +566,12 @@ fetch(const struct resource *resource)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-fill(void)
+font_setup(void)
 {
 	cairo_font_extents_t f_e;
 	cairo_text_extents_t t_e;
 	cairo_surface_t *c_srf;
 	cairo_t *c_ctx;
-
-	/* scaling */
-
-	SCALE(config.font_size);
-	SCALE(config.font_offset_x);
-	SCALE(config.font_offset_y);
-	SCALE(config.font_spacing_horizontal);
-	SCALE(config.font_spacing_vertical);
-	SCALE(config.font_override_ascent);
-	SCALE(config.font_override_descent);
-	SCALE(config.font_override_width);
-	SCALE(config.grid_padding);
-	SCALE(config.grid_spacing);
-	SCALE(config.window_size_corner[0]);
-	SCALE(config.window_size_corner[1]);
-	SCALE(config.window_size_corner[2]);
-	SCALE(config.window_size_corner[3]);
-	SCALE(config.window_size_border);
-	SCALE(config.window_padding);
-	SCALE(config.popup_border);
-	SCALE(config.popup_padding);
-
-	SCALE_BOX(config.placeholder_frame);
 
 	/* get font geometry with cairo */
 
@@ -637,6 +614,39 @@ skip_font_setup:
 skip_auto_font:
 
 	config.font_height = config.font_ascent + config.font_descent;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+scale(const struct resource *resource)
+{
+	switch (resource->type)
+	{
+		case POSITION:
+		case LENGTH:
+		case DOUBLE:
+		case UDOUBLE:
+			*(double*)resource->target *= config.scale;
+			break;
+
+		case LONG:
+			*(long*)resource->target *= config.scale;
+			break;
+
+		case ULONG:
+			*(unsigned long*)resource->target *= config.scale;
+			break;
+
+		case CORNER_SIZE:
+			for (size_t i = 0; i < 4; i++)
+			{
+				((double*)resource->target)[i] *= config.scale;
+			}
+
+		default:
+			break;
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

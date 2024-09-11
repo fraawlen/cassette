@@ -67,9 +67,19 @@ struct cgui_cell_event
  */
 struct cgui_cell_context
 {
+	/* main params */
+
 	unsigned long delay;
 	struct cgui_zone zone;
 	struct cgui_box frame;
+
+	/* duplication of zone params for convenience */
+
+	cairo_t *drawable;
+	double x;
+	double y;
+	double width;
+	double height;
 };
 
 /************************************************************************************************************/

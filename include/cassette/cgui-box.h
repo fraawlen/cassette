@@ -77,7 +77,13 @@ struct cgui_box
  *
  */
 void
-cgui_box_clip(struct cgui_box box, struct cgui_zone zone, double pad);
+cgui_box_clip(struct cgui_box box, struct cgui_zone zone);
+
+/**
+ *
+ */
+void
+cgui_box_clip_custom(struct cgui_box box, struct cgui_zone zone, double pad);
 
 /**
  *

@@ -42,10 +42,11 @@ static void on_state (cgui_window *, enum cgui_window_state_mask);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static cgui_cell   *cell   = CGUI_CELL_PLACEHOLDER;
-static cgui_grid   *grid_1 = CGUI_GRID_PLACEHOLDER;
-static cgui_grid   *grid_2 = CGUI_GRID_PLACEHOLDER;
-static cgui_window *window = CGUI_WINDOW_PLACEHOLDER;
+static cgui_cell   *cell    = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *stripes = CGUI_CELL_PLACEHOLDER;
+static cgui_grid   *grid_1  = CGUI_GRID_PLACEHOLDER;
+static cgui_grid   *grid_2  = CGUI_GRID_PLACEHOLDER;
+static cgui_window *window  = CGUI_WINDOW_PLACEHOLDER;
 
 static struct cgui_screen screen;
 
@@ -64,11 +65,12 @@ static struct cgui_screen screen;
 
 	cgui_init(argc, argv);
 
-	window = cgui_window_create();
-	grid_1 = cgui_grid_create(1, 1);
-	grid_2 = cgui_grid_create(2, 3);
-	cell   = cgui_placeholder_create();
-	screen = cgui_screen_primary_specs();
+	window  = cgui_window_create();
+	grid_1  = cgui_grid_create(1, 1);
+	grid_2  = cgui_grid_create(2, 3);
+	cell    = cgui_placeholder_create();
+	stripes = cgui_stripes_create();
+	screen  = cgui_screen_primary_specs();
 
 	/* Cell setup */
 
@@ -79,7 +81,7 @@ static struct cgui_screen screen;
 	cgui_grid_resize_col(grid_1, 0, strlen(MSG));
 	cgui_grid_set_col_flex(grid_1, 0, 1.0);
 	cgui_grid_set_row_flex(grid_1, 0, 1.0);
-	cgui_grid_assign_cell(grid_1, cell, 0, 0, 1, 1);
+	cgui_grid_assign_cell(grid_1, stripes, 0, 0, 1, 1);
 	
 	/* Grid 2 setup */
 
@@ -88,10 +90,10 @@ static struct cgui_screen screen;
 	cgui_grid_set_col_flex(grid_2, 1, 1.0);
 	cgui_grid_set_row_flex(grid_2, 0, 1.0);
 
-	cgui_grid_assign_cell(grid_2, cell, 0, 0, 1, 1);
-	cgui_grid_assign_cell(grid_2, cell, 0, 1, 1, 1);
-	cgui_grid_assign_cell(grid_2, cell, 1, 0, 1, 2);
-	cgui_grid_assign_cell(grid_2, cell, 0, 2, 2, 1);
+	cgui_grid_assign_cell(grid_2, cell,    0, 0, 1, 1);
+	cgui_grid_assign_cell(grid_2, cell,    0, 1, 1, 1);
+	cgui_grid_assign_cell(grid_2, cell,    1, 0, 1, 2);
+	cgui_grid_assign_cell(grid_2, stripes, 0, 2, 2, 1);
 	
 	/* Window setup */
 
@@ -120,6 +122,7 @@ static struct cgui_screen screen;
 	cgui_grid_destroy(grid_1);
 	cgui_grid_destroy(grid_2);
 	cgui_cell_destroy(cell);
+	cgui_cell_destroy(stripes);
 
 	cgui_reset();
 

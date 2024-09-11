@@ -27,8 +27,8 @@
 #include <stdlib.h>
 #include <xcb/xcb.h>
 
-#include "cgui-attributes.h"
-#include "cgui-box.h"
+/* Init dependent headers */
+
 #include "cgui-cell.h"
 #include "cgui-config.h"
 #include "cgui-event.h"
@@ -36,9 +36,17 @@
 #include "cgui-screen.h"
 #include "cgui-swap.h"
 #include "cgui-window.h"
-#include "cgui-zone.h"
+
+/* Init dependent headers - Cells */
 
 #include "cgui-placeholder.h"
+#include "cgui-stripes.h"
+
+/* Independent headers */
+
+#include "cgui-attributes.h"
+#include "cgui-box.h"
+#include "cgui-zone.h"
 
 #ifdef __cplusplus
 extern "C" {

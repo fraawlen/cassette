@@ -48,7 +48,15 @@ static void subpath_4 (struct cgui_box,  struct cgui_zone);
 /************************************************************************************************************/
 
 void
-cgui_box_clip(struct cgui_box box, struct cgui_zone zone, double pad)
+cgui_box_clip(struct cgui_box box, struct cgui_zone zone)
+{
+	cgui_box_clip_custom(box, zone, box.size_border + box.padding);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_box_clip_custom(struct cgui_box box, struct cgui_zone zone, double pad)
 {
 	path(box, zone, true, pad);
 	cairo_clip(zone.drawable);
