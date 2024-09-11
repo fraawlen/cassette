@@ -66,7 +66,7 @@ static struct cgui_screen screen;
 
 	window = cgui_window_create();
 	grid_1 = cgui_grid_create(1, 1);
-	grid_2 = cgui_grid_create(2, 2);
+	grid_2 = cgui_grid_create(2, 3);
 	cell   = cgui_placeholder_create();
 	screen = cgui_screen_primary_specs();
 
@@ -91,6 +91,7 @@ static struct cgui_screen screen;
 	cgui_grid_assign_cell(grid_2, cell, 0, 0, 1, 1);
 	cgui_grid_assign_cell(grid_2, cell, 0, 1, 1, 1);
 	cgui_grid_assign_cell(grid_2, cell, 1, 0, 1, 2);
+	cgui_grid_assign_cell(grid_2, cell, 0, 2, 2, 1);
 	
 	/* Window setup */
 

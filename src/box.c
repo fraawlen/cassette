@@ -82,8 +82,19 @@ cgui_box_draw(struct cgui_box box, struct cgui_zone zone)
 
 	/* background */
 
-	path(box, zone, true, box.size_border);
-	paint(zone, box.color_background);
+	if (box.padding > 0.0 || !box.draw_foreground)
+	{
+		path(box, zone, true, box.size_border);
+		paint(zone, box.color_background);
+	}
+
+	/* foreground */
+
+	if (box.draw_foreground)
+	{
+		path(box, zone, true, box.size_border + box.padding);
+		paint(zone, box.color_foreground);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

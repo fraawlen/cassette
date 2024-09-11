@@ -183,6 +183,8 @@ struct cgui_config
 	/* cell - placeholder */
 
 	struct cgui_box placeholder_frame;
+	struct ccolor placeholder_color_foreground;
+	double placeholder_padding;
 };
 
 /************************************************************************************************************/

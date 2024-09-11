@@ -851,6 +851,7 @@ window_draw(cgui_window *window)
 		.shape_outline    = false,
 		.shape_border     = false,
 		.draw             = true,
+		.draw_foreground  = false,
 	};
 	
 	struct cgui_zone zone =

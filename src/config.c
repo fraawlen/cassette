@@ -50,6 +50,7 @@
 	SCALE(BOX.size_corner[3]); \
 	SCALE(BOX.size_outline);   \
 	SCALE(BOX.size_border);    \
+	SCALE(BOX.padding);        \
 	SCALE(BOX.margin);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -59,13 +60,16 @@
 	{ NAMESPACE, #STATE "corner_size",       CORNER_SIZE,  TARGET.size_corner      }, \
 	{ NAMESPACE, #STATE "outline_thickness", LENGTH,      &TARGET.size_outline     }, \
 	{ NAMESPACE, #STATE "border_thickness",  LENGTH,      &TARGET.size_border      }, \
+	{ NAMESPACE, #STATE "padding",           POSITION,    &TARGET.padding          }, \
 	{ NAMESPACE, #STATE "margin",            POSITION,    &TARGET.margin           }, \
 	{ NAMESPACE, #STATE "color_outline",     COLOR,       &TARGET.color_outline    }, \
 	{ NAMESPACE, #STATE "color_border",      COLOR,       &TARGET.color_border     }, \
 	{ NAMESPACE, #STATE "color_background",  COLOR,       &TARGET.color_background }, \
+	{ NAMESPACE, #STATE "color_foreground",  COLOR,       &TARGET.color_foreground }, \
 	{ NAMESPACE, #STATE "shape_outline",     BOOL,        &TARGET.shape_outline    }, \
 	{ NAMESPACE, #STATE "shape_border",      BOOL,        &TARGET.shape_border     }, \
-	{ NAMESPACE, #STATE "draw",              BOOL,        &TARGET.draw             },
+	{ NAMESPACE, #STATE "draw",              BOOL,        &TARGET.draw             }, \
+	{ NAMESPACE, #STATE "draw_foreground",   BOOL,        &TARGET.draw_foreground  },
 
 #define KEY(VALUE) \
 	{ "key",     #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_CONFIG_SWAP_DIRECT] }, \
@@ -572,6 +576,8 @@ fill(void)
 	/* scaling */
 
 	SCALE(config.font_size);
+	SCALE(config.font_offset_x);
+	SCALE(config.font_offset_y);
 	SCALE(config.font_spacing_horizontal);
 	SCALE(config.font_spacing_vertical);
 	SCALE(config.font_override_ascent);
@@ -587,8 +593,6 @@ fill(void)
 	SCALE(config.window_padding);
 	SCALE(config.popup_border);
 	SCALE(config.popup_padding);
-	SCALE(config.font_offset_x);
-	SCALE(config.font_offset_y);
 
 	SCALE_BOX(config.placeholder_frame);
 
