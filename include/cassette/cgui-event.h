@@ -88,8 +88,14 @@ struct cgui_event
 			double touch_y;
 			uint32_t touch_id;
 		};
-		/* CGUI_EVENT_REDRAW   */
+		/* CGUI_EVENT_REDRAW */
 		bool redraw_all;
+		/* CGUI_EVENT_POINTER_MOTION */
+		struct
+		{
+			double pointer_x;
+			double pointer_y;
+		};
 		/* CGUI_EVENT_CLOSE    */
 		/* CGUI_EVENT_RECONFIG */
 		/* CGUI_EVENT_MAP      */

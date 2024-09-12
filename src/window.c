@@ -59,10 +59,11 @@ static void update_shown_grid  (cgui_window *)                                  
 
 /* pure */
 
-static struct ccolor border      (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
-static bool          cairo_error (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
-static cgui_grid    *min_grid    (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
-static void          size_limits (const cgui_window *, double *, double *, double *, double *) CGUI_NONNULL(1, 2, 3);
+static struct area   area_at_coords (const cgui_window *, double x, double y)                     CGUI_NONNULL(1) CGUI_PURE;
+static struct ccolor border         (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
+static bool          cairo_error    (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
+static cgui_grid    *min_grid       (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
+static void          size_limits    (const cgui_window *, double *, double *, double *, double *) CGUI_NONNULL(1, 2, 3);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -892,15 +893,36 @@ window_draw(cgui_window *window)
 		draw_area(window, (struct area*)cref_ptr(window->shown_grid->areas, i), box, delay);
 	}
 
-	/* check if there is a new draw cycle requested and update states */
+	/* end */
 
 	window->draw           = WINDOW_DRAW_NONE;
 	window->wait_present   = false;
 	window->draw_timestamp = timestamp;
 
-	// TODO
-
 	window->fn_draw(window, delay);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+window_focus_pointer(cgui_window *window, double x, double y)
+{
+	cgui_cell *cell;
+
+	/* do not update focus if there is an ongoing drag or if the focus is locked */
+
+	if (window->state.locked_focus)
+	{
+		return;
+	}
+
+	/* generate and send focus event */
+
+	cell = area_at_coords(window, x, y).cell;
+
+	(void)cell;
+
+	// TODO
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1067,6 +1089,30 @@ window_update_state(cgui_window *window, enum cgui_window_state_mask mask, bool 
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
+static struct area
+area_at_coords(const cgui_window *window, double x, double y)
+{
+	struct cgui_zone z;
+	struct area *a;
+
+	x -= CONFIG->window_padding;
+	y -= CONFIG->window_padding;
+
+	CREF_FOR_EACH(window->shown_grid->areas, i)
+	{
+		a = (struct area*)cref_ptr(window->shown_grid->areas, i);
+		z = grid_area_zone(window->shown_grid, a, window->drawable);
+		if (util_is_in(x, y, z.x, z.y, z.width, z.height))
+		{
+			return *a;
+		}
+	}
+
+	return AREA_PLACEHOLDER;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 static struct ccolor
 border(const cgui_window *window)
 {
@@ -1131,6 +1177,11 @@ draw_area(cgui_window *window, struct area *area, struct cgui_box box_window, un
 		.draw             = false,
 	};
 
+	if (window->draw != WINDOW_DRAW_FULL || area->cell->draw)
+	{
+		return;
+	}
+
 	/* get and adjust cell frame */
 
 	area->cell->fn_frame(area->cell, &box);
@@ -1150,7 +1201,6 @@ draw_area(cgui_window *window, struct area *area, struct cgui_box box_window, un
 	{
 		cgui_box_pad_corner(&box, box_window, CONFIG->window_padding, 2);
 	}
-
 
 	if (area->x == 0 && area->y + area->height == window->shown_grid->n_rows)
 	{
@@ -1174,7 +1224,7 @@ draw_area(cgui_window *window, struct area *area, struct cgui_box box_window, un
 	/* draw */
 
 	cairo_save(window->drawable);
-	area->cell->fn_draw(area->cell, &context);
+	area->cell->fn_draw(area->cell, context);
 	cairo_restore(window->drawable);
 }
 

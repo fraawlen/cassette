@@ -21,14 +21,15 @@
 #include <cairo/cairo.h>
 #include <cassette/cgui.h>
 
+#include "cell.h"
 #include "config.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void draw  (cgui_cell *, struct cgui_cell_context *) CGUI_NONNULL(1, 2);
-static void frame (cgui_cell *, struct cgui_box          *) CGUI_NONNULL(1, 2);
+static void draw  (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
+static void frame (cgui_cell *, struct cgui_box        *) CGUI_NONNULL(1, 2);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -43,6 +44,7 @@ cgui_stripes_create(void)
 
 	cgui_cell_on_draw (cell, draw);
 	cgui_cell_on_frame(cell, frame);
+	cgui_cell_set_serial(cell, CELL_STRIPES);
 
 	return cell;
 }
@@ -52,7 +54,7 @@ cgui_stripes_create(void)
 /************************************************************************************************************/
 
 static void
-draw(cgui_cell *cell, struct cgui_cell_context *context)
+draw(cgui_cell *cell, struct cgui_cell_context context)
 {
 	const struct ccolor cl = CONFIG->stripes_color;
 	const double w         = CONFIG->stripes_width;
@@ -60,25 +62,25 @@ draw(cgui_cell *cell, struct cgui_cell_context *context)
 
 	(void)cell;
 
-	cgui_box_draw(context->frame, context->zone);
-	cgui_box_clip(context->frame, context->zone);
+	cgui_box_draw(context.frame, context.zone);
+	cgui_box_clip(context.frame, context.zone);
 
-	for (double x = context->x; x < context->x + context->width + w; x += w + s)
+	for (double x = context.x; x < context.x + context.width + w; x += w + s)
 	{
-		cairo_move_to(context->drawable, x, context->y);
-		cairo_line_to(context->drawable, x + context->height, context->y + context->height);
+		cairo_move_to(context.drawable, x, context.y);
+		cairo_line_to(context.drawable, x + context.height, context.y + context.height);
 	}
 
-	for (double y = context->y; y < context->y + context->height + w; y += w + s)
+	for (double y = context.y; y < context.y + context.height + w; y += w + s)
 	{
-		cairo_move_to(context->drawable, context->x, y);
-		cairo_line_to(context->drawable, context->x + context->width, y + context->width);
+		cairo_move_to(context.drawable, context.x, y);
+		cairo_line_to(context.drawable, context.x + context.width, y + context.width);
 	}
 	
-	cairo_set_source_rgba(context->drawable, cl.r, cl.g, cl.b, cl.a);
-	cairo_set_line_cap(context->drawable, CAIRO_LINE_CAP_SQUARE);
-	cairo_set_line_width(context->drawable, w);
-	cairo_stroke(context->drawable);
+	cairo_set_source_rgba(context.drawable, cl.r, cl.g, cl.b, cl.a);
+	cairo_set_line_cap(context.drawable, CAIRO_LINE_CAP_SQUARE);
+	cairo_set_line_width(context.drawable, w);
+	cairo_stroke(context.drawable);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

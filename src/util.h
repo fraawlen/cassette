@@ -33,6 +33,12 @@ CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+bool
+util_is_in(double x_test, double y_test, double x, double y, double width, double height)
+CGUI_CONST;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 double
 util_limit(double d, double min, double max)
 CGUI_CONST;

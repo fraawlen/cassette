@@ -294,6 +294,12 @@ pointer(struct cgui_event *event)
 		return;
 	}
 
+	/* update focus */
+
+	window_focus_pointer(event->window, event->pointer_x, event->pointer_y);
+
+	/* send motion event to focused cell */
+
 	// TODO
 }
 

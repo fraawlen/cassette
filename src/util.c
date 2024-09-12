@@ -39,6 +39,27 @@ util_env_exists(const char *name)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+bool
+util_is_in(double x_test, double y_test, double x, double y, double width, double height)
+{
+	if (width < 0.0)
+	{
+		width *= -1.0;
+		x     -= width;
+	}
+
+	if (height < 0.0)
+	{
+		height *= -1.0;
+		y      -= height;
+	}
+
+	return x_test >= x && x_test < x + width &&
+	       y_test >= y && y_test < y + height;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 double
 util_limit(double d, double min, double max)
 {

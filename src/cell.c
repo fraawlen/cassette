@@ -25,15 +25,16 @@
 
 #include "main.h"
 #include "cell.h"
+#include "window.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void dummy_fn_destroy (cgui_cell *);
-static void dummy_fn_draw    (cgui_cell *, struct cgui_cell_context *);
-static void dummy_fn_event   (cgui_cell *, struct cgui_cell_event *);
-static void dummy_fn_frame   (cgui_cell *, struct cgui_box *);
+static void dummy_fn_destroy (cgui_cell *)                           CGUI_NONNULL(1);
+static void dummy_fn_draw    (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
+static void dummy_fn_event   (cgui_cell *, struct cgui_cell_event *) CGUI_NONNULL(1, 2);
+static void dummy_fn_frame   (cgui_cell *, struct cgui_box *)        CGUI_NONNULL(1, 2);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -47,6 +48,8 @@ cgui_cell cgui_cell_placeholder_instance =
 	.fn_event   = dummy_fn_event,
 	.fn_frame   = dummy_fn_frame,
 	.valid      = false,
+	.draw       = false,
+	.serial     = CELL_INVALID,
 };
 
 /************************************************************************************************************/
@@ -79,6 +82,8 @@ cgui_cell_create(void)
 	cell->fn_event   = dummy_fn_event;
 	cell->fn_frame   = dummy_fn_frame;
 	cell->valid      = true;
+	cell->draw       = false;
+	cell->serial     = CELL_INVALID;
 
 	return cell;
 
@@ -133,7 +138,7 @@ void
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-(*cgui_cell_fn_draw(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_context *context)
+(*cgui_cell_fn_draw(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_context context)
 {
 	if (cgui_error() || !cell->valid)
 	{
@@ -198,7 +203,7 @@ cgui_cell_on_destroy(cgui_cell *cell, void (*fn)(cgui_cell *cell))
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_cell_on_draw(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_context *context))
+cgui_cell_on_draw(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_context context))
 {
 	if (cgui_error() || !cell->valid)
 	{
@@ -244,26 +249,25 @@ cgui_cell_redraw(cgui_cell *cell)
 		return;
 	}
 
-	// TODO
+	CREF_FOR_EACH(main_windows(), i)
+	{
+		window_set_draw_level((cgui_window*)cref_ptr(main_windows(), i), WINDOW_DRAW_PARTIAL);
+	}
+
+	cell->draw = true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
-cgui_cell_send_custom_event(cgui_cell *cell, int id, void *data, size_t length)
+int
+cgui_cell_serial(const cgui_cell *cell)
 {
 	if (cgui_error() || !cell->valid)
 	{
-		return false;
+		return CELL_INVALID;
 	}
 
-	(void)id;
-	(void)data;
-	(void)length;
-
-	// TODO
-
-	return true;
+	return cell->serial;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -277,6 +281,19 @@ cgui_cell_set_data(cgui_cell *cell, void *data)
 	}
 
 	cell->data = data;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_cell_set_serial(cgui_cell *cell, int serial)
+{
+	if (cgui_error() || !cell->valid)
+	{
+		return;
+	}
+
+	cell->serial = serial;
 }
 
 /************************************************************************************************************/
@@ -308,7 +325,7 @@ dummy_fn_destroy(cgui_cell *cell)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-dummy_fn_draw(cgui_cell *cell, struct cgui_cell_context *context)
+dummy_fn_draw(cgui_cell *cell, struct cgui_cell_context context)
 {
 	(void)cell;
 	(void)context;

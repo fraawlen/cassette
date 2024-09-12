@@ -34,6 +34,7 @@
 /************************************************************************************************************/
 
 static void on_accel (cgui_window *, int);
+static void on_click (cgui_cell   *);
 static void on_close (cgui_window *);
 static void on_draw  (cgui_window *, unsigned long);
 static void on_state (cgui_window *, enum cgui_window_state_mask);
@@ -42,8 +43,9 @@ static void on_state (cgui_window *, enum cgui_window_state_mask);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static cgui_cell   *cell    = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *filler  = CGUI_CELL_PLACEHOLDER;
 static cgui_cell   *stripes = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *button  = CGUI_CELL_PLACEHOLDER;
 static cgui_grid   *grid_1  = CGUI_GRID_PLACEHOLDER;
 static cgui_grid   *grid_2  = CGUI_GRID_PLACEHOLDER;
 static cgui_window *window  = CGUI_WINDOW_PLACEHOLDER;
@@ -68,13 +70,15 @@ static struct cgui_screen screen;
 	window  = cgui_window_create();
 	grid_1  = cgui_grid_create(1, 1);
 	grid_2  = cgui_grid_create(2, 3);
-	cell    = cgui_placeholder_create();
+	filler  = cgui_filler_create();
 	stripes = cgui_stripes_create();
+	button  = cgui_button_create();
 	screen  = cgui_screen_primary_specs();
 
 	/* Cell setup */
 
-	// TODO
+	cgui_button_on_click(button, on_click);
+	cgui_button_set_label(button, "button");
 
 	/* Grid 1 setup */
 
@@ -90,9 +94,9 @@ static struct cgui_screen screen;
 	cgui_grid_set_col_flex(grid_2, 1, 1.0);
 	cgui_grid_set_row_flex(grid_2, 0, 1.0);
 
-	cgui_grid_assign_cell(grid_2, cell,    0, 0, 1, 1);
-	cgui_grid_assign_cell(grid_2, cell,    0, 1, 1, 1);
-	cgui_grid_assign_cell(grid_2, cell,    1, 0, 1, 2);
+	cgui_grid_assign_cell(grid_2, filler,  0, 0, 1, 1);
+	cgui_grid_assign_cell(grid_2, button,  0, 1, 1, 1);
+	cgui_grid_assign_cell(grid_2, filler,  1, 0, 1, 2);
 	cgui_grid_assign_cell(grid_2, stripes, 0, 2, 2, 1);
 	
 	/* Window setup */
@@ -105,6 +109,7 @@ static struct cgui_screen screen;
 	cgui_window_on_draw(window, on_draw);
 	cgui_window_on_close(window, on_close);
 	cgui_window_on_state(window, on_state);
+	cgui_window_resize(window, 358, 358);
 	cgui_window_activate(window);
 
 	/* Run */
@@ -121,8 +126,9 @@ static struct cgui_screen screen;
 	cgui_window_destroy(window);
 	cgui_grid_destroy(grid_1);
 	cgui_grid_destroy(grid_2);
-	cgui_cell_destroy(cell);
+	cgui_cell_destroy(filler);
 	cgui_cell_destroy(stripes);
+	cgui_cell_destroy(button);
 
 	cgui_reset();
 
@@ -139,6 +145,16 @@ on_accel(cgui_window *w, int id)
 	(void)w;
 
 	printf("accelerator %i triggered\n", id);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+on_click(cgui_cell *c)
+{
+	(void)c;
+
+	printf("button clicked\n");
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

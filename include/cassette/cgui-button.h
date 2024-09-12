@@ -20,48 +20,60 @@
 
 #pragma once
 
-#include <cassette/cgui.h>
-#include <stdbool.h>
+#include "cgui-attributes.h"
+#include "cgui-cell.h"
 
-/************************************************************************************************************/
-/* TYPES ****************************************************************************************************/
-/************************************************************************************************************/
-
-enum cell_serial
-{
-	CELL_INVALID = 0,
-	CELL_BUTTON,
-	CELL_FILLER,
-	CELL_STRIPES,
-};
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-struct cgui_cell
-{
-	/* data */
-
-	void *data;
-	int serial;
-
-	/* callbacks */
-
-	void (*fn_destroy) (cgui_cell *);
-	void (*fn_draw)    (cgui_cell *, struct cgui_cell_context);
-	void (*fn_event)   (cgui_cell *, struct cgui_cell_event *);
-	void (*fn_frame)   (cgui_cell *, struct cgui_box        *);
-
-	/* states */
-
-	bool valid;
-	bool draw;
-};
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /************************************************************************************************************/
 /* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
 /************************************************************************************************************/
 
+/**
+ *
+ */
+cgui_cell *
+cgui_button_create(void)
+CGUI_NONNULL_RETURN;
+
+/************************************************************************************************************/
+/* IMPURE METHODS *******************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ *
+ */
 void
-cell_destroy(cgui_cell *cell)
+cgui_button_disable(cgui_cell *cell)
 CGUI_NONNULL(1);
 
+/**
+ *
+ */
+void
+cgui_button_enable(cgui_cell *cell)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_button_on_click(cgui_cell *cell, void (*fn)(cgui_cell *cell))
+CGUI_NONNULL(1);
+
+
+/**
+ *
+ */
+void
+cgui_button_set_label(cgui_cell *cell, const char *label)
+CGUI_NONNULL(1, 2);
+
+/**
+ *
+ */
+void
+cgui_button_toggle(cgui_cell *cell)
+CGUI_NONNULL(1);

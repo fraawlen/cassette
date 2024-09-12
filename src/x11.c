@@ -1200,9 +1200,13 @@ event_map(xcb_map_notify_event_t *xcb_event)
 static void
 event_motion(xcb_motion_notify_event_t *xcb_event)
 {
-	struct cgui_event event = {0};
-
-	(void)xcb_event; // TODO
+	struct cgui_event event =
+	{
+		.type      = CGUI_EVENT_POINTER_MOTION,
+		.window    = find_window(xcb_event->event),
+		.pointer_x = xcb_event->event_x,
+		.pointer_y = xcb_event->event_y,
+	};
 
 	main_update(&event);
 }

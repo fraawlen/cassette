@@ -20,21 +20,22 @@
 
 #include <cassette/cgui.h>
 
+#include "cell.h"
 #include "config.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void draw  (cgui_cell *, struct cgui_cell_context *) CGUI_NONNULL(1, 2);
-static void frame (cgui_cell *, struct cgui_box          *) CGUI_NONNULL(1, 2);
+static void draw  (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
+static void frame (cgui_cell *, struct cgui_box        *) CGUI_NONNULL(1, 2);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 cgui_cell *
-cgui_placeholder_create(void)
+cgui_filler_create(void)
 {
 	cgui_cell *cell;
 
@@ -42,6 +43,7 @@ cgui_placeholder_create(void)
 
 	cgui_cell_on_draw (cell, draw);
 	cgui_cell_on_frame(cell, frame);
+	cgui_cell_set_serial(cell, CELL_FILLER);
 
 	return cell;
 }
@@ -51,11 +53,11 @@ cgui_placeholder_create(void)
 /************************************************************************************************************/
 
 static void
-draw(cgui_cell *cell, struct cgui_cell_context *context)
+draw(cgui_cell *cell, struct cgui_cell_context context)
 {
 	(void)cell;
 
-	cgui_box_draw(context->frame, context->zone);
+	cgui_box_draw(context.frame, context.zone);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -65,6 +67,6 @@ frame(cgui_cell *cell, struct cgui_box *box)
 {
 	(void)cell;
 
-	*box = CONFIG->placeholder_frame;
+	*box = CONFIG->filler_frame;
 }
 

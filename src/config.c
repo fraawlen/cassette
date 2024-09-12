@@ -41,21 +41,21 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define BOX(NAMESPACE, STATE, TARGET) \
-	{ NAMESPACE, #STATE "corner_type",       CORNER_TYPE,  TARGET.corner           }, \
-	{ NAMESPACE, #STATE "corner_size",       CORNER_SIZE,  TARGET.size_corner      }, \
-	{ NAMESPACE, #STATE "outline_thickness", LENGTH,      &TARGET.size_outline     }, \
-	{ NAMESPACE, #STATE "border_thickness",  LENGTH,      &TARGET.size_border      }, \
-	{ NAMESPACE, #STATE "padding",           POSITION,    &TARGET.padding          }, \
-	{ NAMESPACE, #STATE "margin",            POSITION,    &TARGET.margin           }, \
-	{ NAMESPACE, #STATE "color_outline",     COLOR,       &TARGET.color_outline    }, \
-	{ NAMESPACE, #STATE "color_border",      COLOR,       &TARGET.color_border     }, \
-	{ NAMESPACE, #STATE "color_background",  COLOR,       &TARGET.color_background }, \
-	{ NAMESPACE, #STATE "color_foreground",  COLOR,       &TARGET.color_foreground }, \
-	{ NAMESPACE, #STATE "shape_outline",     BOOL,        &TARGET.shape_outline    }, \
-	{ NAMESPACE, #STATE "shape_border",      BOOL,        &TARGET.shape_border     }, \
-	{ NAMESPACE, #STATE "draw",              BOOL,        &TARGET.draw             }, \
-	{ NAMESPACE, #STATE "draw_foreground",   BOOL,        &TARGET.draw_foreground  },
+#define BOX(NAMESPACE, TARGET) \
+	{ NAMESPACE, "corner_type",       CORNER_TYPE,  TARGET.corner           }, \
+	{ NAMESPACE, "corner_size",       CORNER_SIZE,  TARGET.size_corner      }, \
+	{ NAMESPACE, "outline_thickness", LENGTH,      &TARGET.size_outline     }, \
+	{ NAMESPACE, "border_thickness",  LENGTH,      &TARGET.size_border      }, \
+	{ NAMESPACE, "padding",           POSITION,    &TARGET.padding          }, \
+	{ NAMESPACE, "margin",            POSITION,    &TARGET.margin           }, \
+	{ NAMESPACE, "color_outline",     COLOR,       &TARGET.color_outline    }, \
+	{ NAMESPACE, "color_border",      COLOR,       &TARGET.color_border     }, \
+	{ NAMESPACE, "color_background",  COLOR,       &TARGET.color_background }, \
+	{ NAMESPACE, "color_foreground",  COLOR,       &TARGET.color_foreground }, \
+	{ NAMESPACE, "shape_outline",     BOOL,        &TARGET.shape_outline    }, \
+	{ NAMESPACE, "shape_border",      BOOL,        &TARGET.shape_border     }, \
+	{ NAMESPACE, "draw",              BOOL,        &TARGET.draw             }, \
+	{ NAMESPACE, "draw_foreground",   BOOL,        &TARGET.draw_foreground  },
 
 #define KEY(VALUE) \
 	{ "key",     #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_CONFIG_SWAP_DIRECT] }, \
@@ -286,8 +286,12 @@ static const struct resource resources[] =
 	BUTTON( 1) BUTTON( 2) BUTTON( 3) BUTTON( 4) BUTTON( 5) BUTTON( 6) BUTTON( 7) BUTTON( 8)
 	BUTTON( 9) BUTTON(10) BUTTON(11) BUTTON(12)
 
-	BOX("placeholder", , config.placeholder_frame)
-	BOX("stripes",     , config.stripes_frame)
+	BOX( "filler",          config.filler_frame          )
+	BOX( "stripes",         config.stripes_frame         )
+	BOX( "button_idle",     config.button_frame_idle     )
+	BOX( "button_focused",  config.button_frame_focused  )
+	BOX( "button_pressed",  config.button_frame_pressed  )
+	BOX( "button_disabled", config.button_frame_disabled )
 };
 
 /************************************************************************************************************/

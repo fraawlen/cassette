@@ -182,7 +182,7 @@ struct cgui_config
 
 	/* cell - placeholder */
 
-	struct cgui_box placeholder_frame;
+	struct cgui_box filler_frame;
 
 	/* cell - stripes */
 
@@ -190,6 +190,13 @@ struct cgui_config
 	struct ccolor stripes_color;
 	double stripes_width;
 	double stripes_spacing;
+
+	/* cell - button */
+
+	struct cgui_box button_frame_idle;
+	struct cgui_box button_frame_focused;
+	struct cgui_box button_frame_pressed;
+	struct cgui_box button_frame_disabled;
 };
 
 /************************************************************************************************************/

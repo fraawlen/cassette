@@ -108,6 +108,12 @@ CGUI_NONNULL(1);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+window_focus_pointer(cgui_window *window, double x, double y)
+CGUI_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 window_present(cgui_window *window)
 CGUI_NONNULL(1);
 

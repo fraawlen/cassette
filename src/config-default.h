@@ -143,9 +143,9 @@ static const struct cgui_config config_default =
 	.buttons[4][CGUI_CONFIG_SWAP_MOD] = { CGUI_INPUT_SWAP_TO_VALUE, 6 },
 	.buttons[5][CGUI_CONFIG_SWAP_MOD] = { CGUI_INPUT_SWAP_TO_VALUE, 7 },
 
-	/* cell - placeholder */
+	/* cell - filler */
 
-	.placeholder_frame =
+	.filler_frame =
 	{
 		.corner           = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
 		.size_corner      = {0, 0, 0, 0},
@@ -186,4 +186,78 @@ static const struct cgui_config config_default =
 	.stripes_color   = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
 	.stripes_width   = 20,
 	.stripes_spacing = 20,
+
+	/* cell - button */
+
+	.button_frame_idle =
+	{
+		.corner           = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
+		.size_corner      = {0, 0, 0, 0},
+		.size_outline     =  0,
+		.size_border      = 10,
+		.padding          = 10,
+		.margin           =  0,
+		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_foreground = { .r = 0.000, .g = 0.200, .b = 0.200, .a = 1.000 },
+		.shape_outline    = true,
+		.shape_border     = true,
+		.draw             = true,
+		.draw_foreground  = true,
+	},
+
+	.button_frame_focused =
+	{
+		.corner           = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
+		.size_corner      = {0, 0, 0, 0},
+		.size_outline     =  0,
+		.size_border      = 10,
+		.padding          = 10,
+		.margin           =  0,
+		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_foreground = { .r = 0.000, .g = 0.200, .b = 0.200, .a = 1.000 },
+		.shape_outline    = true,
+		.shape_border     = true,
+		.draw             = true,
+		.draw_foreground  = true,
+	},
+
+	.button_frame_pressed =
+	{
+		.corner           = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
+		.size_corner      = {0, 0, 0, 0},
+		.size_outline     =  0,
+		.size_border      = 10,
+		.padding          = 10,
+		.margin           =  0,
+		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_foreground = { .r = 0.000, .g = 0.200, .b = 0.200, .a = 1.000 },
+		.shape_outline    = true,
+		.shape_border     = true,
+		.draw             = true,
+		.draw_foreground  = true,
+	},
+
+	.button_frame_disabled =
+	{
+		.corner           = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
+		.size_corner      = {0, 0, 0, 0},
+		.size_outline     =  0,
+		.size_border      = 10,
+		.padding          = 10,
+		.margin           =  0,
+		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_foreground = { .r = 0.000, .g = 0.200, .b = 0.200, .a = 1.000 },
+		.shape_outline    = true,
+		.shape_border     = true,
+		.draw             = true,
+		.draw_foreground  = true,
+	},
 };

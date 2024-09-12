@@ -39,7 +39,8 @@
 
 /* Init dependent headers - Cells */
 
-#include "cgui-placeholder.h"
+#include "cgui-button.h"
+#include "cgui-filler.h"
 #include "cgui-stripes.h"
 
 /* Independent headers */

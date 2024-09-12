@@ -132,7 +132,7 @@ CGUI_NONNULL(1);
  *
  */
 void
-cgui_cell_on_draw(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_context *context))
+cgui_cell_on_draw(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_context context))
 CGUI_NONNULL(1);
 
 /**
@@ -159,15 +159,15 @@ CGUI_NONNULL(1);
 /**
  *
  */
-bool
-cgui_cell_send_custom_event(cgui_cell *cell, int id, void *data, size_t length)
+void
+cgui_cell_set_data(cgui_cell *cell, void *data)
 CGUI_NONNULL(1);
 
 /**
  *
  */
 void
-cgui_cell_set_data(cgui_cell *cell, void *data)
+cgui_cell_set_serial(cgui_cell *cell, int serial)
 CGUI_NONNULL(1);
 
 /************************************************************************************************************/
@@ -195,7 +195,7 @@ CGUI_PURE;
  *
  */
 void
-(*cgui_cell_fn_draw(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_context *context)
+(*cgui_cell_fn_draw(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_context context)
 CGUI_NONNULL_RETURN
 CGUI_NONNULL(1)
 CGUI_PURE;
@@ -223,6 +223,14 @@ CGUI_PURE;
  */
 bool
 cgui_cell_is_valid(const cgui_cell *cell)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+int
+cgui_cell_serial(const cgui_cell *cell)
 CGUI_NONNULL(1)
 CGUI_PURE;
 

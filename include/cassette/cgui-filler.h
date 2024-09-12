@@ -35,5 +35,5 @@ extern "C" {
  *
  */
 cgui_cell *
-cgui_placeholder_create(void)
+cgui_filler_create(void)
 CGUI_NONNULL_RETURN;
