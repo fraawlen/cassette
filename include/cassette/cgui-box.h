@@ -22,10 +22,8 @@
 
 #include <cairo/cairo.h>
 #include <cassette/cobj.h>
-#include <stdint.h>
 
 #include "cgui-attributes.h"
-#include "cgui-zone.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -77,19 +75,13 @@ struct cgui_box
  *
  */
 void
-cgui_box_clip(struct cgui_box box, struct cgui_zone zone);
+cgui_box_clip(struct cgui_box box, double x, double y, double width, double height, double pad, cairo_t *drawable);
 
 /**
  *
  */
 void
-cgui_box_clip_custom(struct cgui_box box, struct cgui_zone zone, double pad);
-
-/**
- *
- */
-void
-cgui_box_draw(struct cgui_box box, struct cgui_zone zone);
+cgui_box_draw(struct cgui_box box, double x, double y, double width, double height, cairo_t *drawable);
 
 /**
  *

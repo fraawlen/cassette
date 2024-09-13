@@ -28,7 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "area.h"
 #include "cell.h"
 #include "config.h"
 #include "grid.h"
@@ -46,24 +45,25 @@
 
 /* impure */
 
-static void cairo_data_destroy (cgui_window *)                                                CGUI_NONNULL(1);
-static bool cairo_setup        (cgui_window *, double, double)                                CGUI_NONNULL(1);
-static void draw_area          (cgui_window *, struct area *, struct cgui_box, unsigned long) CGUI_NONNULL(1, 2);
-static void dummy_fn_accel     (cgui_window *, int)                                           CGUI_NONNULL(1);
-static void dummy_fn_close     (cgui_window *)                                                CGUI_NONNULL(1);
-static void dummy_fn_draw      (cgui_window *, unsigned long)                                 CGUI_NONNULL(1);
-static void dummy_fn_focus     (cgui_window *, cgui_cell *)                                   CGUI_NONNULL(1);
-static void dummy_fn_grid      (cgui_window *, cgui_grid *)                                   CGUI_NONNULL(1);
-static void dummy_fn_state     (cgui_window *, enum cgui_window_state_mask)                   CGUI_NONNULL(1);
-static void update_shown_grid  (cgui_window *)                                                CGUI_NONNULL(1);
+static void cairo_data_destroy (cgui_window *)                                                   CGUI_NONNULL(1);
+static bool cairo_setup        (cgui_window *, double, double)                                   CGUI_NONNULL(1);
+static void draw_area          (cgui_window *, struct grid_area, struct cgui_box, unsigned long) CGUI_NONNULL(1);
+static void dummy_fn_accel     (cgui_window *, int)                                              CGUI_NONNULL(1);
+static void dummy_fn_close     (cgui_window *)                                                   CGUI_NONNULL(1);
+static void dummy_fn_draw      (cgui_window *, unsigned long)                                    CGUI_NONNULL(1);
+static void dummy_fn_focus     (cgui_window *, cgui_cell *)                                      CGUI_NONNULL(1, 2);
+static void dummy_fn_grid      (cgui_window *, cgui_grid *)                                      CGUI_NONNULL(1, 2);
+static void dummy_fn_state     (cgui_window *, enum cgui_window_state_mask)                      CGUI_NONNULL(1);
+static void focus_lock         (cgui_window *, bool)                                             CGUI_NONNULL(1);
+static void update_shown_grid  (cgui_window *)                                                   CGUI_NONNULL(1);
 
 /* pure */
 
-static struct area   area_at_coords (const cgui_window *, double x, double y)                     CGUI_NONNULL(1) CGUI_PURE;
-static struct ccolor border         (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
-static bool          cairo_error    (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
-static cgui_grid    *min_grid       (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
-static void          size_limits    (const cgui_window *, double *, double *, double *, double *) CGUI_NONNULL(1, 2, 3);
+static struct grid_area area_at_coords (const cgui_window *, double x, double y)                     CGUI_NONNULL(1) CGUI_PURE;
+static struct ccolor    border         (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
+static bool             cairo_error    (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
+static cgui_grid       *min_grid       (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
+static void             size_limits    (const cgui_window *, double *, double *, double *, double *) CGUI_NONNULL(1, 2, 3, 4, 5);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -92,7 +92,7 @@ cgui_window cgui_window_placeholder_instance =
 	.fn_state       = dummy_fn_state,
 	.state          = default_states,
 	.shown_grid     = CGUI_GRID_PLACEHOLDER,
-	.focus          = {.x = 0, .y = 0, .width = 0, .height = 0, .cell = CGUI_CELL_PLACEHOLDER},
+	.focus          = GRID_AREA_PLACEHOLDER,
 	.draw           = WINDOW_DRAW_NONE,
 	.wait_present   = false,
 	.valid          = false,
@@ -296,7 +296,7 @@ cgui_window_create(void)
 	window->fn_state       = dummy_fn_state;
 	window->state          = default_states;
 	window->shown_grid     = CGUI_GRID_PLACEHOLDER;
-	window->focus          = AREA_PLACEHOLDER;
+	window->focus          = (struct grid_area)GRID_AREA_PLACEHOLDER;
 	window->draw           = WINDOW_DRAW_NONE;
 	window->wait_present   = false;
 	window->valid          = true;
@@ -374,7 +374,7 @@ cgui_window_enable(cgui_window *window)
 		return;
 	}
 
-	window_update_state(window, CGUI_WINDOW_DISABLED,    false);
+	window_update_state(window, CGUI_WINDOW_DISABLED, false);
 
 	// TODO send event to all cells
 }
@@ -841,7 +841,6 @@ window_draw(cgui_window *window)
 {
 	unsigned long timestamp;
 	unsigned long delay;
-
 	struct cgui_box box =
 	{
 		.size_outline     =  0.0,
@@ -855,15 +854,6 @@ window_draw(cgui_window *window)
 		.draw_foreground  = false,
 	};
 	
-	struct cgui_zone zone =
-	{
-		.drawable = window->drawable,
-		.x        = 0.0,
-		.y        = 0.0,
-		.width    = window->width,
-		.height   = window->height,
-	};
-
 	if (!window->state.mapped || window->draw == WINDOW_DRAW_NONE)
 	{
 		return;
@@ -883,14 +873,14 @@ window_draw(cgui_window *window)
 	if (window->draw == WINDOW_DRAW_FULL)
 	{
 		cairo_set_operator(window->drawable, CAIRO_OPERATOR_SOURCE);
-		cgui_box_draw(box, zone);
+		cgui_box_draw(box, 0.0, 0.0, window->width, window->height, window->drawable);
 	}
 
 	/* draw cells */
 	
 	CREF_FOR_EACH(window->shown_grid->areas, i)
 	{
-		draw_area(window, (struct area*)cref_ptr(window->shown_grid->areas, i), box, delay);
+		draw_area(window, *(struct grid_area*)cref_ptr(window->shown_grid->areas, i), box, delay);
 	}
 
 	/* end */
@@ -907,7 +897,7 @@ window_draw(cgui_window *window)
 void
 window_focus_pointer(cgui_window *window, double x, double y)
 {
-	cgui_cell *cell;
+	struct grid_area area;
 
 	/* do not update focus if there is an ongoing drag or if the focus is locked */
 
@@ -918,9 +908,9 @@ window_focus_pointer(cgui_window *window, double x, double y)
 
 	/* generate and send focus event */
 
-	cell = area_at_coords(window, x, y).cell;
+	area = area_at_coords(window, x, y);
 
-	(void)cell;
+	(void)area;
 
 	// TODO
 }
@@ -938,6 +928,69 @@ window_present(cgui_window *window)
 	x11_window_present(window->x_id, ++window->x_serial);
 
 	window->wait_present = true; /* is set back to false after draw */
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+window_process_cell_event(cgui_window *window, struct grid_area area, struct cgui_cell_event *event)
+{
+	/* filter out some events depending on the window state */
+
+	if (!window->state.disabled)
+	{
+		goto skip_filter;
+	}
+
+	switch (event->type)
+	{
+		// TODO
+
+		default:
+			return false;
+	}
+
+skip_filter:
+
+	/* fill out common fields */
+	
+	event->msg    = CGUI_CELL_MSG_NONE;
+	event->x      = area.x;
+	event->y      = area.y;
+	event->width  = area.width;
+	event->height = area.height;
+
+	/* send event */
+
+	area.cell->fn_event(area.cell, event);
+
+	/* process msg */
+
+	switch (event->msg)
+	{
+		case CGUI_CELL_MSG_REJECT:
+			return false;
+
+		case CGUI_CELL_MSG_LOCK:
+			if (area.cell == window->focus.cell && CONFIG->cell_auto_lock)
+			{
+				focus_lock(window, true);
+			}
+			break;
+
+		case CGUI_CELL_MSG_UNLOCK:
+			if (area.cell == window->focus.cell && CONFIG->cell_auto_lock)
+			{
+				focus_lock(window, true);
+			}
+			break;
+
+		case CGUI_CELL_MSG_NONE:
+		default:
+			break;
+	}
+
+	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1089,26 +1142,24 @@ window_update_state(cgui_window *window, enum cgui_window_state_mask mask, bool 
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-static struct area
+static struct grid_area
 area_at_coords(const cgui_window *window, double x, double y)
 {
-	struct cgui_zone z;
-	struct area *a;
+	struct grid_area *area;
 
 	x -= CONFIG->window_padding;
 	y -= CONFIG->window_padding;
 
 	CREF_FOR_EACH(window->shown_grid->areas, i)
 	{
-		a = (struct area*)cref_ptr(window->shown_grid->areas, i);
-		z = grid_area_zone(window->shown_grid, a, window->drawable);
-		if (util_is_in(x, y, z.x, z.y, z.width, z.height))
+		area = (struct grid_area*)cref_ptr(window->shown_grid->areas, i);
+		if (util_is_in(x, y, area->x, area->y, area->width, area->height))
 		{
-			return *a;
+			return *area;
 		}
 	}
 
-	return AREA_PLACEHOLDER;
+	return (struct grid_area)GRID_AREA_PLACEHOLDER;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1160,7 +1211,7 @@ cairo_error(const cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-draw_area(cgui_window *window, struct area *area, struct cgui_box box_window, unsigned long delay)
+draw_area(cgui_window *window, struct grid_area area, struct cgui_box box_window, unsigned long delay)
 {
 	struct cgui_cell_context context;
 	struct cgui_box box =
@@ -1177,32 +1228,32 @@ draw_area(cgui_window *window, struct area *area, struct cgui_box box_window, un
 		.draw             = false,
 	};
 
-	if (window->draw != WINDOW_DRAW_FULL || area->cell->draw)
+	if (window->draw != WINDOW_DRAW_FULL && !area.cell->draw)
 	{
 		return;
 	}
 
 	/* get and adjust cell frame */
 
-	area->cell->fn_frame(area->cell, &box);
+	area.cell->fn_frame(area.cell, &box);
 
-	if (area->x == 0 && area->y == 0)
+	if (area.col == 0 && area.row == 0)
 	{
 		cgui_box_pad_corner(&box, box_window, CONFIG->window_padding, 0);
 	}
 
-	if (area->x + area->width == window->shown_grid->n_cols && area->y == 0)
+	if (area.col + area.n_cols == window->shown_grid->n_cols && area.row == 0)
 	{
 		cgui_box_pad_corner(&box, box_window, CONFIG->window_padding, 1);
 	}
 
-	if (area->x + area->width  == window->shown_grid->n_cols
-	 && area->y + area->height == window->shown_grid->n_rows)
+	if (area.col + area.n_cols == window->shown_grid->n_cols
+	 && area.row + area.n_rows == window->shown_grid->n_rows)
 	{
 		cgui_box_pad_corner(&box, box_window, CONFIG->window_padding, 2);
 	}
 
-	if (area->x == 0 && area->y + area->height == window->shown_grid->n_rows)
+	if (area.col == 0 && area.row + area.n_rows == window->shown_grid->n_rows)
 	{
 		cgui_box_pad_corner(&box, box_window, CONFIG->window_padding, 3);
 	}
@@ -1210,21 +1261,19 @@ draw_area(cgui_window *window, struct area *area, struct cgui_box box_window, un
 	/* compose context */
 
 	context.delay    = delay;
-	context.zone     = grid_area_zone(window->shown_grid, area, window->drawable);
-	context.zone.x  += CONFIG->window_padding;
-	context.zone.y  += CONFIG->window_padding;
 	context.frame    = box;
-
-	context.drawable = context.zone.drawable;
-	context.x        = context.zone.x;
-	context.y        = context.zone.y;
-	context.width    = context.zone.width;
-	context.height   = context.zone.height;
+	context.drawable = window->drawable;
+	context.x        = area.x + CONFIG->window_padding;
+	context.y        = area.y + CONFIG->window_padding;
+	context.width    = area.width;
+	context.height   = area.height;
 
 	/* draw */
 
+	area.cell->draw = false;
+
 	cairo_save(window->drawable);
-	area->cell->fn_draw(area->cell, context);
+	area.cell->fn_draw(area.cell, context);
 	cairo_restore(window->drawable);
 }
 
@@ -1302,6 +1351,25 @@ dummy_fn_state(cgui_window *window, enum cgui_window_state_mask mask)
 {
 	(void)window;
 	(void)mask;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+focus_lock(cgui_window *window, bool lock)
+{
+	struct cgui_cell_event event =
+	{
+		.type = lock ? CGUI_CELL_EVENT_FOCUS_LOCK : CGUI_CELL_EVENT_FOCUS_UNLOCK,
+	};
+
+	if (!window->focus.cell->valid || lock == window->state.locked_focus)
+	{
+		return;
+	}
+
+	window_process_cell_event(window, window->focus, &event);
+	window_update_state(window, CGUI_WINDOW_LOCKED_FOCUS, lock);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

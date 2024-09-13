@@ -36,36 +36,28 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void paint     (struct cgui_zone, struct ccolor color);
-static void path      (struct cgui_box,  struct cgui_zone, bool shape, double pad);
-static void subpath_1 (struct cgui_box,  struct cgui_zone);
-static void subpath_2 (struct cgui_box,  struct cgui_zone);
-static void subpath_3 (struct cgui_box,  struct cgui_zone);
-static void subpath_4 (struct cgui_box,  struct cgui_zone);
+static void paint     (cairo_t *, struct ccolor color);
+static void path      (struct cgui_box, double, double, double, double, cairo_t *, bool shape, double pad) CGUI_NONNULL(6);
+static void subpath_1 (struct cgui_box, double, double, double, double, cairo_t *)                         CGUI_NONNULL(6);
+static void subpath_2 (struct cgui_box, double, double, double, double, cairo_t *)                         CGUI_NONNULL(6);
+static void subpath_3 (struct cgui_box, double, double, double, double, cairo_t *)                         CGUI_NONNULL(6);
+static void subpath_4 (struct cgui_box, double, double, double, double, cairo_t *)                         CGUI_NONNULL(6);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 void
-cgui_box_clip(struct cgui_box box, struct cgui_zone zone)
+cgui_box_clip(struct cgui_box box, double x, double y, double width, double height, double pad, cairo_t *drawable)
 {
-	cgui_box_clip_custom(box, zone, box.size_border + box.padding);
+	path(box, x, y, width, height, drawable, true, pad);
+	cairo_clip(drawable);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_box_clip_custom(struct cgui_box box, struct cgui_zone zone, double pad)
-{
-	path(box, zone, true, pad);
-	cairo_clip(zone.drawable);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_box_draw(struct cgui_box box, struct cgui_zone zone)
+cgui_box_draw(struct cgui_box box, double x, double y, double width, double height, cairo_t *drawable)
 {
 	if (!box.draw)
 	{
@@ -76,32 +68,32 @@ cgui_box_draw(struct cgui_box box, struct cgui_zone zone)
 
 	if (box.size_outline > 0.0)
 	{
-		path(box, zone, box.shape_outline && box.shape_border, -box.size_outline);
-		paint(zone, box.color_outline);
+		path(box, x, y, width, height, drawable, box.shape_outline && box.shape_border, -box.size_outline);
+		paint(drawable, box.color_outline);
 	}
 
 	/* border */
 
 	if (box.size_border > 0.0)
 	{
-		path(box, zone, box.shape_border, 0.0);
-		paint(zone, box.color_border);
+		path(box, x, y, width, height, drawable, box.shape_border, 0.0);
+		paint(drawable, box.color_border);
 	}
 
 	/* background */
 
 	if (box.padding > 0.0 || !box.draw_foreground)
 	{
-		path(box, zone, true, box.size_border);
-		paint(zone, box.color_background);
+		path(box, x, y, width, height, drawable, true, box.size_border);
+		paint(drawable, box.color_background);
 	}
 
 	/* foreground */
 
 	if (box.draw_foreground)
 	{
-		path(box, zone, true, box.size_border + box.padding);
-		paint(zone, box.color_foreground);
+		path(box, x, y, width, height, drawable, true, box.size_border + box.padding);
+		paint(drawable, box.color_foreground);
 	}
 }
 
@@ -125,31 +117,31 @@ cgui_box_pad_corner(struct cgui_box *box, struct cgui_box box_parent, double pad
 /************************************************************************************************************/
 
 static void
-paint(struct cgui_zone zone, struct ccolor color)
+paint(cairo_t *drawable, struct ccolor color)
 {
-	cairo_set_source_rgba(zone.drawable, color.r, color.g, color.b, color.a);
-	cairo_fill(zone.drawable);
+	cairo_set_source_rgba(drawable, color.r, color.g, color.b, color.a);
+	cairo_fill(drawable);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-path(struct cgui_box box, struct cgui_zone zone, bool shape, double pad)
+path(struct cgui_box box, double x, double y, double w, double h, cairo_t *drawable, bool shape, double pad)
 {
-	pad         += box.margin;
-	zone.x      += pad;
-	zone.y      += pad;
-	zone.width  -= pad * 2;
-	zone.height -= pad * 2;
+	pad += box.margin;
+	x   += pad;
+	y   += pad;
+	w   -= pad * 2;
+	h   -= pad * 2;
 
-	if (zone.width < 1.0 || zone.height < 1.0)
+	if (w < 1.0 || h < 1.0)
 	{
 		return;
 	}
 
 	if (!shape)
 	{
-		cairo_rectangle(zone.drawable, zone.x, zone.y, zone.width, zone.height);
+		cairo_rectangle(drawable, x, y, w, h);
 		return;
 	}
 
@@ -162,21 +154,21 @@ path(struct cgui_box box, struct cgui_zone zone, bool shape, double pad)
 		}
 	}
 
-	subpath_1(box, zone);
-	subpath_2(box, zone);
-	subpath_3(box, zone);
-	subpath_4(box, zone);	
+	subpath_1(box, x, y, w, h, drawable);
+	subpath_2(box, x, y, w, h, drawable);
+	subpath_3(box, x, y, w, h, drawable);
+	subpath_4(box, x, y, w, h, drawable);	
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-subpath_1(struct cgui_box box, struct cgui_zone zone)
+subpath_1(struct cgui_box box, double x, double y, double w, double h, cairo_t *d)
 {
 	const double r = box.size_corner[0];
-	const double x = zone.x;
-	const double y = zone.y;
-	cairo_t     *d = zone.drawable;
+
+	(void)w;
+	(void)h;
 
 	switch (box.corner[0])
 	{
@@ -199,13 +191,11 @@ subpath_1(struct cgui_box box, struct cgui_zone zone)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-subpath_2(struct cgui_box box, struct cgui_zone zone)
+subpath_2(struct cgui_box box, double x, double y, double w, double h, cairo_t *d)
 {
 	const double r = box.size_corner[1];
-	const double x = zone.x;
-	const double y = zone.y;
-	const double w = zone.width;
-	cairo_t     *d = zone.drawable;
+
+	(void)h;
 
 	switch (box.corner[1])
 	{
@@ -227,14 +217,9 @@ subpath_2(struct cgui_box box, struct cgui_zone zone)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-subpath_3(struct cgui_box box, struct cgui_zone zone)
+subpath_3(struct cgui_box box, double x, double y, double w, double h, cairo_t *d)
 {
 	const double r = box.size_corner[2];
-	const double x = zone.x;
-	const double y = zone.y;
-	const double w = zone.width;
-	const double h = zone.height;
-	cairo_t     *d = zone.drawable;
 
 	switch (box.corner[2])
 	{
@@ -256,13 +241,11 @@ subpath_3(struct cgui_box box, struct cgui_zone zone)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-subpath_4(struct cgui_box box, struct cgui_zone zone)
+subpath_4(struct cgui_box box, double x, double y, double w, double h, cairo_t *d)
 {
 	const double r = box.size_corner[3];
-	const double x = zone.x;
-	const double y = zone.y;
-	const double h = zone.height;
-	cairo_t     *d = zone.drawable;
+
+	(void)w;
 
 	switch (box.corner[3])
 	{

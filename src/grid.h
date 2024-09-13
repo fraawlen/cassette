@@ -24,18 +24,31 @@
 #include <cassette/cgui.h>
 #include <stdbool.h>
 
-#include "area.h"
-
 /************************************************************************************************************/
 /* TYPES ****************************************************************************************************/
 /************************************************************************************************************/
 
+struct grid_area
+{
+	cgui_cell *cell; /* hosted cell          */
+	size_t col;      /* start col            */
+	size_t row;      /* start row            */
+	size_t n_cols;   /* width  in cols       */
+	size_t n_rows;   /* height in rows       */
+	double x;        /* pixel x offset cache */
+	double y;        /* pixel y offset cache */
+	double width;    /* pixel width  cache   */
+	double height;   /* pixel height cache   */
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 struct grid_line
 {
-	double offset;  /* pixel offset cache */
-	double size;    /* pixel length cache */
-	double flex;    /* flex factor        */
-	ssize_t units;  /* amount of chars    */
+	double offset; /* pixel offset cache */
+	double size;   /* pixel length cache */
+	double flex;   /* flex factor        */
+	ssize_t units; /* amount of chars    */
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -64,6 +77,23 @@ struct cgui_grid
 };
 
 /************************************************************************************************************/
+/* GLOBALS **************************************************************************************************/
+/************************************************************************************************************/
+
+#define GRID_AREA_PLACEHOLDER \
+{ \
+	.cell   = CGUI_CELL_PLACEHOLDER, \
+	.col    = 0,   \
+	.row    = 0,   \
+	.n_cols = 0,   \
+	.n_rows = 0,   \
+	.x      = 0.0, \
+	.y      = 0.0, \
+	.width  = 0.0, \
+	.height = 0.0, \
+}
+
+/************************************************************************************************************/
 /* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
 /************************************************************************************************************/
 
@@ -84,11 +114,3 @@ CGUI_NONNULL(1);
 void
 grid_update_geometry(cgui_grid *grid, double width, double height)
 CGUI_NONNULL(1);
-
-/************************************************************************************************************/
-/* PURE METHODS *********************************************************************************************/
-/************************************************************************************************************/
-
-struct cgui_zone
-grid_area_zone(const cgui_grid *grid, const struct area *area, cairo_t *drawable)
-CGUI_NONNULL(1, 2);

@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "area.h"
 #include "cell.h"
 #include "config.h"
 #include "main.h"
@@ -37,8 +36,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static double col_width  (struct grid_line) CGUI_PURE;
-static double row_height (struct grid_line) CGUI_PURE;
+static double col_width            (struct grid_line)                              CGUI_PURE;
+static double row_height           (struct grid_line)                              CGUI_PURE;
+static void   update_area_geometry (const cgui_grid *grid, struct grid_area *area) CGUI_NONNULL(1, 2);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -80,7 +80,7 @@ static const enum cgui_grid_relative_size compare_size[4][4] =
 void
 cgui_grid_assign_cell(cgui_grid *grid, cgui_cell *cell, size_t x, size_t y, size_t width, size_t height)
 {
-	struct area *area;
+	struct grid_area *area;
 
 	if (cgui_error()
 	 || !grid->valid)
@@ -99,7 +99,7 @@ cgui_grid_assign_cell(cgui_grid *grid, cgui_cell *cell, size_t x, size_t y, size
 		return;
 	}
 
-	if (!(area = malloc(sizeof(struct area))))
+	if (!(area = malloc(sizeof(struct grid_area))))
 	{
 		main_set_error(CERR_MEMORY);
 		return;
@@ -113,11 +113,15 @@ cgui_grid_assign_cell(cgui_grid *grid, cgui_cell *cell, size_t x, size_t y, size
 		return;
 	}
 
-	area->x      = x;
-	area->y      = y;
-	area->width  = width;
-	area->height = height;
 	area->cell   = cell;
+	area->col    = x;
+	area->row    = y;
+	area->n_cols = width;
+	area->n_rows = height;
+	area->x      = 0.0;
+	area->y      = 0.0;
+	area->width  = 0.0;
+	area->height = 0.0;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -126,7 +130,7 @@ cgui_grid *
 cgui_grid_clone(const cgui_grid *grid)
 {
 	cgui_grid *grid_new;
-	const struct area *area;
+	const struct grid_area *area;
 
 	if (cgui_error() || !grid->valid)
 	{
@@ -160,8 +164,8 @@ cgui_grid_clone(const cgui_grid *grid)
 
 	CREF_FOR_EACH(grid->areas, i)
 	{
-		area = (const struct area*)cref_ptr(grid->areas, i);
-		cgui_grid_assign_cell(grid_new, area->cell, area->x, area->y, area->width, area->height);
+		area = (const struct grid_area*)cref_ptr(grid->areas, i);
+		cgui_grid_assign_cell(grid_new, area->cell, area->col, area->row, area->n_cols, area->n_rows);
 		if (cgui_error())
 		{
 			goto fail_copy;
@@ -600,33 +604,6 @@ cgui_grid_width(const cgui_grid *grid)
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
-struct cgui_zone
-grid_area_zone(const cgui_grid *grid, const struct area *area, cairo_t *drawable)
-{
-	struct cgui_zone zone =
-	{
-		.drawable = drawable,
-		.x        = grid->cols[area->x].offset,
-		.y        = grid->rows[area->y].offset,
-		.width    = CONFIG->grid_spacing * (area->width  - 1),
-		.height   = CONFIG->grid_spacing * (area->height - 1),
-	};
-
-	for (size_t i = area->x; i < area->x + area->width; i++)
-	{
-		zone.width += grid->cols[i].size;	
-	}
-
-	for (size_t i = area->y; i < area->y + area->height; i++)
-	{
-		zone.height += grid->rows[i].size;	
-	}
-
-	return zone;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 void
 grid_destroy(cgui_grid *grid)
 {
@@ -704,6 +681,13 @@ grid_update_geometry(cgui_grid *grid, double width, double height)
 		f -= grid->rows[i].flex;
 		n -= l;
 	}
+
+	/* areas */
+
+	CREF_FOR_EACH(grid->areas, i)
+	{
+		update_area_geometry(grid, cref_ptr(grid->areas, i));
+	}
 }
 
 /************************************************************************************************************/
@@ -738,3 +722,23 @@ row_height(struct grid_line row)
 	}
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+update_area_geometry(const cgui_grid *grid, struct grid_area *area)
+{
+	area->x      = grid->cols[area->col].offset;
+	area->y      = grid->rows[area->row].offset;
+	area->width  = CONFIG->grid_spacing * (area->n_cols - 1);
+	area->height = CONFIG->grid_spacing * (area->n_rows - 1);
+
+	for (size_t i = area->col; i < area->col + area->n_cols; i++)
+	{
+		area->width += grid->cols[i].size;	
+	}
+
+	for (size_t i = area->row; i < area->row + area->n_rows; i++)
+	{
+		area->height += grid->rows[i].size;	
+	}
+}

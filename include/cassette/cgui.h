@@ -47,7 +47,6 @@
 
 #include "cgui-attributes.h"
 #include "cgui-box.h"
-#include "cgui-zone.h"
 
 #ifdef __cplusplus
 extern "C" {

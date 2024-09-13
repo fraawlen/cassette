@@ -56,6 +56,21 @@ cgui_cell cgui_cell_placeholder_instance =
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
+void
+cgui_cell_clip_frame(struct cgui_cell_context context)
+{
+	cgui_box_clip(
+		context.frame,
+		context.x,
+		context.y,
+		context.width,
+		context.height,
+		context.frame.size_border + context.frame.padding,
+		context.drawable);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 cgui_cell *
 cgui_cell_create(void)
 {
@@ -95,6 +110,20 @@ fail_alloc:
 	main_set_error(CERR_INSTANCE);
 fail_main:
 	return CGUI_CELL_PLACEHOLDER;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_cell_draw_frame(struct cgui_cell_context context)
+{
+	cgui_box_draw(
+		context.frame,
+		context.x,
+		context.y,
+		context.width,
+		context.height,
+		context.drawable);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -337,7 +366,8 @@ static void
 dummy_fn_event(cgui_cell *cell, struct cgui_cell_event *event)
 {
 	(void)cell;
-	(void)event;
+
+	event->msg = CGUI_CELL_MSG_REJECT;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

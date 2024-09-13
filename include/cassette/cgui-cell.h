@@ -27,7 +27,6 @@
 
 #include "cgui-attributes.h"
 #include "cgui-box.h"
-#include "cgui-zone.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,11 +44,24 @@ typedef struct cgui_cell cgui_cell;
 /**
  *
  */
+enum cgui_cell_msg
+{
+	CGUI_CELL_MSG_NONE = 0,
+	CGUI_CELL_MSG_REJECT,
+	CGUI_CELL_MSG_LOCK,
+	CGUI_CELL_MSG_UNLOCK,
+};
+
+/**
+ *
+ */
 enum cgui_cell_event_type
 {
 	CGUI_CELL_EVENT_NONE = 0,
-
-	// TODO
+	CGUI_CELL_EVENT_POINTER_HOVER,
+	CGUI_CELL_EVENT_POINTER_DRAG,
+	CGUI_CELL_EVENT_FOCUS_LOCK,
+	CGUI_CELL_EVENT_FOCUS_UNLOCK,
 };
 
 /**
@@ -57,9 +69,26 @@ enum cgui_cell_event_type
  */
 struct cgui_cell_event
 {
+	enum cgui_cell_msg msg;
 	enum cgui_cell_event_type type;
-
-	// TODO
+	double x;
+	double y;
+	double width;
+	double height;
+	union
+	{
+		/* CGUI_CELL_EVENT_POINTER_HOVER */
+		/* CGUI_CELL_EVENT_POINTER_DRAG  */
+		struct
+		{
+			double pointer_x;
+			double pointer_y;
+		};
+		/* CGUI_CELL_EVENT_FOCUS_LOCK   */
+		/* CGUI_CELL_EVENT_FOCUS_UNLOCK */
+		/* CGUI_CELL_EVENT_NONE         */
+		/* no extra fields for these events */
+	};
 };
 
 /**
@@ -67,15 +96,9 @@ struct cgui_cell_event
  */
 struct cgui_cell_context
 {
-	/* main params */
-
-	unsigned long delay;
-	struct cgui_zone zone;
-	struct cgui_box frame;
-
-	/* duplication of zone params for convenience */
-
 	cairo_t *drawable;
+	unsigned long delay;
+	struct cgui_box frame;
 	double x;
 	double y;
 	double width;
@@ -233,6 +256,22 @@ int
 cgui_cell_serial(const cgui_cell *cell)
 CGUI_NONNULL(1)
 CGUI_PURE;
+
+/************************************************************************************************************/
+/* HELPERS **************************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ *
+ */
+void
+cgui_cell_draw_frame(struct cgui_cell_context context);
+
+/**
+ *
+ */
+void
+cgui_cell_clip_frame(struct cgui_cell_context context);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

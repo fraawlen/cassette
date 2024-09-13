@@ -57,7 +57,7 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 {
 	(void)cell;
 
-	cgui_box_draw(context.frame, context.zone);
+	cgui_cell_draw_frame(context);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

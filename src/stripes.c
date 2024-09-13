@@ -62,8 +62,8 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 
 	(void)cell;
 
-	cgui_box_draw(context.frame, context.zone);
-	cgui_box_clip(context.frame, context.zone);
+	cgui_cell_draw_frame(context);
+	cgui_cell_clip_frame(context);
 
 	for (double x = context.x; x < context.x + context.width + w; x += w + s)
 	{

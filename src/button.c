@@ -60,6 +60,7 @@ struct data
 static void destroy        (cgui_cell *)                           CGUI_NONNULL(1);
 static void draw           (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
 static void dummy_fn_click (cgui_cell *)                           CGUI_NONNULL(1);
+static void event          (cgui_cell *, struct cgui_cell_event *) CGUI_NONNULL(1, 2);
 static void frame          (cgui_cell *, struct cgui_box *)        CGUI_NONNULL(1, 2);
 static bool invalid        (const cgui_cell *)                     CGUI_NONNULL(1);
 
@@ -99,6 +100,7 @@ cgui_button_create(void)
 
 	cgui_cell_on_destroy (cell, destroy);
 	cgui_cell_on_draw(cell, draw);
+	cgui_cell_on_event(cell, event);
 	cgui_cell_on_frame(cell, frame);
 	cgui_cell_set_data(cell, data);
 	cgui_cell_set_serial(cell, CELL_BUTTON);
@@ -128,6 +130,8 @@ cgui_button_disable(cgui_cell *cell)
 	}
 	
 	DATA->enabled = false;
+	
+	cgui_cell_redraw(cell);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -141,6 +145,8 @@ cgui_button_enable(cgui_cell *cell)
 	}
 
 	DATA->enabled = true;
+
+	cgui_cell_redraw(cell);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -169,6 +175,8 @@ cgui_button_set_label(cgui_cell *cell, const char *label)
 
 	cstr_clear(DATA->label);
 	cstr_append(DATA->label, label);
+
+	cgui_cell_redraw(cell);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -182,6 +190,8 @@ cgui_button_toggle(cgui_cell *cell)
 	}
 
 	DATA->enabled = !DATA->enabled;
+
+	cgui_cell_redraw(cell);
 }
 
 /************************************************************************************************************/
@@ -202,7 +212,7 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 {
 	(void)cell;
 
-	cgui_box_draw(context.frame, context.zone);
+	cgui_cell_draw_frame(context);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -211,6 +221,25 @@ static void
 dummy_fn_click(cgui_cell *cell)
 {
 	(void)cell;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+event(cgui_cell *cell, struct cgui_cell_event *event)
+{
+	if (!DATA->enabled)
+	{
+		event->msg = CGUI_CELL_MSG_REJECT;
+		return;
+	}
+
+	switch (event->type)
+	{
+		default:
+			event->msg = CGUI_CELL_MSG_REJECT;
+			break;
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

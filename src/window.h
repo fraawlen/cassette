@@ -24,7 +24,7 @@
 #include <cassette/cgui.h>
 #include <stdbool.h>
 
-#include "area.h"
+#include "grid.h"
 
 /************************************************************************************************************/
 /* TYPES ****************************************************************************************************/
@@ -80,7 +80,7 @@ struct cgui_window
 	/* states */
 
 	cgui_grid *shown_grid;
-	struct area focus;
+	struct grid_area focus;
 	struct cgui_window_state_flags state;
 	enum window_draw_level draw;
 	bool wait_present;
@@ -116,6 +116,12 @@ CGUI_NONNULL(1);
 void
 window_present(cgui_window *window)
 CGUI_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+window_process_cell_event(cgui_window *window, struct grid_area area, struct cgui_cell_event *event)
+CGUI_NONNULL(1, 3);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
