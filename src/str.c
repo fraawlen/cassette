@@ -564,12 +564,14 @@ cstr_set_precision(cstr *str, int precision)
 void
 cstr_set_tab_width(cstr *str, size_t width)
 {
-	if (str->err)
+	if (str->err || str->tab_width == width)
 	{
 		return;
 	}
 
 	str->tab_width = width;
+
+	update_n_values(str);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
