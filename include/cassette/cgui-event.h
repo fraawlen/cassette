@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include "cgui-config.h"
 #include "cgui-window.h"
 
 #ifdef __cplusplus
@@ -95,6 +96,7 @@ struct cgui_event
 			double button_x;
 			double button_y;
 			uint32_t button_id;
+			enum cgui_config_modkey button_mod;
 		};
 		/* CGUI_EVENT_REDRAW */
 		bool redraw_all;

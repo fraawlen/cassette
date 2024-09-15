@@ -1020,15 +1020,15 @@ x11_window_update_state_hints(xcb_window_t id, struct cgui_window_state_flags st
 static void
 event_button(xcb_button_press_event_t *xcb_event)
 {
-	struct cgui_event event = {
+	struct cgui_event event =
 	{
-		.button_mod = xcb_event->state,
-		.button_x   = xcb_event->event_x,
-		.button_y   = xcb_event->event_y,
-		.button_id  = xcb_event->detail,
-		.type       = xcb_event->response_type & ~0x80 == XCB_KEY_PRESS ? 
+		.button_mod =  xcb_event->state,
+		.button_x   =  xcb_event->event_x,
+		.button_y   =  xcb_event->event_y,
+		.button_id  =  xcb_event->detail,
+		.type       = (xcb_event->response_type & ~0x80) == XCB_KEY_PRESS ? 
 			CGUI_EVENT_BUTTON_PRESS : CGUI_EVENT_BUTTON_RELEASE,
-	}
+	};
 
 	main_update(&event);
 }
