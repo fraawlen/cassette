@@ -91,11 +91,11 @@ static const struct cgui_config config_default =
 
 	/* behavior */
 
-	.smart_corners            = true,
-	.cell_auto_lock           = true,
-	.input_persistent_pointer = false,
-	.input_persistent_touch   = false,
-	.anim_divider             = 1,
+	.smart_corners      = true,
+	.cell_auto_lock     = true,
+	.persistent_pointer = false,
+	.persistent_touch   = false,
+	.anim_divider       = 1,
 
 	/* keys */
 

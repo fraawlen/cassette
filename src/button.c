@@ -228,6 +228,8 @@ dummy_fn_click(cgui_cell *cell)
 static void
 event(cgui_cell *cell, struct cgui_cell_event *event)
 {
+	enum state old_state = DATA->state;
+
 	if (!DATA->enabled)
 	{
 		event->msg = CGUI_CELL_MSG_REJECT;
@@ -236,9 +238,25 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 
 	switch (event->type)
 	{
+		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_REFERENCE:
+		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_ACTION:
+		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_POINTER:
+		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_TOUCH:
+			DATA->state = FOCUSED;
+			break;
+
+		case CGUI_CELL_EVENT_FOCUS_LOSE:
+			DATA->state = IDLE;
+			break;
+
 		default:
 			event->msg = CGUI_CELL_MSG_REJECT;
 			break;
+	}
+
+	if (old_state != DATA->state)
+	{
+		cgui_cell_redraw(cell);
 	}
 }
 

@@ -88,6 +88,14 @@ struct cgui_event
 			double touch_y;
 			uint32_t touch_id;
 		};
+		/* CGUI_EVENT_BUTTON_PRESS   */
+		/* CGUI_EVENT_BUTTON_RELEASE */
+		struct
+		{
+			double button_x;
+			double button_y;
+			uint32_t button_id;
+		};
 		/* CGUI_EVENT_REDRAW */
 		bool redraw_all;
 		/* CGUI_EVENT_POINTER_MOTION */

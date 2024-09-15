@@ -43,6 +43,7 @@ extern "C" {
 #define CGUI_CONFIG_ACCELS     12
 #define CGUI_CONFIG_BUTTONS    12
 #define CGUI_CONFIG_KEYS       128
+#define CGUI_CONFIG_TOUCHES    10
 
 /************************************************************************************************************/
 /* TYPES ****************************************************************************************************/
@@ -171,8 +172,8 @@ struct cgui_config
 
 	bool smart_corners;
 	bool cell_auto_lock;
-	bool input_persistent_pointer;
-	bool input_persistent_touch;
+	bool persistent_pointer;
+	bool persistent_touch;
 	unsigned long anim_divider;
 
 	/* input swaps */

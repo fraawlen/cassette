@@ -22,6 +22,7 @@
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
 #include <float.h>
+#include <math.h>
 
 #include "config.h"
 
@@ -36,12 +37,12 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void paint     (cairo_t *, struct ccolor color);
-static void path      (struct cgui_box, double, double, double, double, cairo_t *, bool shape, double pad) CGUI_NONNULL(6);
-static void subpath_1 (struct cgui_box, double, double, double, double, cairo_t *)                         CGUI_NONNULL(6);
-static void subpath_2 (struct cgui_box, double, double, double, double, cairo_t *)                         CGUI_NONNULL(6);
-static void subpath_3 (struct cgui_box, double, double, double, double, cairo_t *)                         CGUI_NONNULL(6);
-static void subpath_4 (struct cgui_box, double, double, double, double, cairo_t *)                         CGUI_NONNULL(6);
+static void paint     (cairo_t *, struct ccolor color)                                           CGUI_NONNULL(1);
+static void path      (struct cgui_box, double, double, double, double, cairo_t *, bool, double) CGUI_NONNULL(6);
+static void subpath_1 (struct cgui_box, double, double, double, double, cairo_t *)               CGUI_NONNULL(6);
+static void subpath_2 (struct cgui_box, double, double, double, double, cairo_t *)               CGUI_NONNULL(6);
+static void subpath_3 (struct cgui_box, double, double, double, double, cairo_t *)               CGUI_NONNULL(6);
+static void subpath_4 (struct cgui_box, double, double, double, double, cairo_t *)               CGUI_NONNULL(6);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -95,6 +96,17 @@ cgui_box_draw(struct cgui_box box, double x, double y, double width, double heig
 		path(box, x, y, width, height, drawable, true, box.size_border + box.padding);
 		paint(drawable, box.color_foreground);
 	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+cgui_box_is_in(struct cgui_box box, double x_test, double y_test, double x, double y, double width, double height, cairo_t *drawable)
+{
+	cairo_new_path(drawable);
+	path(box, x, y, width, height, drawable, box.shape_border, 0.0);
+
+	return cairo_in_fill(drawable, x_test, y_test);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

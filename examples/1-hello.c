@@ -36,19 +36,21 @@
 static void on_accel (cgui_window *, int);
 static void on_click (cgui_cell   *);
 static void on_close (cgui_window *);
-static void on_draw  (cgui_window *, unsigned long);
+static void on_draw  (cgui_window *, unsigned long, unsigned long);
 static void on_state (cgui_window *, enum cgui_window_state_mask);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static cgui_cell   *filler  = CGUI_CELL_PLACEHOLDER;
-static cgui_cell   *stripes = CGUI_CELL_PLACEHOLDER;
-static cgui_cell   *button  = CGUI_CELL_PLACEHOLDER;
-static cgui_grid   *grid_1  = CGUI_GRID_PLACEHOLDER;
-static cgui_grid   *grid_2  = CGUI_GRID_PLACEHOLDER;
-static cgui_window *window  = CGUI_WINDOW_PLACEHOLDER;
+static cgui_cell   *filler   = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *stripes  = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *button_1 = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *button_2 = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *button_3 = CGUI_CELL_PLACEHOLDER;
+static cgui_grid   *grid_1   = CGUI_GRID_PLACEHOLDER;
+static cgui_grid   *grid_2   = CGUI_GRID_PLACEHOLDER;
+static cgui_window *window   = CGUI_WINDOW_PLACEHOLDER;
 
 static struct cgui_screen screen;
 
@@ -67,18 +69,27 @@ static struct cgui_screen screen;
 
 	cgui_init(argc, argv);
 
-	window  = cgui_window_create();
-	grid_1  = cgui_grid_create(1, 1);
-	grid_2  = cgui_grid_create(2, 3);
-	filler  = cgui_filler_create();
-	stripes = cgui_stripes_create();
-	button  = cgui_button_create();
-	screen  = cgui_screen_primary_specs();
+	window   = cgui_window_create();
+	grid_1   = cgui_grid_create(1, 1);
+	grid_2   = cgui_grid_create(2, 5);
+	filler   = cgui_filler_create();
+	stripes  = cgui_stripes_create();
+	button_1 = cgui_button_create();
+	button_2 = cgui_button_create();
+	button_3 = cgui_button_create();
+	screen   = cgui_screen_primary_specs();
 
 	/* Cell setup */
 
-	cgui_button_on_click(button, on_click);
-	cgui_button_set_label(button, "button");
+	cgui_button_on_click(button_1, on_click);
+	cgui_button_on_click(button_2, on_click);
+	cgui_button_on_click(button_3, on_click);
+
+	cgui_button_set_label(button_1, "button");
+	cgui_button_set_label(button_2, "button");
+	cgui_button_set_label(button_3, "button");
+
+	cgui_button_disable(button_3);
 
 	/* Grid 1 setup */
 
@@ -94,10 +105,12 @@ static struct cgui_screen screen;
 	cgui_grid_set_col_flex(grid_2, 1, 1.0);
 	cgui_grid_set_row_flex(grid_2, 0, 1.0);
 
-	cgui_grid_assign_cell(grid_2, filler,  0, 0, 1, 1);
-	cgui_grid_assign_cell(grid_2, button,  0, 1, 1, 1);
-	cgui_grid_assign_cell(grid_2, filler,  1, 0, 1, 2);
-	cgui_grid_assign_cell(grid_2, stripes, 0, 2, 2, 1);
+	cgui_grid_assign_cell(grid_2, filler,   0, 0, 1, 1);
+	cgui_grid_assign_cell(grid_2, button_1, 0, 1, 1, 1);
+	cgui_grid_assign_cell(grid_2, button_2, 0, 2, 1, 1);
+	cgui_grid_assign_cell(grid_2, button_3, 0, 3, 1, 1);
+	cgui_grid_assign_cell(grid_2, filler,   1, 0, 1, 4);
+	cgui_grid_assign_cell(grid_2, stripes,  0, 4, 2, 1);
 	
 	/* Window setup */
 
@@ -128,7 +141,9 @@ static struct cgui_screen screen;
 	cgui_grid_destroy(grid_2);
 	cgui_cell_destroy(filler);
 	cgui_cell_destroy(stripes);
-	cgui_cell_destroy(button);
+	cgui_cell_destroy(button_1);
+	cgui_cell_destroy(button_2);
+	cgui_cell_destroy(button_3);
 
 	cgui_reset();
 
@@ -170,11 +185,11 @@ on_close(cgui_window *w)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-on_draw(cgui_window *w, unsigned long delay)
+on_draw(cgui_window *w, unsigned long delay_1, unsigned long delay_2)
 {
 	(void)w;
 
-	printf("window redrawn (%lu)\n", delay);
+	printf("window redrawn (%lu / %lu)\n", delay_1, delay_2);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

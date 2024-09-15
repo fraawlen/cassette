@@ -261,8 +261,8 @@ static const struct resource resources[] =
 	
 	{ "behavior", "smart_corner",                BOOL,        &config.smart_corners                  },
 	{ "behavior", "enable_cell_auto_lock",       BOOL,        &config.cell_auto_lock                 },
-	{ "behavior", "enable_persistent_pointer",   BOOL,        &config.input_persistent_pointer       },
-	{ "behavior", "enable_persistent_touch",     BOOL,        &config.input_persistent_touch         },
+	{ "behavior", "enable_persistent_pointer",   BOOL,        &config.persistent_pointer             },
+	{ "behavior", "enable_persistent_touch",     BOOL,        &config.persistent_touch               },
 	{ "behavior", "animation_framerate_divider", ULONG,       &config.anim_divider                   },
 
 	{ "stripes",  "color",                       COLOR,       &config.stripes_color                  },
@@ -435,10 +435,6 @@ config_load(void)
 	for (size_t i = 0; i < sizeof(resources) / sizeof(struct resource); i++)
 	{
 		fetch(resources + i);
-	}
-
-	for (size_t i = 0; i < sizeof(resources) / sizeof(struct resource); i++)
-	{
 		scale(resources + i);
 	}
 

@@ -289,18 +289,22 @@ map(struct cgui_event *event)
 static void
 pointer(struct cgui_event *event)
 {
+	struct cgui_cell_event cell_event =
+	{
+		.type      = CGUI_CELL_EVENT_POINTER_MOTION,
+		.pointer_x = event->pointer_x,
+		.pointer_y = event->pointer_y,
+	};
+
 	if (!event->window->valid)
 	{
 		return;
 	}
 
-	/* update focus */
-
 	window_focus_pointer(event->window, event->pointer_x, event->pointer_y);
+	window_process_cell_event(event->window, event->window->focus, &cell_event);
 
-	/* send motion event to focused cell */
-
-	// TODO
+	// TODO - drag / resize window if event is rejected
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -390,9 +394,6 @@ transform(struct cgui_event *event)
 	}
 	
 	window_resize(w, event->transform_width, event->transform_height);
-
-	// TODO update current grid
-	// TODO update wm focus hints
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -421,6 +422,4 @@ unmap(struct cgui_event *event)
 	}
 
 	window_update_state(event->window, CGUI_WINDOW_MAPPED, false);
-
-	// TODO propagate event to cells
 }

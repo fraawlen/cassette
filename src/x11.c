@@ -161,7 +161,7 @@ static xcb_atom_t atom_wdlg = 0; /* "_NET_WM_WINDOW_TYPE_DIALOG"  */
 static xcb_atom_t atom_sig  = 0; /* _ATOM_SIGNALS           */
 static xcb_atom_t atom_vers = 0; /* _ATOM_VERSION           */
 static xcb_atom_t atom_stt  = 0; /* _ATOM_WINDOW_STATES     */
-static xcb_atom_t atom_dfoc = 0; /* _ATOM_WINDOW_FOCUS      */
+static xcb_atom_t atom_wfoc = 0; /* _ATOM_WINDOW_FOCUS      */
 static xcb_atom_t atom_tmp1 = 0; /* _ATOM_PASTE_TMP_1       */
 static xcb_atom_t atom_tmp2 = 0; /* _ATOM_PASTE_TMP_2       */
 static xcb_atom_t atom_tmp3 = 0; /* _ATOM_PASTE_TMP_3       */
@@ -350,7 +350,7 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 	atom_sig  = get_atom(_ATOM_SIGNALS);
 	atom_vers = get_atom(_ATOM_VERSION);
 	atom_stt  = get_atom(_ATOM_WINDOW_STATES);
-	atom_dfoc = get_atom(_ATOM_WINDOW_FOCUS);
+	atom_wfoc = get_atom(_ATOM_WINDOW_FOCUS);
 	atom_tmp1 = get_atom(_ATOM_PASTE_TMP_1);
 	atom_tmp2 = get_atom(_ATOM_PASTE_TMP_2);
 	atom_tmp3 = get_atom(_ATOM_PASTE_TMP_3);
@@ -948,6 +948,29 @@ x11_window_set_urgency(xcb_window_t id, bool set_on)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+x11_window_update_focus_hints(xcb_window_t id, double x, double y, double width, double height)
+{
+	uint32_t geometry[4] =
+	{
+		TO_UINT(x),
+		TO_UINT(y),
+		TO_UINT(width),
+		TO_UINT(height),
+	};
+	
+	if (geometry[2] == 0 && geometry[3] == 0)
+	{
+		test_cookie(xcb_delete_property_checked(connection, id, atom_wfoc));
+	}
+	else
+	{
+		prop_set(id, atom_wfoc, XCB_ATOM_CARDINAL, 4, geometry);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 x11_window_update_size_hints(xcb_window_t id, double min_width, double min_height, double max_width, double max_height)
 {
 	const xcb_size_hints_t xhints =
@@ -997,9 +1020,15 @@ x11_window_update_state_hints(xcb_window_t id, struct cgui_window_state_flags st
 static void
 event_button(xcb_button_press_event_t *xcb_event)
 {
-	struct cgui_event event = {0};
-
-	(void)xcb_event; // TODO
+	struct cgui_event event = {
+	{
+		.button_mod = xcb_event->state,
+		.button_x   = xcb_event->event_x,
+		.button_y   = xcb_event->event_y,
+		.button_id  = xcb_event->detail,
+		.type       = xcb_event->response_type & ~0x80 == XCB_KEY_PRESS ? 
+			CGUI_EVENT_BUTTON_PRESS : CGUI_EVENT_BUTTON_RELEASE,
+	}
 
 	main_update(&event);
 }

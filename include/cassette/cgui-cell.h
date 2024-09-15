@@ -58,10 +58,16 @@ enum cgui_cell_msg
 enum cgui_cell_event_type
 {
 	CGUI_CELL_EVENT_NONE = 0,
-	CGUI_CELL_EVENT_POINTER_HOVER,
-	CGUI_CELL_EVENT_POINTER_DRAG,
+	CGUI_CELL_EVENT_POINTER_MOTION,
+	CGUI_CELL_EVENT_FOCUS_GAIN_BY_ACTION,
+	CGUI_CELL_EVENT_FOCUS_GAIN_BY_POINTER,
+	CGUI_CELL_EVENT_FOCUS_GAIN_BY_TOUCH,
+	CGUI_CELL_EVENT_FOCUS_GAIN_BY_REFERENCE,
+	CGUI_CELL_EVENT_FOCUS_LOSE,
 	CGUI_CELL_EVENT_FOCUS_LOCK,
 	CGUI_CELL_EVENT_FOCUS_UNLOCK,
+	CGUI_CELL_EVENT_FOCUS_INFO,
+	CGUI_CELL_EVENT_FOCUS_SEEK,
 };
 
 /**
@@ -77,13 +83,35 @@ struct cgui_cell_event
 	double height;
 	union
 	{
-		/* CGUI_CELL_EVENT_POINTER_HOVER */
-		/* CGUI_CELL_EVENT_POINTER_DRAG  */
+		/* CGUI_CELL_EVENT_POINTER_MOTION */
 		struct
 		{
 			double pointer_x;
 			double pointer_y;
 		};
+		/* CGUI_CELL_EVENT_FOCUS_GAIN_BY_POINTER */
+		/* CGUI_CELL_EVENT_FOCUS_GAIN_BY_TOUCH   */
+		struct
+		{
+			double focus_x;
+			double focus_y;
+		};
+		/* CGUI_CELL_EVENT_FOCUS_GAIN_BY_ACTION    */
+		// TODO
+		/* CGUI_CELL_EVENT_FOCUS_GAIN_BY_REFERENCE */
+		cgui_cell *focus_cell;
+		/* CGUI_CELL_EVENT_FOCUS_INFO */
+		struct
+		{
+			cgui_cell *focus_info_cell;
+			double focus_info_x;
+			double focus_info_y;
+			double focus_info_width;
+			double focus_info_height;
+		};
+		/* CGUI_CELL_EVENT_FOCUS_SEEK */
+		cgui_cell *seek_cell;
+		/* CGUI_CELL_EVENT_FOCUS_LOSE   */
 		/* CGUI_CELL_EVENT_FOCUS_LOCK   */
 		/* CGUI_CELL_EVENT_FOCUS_UNLOCK */
 		/* CGUI_CELL_EVENT_NONE         */

@@ -115,6 +115,11 @@ x11_window_set_urgency(xcb_window_t id, bool set_on);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+x11_window_update_focus_hints(xcb_window_t id, double x, double y, double width, double height);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 x11_window_update_size_hints(xcb_window_t id, double min_width, double min_height, double max_width, double max_height);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
