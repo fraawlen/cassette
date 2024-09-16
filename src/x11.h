@@ -59,8 +59,8 @@ x11_window_activate(xcb_window_t id);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-x11_window_create(xcb_window_t *id, double x, double y, double width, double height)
-CGUI_NONNULL(1);
+x11_window_create(xcb_window_t *id, xcb_pixmap_t *buffer, double x, double y, double width, double height)
+CGUI_NONNULL(1, 2);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -70,7 +70,7 @@ x11_window_deactivate(xcb_window_t id);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_destroy(xcb_window_t id);
+x11_window_destroy(xcb_window_t id, xcb_pixmap_t buffer);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -80,7 +80,7 @@ x11_window_move(xcb_window_t id, double x, double y);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_present(xcb_window_t id, uint32_t serial);
+x11_window_present(xcb_window_t id, xcb_pixmap_t buffer, uint32_t serial, bool async);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -111,6 +111,12 @@ x11_window_set_type(xcb_window_t id, enum cgui_window_type type);
 
 void
 x11_window_set_urgency(xcb_window_t id, bool set_on);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_update_buffer(xcb_window_t id, xcb_pixmap_t *buffer, double width, double height)
+CGUI_NONNULL(2);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

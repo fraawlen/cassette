@@ -202,12 +202,14 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 	xcb_visualtype_iterator_t visual_it;
 	xcb_depth_iterator_t depth_it;
 	xcb_void_cookie_t xc;
-	char   s[20];
-	char   host[256] = "";
+	uint8_t depth_target;
 	size_t host_n;
 	size_t name_n;
 	size_t vers_n;
 	size_t pid;
+	char s[20];
+	char host[256] = "";
+	bool match = false;
 
 	const uint32_t leader_mask_vals[] =
 	{
@@ -247,10 +249,11 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 
 	/* get depth */
 
-	depth_it = xcb_screen_allowed_depths_iterator(screen);
+	depth_target = CONFIG->alt_present ? screen->root_depth : 32;
+	depth_it     = xcb_screen_allowed_depths_iterator(screen);
 	for (; depth_it.rem; xcb_depth_next(&depth_it))
 	{
-		if (depth_it.data->depth == 32)
+		if (depth_it.data->depth == depth_target)
 		{
 			depth = depth_it.data;
 			break;
@@ -266,7 +269,15 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 	visual_it = xcb_depth_visuals_iterator(depth);
 	for (; visual_it.rem; xcb_visualtype_next(&visual_it))
 	{
-		if (visual_it.data->_class == XCB_VISUAL_CLASS_TRUE_COLOR)
+		if (CONFIG->alt_present)
+		{
+			match = visual_it.data->visual_id == screen->root_visual;
+		}
+		else
+		{
+			match = visual_it.data->_class == XCB_VISUAL_CLASS_TRUE_COLOR;
+		}
+		if (match)
 		{
 			visual = visual_it.data;
 			break;
@@ -650,7 +661,7 @@ x11_window_activate(xcb_window_t id)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-x11_window_create(xcb_window_t *id, double x, double y, double width, double height)
+x11_window_create(xcb_window_t *id, xcb_pixmap_t *buffer, double x, double y, double width, double height)
 {
 	xcb_void_cookie_t xc;
 	char   host[256] = "";
@@ -673,7 +684,7 @@ x11_window_create(xcb_window_t *id, double x, double y, double width, double hei
 	{
 		0x00000000,
 		0x00000000,
-		false,
+		XCB_GRAVITY_NORTH_WEST,
 		XCB_EVENT_MASK_EXPOSURE
 		| XCB_EVENT_MASK_POINTER_MOTION
 		| XCB_EVENT_MASK_BUTTON_PRESS
@@ -707,7 +718,7 @@ x11_window_create(xcb_window_t *id, double x, double y, double width, double hei
 		visual->visual_id,
 		XCB_CW_BACK_PIXEL
 		| XCB_CW_BORDER_PIXEL
-		| XCB_CW_OVERRIDE_REDIRECT
+		| XCB_CW_BIT_GRAVITY
 		| XCB_CW_EVENT_MASK
 		| XCB_CW_COLORMAP,
 		ev_mask);
@@ -715,6 +726,16 @@ x11_window_create(xcb_window_t *id, double x, double y, double width, double hei
 	if (!test_cookie(xc))
 	{
 		goto fail_id;
+	}
+
+	/* create buffer for present operations, it won't be used if alt_present = false */
+
+	*buffer = xcb_generate_id(connection);
+	xc = xcb_create_pixmap_checked(connection, depth->depth, *buffer, *id, width, height);
+
+	if (!test_cookie(xc))
+	{
+		goto fail_buffer;
 	}
 
 	/* indicate that the window should receive Present extension events */
@@ -785,6 +806,7 @@ x11_window_create(xcb_window_t *id, double x, double y, double width, double hei
 fail_prop:
 fail_xi:
 fail_present:
+fail_buffer:
 	xcb_destroy_window(connection, *id);
 fail_id:
 	main_set_error(CERR_XCB);
@@ -802,10 +824,11 @@ x11_window_deactivate(xcb_window_t id)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_destroy(xcb_window_t id)
+x11_window_destroy(xcb_window_t id, xcb_pixmap_t buffer)
 {
 	test_cookie(xcb_unmap_window_checked(connection, id));
 	test_cookie(xcb_destroy_window_checked(connection, id));
+	test_cookie(xcb_free_pixmap_checked(connection, buffer));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -824,9 +847,30 @@ x11_window_move(xcb_window_t id, double x, double y)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_present(xcb_window_t id, uint32_t serial)
+x11_window_present(xcb_window_t id, xcb_pixmap_t buffer, uint32_t serial, bool async)
 {
-	xcb_present_notify_msc(connection, id, serial, 0, CONFIG->anim_divider, 0);
+	if (CONFIG->alt_present)
+	{
+		xcb_present_pixmap(
+			connection,
+			id,
+			buffer,
+			serial, 
+			XCB_XFIXES_REGION_NONE,
+			XCB_XFIXES_REGION_NONE,
+			0, 0,
+			0,
+			0,
+			0,
+			async ? XCB_PRESENT_OPTION_ASYNC : XCB_PRESENT_OPTION_NONE,
+			0, async ? 0 : CONFIG->anim_divider, 0,
+			0,
+			NULL);
+	}
+	else
+	{
+		xcb_present_notify_msc(connection, id, serial, 0, async ? 0 : CONFIG->anim_divider, 0);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -943,6 +987,18 @@ x11_window_set_urgency(xcb_window_t id, bool set_on)
 	prop_set(id, XCB_ATOM_WM_HINTS, XCB_ATOM_WM_HINTS, sizeof(xcb_icccm_wm_hints_t), xhints);
 
 	free(xr);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_update_buffer(xcb_window_t id, xcb_pixmap_t *buffer, double width, double height)
+{
+	test_cookie(xcb_free_pixmap_checked(connection, *buffer));
+
+	*buffer = xcb_generate_id(connection);
+
+	test_cookie(xcb_create_pixmap_checked(connection, depth->depth, *buffer, id, width, height));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1133,12 +1189,14 @@ event_expose(xcb_expose_event_t *xcb_event)
 {
 	struct cgui_event event =
 	{
-		.type       = CGUI_EVENT_REDRAW,
-		.window     = find_window(xcb_event->window),
-		.redraw_all = true,
+		.type   = CGUI_EVENT_REDRAW,
+		.window = find_window(xcb_event->window),
 	};
 
-	main_update(&event);
+	if (xcb_event->count == 0)
+	{
+		main_update(&event);
+	};
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1246,22 +1304,21 @@ static void
 event_present(xcb_present_generic_event_t *xcb_event)
 {
 	xcb_present_complete_notify_event_t *present = (xcb_present_complete_notify_event_t*)xcb_event;
+	xcb_present_complete_kind_t type = CONFIG->alt_present ?
+		XCB_PRESENT_COMPLETE_KIND_PIXMAP : XCB_PRESENT_COMPLETE_KIND_NOTIFY_MSC;
 
 	struct cgui_event event =
 	{
-		.type       = CGUI_EVENT_REDRAW,
-		.window     = find_window(present->window),
-		.redraw_all = false,
+		.type   = CGUI_EVENT_PRESENT,
+		.window = find_window(present->window),
 	};
 
-	if (xcb_event->evtype != XCB_PRESENT_EVENT_COMPLETE_NOTIFY
-	 || present->kind     != XCB_PRESENT_COMPLETE_KIND_NOTIFY_MSC
-	 || present->serial   != event.window->x_serial)
+	if (xcb_event->evtype == XCB_PRESENT_EVENT_COMPLETE_NOTIFY
+	 && present->serial   == event.window->x_serial
+	 && present->kind     == type)
 	{
-		return;
+		main_update(&event);
 	}
-
-	main_update(&event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

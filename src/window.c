@@ -84,6 +84,7 @@ cgui_window cgui_window_placeholder_instance =
 	.height         = 0.0,
 	.x_serial       = 0,
 	.x_id           = 0,
+	.x_buffer       = 0,
 	.surface        = NULL,
 	.drawable       = NULL,
 	.name           = NULL,
@@ -99,6 +100,7 @@ cgui_window cgui_window_placeholder_instance =
 	.shown_grid     = CGUI_GRID_PLACEHOLDER,
 	.draw           = WINDOW_DRAW_NONE,
 	.wait_present   = false,
+	.async_present  = false,
 	.valid          = false,
 	.size_requested = false,
 	.draw_timestamp = 0,
@@ -286,7 +288,7 @@ cgui_window_create(void)
 		goto fail_touches;
 	}
 
-	if (!x11_window_create(&window->x_id, x, y, width, height))
+	if (!x11_window_create(&window->x_id, &window->x_buffer, x, y, width, height))
 	{
 		goto fail_backend;
 	}
@@ -325,6 +327,7 @@ cgui_window_create(void)
 	window->focus          = GRID_AREA_NONE;
 	window->draw           = WINDOW_DRAW_NONE;
 	window->wait_present   = false;
+	window->async_present  = false;
 	window->valid          = true;
 	window->size_requested = false;
 	window->draw_timestamp = 0;
@@ -336,7 +339,7 @@ cgui_window_create(void)
 fail_push:
 	cairo_data_destroy(window);
 fail_cairo:
-	x11_window_destroy(window->x_id);
+	x11_window_destroy(window->x_id, window->x_buffer);
 fail_backend:
 	cref_destroy(window->grids);
 fail_touches:
@@ -851,7 +854,7 @@ window_destroy(cgui_window *window)
 
 	cairo_data_destroy(window);
 	main_pull_instance(main_windows(), window);
-	x11_window_destroy(window->x_id);
+	x11_window_destroy(window->x_id, window->x_buffer);
 	cinputs_destroy(window->buttons);
 	cinputs_destroy(window->touches);
 	cref_destroy(window->grids);
@@ -894,7 +897,6 @@ window_draw(cgui_window *window)
 	/* end */
 
 	window->draw           = WINDOW_DRAW_NONE;
-	window->wait_present   = false;
 	window->draw_timestamp = timestamp;
 
 	cairo_new_path(window->drawable);
@@ -938,9 +940,15 @@ window_present(cgui_window *window)
 		return;
 	}
 
-	x11_window_present(window->x_id, ++window->x_serial);
+	if (CONFIG->alt_present)
+	{
+		window_draw(window);
+	}
 
-	window->wait_present = true; /* is set back to false after draw */
+	x11_window_present(window->x_id, window->x_buffer, ++window->x_serial, window->async_present);
+
+	window->wait_present  = true; 
+	window->async_present = false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1024,7 +1032,8 @@ window_repair(cgui_window *window)
 
 	cref_repair(window->grids);
 	window_set_draw_level(window, WINDOW_DRAW_FULL);
-	window_resize(window, window->width, window->height);
+	window_update_size(window, window->width, window->height);
+	window_update_size_hints(window);
 	x11_window_update_state_hints(window->x_id, window->state);
 	x11_window_rename(window->x_id, window->name);
 	for (size_t i = 0; i < CGUI_CONFIG_ACCELS; i++)
@@ -1036,24 +1045,13 @@ window_repair(cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-window_resize(cgui_window *window, double width, double height)
+window_set_async_present(cgui_window *window)
 {
-	window->width  = width;
-	window->height = height;
-
-	cairo_surface_flush(window->surface);
-	cairo_xcb_surface_set_size(window->surface, width, height);
-	if (cairo_error(window))
+	if (CONFIG->async_present)
 	{
-		main_set_error(CERR_CAIRO);
-		return;
+		window->async_present = true;
+		window->wait_present  = false;
 	}
-	
-	update_shown_grid(window);
-	grid_update_geometry(
-		window->shown_grid,
-		window->width  - CONFIG->window_padding * 2,
-		window->height - CONFIG->window_padding * 2);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1065,6 +1063,38 @@ window_set_draw_level(cgui_window *window, enum window_draw_level draw)
 	{
 		window->draw = draw;
 	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+window_update_size(cgui_window *window, double width, double height)
+{
+	window->width  = width;
+	window->height = height;
+
+	cairo_surface_flush(window->surface);
+	if (CONFIG->alt_present)
+	{
+		x11_window_update_buffer(window->x_id, &window->x_buffer, width, height);
+		cairo_xcb_surface_set_drawable(window->surface, window->x_buffer, width, height);
+	}
+	else
+	{
+		cairo_xcb_surface_set_size(window->surface, width, height);
+	}
+
+	if (cairo_error(window))
+	{
+		main_set_error(CERR_CAIRO);
+		return;
+	}
+	
+	update_shown_grid(window);
+	grid_update_geometry(
+		window->shown_grid,
+		window->width  - CONFIG->window_padding * 2,
+		window->height - CONFIG->window_padding * 2);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1202,7 +1232,7 @@ cairo_setup(cgui_window *window, double width, double height)
 {
 	window->surface = cairo_xcb_surface_create(
 		x11_connection(),
-		window->x_id,
+		CONFIG->alt_present ? window->x_buffer : window->x_id,
 		x11_visual(),
 		util_limit(width,  0.0, INT_MAX - 1),
 		util_limit(height, 0.0, INT_MAX - 1));

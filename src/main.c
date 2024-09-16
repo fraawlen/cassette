@@ -155,10 +155,10 @@ cgui_init(int argc, char **argv)
 	SET_ERR(cref_error(grids));
 	SET_ERR(cref_error(windows));
 
-	x11_init(argc, argv, app_name, app_class, ext_connection);
 	config_init(app_name, app_class);
 	config_load();
 	main_lock();
+	x11_init(argc, argv, app_name, app_class, ext_connection);
 
 	if (err)
 	{

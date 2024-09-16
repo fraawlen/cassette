@@ -57,6 +57,7 @@ enum cgui_event_type
 	CGUI_EVENT_LEAVE,
 	CGUI_EVENT_ENTER,
 	CGUI_EVENT_REDRAW,
+	CGUI_EVENT_PRESENT,
 };
 
 /**
@@ -98,8 +99,6 @@ struct cgui_event
 			uint32_t button_id;
 			enum cgui_config_modkey button_mod;
 		};
-		/* CGUI_EVENT_REDRAW */
-		bool redraw_all;
 		/* CGUI_EVENT_POINTER_MOTION */
 		struct
 		{
@@ -112,6 +111,8 @@ struct cgui_event
 		/* CGUI_EVENT_UNMAP    */
 		/* CGUI_EVENT_FOCUS    */
 		/* CGUI_EVENT_UNFOCUS  */
+		/* CGUI_EVENT_REDRAW   */
+		/* CGUI_EVENT_PRESENT  */
 		/* CGUI_EVENT_NONE     */
 		/* no extra fields for these events */
 	};

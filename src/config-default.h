@@ -91,6 +91,8 @@ static const struct cgui_config config_default =
 
 	/* behavior */
 
+	.alt_present        = false,
+	.async_present      = true,
 	.smart_corners      = true,
 	.cell_auto_lock     = true,
 	.persistent_pointer = false,

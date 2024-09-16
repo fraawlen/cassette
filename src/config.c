@@ -125,9 +125,9 @@ struct resource
 /************************************************************************************************************/
 
 static void dummy_fn_load (ccfg *)                                    CGUI_NONNULL(1);
-static void fetch         (const struct resource *)                   CGUI_NONNULL(1);
+static void fetch         (const struct resource);
 static void font_setup    (void);
-static void scale         (const struct resource *)                   CGUI_NONNULL(1);
+static void scale         (const struct resource);
 static void set_corners   (enum value, void *)                        CGUI_NONNULL(2);
 static void swap          (const char *, uint8_t, struct cgui_swap *) CGUI_NONNULL(1, 3);
 static void update_err    (void);
@@ -140,6 +140,7 @@ static struct cgui_config config  = config_default;
 static void (*fn_load)(ccfg *cfg) = dummy_fn_load;
 static ccfg  *parser              = CCFG_PLACEHOLDER;
 static cdict *dict                = CDICT_PLACEHOLDER;
+bool first_load                   = true;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -258,7 +259,8 @@ static const struct resource resources[] =
 	{ "popup",    "enable_position_overrides",   BOOL,        &config.popup_enable_override_position },
 	{ "popup",    "enable_width_override",       BOOL,        &config.popup_enable_override_width    },
 	{ "popup",    "ennable_height_override",     BOOL,        &config.popup_enable_override_height   },
-	
+
+	{ "behavior", "async_present",               BOOL,        &config.async_present                  },
 	{ "behavior", "smart_corner",                BOOL,        &config.smart_corners                  },
 	{ "behavior", "enable_cell_auto_lock",       BOOL,        &config.cell_auto_lock                 },
 	{ "behavior", "enable_persistent_pointer",   BOOL,        &config.persistent_pointer             },
@@ -432,12 +434,18 @@ config_load(void)
 
 	ccfg_load(parser);
 
-	for (size_t i = 0; i < sizeof(resources) / sizeof(struct resource); i++)
+	if (first_load)
 	{
-		fetch(resources + i);
-		scale(resources + i);
+		fetch((struct resource){"global", "alternative_present_mode", BOOL, &config.alt_present});
+		first_load = false;
 	}
 
+	for (size_t i = 0; i < sizeof(resources) / sizeof(struct resource); i++)
+	{
+		fetch(resources[i]);
+		scale(resources[i]);
+	}
+	
 	font_setup();
 	fn_load(parser);
 	update_err();
@@ -479,11 +487,11 @@ dummy_fn_load (ccfg *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-fetch(const struct resource *resource)
+fetch(const struct resource resource)
 {
 	const char *str;
 
-	ccfg_fetch(parser, resource->namespace, resource->name);
+	ccfg_fetch(parser, resource.namespace, resource.name);
 	if (ccfg_iterate(parser))
 	{
 		str = ccfg_resource(parser);
@@ -493,69 +501,69 @@ fetch(const struct resource *resource)
 		return;
 	}
 
-	switch (resource->type)
+	switch (resource.type)
 	{
 		case STRING:
-			snprintf((char*)resource->target, CGUI_CONFIG_STR_LEN, "%s", str);
+			snprintf((char*)resource.target, CGUI_CONFIG_STR_LEN, "%s", str);
 			break;
 
 		case COLOR:
-			*(struct ccolor*)resource->target = ccolor_from_str(str, NULL);
+			*(struct ccolor*)resource.target = ccolor_from_str(str, NULL);
 			break;
 
 		case BOOL:
-			*(bool*)resource->target = !(fabs(strtod(str, NULL)) < DBL_EPSILON);
+			*(bool*)resource.target = !(fabs(strtod(str, NULL)) < DBL_EPSILON);
 			break;
 
 		case POSITION:
-			*(double*)resource->target = ceil(util_str_to_double(str, -DBL_MAX, DBL_MAX));
+			*(double*)resource.target = ceil(util_str_to_double(str, -DBL_MAX, DBL_MAX));
 			break;
 
 		case LENGTH:
-			*(double*)resource->target = ceil(util_str_to_double(str, 0.0, DBL_MAX));
+			*(double*)resource.target = ceil(util_str_to_double(str, 0.0, DBL_MAX));
 			break;
 
 		case LONG:
-			*(long*)resource->target = util_str_to_long(str, LONG_MIN, LONG_MAX);
+			*(long*)resource.target = util_str_to_long(str, LONG_MIN, LONG_MAX);
 			break;
 
 		case ULONG:
-			*(unsigned long*)resource->target = util_str_to_long(str, 0, LONG_MAX);
+			*(unsigned long*)resource.target = util_str_to_long(str, 0, LONG_MAX);
 			break;
 
 		case DOUBLE:
-			*(double*)resource->target = util_str_to_double(str, -DBL_MAX, DBL_MAX);
+			*(double*)resource.target = util_str_to_double(str, -DBL_MAX, DBL_MAX);
 			break;
 
 		case SCALE:
 		case UDOUBLE:
-			*(double*)resource->target = util_str_to_double(str, 0.0, DBL_MAX);
+			*(double*)resource.target = util_str_to_double(str, 0.0, DBL_MAX);
 			break;
 
 		case RATIO:
-			*(double*)resource->target = util_str_to_double(str, 0.0, 1.0);
+			*(double*)resource.target = util_str_to_double(str, 0.0, 1.0);
 			break;
 
 		case MOD_KEY:
 		case ANTIALIAS:
 		case SUBPIXEL:
-			cdict_find(dict, str, resource->type, (size_t*)resource->target);
+			cdict_find(dict, str, resource.type, (size_t*)resource.target);
 			break;
 
 		case MAP_KEY:
-			swap(str, CGUI_CONFIG_KEYS, (struct cgui_swap*)resource->target);
+			swap(str, CGUI_CONFIG_KEYS, (struct cgui_swap*)resource.target);
 			break;
 
 		case MAP_BUTTON:
-			swap(str, CGUI_CONFIG_BUTTONS, (struct cgui_swap*)resource->target);
+			swap(str, CGUI_CONFIG_BUTTONS, (struct cgui_swap*)resource.target);
 			break;
 
 		case CORNER_TYPE:
-			set_corners(CORNER_TYPE, resource->target);
+			set_corners(CORNER_TYPE, resource.target);
 			break;
 
 		case CORNER_SIZE:
-			set_corners(CORNER_SIZE, resource->target);
+			set_corners(CORNER_SIZE, resource.target);
 			break;
 
 		default:
@@ -619,29 +627,29 @@ skip_auto_font:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-scale(const struct resource *resource)
+scale(const struct resource resource)
 {
-	switch (resource->type)
+	switch (resource.type)
 	{
 		case POSITION:
 		case LENGTH:
 		case DOUBLE:
 		case UDOUBLE:
-			*(double*)resource->target *= config.scale;
+			*(double*)resource.target *= config.scale;
 			break;
 
 		case LONG:
-			*(long*)resource->target *= config.scale;
+			*(long*)resource.target *= config.scale;
 			break;
 
 		case ULONG:
-			*(unsigned long*)resource->target *= config.scale;
+			*(unsigned long*)resource.target *= config.scale;
 			break;
 
 		case CORNER_SIZE:
 			for (size_t i = 0; i < 4; i++)
 			{
-				((double*)resource->target)[i] *= config.scale;
+				((double*)resource.target)[i] *= config.scale;
 			}
 
 		default:

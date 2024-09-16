@@ -60,6 +60,7 @@ struct cgui_window
 
 	uint32_t x_serial;
 	xcb_window_t x_id;
+	xcb_pixmap_t x_buffer;
 	cairo_surface_t *surface;
 	cairo_t *drawable;
 
@@ -86,6 +87,7 @@ struct cgui_window
 	struct cgui_window_state_flags state;
 	enum window_draw_level draw;
 	bool wait_present;
+	bool async_present;
 	bool valid;
 	bool size_requested;
 	unsigned long draw_timestamp;
@@ -134,13 +136,19 @@ CGUI_NONNULL(1);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-window_resize(cgui_window *window, double width, double height)
+window_set_async_present(cgui_window *window)
 CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 window_set_draw_level(cgui_window *window, enum window_draw_level draw)
+CGUI_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+window_update_size(cgui_window *window, double width, double height)
 CGUI_NONNULL(1);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

@@ -42,6 +42,7 @@ static void key_release          (struct cgui_event *) CGUI_NONNULL(1);
 static void leave                (struct cgui_event *) CGUI_NONNULL(1);
 static void map                  (struct cgui_event *) CGUI_NONNULL(1);
 static void pointer              (struct cgui_event *) CGUI_NONNULL(1);
+static void present              (struct cgui_event *) CGUI_NONNULL(1);
 static void reconfig             (void);
 static void redraw               (struct cgui_event *) CGUI_NONNULL(1);
 static void touch_begin          (struct cgui_event *) CGUI_NONNULL(1);
@@ -153,6 +154,10 @@ event_process(struct cgui_event *event)
 
 		case CGUI_EVENT_REDRAW:
 			redraw(event);
+			break;
+
+		case CGUI_EVENT_PRESENT:
+			present(event);
 			break;
 
 		case CGUI_EVENT_UNKNOWN_XCB:
@@ -310,6 +315,24 @@ pointer(struct cgui_event *event)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
+present(struct cgui_event *event)
+{
+	if (!event->window->valid)
+	{
+		return;
+	}
+
+	if (!CONFIG->alt_present)
+	{
+		window_draw(event->window);
+	}
+	
+	event->window->wait_present = false;
+}	
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 reconfig(void)
 {
 	cgui_reconfig();
@@ -325,12 +348,8 @@ redraw(struct cgui_event *event)
 		return;
 	}
 
-	if (event->redraw_all)
-	{
-		window_set_draw_level(event->window, WINDOW_DRAW_FULL);
-	}
-
-	window_draw(event->window);
+	window_set_draw_level(event->window, WINDOW_DRAW_FULL);
+	window_set_async_present(event->window);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -377,23 +396,32 @@ touch_update(struct cgui_event *event)
 static void
 transform(struct cgui_event *event)
 {
-	cgui_window *w = event->window;
+	cgui_window *window = event->window;
 
-	if (!event->window->valid)
+	if (!window->valid)
 	{
 		return;
 	}
 
-	w->x = event->transform_x;
-	w->y = event->transform_y;
+	window->x = event->transform_x;
+	window->y = event->transform_y;
 
-	if (fabs(w->width  - event->transform_width)  < DBL_EPSILON
-	 && fabs(w->height - event->transform_height) < DBL_EPSILON)
+	if (fabs(window->width  - event->transform_width)  < DBL_EPSILON
+	 && fabs(window->height - event->transform_height) < DBL_EPSILON)
 	{
 		return;
 	}
-	
-	window_resize(w, event->transform_width, event->transform_height);
+
+	/* extra redraw because an expose event is not received when resizing down */
+
+	if (event->transform_width  < window->width
+	 || event->transform_height < window->height)
+	{
+		window_set_draw_level(window, WINDOW_DRAW_FULL);
+		window_set_async_present(window);
+	}
+
+	window_update_size(window, event->transform_width, event->transform_height);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
