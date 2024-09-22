@@ -103,6 +103,11 @@ cgui_window cgui_window_placeholder_instance =
 	.async_present  = false,
 	.valid          = false,
 	.size_requested = false,
+	.wait_resize    = false,
+	.wm_move        = false,
+	.wm_resize      = false,
+	.old_width      = 0.0,
+	.old_height     = 0.0,
 	.draw_timestamp = 0,
 	.focus          =
 	{
@@ -330,6 +335,11 @@ cgui_window_create(void)
 	window->async_present  = false;
 	window->valid          = true;
 	window->size_requested = false;
+	window->wait_resize    = false;
+	window->wm_move        = false;
+	window->wm_resize      = false;
+	window->old_width      = width;
+	window->old_height     = height;
 	window->draw_timestamp = 0;
 
 	return window;
@@ -975,11 +985,13 @@ skip_filter:
 
 	/* fill out common fields */
 	
-	event->msg    = CGUI_CELL_MSG_NONE;
-	event->x      = area.x;
-	event->y      = area.y;
-	event->width  = area.width;
-	event->height = area.height;
+	event->msg      = CGUI_CELL_MSG_NONE;
+	event->x        = area.x + CONFIG->window_padding;
+	event->y        = area.y + CONFIG->window_padding;
+	event->width    = area.width;
+	event->height   = area.height;
+	event->frame    = cell_frame(window, area);
+	event->drawable = window->drawable;
 
 	/* send event */
 

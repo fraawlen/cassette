@@ -115,6 +115,11 @@ x11_window_set_urgency(xcb_window_t id, bool set_on);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+x11_window_toggle_fullscreen(xcb_window_t id);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 x11_window_update_buffer(xcb_window_t id, xcb_pixmap_t *buffer, double width, double height)
 CGUI_NONNULL(2);
 

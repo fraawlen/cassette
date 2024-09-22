@@ -46,19 +46,19 @@
 
 /* custom atoms names */
 
-#define _ATOM_VERSION           "_CGUI_VERSION"
-#define _ATOM_SIGNALS           "_CGUI_SIGNALS"
-#define _ATOM_RECONFIG          "_CGUI_RECONFIG"
-#define _ATOM_ACCEL             "_CGUI_ACCEL"
-#define _ATOM_WINDOW_STATES     "_CGUI_WINDOW_STATE"
-#define _ATOM_WINDOW_ACTIVE     "_CGUI_STATE_WIN_ACTIVE"
-#define _ATOM_WINDOW_DISABLED   "_CGUI_STATE_WIN_DISABLED"
-#define _ATOM_WINDOW_GRID_LOCK  "_CGUI_STATE_GRID_LOCK"
-#define _ATOM_WINDOW_FOCUS_LOCK "_CGUI_STATE_FOCUS_LOCK"
-#define _ATOM_WINDOW_FOCUS      "_CGUI_WINDOW_FOCUS"
-#define _ATOM_PASTE_TMP_1       "_CGUI_PASTE_TMP_1"
-#define _ATOM_PASTE_TMP_2       "_CGUI_PASTE_TMP_2"
-#define _ATOM_PASTE_TMP_3       "_CGUI_PASTE_TMP_3"
+#define ATOM_VERSION           "_CGUI_VERSION"
+#define ATOM_SIGNALS           "_CGUI_SIGNALS"
+#define ATOM_RECONFIG          "_CGUI_RECONFIG"
+#define ATOM_ACCEL             "_CGUI_ACCEL"
+#define ATOM_WINDOW_STATES     "_CGUI_WINDOW_STATE"
+#define ATOM_WINDOW_ACTIVE     "_CGUI_STATE_WIN_ACTIVE"
+#define ATOM_WINDOW_DISABLED   "_CGUI_STATE_WIN_DISABLED"
+#define ATOM_WINDOW_GRID_LOCK  "_CGUI_STATE_GRID_LOCK"
+#define ATOM_WINDOW_FOCUS_LOCK "_CGUI_STATE_FOCUS_LOCK"
+#define ATOM_WINDOW_FOCUS      "_CGUI_WINDOW_FOCUS"
+#define ATOM_PASTE_TMP_1       "_CGUI_PASTE_TMP_1"
+#define ATOM_PASTE_TMP_2       "_CGUI_PASTE_TMP_2"
+#define ATOM_PASTE_TMP_3       "_CGUI_PASTE_TMP_3"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -81,33 +81,34 @@ struct xi_input_mask
 
 /* helpers */
 
-static cgui_window *find_window          (xcb_window_t);
-static xcb_atom_t   get_atom             (const char *) CGUI_NONNULL(1);
-static uint8_t      get_extension_opcode (const char *) CGUI_NONNULL(1);
-static bool         prop_add             (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
-static bool         prop_set             (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
-static bool         test_cookie          (xcb_void_cookie_t);
+static cgui_window     *find_window          (xcb_window_t);
+static xcb_atom_t       get_atom             (const char *) CGUI_NONNULL(1);
+static uint8_t          get_extension_opcode (const char *) CGUI_NONNULL(1);
+static bool             prop_add             (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
+static bool             prop_set             (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
+static bool             test_cookie          (xcb_void_cookie_t);
+static struct cgui_mods translate_mods       (uint16_t state);
 
 /* event handlers */
 
-static void event_button            (xcb_button_press_event_t *)      CGUI_NONNULL(1);
-static void event_client_message    (xcb_client_message_event_t *)    CGUI_NONNULL(1);
-static void event_configure         (xcb_configure_notify_event_t *)  CGUI_NONNULL(1);
-static void event_enter             (xcb_enter_notify_event_t *)      CGUI_NONNULL(1);
-static void event_expose            (xcb_expose_event_t *)            CGUI_NONNULL(1);
-static void event_focus_in          (xcb_focus_in_event_t *)          CGUI_NONNULL(1);
-static void event_focus_out         (xcb_focus_out_event_t *)         CGUI_NONNULL(1);
-static void event_key               (xcb_key_press_event_t *)         CGUI_NONNULL(1);
-static void event_keymap            (xcb_mapping_notify_event_t *)    CGUI_NONNULL(1);
-static void event_leave             (xcb_leave_notify_event_t *)      CGUI_NONNULL(1);
-static void event_map               (xcb_map_notify_event_t *)        CGUI_NONNULL(1);
-static void event_motion            (xcb_motion_notify_event_t *)     CGUI_NONNULL(1);
-static void event_present           (xcb_present_generic_event_t *)   CGUI_NONNULL(1);
-static void event_selection_clear   (xcb_selection_clear_event_t *)   CGUI_NONNULL(1);
-static void event_selection_request (xcb_selection_request_event_t *) CGUI_NONNULL(1);
-static void event_unknown           (xcb_generic_event_t *)           CGUI_NONNULL(1);
-static void event_unmap             (xcb_unmap_notify_event_t *)      CGUI_NONNULL(1);
-static void event_xinput_touch      (xcb_input_touch_begin_event_t *) CGUI_NONNULL(1);
+static void event_button            (xcb_button_press_event_t *, bool) CGUI_NONNULL(1);
+static void event_client_message    (xcb_client_message_event_t *)     CGUI_NONNULL(1);
+static void event_configure         (xcb_configure_notify_event_t *)   CGUI_NONNULL(1);
+static void event_enter             (xcb_enter_notify_event_t *)       CGUI_NONNULL(1);
+static void event_expose            (xcb_expose_event_t *)             CGUI_NONNULL(1);
+static void event_focus_in          (xcb_focus_in_event_t *)           CGUI_NONNULL(1);
+static void event_focus_out         (xcb_focus_out_event_t *)          CGUI_NONNULL(1);
+static void event_key               (xcb_key_press_event_t *, bool)    CGUI_NONNULL(1);
+static void event_keymap            (xcb_mapping_notify_event_t *)     CGUI_NONNULL(1);
+static void event_leave             (xcb_leave_notify_event_t *)       CGUI_NONNULL(1);
+static void event_map               (xcb_map_notify_event_t *)         CGUI_NONNULL(1);
+static void event_motion            (xcb_motion_notify_event_t *)      CGUI_NONNULL(1);
+static void event_present           (xcb_present_generic_event_t *)    CGUI_NONNULL(1);
+static void event_selection_clear   (xcb_selection_clear_event_t *)    CGUI_NONNULL(1);
+static void event_selection_request (xcb_selection_request_event_t *)  CGUI_NONNULL(1);
+static void event_unknown           (xcb_generic_event_t *)            CGUI_NONNULL(1);
+static void event_unmap             (xcb_unmap_notify_event_t *)       CGUI_NONNULL(1);
+static void event_xinput_touch      (xcb_input_touch_begin_event_t *)  CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -155,6 +156,8 @@ static xcb_atom_t atom_wnom = 0; /* "_NET_WM_WINDOW_TYPE_NORMAL"  */
 static xcb_atom_t atom_wdsk = 0; /* "_NET_WM_WINDOW_TYPE_DESKTOP" */
 static xcb_atom_t atom_wovr = 0; /* "_NET_WM_WINDOW_TYPE_OVERLAY" */
 static xcb_atom_t atom_wdlg = 0; /* "_NET_WM_WINDOW_TYPE_DIALOG"  */
+static xcb_atom_t atom_nstt = 0; /* "_NET_WM_STATE"               */
+static xcb_atom_t atom_full = 0; /* "_NET_WM_STATE_FULLSREEN"     */
 
 /* CGUI custom atoms */
 
@@ -357,23 +360,25 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 	atom_wdsk = get_atom("_NET_WM_WINDOW_TYPE_DESKTOP");
 	atom_wovr = get_atom("_NET_WM_WINDOW_TYPE_DOCK");
 	atom_wdlg = get_atom("_NET_WM_WINDOW_TYPE_DIALOG");
+	atom_nstt = get_atom("_NET_WM_STATE");
+	atom_full = get_atom("_NET_WM_STATE_FULLSCREEN");
 
-	atom_sig  = get_atom(_ATOM_SIGNALS);
-	atom_vers = get_atom(_ATOM_VERSION);
-	atom_stt  = get_atom(_ATOM_WINDOW_STATES);
-	atom_wfoc = get_atom(_ATOM_WINDOW_FOCUS);
-	atom_tmp1 = get_atom(_ATOM_PASTE_TMP_1);
-	atom_tmp2 = get_atom(_ATOM_PASTE_TMP_2);
-	atom_tmp3 = get_atom(_ATOM_PASTE_TMP_3);
-	atom_won  = get_atom(_ATOM_WINDOW_ACTIVE);
-	atom_wena = get_atom(_ATOM_WINDOW_DISABLED);
-	atom_plck = get_atom(_ATOM_WINDOW_GRID_LOCK);
-	atom_flck = get_atom(_ATOM_WINDOW_FOCUS_LOCK);
-	atom_conf = get_atom(_ATOM_RECONFIG);
-	atom_acl  = get_atom(_ATOM_ACCEL);
+	atom_sig  = get_atom(ATOM_SIGNALS);
+	atom_vers = get_atom(ATOM_VERSION);
+	atom_stt  = get_atom(ATOM_WINDOW_STATES);
+	atom_wfoc = get_atom(ATOM_WINDOW_FOCUS);
+	atom_tmp1 = get_atom(ATOM_PASTE_TMP_1);
+	atom_tmp2 = get_atom(ATOM_PASTE_TMP_2);
+	atom_tmp3 = get_atom(ATOM_PASTE_TMP_3);
+	atom_won  = get_atom(ATOM_WINDOW_ACTIVE);
+	atom_wena = get_atom(ATOM_WINDOW_DISABLED);
+	atom_plck = get_atom(ATOM_WINDOW_GRID_LOCK);
+	atom_flck = get_atom(ATOM_WINDOW_FOCUS_LOCK);
+	atom_conf = get_atom(ATOM_RECONFIG);
+	atom_acl  = get_atom(ATOM_ACCEL);
 
 	for (int i = 0; i < CGUI_CONFIG_ACCELS; i++) {
-		sprintf(s, _ATOM_ACCEL "_%i", i + 1);
+		sprintf(s, ATOM_ACCEL "_%i", i + 1);
 		atom_aclx[i] = get_atom(s);
 	}
 
@@ -559,13 +564,19 @@ x11_update(void)
 		/* can mix key and button_press events because their structs have the same fields */
 
 		case XCB_BUTTON_PRESS:
+			event_button((xcb_button_press_event_t*)event, true);
+			break;
+
 		case XCB_BUTTON_RELEASE:
-			event_button((xcb_button_press_event_t*)event);
+			event_button((xcb_button_press_event_t*)event, false);
 			break;
 
 		case XCB_KEY_PRESS:
+			event_key((xcb_key_press_event_t*)event, true);
+			break;
+
 		case XCB_KEY_RELEASE:
-			event_key((xcb_key_press_event_t*)event);
+			event_key((xcb_key_press_event_t*)event, false);
 			break;
 
 		case XCB_ENTER_NOTIFY:
@@ -992,6 +1003,29 @@ x11_window_set_urgency(xcb_window_t id, bool set_on)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+x11_window_toggle_fullscreen(xcb_window_t id)
+{
+	xcb_client_message_event_t event =
+	{
+		.response_type = XCB_CLIENT_MESSAGE,
+		.type          = atom_nstt,
+		.format        = 32,
+		.window        = id,
+		.data          =
+		{
+			.data32[0] = 2,
+			.data32[1] = atom_full,
+			.data32[2] = XCB_ATOM_NONE,
+			.data32[3] = 1,
+		},
+	};
+
+	xcb_send_event(connection, 1, screen->root, XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY, (char*)&event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 x11_window_update_buffer(xcb_window_t id, xcb_pixmap_t *buffer, double width, double height)
 {
 	test_cookie(xcb_free_pixmap_checked(connection, *buffer));
@@ -1074,16 +1108,16 @@ x11_window_update_state_hints(xcb_window_t id, struct cgui_window_state_flags st
 /************************************************************************************************************/
 
 static void
-event_button(xcb_button_press_event_t *xcb_event)
+event_button(xcb_button_press_event_t *xcb_event, bool press)
 {
 	struct cgui_event event =
 	{
-		.button_mod =  xcb_event->state,
-		.button_x   =  xcb_event->event_x,
-		.button_y   =  xcb_event->event_y,
-		.button_id  =  xcb_event->detail,
-		.type       = (xcb_event->response_type & ~0x80) == XCB_KEY_PRESS ? 
-			CGUI_EVENT_BUTTON_PRESS : CGUI_EVENT_BUTTON_RELEASE,
+		.type        = press ? CGUI_EVENT_BUTTON_PRESS : CGUI_EVENT_BUTTON_RELEASE,
+		.window      = find_window(xcb_event->event),
+		.button_id   = xcb_event->detail,
+		.button_x    = xcb_event->event_x,
+		.button_y    = xcb_event->event_y,
+		.button_mods = translate_mods(xcb_event->state),
 	};
 
 	main_update(&event);
@@ -1175,9 +1209,11 @@ event_configure(xcb_configure_notify_event_t *xcb_event)
 static void
 event_enter(xcb_enter_notify_event_t *xcb_event)
 {
-	struct cgui_event event = {0};
-
-	(void)xcb_event; // TODO
+	struct cgui_event event = 
+	{
+		.type   = CGUI_EVENT_ENTER,
+		.window = find_window(xcb_event->event),
+	};
 
 	main_update(&event);
 }
@@ -1239,11 +1275,15 @@ event_focus_out(xcb_focus_out_event_t *xcb_event)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-event_key(xcb_key_press_event_t *xcb_event)
+event_key(xcb_key_press_event_t *xcb_event, bool press)
 {
-	struct cgui_event event = {0};
-
-	(void)xcb_event; // TODO
+	struct cgui_event event =
+	{
+		.type     = press ? CGUI_EVENT_KEY_PRESS : CGUI_EVENT_KEY_RELEASE,
+		.window   = find_window(xcb_event->event),
+		.key_mods = translate_mods(xcb_event->state),
+		// TODO
+	};
 
 	main_update(&event);
 }
@@ -1261,9 +1301,11 @@ event_keymap(xcb_mapping_notify_event_t *xcb_event)
 static void
 event_leave(xcb_leave_notify_event_t *xcb_event)
 {
-	struct cgui_event event = {0};
-
-	(void)xcb_event; // TODO
+	struct cgui_event event = 
+	{
+		.type   = CGUI_EVENT_LEAVE,
+		.window = find_window(xcb_event->event),
+	};
 
 	main_update(&event);
 }
@@ -1326,9 +1368,15 @@ event_present(xcb_present_generic_event_t *xcb_event)
 static void
 event_selection_clear(xcb_selection_clear_event_t *xcb_event)
 {
-	struct cgui_event event = {0};
+	struct cgui_event event =
+	{
+		.type   = CGUI_EVENT_NONE,
+		.window = CGUI_WINDOW_PLACEHOLDER,
+	};
 
-	(void)xcb_event; // TODO
+	(void)xcb_event;
+
+	// TODO
 
 	main_update(&event);
 }
@@ -1338,9 +1386,15 @@ event_selection_clear(xcb_selection_clear_event_t *xcb_event)
 static void
 event_selection_request(xcb_selection_request_event_t *xcb_event)
 {
-	struct cgui_event event = {0};
+	struct cgui_event event =
+	{
+		.type   = CGUI_EVENT_NONE,
+		.window = CGUI_WINDOW_PLACEHOLDER,
+	};
 
-	(void)xcb_event; // TODO
+	(void)xcb_event;
+
+	// TODO
 
 	main_update(&event);
 }
@@ -1528,4 +1582,24 @@ test_cookie(xcb_void_cookie_t xc)
 	}
 
 	return true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static struct cgui_mods
+translate_mods(uint16_t state)
+{
+	struct cgui_mods mods =
+	{
+		.capslock = state & XCB_MOD_MASK_LOCK,
+		.shift    = state & XCB_MOD_MASK_SHIFT,
+		.ctrl     = state & XCB_MOD_MASK_CONTROL,
+		.mod_1    = state & XCB_MOD_MASK_1,
+		.mod_2    = state & XCB_MOD_MASK_2,
+		.mod_3    = state & XCB_MOD_MASK_3,
+		.mod_4    = state & XCB_MOD_MASK_4,
+		.mod_5    = state & XCB_MOD_MASK_5,
+	};
+
+	return mods;
 }

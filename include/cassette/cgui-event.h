@@ -21,6 +21,7 @@
 #pragma once
 
 #include "cgui-config.h"
+#include "cgui-types.h"
 #include "cgui-window.h"
 
 #ifdef __cplusplus
@@ -86,18 +87,25 @@ struct cgui_event
 		/* CGUI_EVENT_TOUCH_END    */
 		struct
 		{
+			uint32_t touch_id;
 			double touch_x;
 			double touch_y;
-			uint32_t touch_id;
 		};
 		/* CGUI_EVENT_BUTTON_PRESS   */
 		/* CGUI_EVENT_BUTTON_RELEASE */
 		struct
 		{
+			size_t button_id;
 			double button_x;
 			double button_y;
-			uint32_t button_id;
-			enum cgui_config_modkey button_mod;
+			struct cgui_mods button_mods;
+		};
+		/* CGUI_EVENT_BUTTON_PRESS   */
+		/* CGUI_EVENT_BUTTON_RELEASE */
+		struct
+		{
+			// TODO
+			struct cgui_mods key_mods;
 		};
 		/* CGUI_EVENT_POINTER_MOTION */
 		struct
@@ -105,6 +113,7 @@ struct cgui_event
 			double pointer_x;
 			double pointer_y;
 		};
+		/* CGUI_EVENT_RECONFIG */
 		/* CGUI_EVENT_CLOSE    */
 		/* CGUI_EVENT_RECONFIG */
 		/* CGUI_EVENT_MAP      */
@@ -113,6 +122,8 @@ struct cgui_event
 		/* CGUI_EVENT_UNFOCUS  */
 		/* CGUI_EVENT_REDRAW   */
 		/* CGUI_EVENT_PRESENT  */
+		/* CGUI_EVENT_ENTER    */
+		/* CGUI_EVENT_LEAVE    */
 		/* CGUI_EVENT_NONE     */
 		/* no extra fields for these events */
 	};

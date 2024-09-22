@@ -91,6 +91,14 @@ struct cgui_window
 	bool valid;
 	bool size_requested;
 	unsigned long draw_timestamp;
+
+	/* wm data */
+
+	bool wait_resize;
+	bool wm_move;
+	bool wm_resize;
+	double old_width;
+	double old_height;
 };
 
 /************************************************************************************************************/

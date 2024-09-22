@@ -229,6 +229,9 @@ static void
 event(cgui_cell *cell, struct cgui_cell_event *event)
 {
 	enum state old_state = DATA->state;
+	bool trigger         = false;
+
+	/* pre-filter */
 
 	if (!DATA->enabled)
 	{
@@ -236,8 +239,19 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 		return;
 	}
 
+	/* process event */
+
 	switch (event->type)
 	{
+		case CGUI_CELL_EVENT_BUTTON_PRESS:
+			DATA->state = event->button_id == 1 ? PRESSED : DATA->state;
+			break;
+
+		case CGUI_CELL_EVENT_BUTTON_RELEASE:
+			DATA->state = event->button_id == 1 ? FOCUSED : DATA->state;
+			trigger     = event->button_id == 1 && cgui_cell_is_event_in(event);
+			break;
+
 		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_REFERENCE:
 		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_ACTION:
 		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_POINTER:
@@ -252,6 +266,13 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 		default:
 			event->msg = CGUI_CELL_MSG_REJECT;
 			break;
+	}
+	
+	/* post-event */
+
+	if (trigger)
+	{
+		DATA->fn_click(cell);
 	}
 
 	if (old_state != DATA->state)

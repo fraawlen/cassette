@@ -27,6 +27,7 @@
 
 #include "cgui-attributes.h"
 #include "cgui-box.h"
+#include "cgui-types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,6 +59,8 @@ enum cgui_cell_msg
 enum cgui_cell_event_type
 {
 	CGUI_CELL_EVENT_NONE = 0,
+	CGUI_CELL_EVENT_BUTTON_PRESS,
+	CGUI_CELL_EVENT_BUTTON_RELEASE,
 	CGUI_CELL_EVENT_POINTER_MOTION,
 	CGUI_CELL_EVENT_FOCUS_GAIN_BY_ACTION,
 	CGUI_CELL_EVENT_FOCUS_GAIN_BY_POINTER,
@@ -75,14 +78,26 @@ enum cgui_cell_event_type
  */
 struct cgui_cell_event
 {
+	cairo_t *drawable;
 	enum cgui_cell_msg msg;
 	enum cgui_cell_event_type type;
+	struct cgui_box frame;
 	double x;
 	double y;
 	double width;
 	double height;
 	union
 	{
+		/* CGUI_CELL_EVENT_BUTTON_PRESS   */
+		/* CGUI_CELL_EVENT_BUTTON_RELEASE */
+		struct
+		{
+			size_t button_id;
+			size_t button_n;
+			double button_x;
+			double button_y;
+			struct cgui_mods button_mods;
+		};
 		/* CGUI_CELL_EVENT_POINTER_MOTION */
 		struct
 		{
@@ -300,6 +315,12 @@ cgui_cell_draw_frame(struct cgui_cell_context context);
  */
 void
 cgui_cell_clip_frame(struct cgui_cell_context context);
+
+/**
+ *
+ */
+bool
+cgui_cell_is_event_in(const struct cgui_cell_event *event) CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

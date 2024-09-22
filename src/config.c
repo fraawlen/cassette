@@ -84,6 +84,7 @@ enum value
 	UDOUBLE,
 	RATIO,
 	SCALE,
+	BUTTON,
 
 	/* dict based */
 
@@ -146,66 +147,66 @@ bool first_load                   = true;
 
 static const struct word words[] =
 {
-	{ "mod1",       MOD_KEY,     CGUI_CONFIG_MOD_1                  },
-	{ "mod4",       MOD_KEY,     CGUI_CONFIG_MOD_4                  },
-	{ "ctrl",       MOD_KEY,     CGUI_CONFIG_MOD_CTRL               },
+	{ "mod1",       MOD_KEY,     CGUI_CONFIG_MOD_1              },
+	{ "mod4",       MOD_KEY,     CGUI_CONFIG_MOD_4              },
+	{ "ctrl",       MOD_KEY,     CGUI_CONFIG_MOD_CTRL           },
 
-	{ "none",       ANTIALIAS,   CGUI_CONFIG_ANTIALIAS_NONE         },
-	{ "gray",       ANTIALIAS,   CGUI_CONFIG_ANTIALIAS_GRAY         },
-	{ "subpixel",   ANTIALIAS,   CGUI_CONFIG_ANTIALIAS_SUBPIXEL     },
+	{ "none",       ANTIALIAS,   CGUI_CONFIG_ANTIALIAS_NONE     },
+	{ "gray",       ANTIALIAS,   CGUI_CONFIG_ANTIALIAS_GRAY     },
+	{ "subpixel",   ANTIALIAS,   CGUI_CONFIG_ANTIALIAS_SUBPIXEL },
 
-	{ "rgb",        SUBPIXEL,    CGUI_CONFIG_SUBPIXEL_RGB           },
-	{ "bgr",        SUBPIXEL,    CGUI_CONFIG_SUBPIXEL_BGR           },
-	{ "vrgb",       SUBPIXEL,    CGUI_CONFIG_SUBPIXEL_VRGB          },
-	{ "vbgr",       SUBPIXEL,    CGUI_CONFIG_SUBPIXEL_VBGR          },
+	{ "rgb",        SUBPIXEL,    CGUI_CONFIG_SUBPIXEL_RGB       },
+	{ "bgr",        SUBPIXEL,    CGUI_CONFIG_SUBPIXEL_BGR       },
+	{ "vrgb",       SUBPIXEL,    CGUI_CONFIG_SUBPIXEL_VRGB      },
+	{ "vbgr",       SUBPIXEL,    CGUI_CONFIG_SUBPIXEL_VBGR      },
 
-	{ "default",    SWAP_KIND,   CGUI_INPUT_SWAP_TO_DEFAULT         },
-	{ "none",       SWAP_KIND,   CGUI_INPUT_SWAP_TO_NONE            },
-	{ "value",      SWAP_KIND,   CGUI_INPUT_SWAP_TO_VALUE           },
-	{ "accel",      SWAP_KIND,   CGUI_INPUT_SWAP_TO_ACCELERATOR     },
-	{ "cut",        SWAP_KIND,   CGUI_INPUT_SWAP_TO_CLIPBOARD_CUT   },
-	{ "copy",       SWAP_KIND,   CGUI_INPUT_SWAP_TO_CLIPBOARD_COPY  },
-	{ "paste",      SWAP_KIND,   CGUI_INPUT_SWAP_TO_CLIPBOARD_PASTE },
-	{ "cell",       SWAP_KIND,   CGUI_INPUT_SWAP_TO_ACTION_CELL     },
-	{ "focus",      SWAP_KIND,   CGUI_INPUT_SWAP_TO_ACTION_FOCUS    },
-	{ "window",     SWAP_KIND,   CGUI_INPUT_SWAP_TO_ACTION_WINDOW   },
-	{ "misc",       SWAP_KIND,   CGUI_INPUT_SWAP_TO_ACTION_MISC     },
+	{ "default",    SWAP_KIND,   CGUI_SWAP_TO_DEFAULT           },
+	{ "none",       SWAP_KIND,   CGUI_SWAP_TO_NONE              },
+	{ "value",      SWAP_KIND,   CGUI_SWAP_TO_VALUE             },
+	{ "accel",      SWAP_KIND,   CGUI_SWAP_TO_ACCELERATOR       },
+	{ "cut",        SWAP_KIND,   CGUI_SWAP_TO_CLIPBOARD_CUT     },
+	{ "copy",       SWAP_KIND,   CGUI_SWAP_TO_CLIPBOARD_COPY    },
+	{ "paste",      SWAP_KIND,   CGUI_SWAP_TO_CLIPBOARD_PASTE   },
+	{ "cell",       SWAP_KIND,   CGUI_SWAP_TO_ACTION_CELL       },
+	{ "focus",      SWAP_KIND,   CGUI_SWAP_TO_ACTION_FOCUS      },
+	{ "window",     SWAP_KIND,   CGUI_SWAP_TO_ACTION_WINDOW     },
+	{ "misc",       SWAP_KIND,   CGUI_SWAP_TO_ACTION_MISC       },
 
-	{ "select-",    SWAP_ACTION, CGUI_INPUT_SWAP_CELL_SELECT_LESS   },
-	{ "select+",    SWAP_ACTION, CGUI_INPUT_SWAP_CELL_SELECT_MORE   },
-	{ "unselect",   SWAP_ACTION, CGUI_INPUT_SWAP_CELL_SELECT_NONE   },
-	{ "select_all", SWAP_ACTION, CGUI_INPUT_SWAP_CELL_SELECT_ALL    },
-	{ "redraw",     SWAP_ACTION, CGUI_INPUT_SWAP_CELL_SELECT_ALL    },
-	{ "trigger1",   SWAP_ACTION, CGUI_INPUT_SWAP_CELL_TRIGGER_1     },
-	{ "trigger2",   SWAP_ACTION, CGUI_INPUT_SWAP_CELL_TRIGGER_2     },
-	{ "trigger3",   SWAP_ACTION, CGUI_INPUT_SWAP_CELL_TRIGGER_3     },
-	{ "trigger4",   SWAP_ACTION, CGUI_INPUT_SWAP_CELL_TRIGGER_4     },
-	{ "trigger5",   SWAP_ACTION, CGUI_INPUT_SWAP_CELL_TRIGGER_5     },
+	{ "select-",    SWAP_ACTION, CGUI_SWAP_CELL_SELECT_LESS     },
+	{ "select+",    SWAP_ACTION, CGUI_SWAP_CELL_SELECT_MORE     },
+	{ "unselect",   SWAP_ACTION, CGUI_SWAP_CELL_SELECT_NONE     },
+	{ "select_all", SWAP_ACTION, CGUI_SWAP_CELL_SELECT_ALL      },
+	{ "redraw",     SWAP_ACTION, CGUI_SWAP_CELL_SELECT_ALL      },
+	{ "trigger1",   SWAP_ACTION, CGUI_SWAP_CELL_TRIGGER_1       },
+	{ "trigger2",   SWAP_ACTION, CGUI_SWAP_CELL_TRIGGER_2       },
+	{ "trigger3",   SWAP_ACTION, CGUI_SWAP_CELL_TRIGGER_3       },
+	{ "trigger4",   SWAP_ACTION, CGUI_SWAP_CELL_TRIGGER_4       },
+	{ "trigger5",   SWAP_ACTION, CGUI_SWAP_CELL_TRIGGER_5       },
 
-	{ "left",       SWAP_ACTION, CGUI_INPUT_SWAP_FOCUS_LEFT         },
-	{ "right",      SWAP_ACTION, CGUI_INPUT_SWAP_FOCUS_RIGHT        },
-	{ "up",         SWAP_ACTION, CGUI_INPUT_SWAP_FOCUS_UP           },
-	{ "down",       SWAP_ACTION, CGUI_INPUT_SWAP_FOCUS_DOWN         },
-	{ "leftmost",   SWAP_ACTION, CGUI_INPUT_SWAP_FOCUS_LEFTMOST     },
-	{ "rightmost",  SWAP_ACTION, CGUI_INPUT_SWAP_FOCUS_RIGHTMOST    },
-	{ "top",        SWAP_ACTION, CGUI_INPUT_SWAP_FOCUS_TOP          },
-	{ "bottom",     SWAP_ACTION, CGUI_INPUT_SWAP_FOCUS_BOTTOM       },
-	{ "next",       SWAP_ACTION, CGUI_INPUT_SWAP_FOCUS_NEXT         },
-	{ "previous",   SWAP_ACTION, CGUI_INPUT_SWAP_FOCUS_PREV         },
-	{ "first",      SWAP_ACTION, CGUI_INPUT_SWAP_FOCUS_FIRST        },
-	{ "last",       SWAP_ACTION, CGUI_INPUT_SWAP_FOCUS_LAST         },
-	{ "none",       SWAP_ACTION, CGUI_INPUT_SWAP_FOCUS_NONE         },
+	{ "left",       SWAP_ACTION, CGUI_SWAP_FOCUS_LEFT           },
+	{ "right",      SWAP_ACTION, CGUI_SWAP_FOCUS_RIGHT          },
+	{ "up",         SWAP_ACTION, CGUI_SWAP_FOCUS_UP             },
+	{ "down",       SWAP_ACTION, CGUI_SWAP_FOCUS_DOWN           },
+	{ "leftmost",   SWAP_ACTION, CGUI_SWAP_FOCUS_LEFTMOST       },
+	{ "rightmost",  SWAP_ACTION, CGUI_SWAP_FOCUS_RIGHTMOST      },
+	{ "top",        SWAP_ACTION, CGUI_SWAP_FOCUS_TOP            },
+	{ "bottom",     SWAP_ACTION, CGUI_SWAP_FOCUS_BOTTOM         },
+	{ "next",       SWAP_ACTION, CGUI_SWAP_FOCUS_NEXT           },
+	{ "previous",   SWAP_ACTION, CGUI_SWAP_FOCUS_PREV           },
+	{ "first",      SWAP_ACTION, CGUI_SWAP_FOCUS_FIRST          },
+	{ "last",       SWAP_ACTION, CGUI_SWAP_FOCUS_LAST           },
+	{ "none",       SWAP_ACTION, CGUI_SWAP_FOCUS_NONE           },
 
-	{ "lock_grid",  SWAP_ACTION, CGUI_INPUT_SWAP_WINDOW_LOCK_GRID   },
-	{ "lock_focus", SWAP_ACTION, CGUI_INPUT_SWAP_WINDOW_LOCK_FOCUS  },
-	{ "redraw",     SWAP_ACTION, CGUI_INPUT_SWAP_WINDOW_LOCK_FOCUS  },
+	{ "lock_grid",  SWAP_ACTION, CGUI_SWAP_WINDOW_LOCK_GRID     },
+	{ "lock_focus", SWAP_ACTION, CGUI_SWAP_WINDOW_LOCK_FOCUS    },
+	{ "redraw",     SWAP_ACTION, CGUI_SWAP_WINDOW_LOCK_FOCUS    },
 	
-	{ "reconfig",   SWAP_ACTION, CGUI_INPUT_SWAP_RECONFIG           },
-	{ "exit",       SWAP_ACTION, CGUI_INPUT_SWAP_EXIT               },
+	{ "reconfig",   SWAP_ACTION, CGUI_SWAP_RECONFIG             },
+	{ "exit",       SWAP_ACTION, CGUI_SWAP_EXIT                 },
 
-	{ "straight",   CORNER_TYPE, CGUI_BOX_STRAIGHT                  },
-	{ "chamfer",    CORNER_TYPE, CGUI_BOX_CHAMFER                   },
-	{ "radii",      CORNER_TYPE, CGUI_BOX_RADII                     },
+	{ "straight",   CORNER_TYPE, CGUI_BOX_STRAIGHT              },
+	{ "chamfer",    CORNER_TYPE, CGUI_BOX_CHAMFER               },
+	{ "radii",      CORNER_TYPE, CGUI_BOX_RADII                 },
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -266,6 +267,9 @@ static const struct resource resources[] =
 	{ "behavior", "enable_persistent_pointer",   BOOL,        &config.persistent_pointer             },
 	{ "behavior", "enable_persistent_touch",     BOOL,        &config.persistent_touch               },
 	{ "behavior", "animation_framerate_divider", ULONG,       &config.anim_divider                   },
+	{ "behavior", "window_button_move",          BUTTON,      &config.wm_button_move                 },
+	{ "behavior", "window_button_resize",        BUTTON,      &config.wm_button_resize               },
+	{ "behavior", "window_button_fullscreen",    BUTTON,      &config.wm_button_fullscreen           },
 
 	{ "stripes",  "color",                       COLOR,       &config.stripes_color                  },
 	{ "stripes",  "width",                       LENGTH,      &config.stripes_width                  },
@@ -474,6 +478,54 @@ config_reset(void)
 	dict    = CDICT_PLACEHOLDER;
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct cgui_swap
+config_swap_input(uint32_t id, struct cgui_mods mods, enum config_swap type)
+{
+	bool modkey;
+	const struct cgui_swap none =
+	{
+		.type  = CGUI_SWAP_TO_NONE,
+		.value = CGUI_SWAP_NONE
+	};
+
+	if (id == 0 || id > (type == CONFIG_SWAP_KEYS ? CGUI_CONFIG_KEYS : CGUI_CONFIG_BUTTONS))
+	{
+		return none;
+	}
+
+	switch (config.modkey)
+	{
+		case CGUI_CONFIG_MOD_CTRL:
+			modkey = mods.ctrl;
+			break;
+
+		case CGUI_CONFIG_MOD_1:
+			modkey = mods.mod_1;
+			break;
+
+		case CGUI_CONFIG_MOD_4:
+			modkey = mods.mod_4;
+			break;
+
+		default:
+			return none;
+	}
+
+	switch (type)
+	{
+		case CONFIG_SWAP_KEYS:
+			return config.keys[id][modkey ? (mods.shift ? 2 : 1) : 0];
+
+		case CONFIG_SWAP_BUTTONS:
+			return config.buttons[id][modkey ? (mods.shift ? 2 : 1) : 0];
+
+		default:
+			return none;
+	}
+}
+
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
@@ -542,6 +594,10 @@ fetch(const struct resource resource)
 
 		case RATIO:
 			*(double*)resource.target = util_str_to_double(str, 0.0, 1.0);
+			break;
+
+		case BUTTON:
+			*(size_t*)resource.target = util_str_to_long(str, 0, CGUI_CONFIG_BUTTONS);
 			break;
 
 		case MOD_KEY:
@@ -743,31 +799,31 @@ swap(const char *str, uint8_t limit, struct cgui_swap *target)
 
 	switch (target->type)
 	{
-		case CGUI_INPUT_SWAP_TO_VALUE:
+		case CGUI_SWAP_TO_VALUE:
 			target->value = util_str_to_long(r, 0, limit);
 			break;
 
-		case CGUI_INPUT_SWAP_TO_ACCELERATOR:
+		case CGUI_SWAP_TO_ACCELERATOR:
 			target->value = util_str_to_long(r, 1, CGUI_CONFIG_ACCELS);
 			break;
 
-		case CGUI_INPUT_SWAP_TO_CLIPBOARD_CUT:
-		case CGUI_INPUT_SWAP_TO_CLIPBOARD_COPY:
-		case CGUI_INPUT_SWAP_TO_CLIPBOARD_PASTE:
+		case CGUI_SWAP_TO_CLIPBOARD_CUT:
+		case CGUI_SWAP_TO_CLIPBOARD_COPY:
+		case CGUI_SWAP_TO_CLIPBOARD_PASTE:
 			target->value = util_str_to_long(r, 1, CGUI_CONFIG_CLIPBOARDS);
 			break;
 
-		case CGUI_INPUT_SWAP_TO_ACTION_CELL:
-		case CGUI_INPUT_SWAP_TO_ACTION_FOCUS:
-		case CGUI_INPUT_SWAP_TO_ACTION_WINDOW:
-		case CGUI_INPUT_SWAP_TO_ACTION_MISC:
+		case CGUI_SWAP_TO_ACTION_CELL:
+		case CGUI_SWAP_TO_ACTION_FOCUS:
+		case CGUI_SWAP_TO_ACTION_WINDOW:
+		case CGUI_SWAP_TO_ACTION_MISC:
 			tmp = 0;
 			cdict_find(dict, r, SWAP_KIND, &tmp);
 			target->value = tmp;
 			break;
 
-		case CGUI_INPUT_SWAP_TO_DEFAULT:
-		case CGUI_INPUT_SWAP_TO_NONE:
+		case CGUI_SWAP_TO_DEFAULT:
+		case CGUI_SWAP_TO_NONE:
 		default:
 			break;
 	}

@@ -26,10 +26,13 @@
 #include "event.h"
 #include "config.h"
 #include "window.h"
+#include "x11.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
+
+/* event handlers */
 
 static void accelerate           (struct cgui_event *) CGUI_NONNULL(1);
 static void button_press         (struct cgui_event *) CGUI_NONNULL(1);
@@ -51,6 +54,10 @@ static void touch_update         (struct cgui_event *) CGUI_NONNULL(1);
 static void transform            (struct cgui_event *) CGUI_NONNULL(1);
 static void unfocus              (struct cgui_event *) CGUI_NONNULL(1);
 static void unmap                (struct cgui_event *) CGUI_NONNULL(1);
+
+/* other functions */
+
+//static bool swap_input {struct cgui_event *} CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -163,6 +170,7 @@ event_process(struct cgui_event *event)
 		case CGUI_EVENT_UNKNOWN_XCB:
 		case CGUI_EVENT_ENTER:
 		case CGUI_EVENT_NONE:
+		default:
 			break;
 	}
 }
@@ -187,12 +195,68 @@ accelerate(struct cgui_event *event)
 static void
 button_press(struct cgui_event *event)
 {
-	if (!event->window->valid)
+	bool accepted;
+	struct cgui_swap input;
+	struct cgui_cell_event cell_event =
+	{
+		.type      = CGUI_CELL_EVENT_BUTTON_PRESS,
+		.button_id = event->button_id,
+		.button_x  = event->button_x,
+		.button_y  = event->button_y,
+	};
+
+	if (!event->window->valid || event->button_id == 0)
 	{
 		return;
 	}
 
-	// TODO
+	/* swap input */
+
+	input = config_swap_input(event->button_id, event->button_mods, CONFIG_SWAP_BUTTONS);
+	switch (input.type)
+	{
+		case CGUI_SWAP_TO_DEFAULT:
+			break;
+
+		case CGUI_SWAP_TO_VALUE:
+			event->button_id = input.value;
+			break;
+
+		case CGUI_SWAP_TO_ACCELERATOR:
+			event->window->accels[input.value - 1].fn(event->window, input.value);
+			return;
+
+		default:
+			//action_process(input);
+			return;
+	}
+
+	/* first update focus in case it was changed my an other input mean */
+
+	window_focus_pointer(event->window, event->button_x, event->button_y);
+
+	/* send cell event */
+
+	cinputs_push(event->window->buttons, event->button_id, event->button_x, event->button_y, NULL);
+	cell_event.button_n = cinputs_load(event->window->buttons);
+	accepted = window_process_cell_event(event->window, event->window->focus, &cell_event);
+
+	/* allow wm functions if the event is rejected with a matching button id */
+
+	if (event->button_id == CONFIG->wm_button_move)
+	{
+		event->window->wm_move = !accepted;
+	}
+	else if (event->button_id == CONFIG->wm_button_resize)
+	{
+		event->window->wm_resize  = !accepted;
+		event->window->old_width  = event->window->width;
+		event->window->old_height = event->window->height;
+	}
+	else if (event->button_id == CONFIG->wm_button_fullscreen)
+	{
+		x11_window_toggle_fullscreen(event->window->x_id);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -200,12 +264,46 @@ button_press(struct cgui_event *event)
 static void
 button_release(struct cgui_event *event)
 {
-	if (!event->window->valid)
+	struct cgui_swap input;
+	struct cgui_cell_event cell_event =
+	{
+		.type        = CGUI_CELL_EVENT_BUTTON_RELEASE,
+		.button_id   = event->button_id,
+		.button_x    = event->button_x,
+		.button_y    = event->button_y,
+		.button_mods = event->button_mods,
+	};
+
+	if (!event->window->valid || event->button_id == 0)
 	{
 		return;
 	}
 
-	// TODO
+	/* swap input */
+
+	input = config_swap_input(event->button_id, event->button_mods, CONFIG_SWAP_BUTTONS);
+	switch (input.type)
+	{
+		case CGUI_SWAP_TO_DEFAULT:
+			break;
+
+		case CGUI_SWAP_TO_VALUE:
+			event->button_id = input.value;
+			break;
+
+		default:
+			return;
+	}
+
+	/* send cell event */
+
+	cinputs_pull_id(event->window->buttons, event->button_id);
+	cell_event.button_n = cinputs_load(event->window->buttons);
+	window_process_cell_event(event->window, event->window->focus, &cell_event);
+
+	/* update focus in case of a drag action that ended up out of bounds of the cell */
+
+	window_focus_pointer(event->window, event->button_x, event->button_y);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -294,6 +392,7 @@ map(struct cgui_event *event)
 static void
 pointer(struct cgui_event *event)
 {
+	size_t i;
 	struct cgui_cell_event cell_event =
 	{
 		.type      = CGUI_CELL_EVENT_POINTER_MOTION,
@@ -307,9 +406,30 @@ pointer(struct cgui_event *event)
 	}
 
 	window_focus_pointer(event->window, event->pointer_x, event->pointer_y);
-	window_process_cell_event(event->window, event->window->focus, &cell_event);
+	if (window_process_cell_event(event->window, event->window->focus, &cell_event))
+	{
+		return;
+	}
 
-	// TODO - drag / resize window if event is rejected
+	/* drag or resize window if event is rejected */
+
+	if (event->window->wm_move && cinputs_find(event->window->buttons, CONFIG->wm_button_move, &i))
+	{
+		cgui_window_move(
+			event->window,
+			event->pointer_x - cinputs_x(event->window->buttons, i) + event->window->x,
+			event->pointer_y - cinputs_y(event->window->buttons, i) + event->window->y
+		);
+	}
+	else if ( !event->window->wait_resize
+	 && event->window->wm_resize && cinputs_find(event->window->buttons, CONFIG->wm_button_resize, &i))
+	{
+		event->window->wait_resize = true; /* this is to avoid spamming resizes that are slow */
+		cgui_window_resize(
+			event->window,
+			event->pointer_x - cinputs_x(event->window->buttons, i) + event->window->old_width,
+			event->pointer_y - cinputs_y(event->window->buttons, i) + event->window->old_height);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -403,8 +523,9 @@ transform(struct cgui_event *event)
 		return;
 	}
 
-	window->x = event->transform_x;
-	window->y = event->transform_y;
+	window->wait_resize = false;
+	window->x           = event->transform_x;
+	window->y           = event->transform_y;
 
 	if (fabs(window->width  - event->transform_width)  < DBL_EPSILON
 	 && fabs(window->height - event->transform_height) < DBL_EPSILON)

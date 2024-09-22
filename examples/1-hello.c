@@ -122,7 +122,7 @@ static struct cgui_screen screen;
 	cgui_window_on_draw(window, on_draw);
 	cgui_window_on_close(window, on_close);
 	cgui_window_on_state(window, on_state);
-	cgui_window_resize(window, 358, 358);
+	cgui_window_resize(window, 1208, 1208);
 	cgui_window_activate(window);
 
 	/* Run */
@@ -188,8 +188,10 @@ static void
 on_draw(cgui_window *w, unsigned long delay_1, unsigned long delay_2)
 {
 	(void)w;
+	(void)delay_1;
+	(void)delay_2;
 
-	printf("window redrawn (%lu / %lu)\n", delay_1, delay_2);
+//	printf("window redrawn (%lu / %lu)\n", delay_1, delay_2);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

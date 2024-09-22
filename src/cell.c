@@ -206,6 +206,42 @@ void
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
+cgui_cell_is_event_in(const struct cgui_cell_event *event)
+{
+	double x;
+	double y;
+
+	switch (event->type)
+	{
+		case CGUI_CELL_EVENT_BUTTON_PRESS:
+		case CGUI_CELL_EVENT_BUTTON_RELEASE:
+			x = event->button_x;
+			y = event->button_y;
+			break;
+
+		case CGUI_CELL_EVENT_POINTER_MOTION:
+			x = event->pointer_x;
+			y = event->pointer_y;
+			break;
+
+		default:
+			return false;
+	}
+
+	return cgui_box_is_in(
+		event->frame,
+		x,
+		y,
+		event->x,
+		event->y,
+		event->width,
+		event->height,
+		event->drawable);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
 cgui_cell_is_valid(const cgui_cell *cell)
 {
 	if (cgui_error())

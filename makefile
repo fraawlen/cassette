@@ -26,7 +26,7 @@ LIST_BIN   := $(patsubst $(DIR_DEMOS)/%.c, $(DIR_BIN)/%, $(LIST_DEMOS))
 OUTPUT   := cgui
 LIBS     := -lcobj -lccfg -lm -lpthread 
 LIBS_DYN := -lcairo -lfontconfig -lxcb -lxcb-keysyms -lxcb-present -lxcb-randr -lxcb-xinput -lxkbcommon
-FLAGS    := -std=c11 -O3 -D_POSIX_C_SOURCE=200809L -pedantic -pedantic-errors -Werror -Wall -Wextra    \
+FLAGS    := -std=c11 -O3 -D_POSIX_C_SOURCE=200809L -pedantic -pedantic-errors -Wall -Wextra            \
             -Wbad-function-cast -Wcast-align -Wcast-qual -Wdeclaration-after-statement -Wfloat-equal   \
             -Wformat=2 -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wmissing-prototypes \
             -Wnested-externs -Wpointer-arith -Wredundant-decls -Wsequence-point -Wshadow               \

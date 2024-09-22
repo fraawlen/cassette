@@ -54,14 +54,9 @@ extern "C" {
  */
 enum cgui_config_modkey
 {
-	CGUI_CONFIG_MOD_NONE  = 0,      /* cannor be used as modkey config option */
-	CGUI_CONFIG_MOD_LOCK  = 1,      /* cannot be used as modkey config option */
-	CGUI_CONFIG_MOD_CTRL  = 1 << 1, 
-	CGUI_CONFIG_MOD_1     = 1 << 2, 
-	CGUI_CONFIG_MOD_2     = 1 << 3, /* cannot be used as modkey config option */
-	CGUI_CONFIG_MOD_3     = 1 << 4, /* cannot be used as modkey config option */
-	CGUI_CONFIG_MOD_4     = 1 << 5,
-	CGUI_CONFIG_MOD_5     = 1 << 6, /* cannot be used as modkey config option */
+	CGUI_CONFIG_MOD_CTRL,
+	CGUI_CONFIG_MOD_1, 
+	CGUI_CONFIG_MOD_4,
 };
 
 /**
@@ -177,6 +172,9 @@ struct cgui_config
 	bool persistent_pointer;
 	bool persistent_touch;
 	unsigned long anim_divider;
+	size_t wm_button_move;
+	size_t wm_button_resize;
+	size_t wm_button_fullscreen;
 
 	/* input swaps */
 
