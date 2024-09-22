@@ -428,13 +428,21 @@ config_init(const char *app_name, const char *app_class)
 void
 config_load(void)
 {
-	config      = config_default;
-	config.init = true;
+	bool tmp;
+
+	/* apply defaults */
+
+	tmp                = config.alt_present;
+	config             = config_default;
+	config.init        = true;
+	config.alt_present = tmp;
 
 	if (cgui_error() || util_env_exists(ENV_NO_PARSING))
 	{
 		return;
 	}
+
+	/* get new resources */
 
 	ccfg_load(parser);
 
@@ -449,6 +457,8 @@ config_load(void)
 		fetch(resources[i]);
 		scale(resources[i]);
 	}
+
+	/* fill in the blanks and check of errors */
 	
 	font_setup();
 	fn_load(parser);
@@ -487,7 +497,7 @@ config_swap_input(uint32_t id, struct cgui_mods mods, enum config_swap type)
 	const struct cgui_swap none =
 	{
 		.type  = CGUI_SWAP_TO_NONE,
-		.value = CGUI_SWAP_NONE
+		.value = CGUI_SWAP_NONE,
 	};
 
 	if (id == 0 || id > (type == CONFIG_SWAP_KEYS ? CGUI_CONFIG_KEYS : CGUI_CONFIG_BUTTONS))
@@ -818,7 +828,7 @@ swap(const char *str, uint8_t limit, struct cgui_swap *target)
 		case CGUI_SWAP_TO_ACTION_WINDOW:
 		case CGUI_SWAP_TO_ACTION_MISC:
 			tmp = 0;
-			cdict_find(dict, r, SWAP_KIND, &tmp);
+			cdict_find(dict, r, SWAP_ACTION, &tmp);
 			target->value = tmp;
 			break;
 

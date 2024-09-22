@@ -66,7 +66,7 @@ static bool             cairo_error    (const cgui_window *)                    
 static struct cgui_box  cell_frame     (const cgui_window *, struct grid_area)                       CGUI_NONNULL(1) CGUI_PURE;
 static struct cgui_box  frame          (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
 static cgui_grid       *min_grid       (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
-static void             size_limits    (const cgui_window *, double *, double *, double *, double *) CGUI_NONNULL(1, 2, 3, 4, 5);
+void                    size_limits    (const cgui_window *, double *, double *, double *, double *) CGUI_NONNULL(1, 2, 3, 4, 5);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -936,8 +936,14 @@ window_focus_pointer(cgui_window *window, double x, double y)
 	/* generate and send focus event */
 
 	area = area_at_coords(window, x, y);
-
-	focus(window, window_process_cell_event(window, area, &event) ? area : GRID_AREA_NONE);
+	if (window_process_cell_event(window, area, &event))
+	{
+		focus(window, area);
+	}
+	else if (!CONFIG->persistent_pointer)
+	{
+		focus(window, GRID_AREA_NONE);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1603,7 +1609,7 @@ refocus(cgui_window *window)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void
+void
 size_limits(const cgui_window *window, double *min_width, double *min_height, double *max_width, double *max_height)
 {
 	cgui_grid *grid;

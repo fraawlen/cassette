@@ -24,6 +24,7 @@
 #include <xcb/xcb.h>
 
 #include "event.h"
+#include "cell.h"
 #include "config.h"
 #include "window.h"
 #include "x11.h"
@@ -57,7 +58,11 @@ static void unmap                (struct cgui_event *) CGUI_NONNULL(1);
 
 /* other functions */
 
-//static bool swap_input {struct cgui_event *} CGUI_NONNULL(1);
+static void   action_cell   (uint8_t, cgui_window *) CGUI_NONNULL(2);
+static void   action_focus  (uint8_t, cgui_window *) CGUI_NONNULL(2);
+static void   action_misc   (uint8_t);
+static void   action_window (uint8_t, cgui_window *) CGUI_NONNULL(2);
+static size_t swap_input    (struct cgui_event *)    CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -182,12 +187,83 @@ event_process(struct cgui_event *event)
 static void
 accelerate(struct cgui_event *event)
 {
-	if (!event->window->valid)
+	if (!event->window->valid || event->accelerator == 0 || event->accelerator > CGUI_CONFIG_ACCELS)
 	{
 		return;
 	}
 
-	// TODO
+	event->window->accels[event->accelerator - 1].fn(event->window, event->accelerator);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+action_cell(uint8_t type, cgui_window *window)
+{
+	if (!window->focus.cell->valid)
+	{
+		return;
+	}
+
+	switch (type)
+	{
+		// TODO
+
+		default:
+			break;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+action_focus(uint8_t type, cgui_window *window)
+{
+	(void)window;
+
+	switch (type)
+	{
+		// TODO
+
+		default:
+			break;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+action_misc(uint8_t type)
+{
+	switch (type)
+	{
+		case CGUI_SWAP_RECONFIG:
+			cgui_reconfig();
+			break;
+
+		case CGUI_SWAP_EXIT:
+			cgui_exit();
+			break;
+
+		default:
+			break;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+action_window(uint8_t type, cgui_window *window)
+{
+	(void)window;
+
+	switch (type)
+	{
+		// TODO
+
+		default:
+			break;
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -196,7 +272,6 @@ static void
 button_press(struct cgui_event *event)
 {
 	bool accepted;
-	struct cgui_swap input;
 	struct cgui_cell_event cell_event =
 	{
 		.type      = CGUI_CELL_EVENT_BUTTON_PRESS,
@@ -205,30 +280,9 @@ button_press(struct cgui_event *event)
 		.button_y  = event->button_y,
 	};
 
-	if (!event->window->valid || event->button_id == 0)
+	if (!event->window->valid || (cell_event.button_id = swap_input(event)) == 0)
 	{
 		return;
-	}
-
-	/* swap input */
-
-	input = config_swap_input(event->button_id, event->button_mods, CONFIG_SWAP_BUTTONS);
-	switch (input.type)
-	{
-		case CGUI_SWAP_TO_DEFAULT:
-			break;
-
-		case CGUI_SWAP_TO_VALUE:
-			event->button_id = input.value;
-			break;
-
-		case CGUI_SWAP_TO_ACCELERATOR:
-			event->window->accels[input.value - 1].fn(event->window, input.value);
-			return;
-
-		default:
-			//action_process(input);
-			return;
 	}
 
 	/* first update focus in case it was changed my an other input mean */
@@ -253,7 +307,7 @@ button_press(struct cgui_event *event)
 		event->window->old_width  = event->window->width;
 		event->window->old_height = event->window->height;
 	}
-	else if (event->button_id == CONFIG->wm_button_fullscreen)
+	else if (!accepted && event->button_id == CONFIG->wm_button_fullscreen)
 	{
 		x11_window_toggle_fullscreen(event->window->x_id);
 	}
@@ -264,35 +318,17 @@ button_press(struct cgui_event *event)
 static void
 button_release(struct cgui_event *event)
 {
-	struct cgui_swap input;
 	struct cgui_cell_event cell_event =
 	{
 		.type        = CGUI_CELL_EVENT_BUTTON_RELEASE,
-		.button_id   = event->button_id,
 		.button_x    = event->button_x,
 		.button_y    = event->button_y,
 		.button_mods = event->button_mods,
 	};
 
-	if (!event->window->valid || event->button_id == 0)
+	if (!event->window->valid || (cell_event.button_id = swap_input(event)) == 0)
 	{
 		return;
-	}
-
-	/* swap input */
-
-	input = config_swap_input(event->button_id, event->button_mods, CONFIG_SWAP_BUTTONS);
-	switch (input.type)
-	{
-		case CGUI_SWAP_TO_DEFAULT:
-			break;
-
-		case CGUI_SWAP_TO_VALUE:
-			event->button_id = input.value;
-			break;
-
-		default:
-			return;
 	}
 
 	/* send cell event */
@@ -371,7 +407,10 @@ leave(struct cgui_event *event)
 		return;
 	}
 
-	// TODO
+	/* useful when compact themes are used as sometime pointer motion may not be detected when */
+	/* leaving the window quickly.                                                             */
+
+	window_focus_pointer(event->window, -1.0, -1.0);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -418,10 +457,9 @@ pointer(struct cgui_event *event)
 		cgui_window_move(
 			event->window,
 			event->pointer_x - cinputs_x(event->window->buttons, i) + event->window->x,
-			event->pointer_y - cinputs_y(event->window->buttons, i) + event->window->y
-		);
+			event->pointer_y - cinputs_y(event->window->buttons, i) + event->window->y);
 	}
-	else if ( !event->window->wait_resize
+	else if (!event->window->wait_resize
 	 && event->window->wm_resize && cinputs_find(event->window->buttons, CONFIG->wm_button_resize, &i))
 	{
 		event->window->wait_resize = true; /* this is to avoid spamming resizes that are slow */
@@ -470,6 +508,118 @@ redraw(struct cgui_event *event)
 
 	window_set_draw_level(event->window, WINDOW_DRAW_FULL);
 	window_set_async_present(event->window);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static size_t
+swap_input(struct cgui_event *event)
+{
+	size_t value;
+	struct cgui_mods mods;
+	struct cgui_swap swap;
+	enum config_swap group;
+	bool press;
+
+	if (event->button_id == 0)
+	{
+		return 0;
+	}
+
+	/* select modes */
+
+	switch (event->type)
+	{
+		case CGUI_EVENT_BUTTON_PRESS:
+			mods  = event->button_mods;
+			value = event->button_id;
+			press = true;
+			group = CONFIG_SWAP_BUTTONS;
+			break;
+
+		case CGUI_EVENT_BUTTON_RELEASE:
+			mods  = event->button_mods;
+			value = event->button_id;
+			group = CONFIG_SWAP_BUTTONS;
+			press = false;
+			break;
+
+		case CGUI_EVENT_KEY_PRESS:
+			mods  = event->key_mods;
+			value = event->key_code;
+			group = CONFIG_SWAP_KEYS;
+			press = true;
+			break;
+
+		case CGUI_EVENT_KEY_RELEASE:
+			mods  = event->key_mods;
+			value = event->key_code;
+			group = CONFIG_SWAP_KEYS;
+			press = false;
+			break;
+
+		default:
+			return false;
+	}
+
+	/* press and release swaps */
+
+	swap = config_swap_input(value, mods, group);
+	switch (swap.type)
+	{
+		case CGUI_SWAP_TO_NONE:
+			return 0;
+
+		case CGUI_SWAP_TO_DEFAULT:
+			return value;
+
+		case CGUI_SWAP_TO_VALUE:
+			return swap.value;
+
+		default:
+			break;
+	}
+
+	/* press only swaps */
+
+	if (!press)
+	{
+		return 0;
+	}
+
+	switch (swap.type)
+	{
+		case CGUI_SWAP_TO_ACCELERATOR:
+			event->window->accels[swap.value - 1].fn(event->window, swap.value);
+			break;
+
+		case CGUI_SWAP_TO_CLIPBOARD_CUT:
+		case CGUI_SWAP_TO_CLIPBOARD_COPY:
+		case CGUI_SWAP_TO_CLIPBOARD_PASTE:
+			// TODO
+			break;
+
+		case CGUI_SWAP_TO_ACTION_CELL:
+			action_cell(swap.value, event->window);
+			break;
+
+		case CGUI_SWAP_TO_ACTION_FOCUS:
+			action_focus(swap.value, event->window);
+			break;
+
+		case CGUI_SWAP_TO_ACTION_WINDOW:
+			action_window(swap.value, event->window);
+			break;
+
+		case CGUI_SWAP_TO_ACTION_MISC:
+			action_misc(swap.value);
+			break;
+
+		default:
+			break;
+	}
+
+	return 0;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

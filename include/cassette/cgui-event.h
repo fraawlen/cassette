@@ -100,11 +100,12 @@ struct cgui_event
 			double button_y;
 			struct cgui_mods button_mods;
 		};
-		/* CGUI_EVENT_BUTTON_PRESS   */
-		/* CGUI_EVENT_BUTTON_RELEASE */
+		/* CGUI_EVENT_KEY_PRESS   */
+		/* CGUI_EVENT_KEY_RELEASE */
 		struct
 		{
 			// TODO
+			size_t key_code;
 			struct cgui_mods key_mods;
 		};
 		/* CGUI_EVENT_POINTER_MOTION */

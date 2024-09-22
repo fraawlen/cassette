@@ -439,7 +439,7 @@ cgui_grid_height(const cgui_grid *grid)
 
 	if (cgui_error() || !grid->valid)
 	{
-		return 0;
+		return 0.0;
 	}
 
 	for (size_t i = 0; i < grid->n_rows; i++)
@@ -589,7 +589,7 @@ cgui_grid_width(const cgui_grid *grid)
 
 	if (cgui_error() || !grid->valid)
 	{
-		return 0;
+		return 0.0;
 	}
 
 	for (size_t i = 0; i < grid->n_cols; i++)

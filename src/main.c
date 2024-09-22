@@ -188,8 +188,6 @@ void
 cgui_reconfig(void)
 {
 	cgui_window *window;
-	cgui_grid *grid;
-	cgui_grid *grid_min;
 
 	if (err)
 	{
@@ -201,15 +199,16 @@ cgui_reconfig(void)
 	CREF_FOR_EACH(windows, i)
 	{
 		window = (cgui_window*)cref_ptr(windows, i);
-		if (!window->valid)
+		if (!window->valid || !window->state.active)
 		{
 			continue;
 		}
 
-		(void)grid;
-		(void)grid_min;
-
-		// TODO
+		cgui_window_resize(window, window->width, window->height);
+		window_update_size(window, window->width, window->height);
+		window_update_size_hints(window);
+		window_set_draw_level(window, WINDOW_DRAW_FULL);
+		window_set_async_present(window);
 	}
 }
 

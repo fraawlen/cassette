@@ -265,19 +265,19 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 
 		default:
 			event->msg = CGUI_CELL_MSG_REJECT;
-			break;
+			return;
 	}
 	
 	/* post-event */
 
-	if (trigger)
-	{
-		DATA->fn_click(cell);
-	}
-
 	if (old_state != DATA->state)
 	{
 		cgui_cell_redraw(cell);
+	}
+
+	if (trigger)
+	{
+		DATA->fn_click(cell);
 	}
 }
 
