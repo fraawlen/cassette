@@ -172,9 +172,9 @@ struct cgui_config
 	bool persistent_pointer;
 	bool persistent_touch;
 	unsigned long anim_divider;
-	size_t wm_button_move;
-	size_t wm_button_resize;
-	size_t wm_button_fullscreen;
+	uint8_t wm_button_move;
+	uint8_t wm_button_resize;
+	uint8_t wm_button_fullscreen;
 
 	/* input swaps */
 

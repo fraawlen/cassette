@@ -95,7 +95,7 @@ struct cgui_event
 		/* CGUI_EVENT_BUTTON_RELEASE */
 		struct
 		{
-			size_t button_id;
+			uint8_t button_id;
 			double button_x;
 			double button_y;
 			struct cgui_mods button_mods;
@@ -104,8 +104,7 @@ struct cgui_event
 		/* CGUI_EVENT_KEY_RELEASE */
 		struct
 		{
-			// TODO
-			size_t key_code;
+			uint8_t key_code;
 			struct cgui_mods key_mods;
 		};
 		/* CGUI_EVENT_POINTER_MOTION */

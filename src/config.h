@@ -67,4 +67,4 @@ config_repair(void);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct cgui_swap
-config_swap_input(uint32_t id, struct cgui_mods mods, enum config_swap type);
+config_swap_input(uint8_t id, struct cgui_mods mods, enum config_swap type);

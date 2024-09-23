@@ -442,6 +442,28 @@ fail_server:
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void
+x11_key(uint8_t keycode, struct cgui_mods mods, uint32_t *keysym, uint32_t *utf32, char utf8[static 8])
+{
+	int shift = 0;
+
+	if (mods.mod_5)
+	{
+		shift += 2;
+	}
+
+	if (mods.shift != mods.capslock)
+	{
+		shift += 1;
+	}
+
+	*keysym = xcb_key_symbols_get_keysym(keysyms, keycode, shift);
+	*utf32  = xkb_keysym_to_utf32(*keysym);
+	xkb_keysym_to_utf8(*keysym, utf8, 8);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 xcb_window_t
 x11_leader_window(void)
 {
@@ -1279,10 +1301,10 @@ event_key(xcb_key_press_event_t *xcb_event, bool press)
 {
 	struct cgui_event event =
 	{
-		.type     = press ? CGUI_EVENT_KEY_PRESS : CGUI_EVENT_KEY_RELEASE,
-		.window   = find_window(xcb_event->event),
-		.key_mods = translate_mods(xcb_event->state),
-		// TODO
+		.type      = press ? CGUI_EVENT_KEY_PRESS : CGUI_EVENT_KEY_RELEASE,
+		.window    = find_window(xcb_event->event),
+		.key_code  = xcb_event->detail,
+		.key_mods  = translate_mods(xcb_event->state),
 	};
 
 	main_update(&event);

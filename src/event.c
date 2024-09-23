@@ -376,10 +376,18 @@ focus(struct cgui_event *event)
 static void
 key_press(struct cgui_event *event)
 {
+	uint32_t keysym;
+	uint32_t utf32;
+	char utf8[8] = {0};
+
 	if (!event->window->valid)
 	{
 		return;
 	}
+
+	x11_key(event->key_code, event->key_mods, &keysym, &utf32, utf8);
+
+	printf(">> %s\n", utf8);
 
 	// TODO
 }

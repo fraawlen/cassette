@@ -84,7 +84,8 @@ enum value
 	UDOUBLE,
 	RATIO,
 	SCALE,
-	BUTTON,
+	BUTTON_ID,
+	KEY_ID,
 
 	/* dict based */
 
@@ -267,9 +268,9 @@ static const struct resource resources[] =
 	{ "behavior", "enable_persistent_pointer",   BOOL,        &config.persistent_pointer             },
 	{ "behavior", "enable_persistent_touch",     BOOL,        &config.persistent_touch               },
 	{ "behavior", "animation_framerate_divider", ULONG,       &config.anim_divider                   },
-	{ "behavior", "window_button_move",          BUTTON,      &config.wm_button_move                 },
-	{ "behavior", "window_button_resize",        BUTTON,      &config.wm_button_resize               },
-	{ "behavior", "window_button_fullscreen",    BUTTON,      &config.wm_button_fullscreen           },
+	{ "behavior", "window_button_move",          BUTTON_ID,   &config.wm_button_move                 },
+	{ "behavior", "window_button_resize",        BUTTON_ID,   &config.wm_button_resize               },
+	{ "behavior", "window_button_fullscreen",    BUTTON_ID,   &config.wm_button_fullscreen           },
 
 	{ "stripes",  "color",                       COLOR,       &config.stripes_color                  },
 	{ "stripes",  "width",                       LENGTH,      &config.stripes_width                  },
@@ -491,7 +492,7 @@ config_reset(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct cgui_swap
-config_swap_input(uint32_t id, struct cgui_mods mods, enum config_swap type)
+config_swap_input(uint8_t id, struct cgui_mods mods, enum config_swap type)
 {
 	bool modkey;
 	const struct cgui_swap none =
@@ -606,10 +607,14 @@ fetch(const struct resource resource)
 			*(double*)resource.target = util_str_to_double(str, 0.0, 1.0);
 			break;
 
-		case BUTTON:
-			*(size_t*)resource.target = util_str_to_long(str, 0, CGUI_CONFIG_BUTTONS);
+		case BUTTON_ID:
+			*(uint8_t*)resource.target = util_str_to_long(str, 0, CGUI_CONFIG_BUTTONS);
 			break;
-
+		
+		case KEY_ID:
+			*(uint8_t*)resource.target = util_str_to_long(str, 0, CGUI_CONFIG_KEYS);
+			break;
+			
 		case MOD_KEY:
 		case ANTIALIAS:
 		case SUBPIXEL:

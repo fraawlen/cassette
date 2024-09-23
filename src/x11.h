@@ -154,3 +154,9 @@ x11_leader_window(void);
 
 xcb_visualtype_t *
 x11_visual(void);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_key(uint8_t keycode, struct cgui_mods mods, uint32_t *keysym, uint32_t *utf32, char utf8[static 8])
+CGUI_NONNULL(3, 4, 5);
