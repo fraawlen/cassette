@@ -376,20 +376,19 @@ focus(struct cgui_event *event)
 static void
 key_press(struct cgui_event *event)
 {
-	uint32_t keysym;
-	uint32_t utf32;
-	char utf8[8] = {0};
+	struct cgui_cell_event cell_event =
+	{
+		.type     = CGUI_CELL_EVENT_KEY_PRESS,
+		.key_mods = event->key_mods,
+	};
 
-	if (!event->window->valid)
+	if (!event->window->valid || (cell_event.key_code = swap_input(event)) == 0)
 	{
 		return;
 	}
 
-	x11_key(event->key_code, event->key_mods, &keysym, &utf32, utf8);
-
-	printf(">> %s\n", utf8);
-
-	// TODO
+	x11_key(event->key_code, event->key_mods, &cell_event.key_sym, &cell_event.utf32, cell_event.utf8);
+	window_process_cell_event(event->window, event->window->focus, &cell_event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -397,12 +396,19 @@ key_press(struct cgui_event *event)
 static void
 key_release(struct cgui_event *event)
 {
-	if (!event->window->valid)
+	struct cgui_cell_event cell_event =
+	{
+		.type     = CGUI_CELL_EVENT_KEY_RELEASE,
+		.key_mods = event->key_mods,
+	};
+
+	if (!event->window->valid || (cell_event.key_code = swap_input(event)) == 0)
 	{
 		return;
 	}
 
-	// TODO
+	x11_key(event->key_code, event->key_mods, &cell_event.key_sym, &cell_event.utf32, cell_event.utf8);
+	window_process_cell_event(event->window, event->window->focus, &cell_event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

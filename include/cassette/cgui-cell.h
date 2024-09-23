@@ -59,6 +59,8 @@ enum cgui_cell_msg
 enum cgui_cell_event_type
 {
 	CGUI_CELL_EVENT_NONE = 0,
+	CGUI_CELL_EVENT_KEY_PRESS,
+	CGUI_CELL_EVENT_KEY_RELEASE,
 	CGUI_CELL_EVENT_BUTTON_PRESS,
 	CGUI_CELL_EVENT_BUTTON_RELEASE,
 	CGUI_CELL_EVENT_POINTER_MOTION,
@@ -88,11 +90,21 @@ struct cgui_cell_event
 	double height;
 	union
 	{
+		/* CGUI_CELL_EVENT_KEY_PRESS   */
+		/* CGUI_CELL_EVENT_KEY_RELEASE */
+		struct
+		{
+			uint8_t key_code;
+			uint32_t key_sym;
+			uint32_t utf32;
+			char utf8[8];
+			struct cgui_mods key_mods;
+		};
 		/* CGUI_CELL_EVENT_BUTTON_PRESS   */
 		/* CGUI_CELL_EVENT_BUTTON_RELEASE */
 		struct
 		{
-			size_t button_id;
+			uint8_t button_id;
 			size_t button_n;
 			double button_x;
 			double button_y;

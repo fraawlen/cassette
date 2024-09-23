@@ -243,6 +243,15 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 
 	switch (event->type)
 	{
+		case CGUI_CELL_EVENT_KEY_PRESS:
+			DATA->state = event->key_sym == 0xff0d ? PRESSED : DATA->state; /* Return */
+			trigger     = event->key_sym == 0xff0d;
+			break;
+
+		case CGUI_CELL_EVENT_KEY_RELEASE:
+			DATA->state = event->key_sym == 0xff0d ? FOCUSED : DATA->state;
+			break;
+
 		case CGUI_CELL_EVENT_BUTTON_PRESS:
 			DATA->state = event->button_id == 1 ? PRESSED : DATA->state;
 			break;
