@@ -63,6 +63,9 @@ enum cgui_cell_event_type
 	CGUI_CELL_EVENT_KEY_RELEASE,
 	CGUI_CELL_EVENT_BUTTON_PRESS,
 	CGUI_CELL_EVENT_BUTTON_RELEASE,
+	CGUI_CELL_EVENT_TOUCH_BEGIN,
+	CGUI_CELL_EVENT_TOUCH_END,
+	CGUI_CELL_EVENT_TOUCH_UPDATE,
 	CGUI_CELL_EVENT_POINTER_MOTION,
 	CGUI_CELL_EVENT_FOCUS_GAIN_BY_ACTION,
 	CGUI_CELL_EVENT_FOCUS_GAIN_BY_POINTER,
@@ -73,6 +76,11 @@ enum cgui_cell_event_type
 	CGUI_CELL_EVENT_FOCUS_UNLOCK,
 	CGUI_CELL_EVENT_FOCUS_INFO,
 	CGUI_CELL_EVENT_FOCUS_SEEK,
+	CGUI_CELL_EVENT_SELECT_LESS,
+	CGUI_CELL_EVENT_SELECT_MORE,
+	CGUI_CELL_EVENT_SELECT_NONE,
+	CGUI_CELL_EVENT_SELECT_ALL,
+	CGUI_CELL_EVENT_CANCEL,
 };
 
 /**
@@ -81,6 +89,7 @@ enum cgui_cell_event_type
 struct cgui_cell_event
 {
 	cairo_t *drawable;
+	bool is_focused;
 	enum cgui_cell_msg msg;
 	enum cgui_cell_event_type type;
 	struct cgui_box frame;
@@ -109,6 +118,16 @@ struct cgui_cell_event
 			double button_x;
 			double button_y;
 			struct cgui_mods button_mods;
+		};
+		/* CGUI_CELL_EVENT_TOUCH_BEGIN  */
+		/* CGUI_CELL_EVENT_TOUCH_UPDATE */
+		/* CGUI_CELL_EVENT_TOUCH_END    */
+		struct
+		{
+			uint32_t touch_id;
+			size_t touch_n;
+			double touch_x;
+			double touch_y;
 		};
 		/* CGUI_CELL_EVENT_POINTER_MOTION */
 		struct
@@ -141,6 +160,11 @@ struct cgui_cell_event
 		/* CGUI_CELL_EVENT_FOCUS_LOSE   */
 		/* CGUI_CELL_EVENT_FOCUS_LOCK   */
 		/* CGUI_CELL_EVENT_FOCUS_UNLOCK */
+		/* CGUI_CELL_EVENT_CANCEL       */
+		/* CGUI_CELL_EVENT_SELECT_LESS  */
+		/* CGUI_CELL_EVENT_SELECT_MORE  */
+		/* CGUI_CELL_EVENT_SELECT_NONE  */
+		/* CGUI_CELL_EVENT_SELECT_ALL   */
 		/* CGUI_CELL_EVENT_NONE         */
 		/* no extra fields for these events */
 	};

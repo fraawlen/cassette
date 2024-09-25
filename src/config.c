@@ -178,11 +178,6 @@ static const struct word words[] =
 	{ "unselect",   SWAP_ACTION, CGUI_SWAP_CELL_SELECT_NONE     },
 	{ "select_all", SWAP_ACTION, CGUI_SWAP_CELL_SELECT_ALL      },
 	{ "redraw",     SWAP_ACTION, CGUI_SWAP_CELL_SELECT_ALL      },
-	{ "trigger1",   SWAP_ACTION, CGUI_SWAP_CELL_TRIGGER_1       },
-	{ "trigger2",   SWAP_ACTION, CGUI_SWAP_CELL_TRIGGER_2       },
-	{ "trigger3",   SWAP_ACTION, CGUI_SWAP_CELL_TRIGGER_3       },
-	{ "trigger4",   SWAP_ACTION, CGUI_SWAP_CELL_TRIGGER_4       },
-	{ "trigger5",   SWAP_ACTION, CGUI_SWAP_CELL_TRIGGER_5       },
 
 	{ "left",       SWAP_ACTION, CGUI_SWAP_FOCUS_LEFT           },
 	{ "right",      SWAP_ACTION, CGUI_SWAP_FOCUS_RIGHT          },

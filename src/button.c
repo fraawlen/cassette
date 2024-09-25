@@ -261,6 +261,15 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 			trigger     = event->button_id == 1 && cgui_cell_is_event_in(event);
 			break;
 
+		case CGUI_CELL_EVENT_TOUCH_BEGIN:
+			DATA->state = FOCUSED;
+			break;
+
+		case CGUI_CELL_EVENT_TOUCH_END:
+			DATA->state = event->touch_n == 0 ? (event->is_focused ? FOCUSED : IDLE) : DATA->state;
+			trigger     = event->touch_n == 0 && cgui_cell_is_event_in(event);
+			break;
+
 		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_REFERENCE:
 		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_ACTION:
 		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_POINTER:
@@ -270,6 +279,10 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 
 		case CGUI_CELL_EVENT_FOCUS_LOSE:
 			DATA->state = IDLE;
+			break;
+
+		case CGUI_CELL_EVENT_CANCEL:
+			DATA->state = event->is_focused ? FOCUSED : IDLE;
 			break;
 
 		default:

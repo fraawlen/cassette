@@ -224,6 +224,19 @@ cgui_cell_is_event_in(const struct cgui_cell_event *event)
 			y = event->pointer_y;
 			break;
 
+		case CGUI_CELL_EVENT_TOUCH_BEGIN:
+		case CGUI_CELL_EVENT_TOUCH_END:
+		case CGUI_CELL_EVENT_TOUCH_UPDATE:
+			x = event->touch_x;
+			y = event->touch_y;
+			break;
+
+		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_POINTER:
+		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_TOUCH:
+			x = event->focus_x;
+			y = event->focus_y;
+			break;
+
 		default:
 			return false;
 	}

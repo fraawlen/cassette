@@ -23,6 +23,7 @@
 #include <math.h>
 #include <xcb/xcb.h>
 
+#include "grid.h"
 #include "event.h"
 #include "cell.h"
 #include "config.h"
@@ -200,6 +201,8 @@ accelerate(struct cgui_event *event)
 static void
 action_cell(uint8_t type, cgui_window *window)
 {
+	struct cgui_cell_event event;
+
 	if (!window->focus.cell->valid)
 	{
 		return;
@@ -207,11 +210,31 @@ action_cell(uint8_t type, cgui_window *window)
 
 	switch (type)
 	{
-		// TODO
+		case CGUI_SWAP_CELL_SELECT_LESS:
+			event.type = CGUI_CELL_EVENT_SELECT_LESS;
+			break;
+
+		case CGUI_SWAP_CELL_SELECT_MORE:
+			event.type = CGUI_CELL_EVENT_SELECT_MORE;
+			break;
+
+		case CGUI_SWAP_CELL_SELECT_NONE:
+			event.type = CGUI_CELL_EVENT_SELECT_NONE;
+			break;
+
+		case CGUI_SWAP_CELL_SELECT_ALL:
+			event.type = CGUI_CELL_EVENT_SELECT_ALL;
+			break;
+
+		case CGUI_SWAP_CELL_REDRAW:
+			cgui_cell_redraw(window->focus.cell);
+			return;
 
 		default:
-			break;
+			return;
 	}
+
+	window_process_cell_event(window, window->focus, &event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -259,7 +282,19 @@ action_window(uint8_t type, cgui_window *window)
 
 	switch (type)
 	{
-		// TODO
+		case CGUI_SWAP_WINDOW_LOCK_GRID:
+			window_update_state(window, CGUI_WINDOW_LOCKED_GRID, !window->state.locked_grid);
+			window_set_draw_level(window, WINDOW_DRAW_FULL);
+			window_update_size_hints(window);
+			break;
+
+		case CGUI_SWAP_WINDOW_LOCK_FOCUS:
+			window_focus_lock(window, !window->state.locked_focus);
+			break;
+
+		case CGUI_SWAP_WINDOW_REDRAW:
+			window_set_draw_level(window, WINDOW_DRAW_FULL);
+			break;
 
 		default:
 			break;
@@ -641,12 +676,42 @@ swap_input(struct cgui_event *event)
 static void
 touch_begin(struct cgui_event *event)
 {
+	struct grid_area area;
+	struct cgui_cell_event cell_event_touch =
+	{
+		.type     = CGUI_CELL_EVENT_TOUCH_BEGIN,
+		.touch_id = event->touch_id,
+		.touch_x  = event->touch_y,
+		.touch_y  = event->touch_x,
+	};
+
+	struct cgui_cell_event cell_event_focus =
+	{
+		.type    = CGUI_CELL_EVENT_FOCUS_GAIN_BY_TOUCH,
+		.focus_x = event->touch_x,
+		.focus_y = event->touch_y,
+	};
+
 	if (!event->window->valid)
 	{
 		return;
 	}
 
-	// TODO
+	area = window_area_at_coords(event->window, event->touch_x, event->touch_y);
+
+	/* if it's the first touch event, update focus */
+
+	if (cinputs_load(event->window->touches) == 0
+	 && window_process_cell_event(event->window, area, &cell_event_focus))
+	{
+		window_focus(event->window, area);
+	}
+
+	/* save event to tracker and send it to cell */
+
+	cinputs_push(event->window->touches, event->touch_id, event->touch_x, event->touch_y, area.cell);
+	cell_event_touch.touch_n = window_cell_touches(event->window, area.cell);
+	window_process_cell_event(event->window, area, &cell_event_touch);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -654,12 +719,39 @@ touch_begin(struct cgui_event *event)
 static void
 touch_end(struct cgui_event *event)
 {
+	size_t n;
+	struct grid_area area;
+	struct cgui_cell_event cell_event =
+	{
+		.type     = CGUI_CELL_EVENT_TOUCH_END,
+		.touch_id = event->touch_id,
+		.touch_x  = event->touch_y,
+		.touch_y  = event->touch_x,
+	};
+
 	if (!event->window->valid)
 	{
 		return;
 	}
 
-	// TODO
+	area = window_touch_area(event->window, event->touch_id);
+
+	/* update tracker and send event to cell */
+
+	cinputs_pull_id(event->window->touches, event->touch_id);
+	n = window_cell_touches(event->window, area.cell);
+	cell_event.touch_n = n;
+	window_process_cell_event(event->window, area, &cell_event);
+
+	/* if it's the last touch on the focused cell, unfocus */
+
+	if (n == 0 
+	 && !CONFIG->persistent_touch
+	 && !event->window->state.locked_focus
+	 &&  event->window->focus.cell == area.cell)
+	{
+		window_focus(event->window, GRID_AREA_NONE);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -667,12 +759,23 @@ touch_end(struct cgui_event *event)
 static void
 touch_update(struct cgui_event *event)
 {
+	struct grid_area area;
+	struct cgui_cell_event cell_event =
+	{
+		.type     = CGUI_CELL_EVENT_TOUCH_UPDATE,
+		.touch_id = event->touch_id,
+		.touch_x  = event->touch_y,
+		.touch_y  = event->touch_x,
+	};
+
 	if (!event->window->valid)
 	{
 		return;
 	}
-
-	// TODO
+	
+	area = window_touch_area(event->window, event->touch_id);
+	cell_event.touch_n = window_cell_touches(event->window, area.cell);
+	window_process_cell_event(event->window, area, &cell_event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -719,9 +822,16 @@ unfocus(struct cgui_event *event)
 		return;
 	}
 
-	window_update_state(event->window, CGUI_WINDOW_FOCUSED, false);
+	if ((!CONFIG->persistent_pointer && cinputs_load(event->window->buttons) > 0)
+	 || (!CONFIG->persistent_touch   && cinputs_load(event->window->touches) > 0))
+	{
+		window_focus(event->window, GRID_AREA_NONE);
+	}
 
-	// TODO clear all tracked inputs
+	cinputs_clear(event->window->buttons);
+	cinputs_clear(event->window->touches);
+	window_update_state(event->window, CGUI_WINDOW_FOCUSED, false);
+	window_cancel_cell_events(event->window);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

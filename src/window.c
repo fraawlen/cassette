@@ -54,14 +54,11 @@ static void dummy_fn_draw      (cgui_window *, unsigned long, unsigned long)    
 static void dummy_fn_focus     (cgui_window *, cgui_cell *)                     CGUI_NONNULL(1, 2);
 static void dummy_fn_grid      (cgui_window *, cgui_grid *)                     CGUI_NONNULL(1, 2);
 static void dummy_fn_state     (cgui_window *, enum cgui_window_state_mask)     CGUI_NONNULL(1);
-static void focus_lock         (cgui_window *, bool)                            CGUI_NONNULL(1);
-static void focus              (cgui_window *, struct grid_area)                CGUI_NONNULL(1);
 static void refocus            (cgui_window *)                                  CGUI_NONNULL(1);
 static void update_shown_grid  (cgui_window *)                                  CGUI_NONNULL(1);
 
 /* pure */
 
-static struct grid_area area_at_coords (const cgui_window *, double x, double y)                     CGUI_NONNULL(1) CGUI_PURE;
 static bool             cairo_error    (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
 static struct cgui_box  cell_frame     (const cgui_window *, struct grid_area)                       CGUI_NONNULL(1) CGUI_PURE;
 static struct cgui_box  frame          (const cgui_window *)                                         CGUI_NONNULL(1) CGUI_PURE;
@@ -315,6 +312,7 @@ cgui_window_create(void)
 	}
 
 	cref_set_default_ptr(window->grids, CGUI_GRID_PLACEHOLDER);
+	cinputs_set_default_ptr(window->touches, CGUI_CELL_PLACEHOLDER);
 
 	window->x              = x;
 	window->y              = y;
@@ -376,6 +374,8 @@ cgui_window_deactivate(cgui_window *window)
 
 	x11_window_deactivate(window->x_id);
 	window_update_state(window, CGUI_WINDOW_ACTIVE, false);
+	window_focus(window, GRID_AREA_NONE);
+	window_cancel_cell_events(window);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -402,7 +402,8 @@ cgui_window_disable(cgui_window *window)
 
 	window_update_state(window, CGUI_WINDOW_DISABLED,    true);
 	window_update_state(window, CGUI_WINDOW_LOCKED_GRID, false);
-	focus(window, GRID_AREA_NONE);
+	window_focus(window, GRID_AREA_NONE);
+	window_cancel_cell_events(window);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -625,7 +626,7 @@ cgui_window_reset_grid(cgui_window *window)
 
 	window->shown_grid = CGUI_GRID_PLACEHOLDER;
 	window->fn_grid(window, window->shown_grid);
-	focus(window, GRID_AREA_NONE);
+	window_focus(window, GRID_AREA_NONE);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -849,6 +850,80 @@ cgui_window_y(const cgui_window *window)
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
+struct grid_area
+window_area_at_coords(const cgui_window *window, double x, double y)
+{
+	struct grid_area area;
+	struct cgui_box box;
+
+	x -= CONFIG->window_padding;
+	y -= CONFIG->window_padding;
+
+	CREF_FOR_EACH(window->shown_grid->areas, i)
+	{
+		area = *(struct grid_area*)cref_ptr(window->shown_grid->areas, i);
+		box  = cell_frame(window, area);
+		if (cgui_box_is_in(box, x, y, area.x, area.y, area.width, area.height, window->drawable))
+		{
+			return area;
+		}
+	}
+
+	return GRID_AREA_NONE;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+window_cancel_cell_events(cgui_window *window)
+{
+	struct grid_area area;
+	struct cgui_cell_event event;
+
+	CREF_FOR_EACH(window->shown_grid->areas, i)
+	{
+		event.type = CGUI_CELL_EVENT_CANCEL;
+		area = *(struct grid_area*)cref_ptr(window->shown_grid->areas, i);
+		window_process_cell_event(window, area, &event);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct grid_area
+window_cell_area(const cgui_window *window, const cgui_cell *cell)
+{
+	struct grid_area area;
+
+	CREF_FOR_EACH(window->shown_grid->areas, i)
+	{
+		area = *(struct grid_area*)cref_ptr(window->shown_grid->areas, i);
+		if (cell == area.cell)
+		{
+			return area;
+		}
+	}
+
+	return GRID_AREA_NONE;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+size_t
+window_cell_touches(const cgui_window *window, const cgui_cell *cell)
+{
+	size_t n = 0;
+
+	CINPUTS_FOR_EACH(window->touches, i)
+	{
+		n += cell == cinputs_ptr(window->touches, i) ? 1 : 0;
+	}
+
+	return n;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 window_destroy(cgui_window *window)
 {
@@ -916,6 +991,78 @@ window_draw(cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+window_focus(cgui_window *window, struct grid_area area)
+{
+	struct cgui_cell_event event_unfoc =
+	{
+		.type = CGUI_CELL_EVENT_FOCUS_LOSE,
+	};
+
+	struct cgui_cell_event event_info =
+	{
+		.type              = CGUI_CELL_EVENT_FOCUS_INFO,
+		.focus_info_cell   = area.cell,
+		.focus_info_x      = area.x,
+		.focus_info_y      = area.y,
+		.focus_info_width  = area.width,
+		.focus_info_height = area.height,
+	};
+
+	if (window->focus.cell == area.cell)
+	{
+		return;
+	}
+
+	/* first, unfocus the previously unfocused cell (if any). It's assumed that the focus event was   */
+	/* sent by the caller of this function. If a GRID_AREA_NONE is given (with an invalid cell), then */
+	/* it means that the window loses focus completely.                                               */
+
+	window_process_cell_event(window, window->focus, &event_unfoc);
+
+	window->focus = area;
+
+	/* the following line is here in case the focused cell is a meta-cell, as in a cell holding other */
+	/* cells with its own internal focus system. The focus_info event that is sent is meant for them. */
+	/* It queries the meta-cell for infomation about it's internal focus if any, focus info that will */
+	/* then be used to set the window's focus hints. Non-meta cells should just reject that event. In */
+	/* this situation, the cell's grid-level geometry is used for hints as set by the event's default */
+	/* values.                                                                                        */
+
+	window_process_cell_event(window, window->focus, &event_info);
+
+	/* callbacks and hint updates */
+
+	window->fn_focus(window, window->focus.cell);
+	x11_window_update_focus_hints(
+		window->x_id,
+		event_info.focus_info_x,
+		event_info.focus_info_y,
+		event_info.focus_info_width,
+		event_info.focus_info_height);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+window_focus_lock(cgui_window *window, bool lock)
+{
+	struct cgui_cell_event event =
+	{
+		.type = lock ? CGUI_CELL_EVENT_FOCUS_LOCK : CGUI_CELL_EVENT_FOCUS_UNLOCK,
+	};
+
+	if (!window->focus.cell->valid || lock == window->state.locked_focus)
+	{
+		return;
+	}
+
+	window_process_cell_event(window, window->focus, &event);
+	window_update_state(window, CGUI_WINDOW_LOCKED_FOCUS, lock);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 window_focus_pointer(cgui_window *window, double x, double y)
 {
 	struct grid_area area;
@@ -935,14 +1082,14 @@ window_focus_pointer(cgui_window *window, double x, double y)
 
 	/* generate and send focus event */
 
-	area = area_at_coords(window, x, y);
+	area = window_area_at_coords(window, x, y);
 	if (window_process_cell_event(window, area, &event))
 	{
-		focus(window, area);
+		window_focus(window, area);
 	}
 	else if (!CONFIG->persistent_pointer)
 	{
-		focus(window, GRID_AREA_NONE);
+		window_focus(window, GRID_AREA_NONE);
 	}
 }
 
@@ -972,6 +1119,11 @@ window_present(cgui_window *window)
 bool
 window_process_cell_event(cgui_window *window, struct grid_area area, struct cgui_cell_event *event)
 {
+	if (!area.cell->valid)
+	{
+		return false;
+	}
+
 	/* filter out some events depending on the window state */
 
 	if (!window->state.disabled)
@@ -991,13 +1143,14 @@ skip_filter:
 
 	/* fill out common fields */
 	
-	event->msg      = CGUI_CELL_MSG_NONE;
-	event->x        = area.x + CONFIG->window_padding;
-	event->y        = area.y + CONFIG->window_padding;
-	event->width    = area.width;
-	event->height   = area.height;
-	event->frame    = cell_frame(window, area);
-	event->drawable = window->drawable;
+	event->msg        = CGUI_CELL_MSG_NONE;
+	event->x          = area.x + CONFIG->window_padding;
+	event->y          = area.y + CONFIG->window_padding;
+	event->width      = area.width;
+	event->height     = area.height;
+	event->frame      = cell_frame(window, area);
+	event->drawable   = window->drawable;
+	event->is_focused = window->focus.cell == area.cell;
 
 	/* send event */
 
@@ -1013,14 +1166,14 @@ skip_filter:
 		case CGUI_CELL_MSG_LOCK:
 			if (area.cell == window->focus.cell && CONFIG->cell_auto_lock)
 			{
-				focus_lock(window, true);
+				window_focus_lock(window, true);
 			}
 			break;
 
 		case CGUI_CELL_MSG_UNLOCK:
 			if (area.cell == window->focus.cell && CONFIG->cell_auto_lock)
 			{
-				focus_lock(window, false);
+				window_focus_lock(window, false);
 			}
 			break;
 
@@ -1049,6 +1202,8 @@ window_repair(cgui_window *window)
 	}
 
 	cref_repair(window->grids);
+	cinputs_repair(window->buttons);
+	cinputs_repair(window->touches);
 	window_set_draw_level(window, WINDOW_DRAW_FULL);
 	window_update_size(window, window->width, window->height);
 	window_update_size_hints(window);
@@ -1081,6 +1236,21 @@ window_set_draw_level(cgui_window *window, enum window_draw_level draw)
 	{
 		window->draw = draw;
 	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct grid_area
+window_touch_area(const cgui_window *window, uint32_t id)
+{
+	size_t i;
+
+	if (!cinputs_find(window->touches, id, &i))
+	{
+		return GRID_AREA_NONE;
+	}
+
+	 return window_cell_area(window, (cgui_cell*)cinputs_ptr(window->touches, i));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1202,30 +1372,6 @@ window_update_state(cgui_window *window, enum cgui_window_state_mask mask, bool 
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
-
-static struct grid_area
-area_at_coords(const cgui_window *window, double x, double y)
-{
-	struct grid_area area;
-	struct cgui_box box;
-
-	x -= CONFIG->window_padding;
-	y -= CONFIG->window_padding;
-
-	CREF_FOR_EACH(window->shown_grid->areas, i)
-	{
-		area = *(struct grid_area*)cref_ptr(window->shown_grid->areas, i);
-		box  = cell_frame(window, area);
-		if (cgui_box_is_in(box, x, y, area.x, area.y, area.width, area.height, window->drawable))
-		{
-			return area;
-		}
-	}
-
-	return GRID_AREA_NONE;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
 cairo_data_destroy(cgui_window *window)
@@ -1402,78 +1548,6 @@ dummy_fn_state(cgui_window *window, enum cgui_window_state_mask mask)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void
-focus(cgui_window *window, struct grid_area area)
-{
-	struct cgui_cell_event event_unfoc =
-	{
-		.type = CGUI_CELL_EVENT_FOCUS_LOSE,
-	};
-
-	struct cgui_cell_event event_info =
-	{
-		.type              = CGUI_CELL_EVENT_FOCUS_INFO,
-		.focus_info_cell   = area.cell,
-		.focus_info_x      = area.x,
-		.focus_info_y      = area.y,
-		.focus_info_width  = area.width,
-		.focus_info_height = area.height,
-	};
-
-	if (window->focus.cell == area.cell)
-	{
-		return;
-	}
-
-	/* first, unfocus the previously unfocused cell (if any). It's assumed that the focus event was   */
-	/* sent by the caller of this function. If a GRID_AREA_NONE is given (with an invalid cell), then */
-	/* it means that the window loses focus completely.                                               */
-
-	window_process_cell_event(window, window->focus, &event_unfoc);
-
-	window->focus = area;
-
-	/* the following line is here in case the focused cell is a meta-cell, as in a cell holding other */
-	/* cells with its own internal focus system. The focus_info event that is sent is meant for them. */
-	/* It queries the meta-cell for infomation about it's internal focus if any, focus info that will */
-	/* then be used to set the window's focus hints. Non-meta cells should just reject that event. In */
-	/* this situation, the cell's grid-level geometry is used for hints as set by the event's default */
-	/* values.                                                                                        */
-
-	window_process_cell_event(window, window->focus, &event_info);
-
-	/* callbacks and hint updates */
-
-	window->fn_focus(window, window->focus.cell);
-	x11_window_update_focus_hints(
-		window->x_id,
-		event_info.focus_info_x,
-		event_info.focus_info_y,
-		event_info.focus_info_width,
-		event_info.focus_info_height);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-focus_lock(cgui_window *window, bool lock)
-{
-	struct cgui_cell_event event =
-	{
-		.type = lock ? CGUI_CELL_EVENT_FOCUS_LOCK : CGUI_CELL_EVENT_FOCUS_UNLOCK,
-	};
-
-	if (!window->focus.cell->valid || lock == window->state.locked_focus)
-	{
-		return;
-	}
-
-	window_process_cell_event(window, window->focus, &event);
-	window_update_state(window, CGUI_WINDOW_LOCKED_FOCUS, lock);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 static struct cgui_box
 frame(const cgui_window *window)
 {
@@ -1599,12 +1673,12 @@ refocus(cgui_window *window)
 		 || window_process_cell_event(window, area, &event_seek)) 
 		 && window_process_cell_event(window, area, &event_foc))
 		{
-			focus(window, area);
+			window_focus(window, area);
 			return;
 		}
 	}
 
-	focus(window, GRID_AREA_NONE);
+	window_focus(window, GRID_AREA_NONE);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
