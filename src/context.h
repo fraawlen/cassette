@@ -36,15 +36,15 @@
 
 struct context
 {
-	/* file data if buffer is NULL */
+	/* source */
+
+	char *buffer; 
+
+	/* file data */
 
 	ino_t file_inode;
+	off_t file_size;
 	char  file_dir[PATH_MAX];
-	FILE *file;
-
-	/* internal buffer to parse from (if non-NULL) */
-
-	const char *buffer; 
 
 	/* context states */
 
@@ -78,7 +78,7 @@ struct context
 
 	struct context *parent;
 	bool restricted;
-	crand *rand;
+	crand rand;
 };
 
 /************************************************************************************************************/

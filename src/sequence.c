@@ -660,6 +660,6 @@ seed(struct context *ctx)
 
 	if (context_get_token_numeral(ctx, token, &d) != TOKEN_INVALID)
 	{
-		crand_seed(ctx->rand, d);
+		ctx->rand = crand_seed(d);
 	}
 }

@@ -34,7 +34,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static int  read_char    (struct context *)                              CCFG_NONNULL(1);
+static char read_char    (struct context *)                              CCFG_NONNULL(1);
 static bool read_word    (struct context *, char [static TOKEN_MAX_LEN]) CCFG_NONNULL(1);
 static void update_state (struct context *, char)                        CCFG_NONNULL(1);
 
@@ -124,20 +124,10 @@ context_goto_eol(struct context *ctx)
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-static int
+static char
 read_char(struct context *ctx)
 {
-	if (!ctx->buffer)
-	{
-		return fgetc(ctx->file);
-	}
-
-	if (*ctx->buffer != '\0')
-	{
-		return *(ctx->buffer++);
-	}
-	
-	return EOF;
+	return *ctx->buffer != '\0' ? *(ctx->buffer++) : '\0';
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -148,7 +138,7 @@ read_word(struct context *ctx, char token[static TOKEN_MAX_LEN])
 	size_t i = 0;
 	bool quotes_1 = false;
 	bool quotes_2 = false;
-	int  c;
+	char c;
 
 	if (ctx->eol_reached)
 	{
@@ -181,7 +171,6 @@ exit_lead:
 	{
 		switch (c)
 		{
-			case EOF :
 			case '\0':
 				goto exit_word;
 
@@ -241,7 +230,6 @@ update_state(struct context *ctx, char c)
 {
 	switch (c)
 	{
-		case EOF :
 		case '\0':
 			ctx->eof_reached = true;
 			/* fallthrough */

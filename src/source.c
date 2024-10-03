@@ -20,14 +20,17 @@
 
 #include <cassette/ccfg.h>
 #include <cassette/cobj.h>
+#include <fcntl.h>
 #include <libgen.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include "context.h"
 #include "main.h"
@@ -39,9 +42,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool has_err   (struct context *)                                       CCFG_NONNULL(1);
-static bool open_file (struct context *, const struct context *, const char *) CCFG_NONNULL(1, 3);
-static void parse     (struct context *)                                       CCFG_NONNULL(1);
+static bool  has_err    (struct context *)                                             CCFG_NONNULL(1);
+static char *map_source (struct context *, const struct context *, const char *, bool) CCFG_NONNULL(1, 3);
+static void  parse      (struct context *)                                             CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -53,8 +56,10 @@ source_parse_child(struct context *ctx_parent, const char *source)
 	struct context ctx;
 	size_t var_i;
 	size_t var_group;
+	char  *buffer;
 	
-	if (ctx_parent->depth >= CONTEXT_MAX_DEPTH || !open_file(&ctx, ctx_parent, source))
+	if (ctx_parent->depth >= CONTEXT_MAX_DEPTH
+	 || !(buffer = map_source(&ctx, ctx_parent, source, false)))
 	{
 		return;
 	}
@@ -62,7 +67,7 @@ source_parse_child(struct context *ctx_parent, const char *source)
 	var_i     = ctx_parent->var_i;
 	var_group = ctx_parent->var_group;
 
-	ctx.buffer         = NULL;
+	ctx.buffer         = buffer;
 	ctx.eol_reached    = false;
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
@@ -88,7 +93,7 @@ source_parse_child(struct context *ctx_parent, const char *source)
 	ctx.var_i     = var_i;
 	ctx.var_group = var_group;
 
-	fclose(ctx.file);
+	munmap(buffer, ctx.file_size);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -97,16 +102,14 @@ void
 source_parse_root(ccfg *cfg, const char *source, bool internal)
 {
 	struct context ctx;
-	crand r = 0;
+	char *buffer;
 
-	if (!internal && !open_file(&ctx, NULL, source))
+	if (!(buffer = map_source(&ctx, NULL, source, internal)))
 	{
 		return;
 	}
 
-	crand_seed(&r, 0);
-
-	ctx.buffer         = internal ? source : NULL;
+	ctx.buffer         = buffer;
 	ctx.eol_reached    = false;
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
@@ -125,7 +128,7 @@ source_parse_root(ccfg *cfg, const char *source, bool internal)
 	ctx.tokens         = cfg->tokens;
 	ctx.restricted     = cfg->restricted || getenv("CCFG_RESTRICT");
 	ctx.parent         = NULL;
-	ctx.rand           = &r;
+	ctx.rand           = crand_seed(0);
 
 	parse(&ctx);
 
@@ -134,9 +137,13 @@ source_parse_root(ccfg *cfg, const char *source, bool internal)
 		cfg->err = CERR_MEMORY;
 	}
 
-	if (!internal)
+	if (internal)
 	{
-		fclose(ctx.file);
+		free(buffer);
+	}
+	else
+	{
+		munmap(buffer, ctx.file_size);
 	}
 
 	cbook_destroy(ctx.iteration);
@@ -156,33 +163,65 @@ has_err(struct context *ctx)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static bool
-open_file(struct context *ctx, const struct context *ctx_parent, const char *filename)
+static char *
+map_source(struct context *ctx, const struct context *ctx_parent, const char *source, bool internal)
 {
 	struct stat fs;
+	char *map;
+	int fd;
 
-	if (!(ctx->file = fopen(filename, "r")) || fstat(fileno(ctx->file), &fs) < 0)
+	/* internal buffer setup, source is directly used as buffer */
+
+	if (internal)
 	{
-		fclose(ctx->file);
-		return false;
+		ctx->file_inode  = 0;
+		ctx->file_size   = 0;
+		ctx->file_dir[0] = '\0';
+		return strdup(source);
+	}
+
+	/* map file for external sources, source is used as filename */
+
+	if ((fd = open(source, O_RDONLY)) == -1)
+	{
+		goto fail_open;
+	}
+
+	if ((fstat(fd, &fs)) == -1)
+	{
+		goto fail_stat;
 	}
 
 	while (ctx_parent)
 	{
 		if (fs.st_ino == ctx_parent->file_inode)
 		{
-			fclose(ctx->file);
-			return false;
+			goto fail_loop;
 		}
 		ctx_parent = ctx_parent->parent;
 	}
 
+	if ((map = mmap(0, fs.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) == MAP_FAILED)
+	{
+		goto fail_map;
+	}
+
+	ctx->file_size  = fs.st_size;
 	ctx->file_inode = fs.st_ino;
-
-	snprintf(ctx->file_dir, PATH_MAX, "%s", filename);
+	snprintf(ctx->file_dir, PATH_MAX, "%s", source);
 	dirname(ctx->file_dir);
+	close(fd);
 
-	return true;	
+	return map;
+
+	/* errors */
+
+fail_map:
+fail_loop:
+fail_stat:
+	close(fd);
+fail_open:
+	return NULL;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
