@@ -70,7 +70,7 @@ main(void)
 	str_ref  = cstr_create();
 	str_wrap = cstr_create();
 
-	cstr_append(str_ref, "This is a lͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲng line Ͳf text!");
+	cstr_append(str_ref, "This is a lͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲͲng line of text!");
 	update_wrap();
 
 	/* We assume the end-user wrote 'NEW' into the widget at the 3rd row and 6th column          */

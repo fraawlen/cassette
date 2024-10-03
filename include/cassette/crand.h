@@ -40,6 +40,20 @@ extern "C" {
 typedef unsigned long crand;
 
 /************************************************************************************************************/
+/* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
+/************************************************************************************************************/
+
+/**
+ * Sets the initial value of the keeper.
+ *
+ * @param seed : Initial value to apply
+ *
+ * @return : Value
+ */
+crand
+crand_seed(unsigned long seed);
+
+/************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
 
@@ -54,16 +68,6 @@ typedef unsigned long crand;
  */
 double
 crand_next(crand *rand, double lim_1, double lim_2)
-CRAND_NONNULL(1);
-
-/**
- * Sets the initial value of the keeper.
- *
- * @param rand : Keeper value to interact with
- * @param seed : Initial value to apply
- */
-void
-crand_seed(crand *rand, unsigned long seed)
 CRAND_NONNULL(1);
 
 /************************************************************************************************************/
