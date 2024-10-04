@@ -32,12 +32,6 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define RESTRICT if (ctx->restricted) { return; }
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
 /* sequences handlers */
 
 static void combine_var      (struct context *, enum token)   CCFG_NONNULL(1);
@@ -157,7 +151,10 @@ combine_var(struct context *ctx, enum token type)
 	size_t i;
 	size_t j;
 
-	RESTRICT;
+	if (ctx->restricted)
+	{
+		return;
+	}
 
 	val = cstr_create();
 
@@ -221,7 +218,10 @@ declare_enum(struct context *ctx)
 	double ratio;
 	int n = 0;
 
-	RESTRICT;
+	if (ctx->restricted)
+	{
+		return;
+	}
 
 	/* get enum name and params, set defaults on missing params */
 
@@ -334,7 +334,10 @@ declare_variable(struct context *ctx)
 	char value[TOKEN_MAX_LEN];
 	size_t n = 0;
 
-	RESTRICT;
+	if (ctx->restricted)
+	{
+		return;
+	}
 
 	/* get variable's name */
 
@@ -371,7 +374,10 @@ include(struct context *ctx)
 	char token[TOKEN_MAX_LEN];
 	cstr *filename;
 
-	RESTRICT;
+	if (ctx->restricted)
+	{
+		return;
+	}
 
 	filename = cstr_create();
 
@@ -411,7 +417,10 @@ iterate(struct context *ctx)
 	bool nested;
 	bool fail = false;
 
-	RESTRICT;
+	if (ctx->restricted)
+	{
+		return;
+	}
 
 	/* get iteration params and detect if it's nested */
 
@@ -579,7 +588,10 @@ print(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
 	
-	RESTRICT;
+	if (ctx->restricted)
+	{
+		return;
+	}
 
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
@@ -604,7 +616,10 @@ section_add(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
 
-	RESTRICT;
+	if (ctx->restricted)
+	{
+		return;
+	}
 
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
@@ -619,7 +634,10 @@ section_begin(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
 
-	RESTRICT;
+	if (ctx->restricted)
+	{
+		return;
+	}
 
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
@@ -640,7 +658,10 @@ section_del(struct context *ctx)
 {
 	char token[TOKEN_MAX_LEN];
 
-	RESTRICT;
+	if (ctx->restricted)
+	{
+		return;
+	}
 
 	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
 	{
@@ -656,7 +677,10 @@ seed(struct context *ctx)
 	char token[TOKEN_MAX_LEN];
 	double d;
 	
-	RESTRICT;
+	if (ctx->restricted)
+	{
+		return;
+	}
 
 	if (context_get_token_numeral(ctx, token, &d) != TOKEN_INVALID)
 	{

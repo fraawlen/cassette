@@ -28,7 +28,7 @@ LIST_BIN   := $(patsubst $(DIR_DEMOS)/%.c, $(DIR_BIN)/%, $(LIST_DEMOS))
 OUTPUT := ccfg
 LIBS   := -lcobj -lm -lpthread
 FLAGS  := -std=c11 -O3 -D_POSIX_C_SOURCE=200809L -pedantic -pedantic-errors -Werror -Wall -Wextra          \
-          -Wbad-function-cast -Wcast-align -Wcast-qual -Wdeclaration-after-statement -Wfloat-equal         \
+          -Wbad-function-cast -Wcast-align -Wdeclaration-after-statement -Wfloat-equal                     \
           -Wformat=2 -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wmissing-prototypes       \
           -Wnested-externs -Wpointer-arith -Wredundant-decls -Wsequence-point -Wshadow -Wstrict-prototypes \
           -Wswitch -Wundef -Wunreachable-code -Wunused-but-set-parameter -Wwrite-strings

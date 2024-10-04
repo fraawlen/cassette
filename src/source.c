@@ -42,9 +42,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool  has_err    (struct context *)                                             CCFG_NONNULL(1);
-static char *map_source (struct context *, const struct context *, const char *, bool) CCFG_NONNULL(1, 3);
-static void  parse      (struct context *)                                             CCFG_NONNULL(1);
+static bool has_err    (struct context *)                                             CCFG_NONNULL(1);
+static bool map_source (struct context *, const struct context *, const char *, bool) CCFG_NONNULL(1, 3);
+static void parse      (struct context *)                                             CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -56,10 +56,8 @@ source_parse_child(struct context *ctx_parent, const char *source)
 	struct context ctx;
 	size_t var_i;
 	size_t var_group;
-	char  *buffer;
 	
-	if (ctx_parent->depth >= CONTEXT_MAX_DEPTH
-	 || !(buffer = map_source(&ctx, ctx_parent, source, false)))
+	if (ctx_parent->depth >= CONTEXT_MAX_DEPTH || !map_source(&ctx, ctx_parent, source, false))
 	{
 		return;
 	}
@@ -67,7 +65,6 @@ source_parse_child(struct context *ctx_parent, const char *source)
 	var_i     = ctx_parent->var_i;
 	var_group = ctx_parent->var_group;
 
-	ctx.buffer         = buffer;
 	ctx.eol_reached    = false;
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
@@ -93,7 +90,7 @@ source_parse_child(struct context *ctx_parent, const char *source)
 	ctx.var_i     = var_i;
 	ctx.var_group = var_group;
 
-	munmap(buffer, ctx.file_size);
+	munmap((void*)ctx.buffer, ctx.file_size);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -102,14 +99,12 @@ void
 source_parse_root(ccfg *cfg, const char *source, bool internal)
 {
 	struct context ctx;
-	char *buffer;
 
-	if (!(buffer = map_source(&ctx, NULL, source, internal)))
+	if (!map_source(&ctx, NULL, source, internal))
 	{
 		return;
 	}
 
-	ctx.buffer         = buffer;
 	ctx.eol_reached    = false;
 	ctx.eof_reached    = false;
 	ctx.skip_sequences = false;
@@ -137,13 +132,9 @@ source_parse_root(ccfg *cfg, const char *source, bool internal)
 		cfg->err = CERR_MEMORY;
 	}
 
-	if (internal)
+	if (!internal)
 	{
-		free(buffer);
-	}
-	else
-	{
-		munmap(buffer, ctx.file_size);
+		munmap((void*)ctx.buffer, ctx.file_size);
 	}
 
 	cbook_destroy(ctx.iteration);
@@ -163,11 +154,10 @@ has_err(struct context *ctx)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static char *
+static bool
 map_source(struct context *ctx, const struct context *ctx_parent, const char *source, bool internal)
 {
 	struct stat fs;
-	char *map;
 	int fd;
 
 	/* internal buffer setup, source is directly used as buffer */
@@ -177,10 +167,11 @@ map_source(struct context *ctx, const struct context *ctx_parent, const char *so
 		ctx->file_inode  = 0;
 		ctx->file_size   = 0;
 		ctx->file_dir[0] = '\0';
-		return strdup(source);
+		ctx->buffer      = source;
+		return true;
 	}
 
-	/* map file for external sources, source is used as filename */
+	/* map file, source is used as filename */
 
 	if ((fd = open(source, O_RDONLY)) == -1)
 	{
@@ -201,7 +192,7 @@ map_source(struct context *ctx, const struct context *ctx_parent, const char *so
 		ctx_parent = ctx_parent->parent;
 	}
 
-	if ((map = mmap(0, fs.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) == MAP_FAILED)
+	if ((ctx->buffer = mmap(0, fs.st_size, PROT_READ, MAP_PRIVATE, fd, 0)) == MAP_FAILED)
 	{
 		goto fail_map;
 	}
@@ -212,7 +203,7 @@ map_source(struct context *ctx, const struct context *ctx_parent, const char *so
 	dirname(ctx->file_dir);
 	close(fd);
 
-	return map;
+	return true;
 
 	/* errors */
 
@@ -221,7 +212,7 @@ fail_loop:
 fail_stat:
 	close(fd);
 fail_open:
-	return NULL;
+	return false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

@@ -38,7 +38,7 @@ struct context
 {
 	/* source */
 
-	char *buffer; 
+	const char *buffer; 
 
 	/* file data */
 
