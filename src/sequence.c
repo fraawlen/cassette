@@ -374,7 +374,7 @@ include(struct context *ctx)
 	char token[TOKEN_MAX_LEN];
 	cstr *filename;
 
-	if (ctx->restricted)
+	if (ctx->restricted || ctx->file_inode == 0)
 	{
 		return;
 	}

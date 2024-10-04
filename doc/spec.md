@@ -430,7 +430,7 @@ FOR_END
 INCLUDE [filename] [filename] ...
 ```
 
-Alongside sections, resources can also be split into separate files that can be opened and parsed with an inclusion sequence that starts with an `INCLUDE` token followed by filenames of files to include. The filenames are relative to the location of the file the sequence is read from. Unless they start with '/' in which case the given filename are absolute.
+Alongside sections, resources can also be split into separate files that can be opened and parsed with an inclusion sequence that starts with an `INCLUDE` token followed by filenames of files to include. The filenames are relative to the location of the file the sequence is read from. Unless they start with '/' in which case the given filename are absolute. This sequence type is automatically disabled if the root source is an internal buffer instead of a file.
 
 The contents of the included files are treated as if they've been copy-pasted into the parent file at the position of the inclusion sequence. In other words, declared variables, enumerations, and section states are carried over to the included child file. And any modifications that happen in inclusions are also brought back to the parent file.
 
