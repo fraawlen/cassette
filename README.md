@@ -2,7 +2,7 @@
 
 Cassette Graphics, or Cassette GUI (CGUI) is a modular general-purpose GUI toolkit written in C for X11 end-user applications. It's designed as a universal GUI, equally targeting desktop, laptop, mobile, and miscellaneous devices with more or less limited inputs. All thanks to a flexible grid layout, simple widget appearance, and an advanced configuration system, allowing one to tailor the theme, behavior, keybinds and input interpretation for each device class. CGUI also tries to limit the amount of direct external dependencies to make it easier to set it up on any system running an X11 display server.
 
-The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems.
+The library is free and open-source software licensed under the [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html). It's made to run on modern POSIX-compliant systems.
 
 Features
 --------
@@ -36,20 +36,21 @@ Dependencies
 
 	- [Cairo](https://cgit.freedesktop.org/cairo/)
 	- [FontConfig](https://gitlab.freedesktop.org/fontconfig/fontconfig)
-	- [XCB](https://gitlab.freedesktop.org/xorg/lib/libxcb)
 	- [XKBCommon](https://github.com/xkbcommon/libxkbcommon)
+	- [XCB](https://gitlab.freedesktop.org/xorg/lib/libxcb)
 
 Installation
 ------------
 
-First, edit the makefile if you want to change the installation destinations. These are represented by the variables DEST_HEADERS and DEST_LIBS for the public API headers and library files respectively. By default, they are set to /usr/include/cassette/ and /usr/lib. Then, build and install CGUI with the following commands :
+First, edit the makefile if you want to change the installation destinations. These are represented by the variables `DIR_INSTALL_INC` and `DIR_INSTALL_LIB` for the public API headers and library files respectively. By default, they are set to `/usr/include/cassette/` and `/usr/lib`.
+Then, build and install COBJ with the following commands :
 
 ```
 make
 make install
 ```
 
-After these steps, a shared binary will be generated and installed on your system. Examples will also be built and placed under `build/bin`.
+After these steps, both a shared binary and static archive will be generated and installed on your system. Examples will also be built and placed under `build/bin`.
 
 Post-Installation
 -----------------
@@ -156,5 +157,5 @@ In these screenshots, the following third-party resources were used :
 Mirrors
 -------
 
-- [Codeberg](https://codeberg.org/fraawlen/cassette-graphics)
-- [Github](https://github.com/fraawlen/cassette-graphics)
+- https://github.com/fraawlen/cassette-graphics
+- https://codeberg.org/fraawlen/cassette-graphics
