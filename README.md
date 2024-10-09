@@ -4,6 +4,9 @@ Cassette Graphics (CGUI) is a modular general-purpose GUI toolkit written in C f
 
 The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems.
 
+> [!Warning]
+> This library is alpha software! Some features and widgets are still missing. Moreover, it is currently being rewritten in a better code and interface style under the Cassette name (formerly Derelict Graphics or DG, and on this branch the functions namespaces have not been yet updated). Because of that, the function names, will change in the next release. Checkout the 'rewrite' branch for the latest developments.
+
 Features
 --------
 
@@ -18,11 +21,6 @@ Features
 - Fractional scaling
 - Native transparency
 - Vertically synced animations
-
-Notice
-------
-
-This library is alpha software! Some features and widgets are still missing. Moreover, it is currently being rewritten in a better code and interface style under the Cassette name (formerly Derelict Graphics or DG, and on this branch the functions namespaces have not been yet updated). Some of its components have also been split off into their own self-contained support libraries, [Cassette Objects (COBJ)](/../../../../fraawlen/cassette-objects) and [Cassette Configuration (CCFG)](/../../../../fraawlen/cassette-configuration). The remaining library components, originally distributed across 3 modules, Core (GUI engine), Base (widgets implementations), and Wm (extra tools for desktop environments), will all be merged into a single module that will be the library itself. Because of that, the function's namespaces, and thus their names, will change in the next release. Checkout the 'rewrite' branch for the latest developments.
 
 Dependencies
 ------------
