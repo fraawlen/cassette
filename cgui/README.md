@@ -2,8 +2,6 @@
 
 Cassette Graphics, or Cassette GUI (CGUI) is a modular general-purpose GUI toolkit written in C for X11 end-user applications. It's designed as a universal GUI, equally targeting desktop, laptop, mobile, and miscellaneous devices with more or less limited inputs. All thanks to a flexible grid layout, simple widget appearance, and an advanced configuration system, allowing one to tailor the theme, behavior, keybinds and input interpretation for each device class. CGUI also tries to limit the amount of direct external dependencies to make it easier to set it up on any system running an X11 display server.
 
-The library is free and open-source software licensed under the [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html). It's made to run on modern POSIX-compliant systems.
-
 Features
 --------
 
@@ -139,20 +137,6 @@ Output :
 ![hello world output](./extras/hello.png)
 
 Check out the `examples` directory for more in depth demonstrations.
-
-Screenshots
------------
-
-![Screenshot 1](./extras/screenshot-1.png)
-![Screenshot 2](./extras/screenshot-2.png)
-![Screenshot 3](./extras/screenshot-3.png)
-
-In these screenshots, the following third-party resources were used :
-
-- [Terminus font](https://terminus-font.sourceforge.net/)
-- [Scientifica font](https://github.com/nerdypepper/scientifica)
-- [NASA Curiosity's view of Mars sky at sunset](https://www.nasa.gov/)
-- [Picom for shadow and blur effects](https://github.com/yshui/picom)
 
 Mirrors
 -------

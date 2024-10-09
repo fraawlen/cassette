@@ -2,8 +2,6 @@
 
 Cassette Objects (COBJ) is a little collection self-contained data structures. Its API is written in a (somewhat) safe C style in which all structures that depend on dynamic memory allocation are opaque and their handler functions are designed to minimize the return of null pointer values. In other words, save for a few explicit exceptions, functions including constructors always return valid values or pointers, even in case of memory allocation failure. 
 
-The library is free and open-source software licensed under the [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html). It's made to run on modern POSIX-compliant systems.
-
 Features
 --------
 

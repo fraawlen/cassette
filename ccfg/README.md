@@ -2,8 +2,6 @@
 
 Cassette Configuration (CCFG) is a configuration language and parser library featuring array based values and short s-like expressions based functions. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
 
-The library is free and open-source software licensed under the [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html). It's made to run on modern POSIX-compliant systems.
-
 Language Features
 -----------------
 
@@ -17,7 +15,7 @@ Language Features
 - iteration loops
 - conditionals
 - child file inclusion
-- [more](./doc/spec.md)
+- [more](../docs/ccfg-spec.md)
 
 Dependencies
 ------------
@@ -101,7 +99,7 @@ value_A
 value_B
 ```
 
-Check out the `examples` directory for more in depth demonstrations and `include/cassette/*.h` header files for full functions descriptions. For more information about the language usage, features and syntax check out the [language spec](./doc/spec.md).
+Check out the `examples` directory for more in depth demonstrations and `include/cassette/*.h` header files for full functions descriptions. For more information about the language usage, features and syntax check out the [language spec](../docs/ccfg-spec.md).
 
 Fizz Buzz
 ---------
@@ -136,17 +134,12 @@ Fuzzing <a name="fuzzing"></a>
 This project comes with an integrated fuzz test case. First make sure to have AFL++ and the necessary utilities (afl-gcc-fast) installed. Then build and run it with the following command:
 
 ```
-make fuzzer
+cd test
+make
 ```
 
-By default, CCFG will run without restrictions; thus, some language functions can generate hangs during fuzzing. CCFG provides a restricted mode ([Section 2.5](./doc/spec.md)). In restricted mode, only resources definitions are valid, and all language functions are disabled. To run the fuzz test case in restricted mode, run the following command:
+By default, CCFG will run without restrictions; thus, some language functions can generate hangs during fuzzing. CCFG provides a restricted mode ([Section 2.5](../docs/ccfg-spec.md)). In restricted mode, only resources definitions are valid, and all language functions are disabled. To run the fuzz test case in restricted mode, run the following command:
 
 ```
-CCFG_RESTRICT= make test
+CCFG_RESTRICT= make
 ```
-
-Mirrors
--------
-
-- https://github.com/fraawlen/cassette-configuration
-- https://codeberg.org/fraawlen/cassette-configuration
