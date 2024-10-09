@@ -4,6 +4,9 @@ Cassette is a lightweight framework written in C11, with a UI inspired by the ca
 
 Cassette is free and open-source software, licensed under the [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html).
 
+> [!Warning]
+> You are currently viewing the 'rewrite' branch which is preparing a new release version (0.2.0). It is non-functional yet. In the meantime, checkout the 'trunk' branch or the release tab, where there are usable builds of the framework. Cassette is still in early development, and some features are missing, but the releases builds are fully functional, albeit the next version will COMPLETELY CHANGE THE API.
+
 > [!WARNING]
 > Readme and documentation under construction.
 
@@ -80,23 +83,21 @@ A collection self-contained data structures and utilities used by both CCFG and 
 
 ## Dependencies <a name="dependencies"></a>
 
-### Tools :
+-Tools :
+	- C11 compiler with a stdlib + POSIX 200809L
+	- Make
 
-- C11 compiler with a stdlib + POSIX 200809L
-- Make
-
-### Libraries :
-
-- [Cairo](https://cgit.freedesktop.org/cairo/)
-- [FontConfig](https://gitlab.freedesktop.org/fontconfig/fontconfig)
-- [XKBCommon](https://github.com/xkbcommon/libxkbcommon)
-- [XCB](https://gitlab.freedesktop.org/xorg/lib/libxcb), with:
-	- ICCCM
-	- Keysyms
-	- Present
-	- Randr
-	- Render
-	- XInput
+- Libraries :
+	- [Cairo](https://cgit.freedesktop.org/cairo/)
+	- [FontConfig](https://gitlab.freedesktop.org/fontconfig/fontconfig)
+	- [XKBCommon](https://github.com/xkbcommon/libxkbcommon)
+	- [XCB](https://gitlab.freedesktop.org/xorg/lib/libxcb)
+	- XCB-ICCCM
+	- XCB-Keysyms
+	- XCB-Present
+	- XCB-Randr
+	- XCB-Render
+	- XCB-XInput
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
