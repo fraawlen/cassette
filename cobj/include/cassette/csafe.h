@@ -23,34 +23,60 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#if __GNUC__ > 4
-	#define HIDDEN __attribute__((visibility ("hidden")))
-#else
-	#define HIDDEN
-#endif
-
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+/**
+ * Safe addition.
+ *
+ * @param result : Optional, if given, the result will be put there
+ * @param a      : First value
+ * @param b      : Second value
+ *
+ * @return : True if the operation is safe, false otherwhise
+ */
 bool
-safe_add(size_t *result, size_t a, size_t b)
-HIDDEN;
+safe_add(size_t *result, size_t a, size_t b);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+/**
+ * Safe division.
+ *
+ * @param result : Optional, if given, the result will be put there
+ * @param a      : First value
+ * @param b      : Second value
+ *
+ * @return : True if the operation is safe, false otherwhise
+ */
 bool
-safe_div(size_t *result, size_t a, size_t b)
-HIDDEN;
+safe_div(size_t *result, size_t a, size_t b);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+/**
+ * Safe multiplication
+ *
+ * @param result : Optional, if given, the result will be put there
+ * @param a      : First value
+ * @param b      : Second value
+ *
+ * @return : True if the operation is safe, false otherwhise
+ */
 bool
-safe_mul(size_t *result, size_t a, size_t b)
-HIDDEN;
+safe_mul(size_t *result, size_t a, size_t b);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+/**
+ * Safe substraction.
+ *
+ * @param result : Optional, if given, the result will be put there
+ * @param a      : First value
+ * @param b      : Second value
+ *
+ * @return : True if the operation is safe, false otherwhise
+ */
 bool
-safe_sub(size_t *result, size_t a, size_t b)
-HIDDEN;
+safe_sub(size_t *result, size_t a, size_t b);

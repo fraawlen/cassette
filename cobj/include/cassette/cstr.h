@@ -29,10 +29,12 @@
 	#define CSTR_NONNULL_RETURN __attribute__((returns_nonnull))
 	#define CSTR_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
 	#define CSTR_PURE           __attribute__((pure))
+	#define CSTR_CONST          __attribute__((const))
 #else
 	#define CSTR_NONNULL_RETURN
 	#define CSTR_NONNULL(...)
 	#define CSTR_PURE
+	#define CSTR_CONST
 #endif
 
 #ifdef __cplusplus

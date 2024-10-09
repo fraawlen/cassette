@@ -34,7 +34,8 @@
 
 void
 util_sort_pair(double *d_1, double *d_2)
-CCFG_NONNULL(1, 2);
+CCFG_NONNULL(1, 2)
+CCFG_HIDDEN;
 
 /************************************************************************************************************/
 /* FUNCTIONS ************************************************************************************************/
@@ -42,10 +43,12 @@ CCFG_NONNULL(1, 2);
 
 double
 util_interpolate(double d_1, double d_2, double ratio)
-CONST;
+CCFG_HIDDEN
+CCFG_CONST;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
 util_limit(double d, double lim_1, double lim_2)
-CONST;
+CCFG_HIDDEN
+CCFG_CONST;

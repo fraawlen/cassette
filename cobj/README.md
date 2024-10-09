@@ -1,4 +1,4 @@
-<p align=center><img src="./extras/banner.svg"></p>
+<p align=center><img src="banner.svg"></p>
 
 Cassette Objects (COBJ) is a little collection self-contained data structures. Its API is written in a (somewhat) safe C style in which all structures that depend on dynamic memory allocation are opaque and their handler functions are designed to minimize the return of null pointer values. In other words, save for a few explicit exceptions, functions including constructors always return valid values or pointers, even in case of memory allocation failure. 
 
@@ -16,6 +16,7 @@ Features
 | cinputs | 2D input (screen touches, key / button presses) tracker array                     |
 | crand   | re-implementation of POSIX's rand48 functions with a slightly more convenient API |
 | cref    | reference counter used to keep track of instanced components                      |
+| csafe   | set of arithmetics operations on size_t with overflow and underflow protection    |
 | cseg    | 1D segment represenation and manipulation with bound checks and UB prevention     |
 | cstr    | UTF-8 strings with 2D (rows, columns, tabsize, wrapping) features                 |
 

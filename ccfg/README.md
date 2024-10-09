@@ -1,4 +1,4 @@
-<p align="center"><img src="./extras/banner.svg"></p>
+<p align="center"><img src="banner.svg"></p>
 
 Cassette Configuration (CCFG) is a configuration language and parser library featuring array based values and short s-like expressions based functions. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
 

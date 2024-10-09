@@ -27,5 +27,6 @@
 #include "cinputs.h"
 #include "crand.h"
 #include "cref.h"
+#include "csafe.h"
 #include "cseg.h"
 #include "cstr.h"

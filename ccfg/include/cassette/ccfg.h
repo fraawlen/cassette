@@ -29,11 +29,13 @@
 	#define CCFG_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
 	#define CCFG_HIDDEN         __attribute__((visibility ("hidden")))
 	#define CCFG_PURE           __attribute__((pure))
+	#define CCFG_CONST          __attribute__((const))
 #else
 	#define CCFG_NONNULL_RETURN
 	#define CCFG_NONNULL(...)
 	#define CCFG_HIDDEN
 	#define CCFG_PURE
+	#define CCFG_CONST
 #endif
 
 #ifdef __cplusplus
