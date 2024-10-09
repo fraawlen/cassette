@@ -2,7 +2,7 @@
 
 Cassette Objects (COBJ) is a little collection self-contained data structures. Its API is written in a (somewhat) safe C style in which all structures that depend on dynamic memory allocation are opaque and their handler functions are designed to minimize the return of null pointer values. In other words, save for a few explicit exceptions, functions including constructors always return valid values or pointers, even in case of memory allocation failure. 
 
-The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems, and except for the compiler and build system, is not dependent on third-party software.
+The library is free and open-source software licensed under the [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html). It's made to run on modern POSIX-compliant systems.
 
 Features
 --------
@@ -30,7 +30,7 @@ Dependencies
 Installation
 ------------
 
-First, edit the makefile if you want to change the installation destinations. These are represented by the variables `DEST_HEADERS` and `DEST_LIBS` for the public API headers and library files respectively. By default, they are set to `/usr/include/cassette/` and `/usr/lib`.
+First, edit the makefile if you want to change the installation destinations. These are represented by the variables `DIR_INSTALL_INC` and `DIR_INSTALL_LIB` for the public API headers and library files respectively. By default, they are set to `/usr/include/cassette/` and `/usr/lib`.
 Then, build and install COBJ with the following commands :
 
 ```
@@ -38,7 +38,7 @@ make
 make install
 ```
 
-After these steps, both a shared binary and static archive will be generated and installed on your system. Examples will also be built and placed under `./build/bin`. The examples are statically compiled and can be run from anywhere on your system.
+After these steps, both a shared binary and static archive will be generated and installed on your system. Examples will also be built and placed under `build/bin`.
 
 Usage
 -----
@@ -71,5 +71,5 @@ Then, to compile your program, add this flag :
 Mirrors
 -------
 
-- https://codeberg.org/fraawlen/cassette-objects
 - https://github.com/fraawlen/cassette-objects
+- https://codeberg.org/fraawlen/cassette-objects
