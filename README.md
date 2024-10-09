@@ -148,5 +148,5 @@ CCFG_RESTRICT= make test
 Mirrors
 -------
 
-- https://codeberg.org/fraawlen/cassette-configuration
 - https://github.com/fraawlen/cassette-configuration
+- https://codeberg.org/fraawlen/cassette-configuration
