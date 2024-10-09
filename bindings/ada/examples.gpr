@@ -1,0 +1,37 @@
+with "cassette.gpr";
+
+--------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
+
+project Examples is
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	for Source_Dirs use ("examples/cobj", "examples/ccfg");
+	for Object_Dir  use "build/obj";
+	for Exec_Dir    use "build/bin";
+	for Main        use (
+		"tracker.adb", 
+		"data.adb",
+		"widget.adb",
+		"random.adb",
+		"colors.adb",
+		"dictionary.adb",
+		"segment.adb",
+		"print.adb");
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	for Create_Missing_Dirs use "True";
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+	package Linker
+	is
+		for Default_Switches ("Ada") use Cassette.Linker_Switches;
+	end Linker;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
+end Examples;
