@@ -309,10 +309,22 @@ ccfg_push_param_long(ccfg *cfg, const char *name, long long l)
 void
 ccfg_push_param_str(ccfg *cfg, const char *name, const char *str)
 {
+	size_t i;
+
 	if (cfg->err)
 	{
 		return;
 	}
+
+	/* try to rewrite param value if it already exists */
+
+	if (cdict_find(cfg->keys_params, name, 0, &i)
+	 && cbook_rewrite(cfg->params, i, str))
+	{
+		return;
+	}
+
+	/* otherwhise create new param */
 
 	cbook_write(cfg->params, str);
 	if (!cbook_error(cfg->params))
