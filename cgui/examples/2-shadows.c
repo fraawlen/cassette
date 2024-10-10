@@ -19,6 +19,8 @@
 /************************************************************************************************************/
 
 #include <cassette/cgui.h>
+#include <cassette/ccfg.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -27,17 +29,13 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define MSG "Hello World!"
+#define MAX_DIST 200.0
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void on_accel (cgui_window *, int);
-static void on_click (cgui_cell   *);
-static void on_close (cgui_window *);
-static void on_draw  (cgui_window *, unsigned long, unsigned long);
-static void on_state (cgui_window *, enum cgui_window_state_mask);
+static void on_draw (cgui_window *, unsigned long, unsigned long);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -48,11 +46,9 @@ static cgui_cell   *stripes  = CGUI_CELL_PLACEHOLDER;
 static cgui_cell   *button_1 = CGUI_CELL_PLACEHOLDER;
 static cgui_cell   *button_2 = CGUI_CELL_PLACEHOLDER;
 static cgui_cell   *button_3 = CGUI_CELL_PLACEHOLDER;
-static cgui_grid   *grid_1   = CGUI_GRID_PLACEHOLDER;
-static cgui_grid   *grid_2   = CGUI_GRID_PLACEHOLDER;
+static cgui_cell   *button_4 = CGUI_CELL_PLACEHOLDER;
+static cgui_grid   *grid     = CGUI_GRID_PLACEHOLDER;
 static cgui_window *window   = CGUI_WINDOW_PLACEHOLDER;
-
-static struct cgui_screen screen;
 
 /************************************************************************************************************/
 /* MAIN *****************************************************************************************************/
@@ -67,64 +63,37 @@ static struct cgui_screen screen;
  {
 	/* Setup */
 
+	cgui_setup_app_name("shadow_test");
 	cgui_init(argc, argv);
 
 	window   = cgui_window_create();
-	grid_1   = cgui_grid_create(2, 2);
-	grid_2   = cgui_grid_create(2, 4);
+	grid     = cgui_grid_create(3, 3);
 	filler   = cgui_filler_create();
 	stripes  = cgui_stripes_create();
 	button_1 = cgui_button_create();
 	button_2 = cgui_button_create();
 	button_3 = cgui_button_create();
-	screen   = cgui_screen_primary_specs();
+	button_4 = cgui_button_create();
 
 	/* Cell setup */
 
-	cgui_button_on_click(button_1, on_click);
-	cgui_button_on_click(button_2, on_click);
-	cgui_button_on_click(button_3, on_click);
-
-	cgui_button_set_label(button_1, "button");
-	cgui_button_set_label(button_2, "button");
-	cgui_button_set_label(button_3, "button");
-
-	cgui_button_disable(button_3);
+	cgui_button_disable(button_4);
 
 	/* Grid 1 setup */
 
-	cgui_grid_set_col_flex(grid_1, 0, 1.0);
-	cgui_grid_set_col_flex(grid_1, 1, 1.0);
-	cgui_grid_set_row_flex(grid_1, 0, 1.0);
-	cgui_grid_set_row_flex(grid_1, 1, 1.0);
-
-	cgui_grid_assign_cell(grid_1, button_1, 0, 0, 1, 1);
-	cgui_grid_assign_cell(grid_1, button_2, 1, 0, 1, 1);
-	cgui_grid_assign_cell(grid_1, button_3, 0, 1, 1, 1);
-	cgui_grid_assign_cell(grid_1, stripes,  1, 1, 1, 1);
-	
-	/* Grid 2 setup */
-
-	cgui_grid_set_col_flex(grid_2, 1, 1.0);
-	cgui_grid_set_row_flex(grid_2, 0, 1.0);
-
-	cgui_grid_assign_cell(grid_2, filler,   0, 0, 1, 1);
-	cgui_grid_assign_cell(grid_2, button_1, 0, 1, 1, 1);
-	cgui_grid_assign_cell(grid_2, button_2, 0, 2, 1, 1);
-	cgui_grid_assign_cell(grid_2, button_3, 0, 3, 1, 1);
-	cgui_grid_assign_cell(grid_2, filler,   1, 0, 1, 3);
-	cgui_grid_assign_cell(grid_2, stripes,  1, 3, 1, 1);
+	cgui_grid_assign_cell(grid, stripes,  1, 1, 1, 1);
+	cgui_grid_assign_cell(grid, filler,   2, 0, 1, 2);
+	cgui_grid_assign_cell(grid, filler,   0, 2, 2, 1);
+	cgui_grid_assign_cell(grid, button_1, 0, 0, 1, 1);
+	cgui_grid_assign_cell(grid, button_2, 1, 0, 1, 1);
+	cgui_grid_assign_cell(grid, button_3, 0, 1, 1, 1);
+	cgui_grid_assign_cell(grid, button_4, 2, 2, 1, 1);
 	
 	/* Window setup */
 
-	cgui_window_push_grid(window, grid_2);
-	cgui_window_push_grid(window, grid_1);
-	cgui_window_rename(window, "Hi");
-	cgui_window_set_accelerator(window, 1, "Hello", on_accel);
-	cgui_window_set_accelerator(window, 2, "World", on_accel);
+	cgui_window_push_grid(window, grid);
+	cgui_window_rename(window, "shadows");
 	cgui_window_on_draw(window, on_draw);
-	cgui_window_on_close(window, on_close);
-	cgui_window_on_state(window, on_state);
 	cgui_window_activate(window);
 
 	/* Run */
@@ -139,13 +108,13 @@ static struct cgui_screen screen;
 	}
 
 	cgui_window_destroy(window);
-	cgui_grid_destroy(grid_1);
-	cgui_grid_destroy(grid_2);
+	cgui_grid_destroy(grid);
 	cgui_cell_destroy(filler);
 	cgui_cell_destroy(stripes);
 	cgui_cell_destroy(button_1);
 	cgui_cell_destroy(button_2);
 	cgui_cell_destroy(button_3);
+	cgui_cell_destroy(button_4);
 
 	cgui_reset();
 
@@ -157,81 +126,35 @@ static struct cgui_screen screen;
 /************************************************************************************************************/
 
 static void
-on_accel(cgui_window *w, int id)
-{
-	(void)w;
-
-	printf("accelerator %i triggered\n", id);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-on_click(cgui_cell *c)
-{
-	(void)c;
-
-	printf("button clicked\n");
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-on_close(cgui_window *w)
-{
-	cgui_window_deactivate(w);
-	
-	printf("window closed\n");
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
 on_draw(cgui_window *w, unsigned long delay_1, unsigned long delay_2)
 {
-	(void)w;
+	double x;
+	double y;
+	double d;
+	double a;
+	double m;
+	double r;
+
 	(void)delay_1;
 	(void)delay_2;
 
-//	printf("window redrawn (%lu / %lu)\n", delay_1, delay_2);
-}
+	/* pointer position relative to window's center */
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+	cgui_screen_pointer_position(&x, &y);
 
-static void
-on_state(cgui_window *w, enum cgui_window_state_mask mask)
-{
-	struct cgui_window_state_flags state;
+	x -= cgui_window_x(w) + cgui_window_width(w)  / 2;
+	y -= cgui_window_y(w) + cgui_window_height(w) / 2;
+	
+	/* calculate shadow offset ratios */
 
-	state = cgui_window_state(w);
+	m = cgui_window_width(w) / 2 + MAX_DIST;
+	a = atan(y / x) + (x > 0.0 ? 3.14159 : 0.0);
+	d = sqrt(pow(x, 2) + pow(y, 2));
+	r = d > m ? 1.0 : d / m;
 
-	switch (mask)
-	{
-		case CGUI_WINDOW_ACTIVE:
-			printf("window %s\n", state.active ? "activated" : "deactivated");
-			break;
+	/* apply offset ratios */
 
-		case CGUI_WINDOW_MAPPED:
-			printf("window %s\n", state.mapped ? "mapped" : "unmapped");
-			break;
-
-		case CGUI_WINDOW_FOCUSED:
-			printf("window %s\n", state.focused ? "focused" : "unfocused");
-			break;
-
-		case CGUI_WINDOW_DISABLED:
-			printf("window %s\n", state.disabled ? "disabled" : "enabled");
-			break;
-
-		case CGUI_WINDOW_LOCKED_GRID:
-			printf("window %s\n", state.locked_grid ? "grid locked" : "grid unlocked");
-			break;
-
-		case CGUI_WINDOW_LOCKED_FOCUS:
-			printf("window %s\n", state.locked_focus ? "focus locked" : "focus unlocked");
-			break;
-
-		default:
-			return;
-	}
+	ccfg_push_param(cgui_config_get_parser(), "shadow_x", r * cos(a));
+	ccfg_push_param(cgui_config_get_parser(), "shadow_y", r * sin(a));
+	cgui_reconfig();
 }

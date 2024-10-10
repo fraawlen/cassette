@@ -240,6 +240,14 @@ CGUI_PURE;
 /**
  *
  */
+ccfg *
+cgui_config_get_parser(void)
+CGUI_NONNULL_RETURN
+CGUI_PURE;
+
+/**
+ *
+ */
 double
 cgui_config_str_height(size_t rows)
 CGUI_PURE;

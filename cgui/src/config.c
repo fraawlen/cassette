@@ -339,6 +339,14 @@ cgui_config_get(void)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+ccfg *
+cgui_config_get_parser(void)
+{
+	return parser;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 cgui_config_on_load(void (*fn)(ccfg *cfg))
 {

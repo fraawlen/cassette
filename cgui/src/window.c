@@ -55,7 +55,6 @@ static void dummy_fn_focus     (cgui_window *, cgui_cell *)                     
 static void dummy_fn_grid      (cgui_window *, cgui_grid *)                     CGUI_NONNULL(1, 2);
 static void dummy_fn_state     (cgui_window *, enum cgui_window_state_mask)     CGUI_NONNULL(1);
 static void refocus            (cgui_window *)                                  CGUI_NONNULL(1);
-static void update_shown_grid  (cgui_window *)                                  CGUI_NONNULL(1);
 
 /* pure */
 
@@ -1283,7 +1282,7 @@ window_update_size(cgui_window *window, double width, double height)
 		return;
 	}
 	
-	update_shown_grid(window);
+	window_update_shown_grid(window);
 	grid_update_geometry(
 		window->shown_grid,
 		window->width  - CONFIG->window_padding * 2,
@@ -1308,6 +1307,48 @@ window_update_size_hints(cgui_window *window)
 	}
 
 	x11_window_update_size_hints(window->x_id, min_w, min_h, max_w, max_h);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+window_update_shown_grid(cgui_window *window)
+{
+	cgui_grid *grid_old;
+	cgui_grid *grid;
+
+	if (window->state.locked_grid || cref_length(window->grids) < 2)
+	{
+		return;
+	}
+
+	/* find biggest grid that could fit in current window dimensions */
+
+	grid_old           = window->shown_grid;
+	window->shown_grid = min_grid(window);
+
+	CREF_FOR_EACH(window->grids, i)
+	{
+		grid = (cgui_grid*)cref_ptr(window->grids, i);
+		if (cgui_grid_compare_size(grid, window->shown_grid) == CGUI_GRID_SIZE_BIGGER
+		 && WIDTH(grid)  <= window->width
+		 && HEIGHT(grid) <= window->height)
+		{
+			window->shown_grid = grid;
+		}
+	}
+
+	/* updates to do if the shown grid changed */
+
+	if (grid_old == window->shown_grid)
+	{
+		return;
+	}
+
+	cgui_window_swap_grid(window, grid_old, grid_old->ref);
+	window->fn_grid(window, window->shown_grid);
+	window_set_draw_level(window, WINDOW_DRAW_FULL);
+	refocus(window);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1699,45 +1740,3 @@ size_limits(const cgui_window *window, double *min_width, double *min_height, do
 	*max_width  = ((cgui_grid*)cref_ptr(window->grids, 0))->col_flex > 0.0 ? DBL_MAX : *min_width;
 	*max_height = ((cgui_grid*)cref_ptr(window->grids, 0))->row_flex > 0.0 ? DBL_MAX : *min_height;
 }	
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-update_shown_grid(cgui_window *window)
-{
-	cgui_grid *grid_old;
-	cgui_grid *grid;
-
-	if (window->state.locked_grid || cref_length(window->grids) < 2)
-	{
-		return;
-	}
-
-	/* find biggest grid that could fit in current window dimensions */
-
-	grid_old           = window->shown_grid;
-	window->shown_grid = min_grid(window);
-
-	CREF_FOR_EACH(window->grids, i)
-	{
-		grid = (cgui_grid*)cref_ptr(window->grids, i);
-		if (cgui_grid_compare_size(grid, window->shown_grid) == CGUI_GRID_SIZE_BIGGER
-		 && WIDTH(grid)  <= window->width
-		 && HEIGHT(grid) <= window->height)
-		{
-			window->shown_grid = grid;
-		}
-	}
-
-	/* updates to do if the shown grid changed */
-
-	if (grid_old == window->shown_grid)
-	{
-		return;
-	}
-
-	cgui_window_swap_grid(window, grid_old, grid_old->ref);
-	window->fn_grid(window, window->shown_grid);
-	window_set_draw_level(window, WINDOW_DRAW_FULL);
-	refocus(window);
-}

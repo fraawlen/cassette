@@ -205,10 +205,14 @@ cgui_reconfig(void)
 		}
 
 		cgui_window_resize(window, window->width, window->height);
-		window_update_size(window, window->width, window->height);
 		window_update_size_hints(window);
 		window_set_draw_level(window, WINDOW_DRAW_FULL);
 		window_set_async_present(window);
+		window_update_shown_grid(window);
+		grid_update_geometry(
+			window->shown_grid,
+			window->width  - CONFIG->window_padding * 2,
+			window->height - CONFIG->window_padding * 2);
 	}
 }
 

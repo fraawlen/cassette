@@ -186,6 +186,12 @@ CGUI_NONNULL(1);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+window_update_shown_grid(cgui_window *)
+CGUI_NONNULL(1);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 window_update_state(cgui_window *window, enum cgui_window_state_mask mask, bool value)
 CGUI_NONNULL(1);
 
