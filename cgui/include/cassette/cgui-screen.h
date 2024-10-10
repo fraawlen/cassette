@@ -54,6 +54,13 @@ cgui_screen_numbers(void);
 /**
  *
  */
+void
+cgui_screen_pointer_position(double *x, double *y)
+CGUI_NONNULL(1, 2);
+
+/**
+ *
+ */
 struct cgui_screen
 cgui_screen_primary_specs(void);
 

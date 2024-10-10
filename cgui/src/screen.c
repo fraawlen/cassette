@@ -50,6 +50,19 @@ cgui_screen_numbers(void)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void
+cgui_screen_pointer_position(double *x, double *y)
+{
+	if (cgui_error())
+	{
+		return;
+	}
+
+	x11_pointer_position(x, y);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 struct cgui_screen
 cgui_screen_primary_specs(void)
 {

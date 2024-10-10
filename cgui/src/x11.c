@@ -478,6 +478,28 @@ x11_leader_window(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+x11_pointer_position(double *x, double *y)
+{
+	xcb_query_pointer_cookie_t xc;
+	xcb_query_pointer_reply_t *xr;
+
+	xc = xcb_query_pointer(connection, screen->root);
+	xr = xcb_query_pointer_reply(connection, xc, NULL);
+	if (!xr)
+	{
+		main_set_error(CERR_XCB);
+		return;
+	}
+
+	*x = xr->root_x;
+	*y = xr->root_y;
+
+	free(xr);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 x11_reset(bool kill_connection)
 {
 	CREF_FOR_EACH(events, i)

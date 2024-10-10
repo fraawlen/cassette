@@ -42,6 +42,12 @@ x11_reset(bool kill_connection);
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
 
+void
+x11_pointer_position(double *x, double *y)
+CGUI_NONNULL(1, 2);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 struct cgui_screen
 x11_screen(size_t i, size_t *n, size_t *primary)
 CGUI_NONNULL(2, 3);
