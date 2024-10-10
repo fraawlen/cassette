@@ -49,6 +49,8 @@
 /************************************************************************************************************/
 
 static bool is_any_window_activated (void) CGUI_PURE;
+static void mutex_init              (void);
+static void mutex_reset             (void);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -57,7 +59,6 @@ static bool is_any_window_activated (void) CGUI_PURE;
 /* pre-init args */
 
 static xcb_connection_t *ext_connection = NULL;
-static pthread_mutex_t  *mutex          = NULL;
 static const char       *app_name       = NULL;
 static const char       *app_class      = NULL;
 
@@ -72,6 +73,10 @@ static cref *windows = CREF_PLACEHOLDER;
 static bool running  = false;
 static bool usr_exit = true;
 static enum cerr err = CERR_INVALID;
+
+/* misc */
+
+static pthread_mutex_t mutex;
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -157,7 +162,8 @@ cgui_init(int argc, char **argv)
 
 	config_init(app_name, app_class);
 	config_load();
-	main_lock();
+	mutex_init();
+	cgui_lock();
 	x11_init(argc, argv, app_name, app_class, ext_connection);
 
 	if (err)
@@ -180,6 +186,19 @@ bool
 cgui_is_running(void)
 {
 	return running;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_lock(void)
+{
+	if (err)
+	{
+		return;
+	}
+
+	pthread_mutex_lock(&mutex);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -275,13 +294,13 @@ cgui_reset(void)
 	cref_destroy(windows);
 	x11_reset(!ext_connection);
 	config_reset();
-	main_unlock();
+	cgui_unlock();
+	mutex_reset();
 
 	cells          = CREF_PLACEHOLDER;
 	grids          = CREF_PLACEHOLDER;
 	windows        = CREF_PLACEHOLDER;
 	ext_connection = NULL;
-	mutex          = NULL;
 	app_class      = NULL;
 	app_name       = NULL;
 	usr_exit       = true;
@@ -338,19 +357,6 @@ cgui_setup_app_name(const char *name)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_setup_threading(pthread_mutex_t *mut)
-{
-	if (err != CERR_INVALID)
-	{
-		return;
-	}
-
-	mutex = mut;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
 cgui_setup_x11_connection(xcb_connection_t *connection)
 {
 	if (err != CERR_INVALID)
@@ -377,6 +383,19 @@ cgui_x11_leader_window(void)
 	return  x11_leader_window();
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_unlock(void)
+{
+	if (err)
+	{
+		return;
+	}
+
+	pthread_mutex_unlock(&mutex);
+}
+
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
@@ -393,22 +412,6 @@ cref *
 main_grids(void)
 {
 	return grids;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-main_lock(void)
-{
-	if (!mutex)
-	{
-		return;
-	}
-
-	if ((pthread_mutex_lock(mutex) & ~EDEADLK) != 0)
-	{
-		SET_ERR(CERR_MUTEX);
-	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -443,22 +446,6 @@ cref *
 main_windows(void)
 {
 	return windows;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-main_unlock(void)
-{
-	if (!mutex)
-	{
-		return;
-	}
-	
-	if ((pthread_mutex_unlock(mutex) & ~EPERM) != 0)
-	{
-		SET_ERR(CERR_MUTEX);
-	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -501,4 +488,41 @@ is_any_window_activated(void)
 	}
 
 	return false;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+mutex_init(void)
+{
+	pthread_mutexattr_t mut_attr;
+
+	if (pthread_mutexattr_init(&mut_attr) != 0
+	 || pthread_mutexattr_settype(&mut_attr, PTHREAD_MUTEX_RECURSIVE) != 0)
+	{
+		goto fail_attrib;
+	}
+	
+	if (pthread_mutex_init(&mutex, &mut_attr))
+	{
+		goto fail_mutex;
+	}
+
+	pthread_mutexattr_destroy(&mut_attr);
+
+	return;
+
+fail_mutex:
+	pthread_mutex_destroy(&mutex);
+fail_attrib:
+	pthread_mutexattr_destroy(&mut_attr);
+	SET_ERR(CERR_MUTEX);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+mutex_reset(void)
+{
+	pthread_mutex_destroy(&mutex);
 }

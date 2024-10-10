@@ -95,12 +95,6 @@ cgui_setup_app_name(const char *name);
  *
  */
 void
-cgui_setup_threading(pthread_mutex_t *mut);
-
-/**
- *
- */
-void
 cgui_setup_x11_connection(xcb_connection_t *connection);
 
 /************************************************************************************************************/
@@ -129,6 +123,12 @@ cgui_exit(void);
  *
  */
 void
+cgui_lock(void);
+
+/**
+ *
+ */
+void
 cgui_reconfig(void);
 
 /**
@@ -142,6 +142,12 @@ cgui_repair(void);
  */
 void
 cgui_run(void);
+
+/**
+ *
+ */
+void
+cgui_unlock(void);
 
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/

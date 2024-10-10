@@ -590,9 +590,9 @@ x11_update(void)
 	}
 	else
 	{
-		main_unlock();
+		cgui_unlock();
 		event = xcb_wait_for_event(connection);
-		main_lock();
+		cgui_lock();
 	}
 
 	if (!event)
