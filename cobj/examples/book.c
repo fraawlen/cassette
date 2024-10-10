@@ -65,6 +65,9 @@ main(void)
 	cbook_write(book, "test9");
 	cbook_write(book, "test0");
 
+	cbook_rewrite(book, 0, "new");  /* will rewrite "test1"                            */
+	cbook_rewrite(book, 0, "new2"); /* will not rewrite "new" because "new2" is longer */
+
 	print_stats();
 
 	for (size_t i = 0; i < cbook_groups_number(book); i++)

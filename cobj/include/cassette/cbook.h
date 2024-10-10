@@ -198,6 +198,21 @@ cbook_repair(cbook *book)
 CBOOK_NONNULL(1);
 
 /**
+ * Tries to rewrite a word at the given index. If the new word is longer than the original word, this function
+ * exits without modifying anything. If word_index is out of bounds, the default return_err value is returned.
+ *
+ * @param book       : Book to interact with
+ * @param word_index : Index in book across all groups
+ * @param str        : C string
+ *
+ * @return     : True if the word was rewriten, false if it failed.
+ * @return_err : False
+ */
+bool
+cbook_rewrite(cbook *book, size_t word_index, const char *str)
+CBOOK_NONNULL(1, 3);
+
+/**
  * Reverts the effects of cbook_prepare_new_group().
  *
  * @param book : Book to interact with
@@ -302,8 +317,8 @@ CBOOK_NONNULL(1)
 CBOOK_PURE;
 
 /**
- * Gets a word from a specific group. If group_index or word_index are out of bounds, the default return_err
- * value is returned.
+ * Gets a word from a specific group. If group_index or word_local_index are out of bounds, the default
+ * return_err value is returned.
  * 
  * @param book             : Book to interact with
  * @param group_index      : Group index within book
@@ -319,8 +334,8 @@ CBOOK_NONNULL(1)
 CBOOK_PURE;
 
 /**
- * Converts a group + local word indexes to a book-wide word index. If group_index or word_index are out of
- * bounds, the default return_err value is returned.
+ * Converts a group + local word indexes to a book-wide word index. If group_index or word_local_index are
+ * out of bounds, the default return_err value is returned.
  *
  * @param book             : Book to interact with
  * @param group_index      : Group index within book

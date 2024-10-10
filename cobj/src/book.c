@@ -293,6 +293,25 @@ cbook_repair(cbook *book)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+bool
+cbook_rewrite(cbook *book, size_t word_index, const char *str)
+{
+	char *target;
+	size_t n;
+
+	if (*(target = (char *)cbook_word(book, word_index)) == '\0'
+	 ||  (n      = strlen(str)) > strlen(target))
+	{
+		return false;
+	}
+
+	memmove(target, str, n + 1);
+
+	return true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 cbook_undo_new_group(cbook *book)
 {
