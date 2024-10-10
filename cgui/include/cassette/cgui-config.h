@@ -144,6 +144,7 @@ struct cgui_config
 	bool window_enable_disabled;
 	bool window_enable_focused;
 	bool window_enable_locked;
+	bool window_enable_partial_redraws;
 	
 	/* popup */
 

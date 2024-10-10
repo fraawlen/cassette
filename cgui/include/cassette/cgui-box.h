@@ -55,16 +55,21 @@ struct cgui_box
 	double size_border;
 	double padding;
 	double margin;
+	double shadow_x_offset;
+	double shadow_y_offset;
 	
 	struct ccolor color_outline;
 	struct ccolor color_border;
 	struct ccolor color_background;
 	struct ccolor color_foreground;
+	struct ccolor color_shadow;
 
 	bool draw;
 	bool draw_foreground;
+	bool draw_shadow;
 	bool shape_outline;
 	bool shape_border;
+	bool hit_outline;
 };
 
 /************************************************************************************************************/

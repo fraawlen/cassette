@@ -65,6 +65,22 @@ cgui_box_draw(struct cgui_box box, double x, double y, double width, double heig
 		return;
 	}
 
+	/* shadow */
+
+	if (box.draw_shadow)
+	{
+		path(
+			box,
+			x + box.shadow_x_offset,
+			y + box.shadow_y_offset, 
+			width,
+			height,
+			drawable,
+			box.shape_outline && box.shape_border,
+			-box.size_outline);
+		paint(drawable, box.color_shadow);
+	}
+
 	/* outline */
 
 	if (box.size_outline > 0.0)
@@ -104,7 +120,7 @@ bool
 cgui_box_is_in(struct cgui_box box, double x_test, double y_test, double x, double y, double width, double height, cairo_t *drawable)
 {
 	cairo_new_path(drawable);
-	path(box, x, y, width, height, drawable, box.shape_border, 0.0);
+	path(box, x, y, width, height, drawable, box.shape_border, box.hit_outline ? -box.size_outline : 0);
 
 	return cairo_in_fill(drawable, x_test, y_test);
 }

@@ -48,14 +48,18 @@
 	{ NAMESPACE, "border_thickness",  LENGTH,      &TARGET.size_border      }, \
 	{ NAMESPACE, "padding",           POSITION,    &TARGET.padding          }, \
 	{ NAMESPACE, "margin",            POSITION,    &TARGET.margin           }, \
+	{ NAMESPACE, "shadow_x_offset",   POSITION,    &TARGET.shadow_x_offset  }, \
+	{ NAMESPACE, "shadow_y_offset",   POSITION,    &TARGET.shadow_y_offset  }, \
 	{ NAMESPACE, "color_outline",     COLOR,       &TARGET.color_outline    }, \
 	{ NAMESPACE, "color_border",      COLOR,       &TARGET.color_border     }, \
 	{ NAMESPACE, "color_background",  COLOR,       &TARGET.color_background }, \
 	{ NAMESPACE, "color_foreground",  COLOR,       &TARGET.color_foreground }, \
+	{ NAMESPACE, "color_shadow",      COLOR,       &TARGET.color_shadow     }, \
 	{ NAMESPACE, "shape_outline",     BOOL,        &TARGET.shape_outline    }, \
 	{ NAMESPACE, "shape_border",      BOOL,        &TARGET.shape_border     }, \
 	{ NAMESPACE, "draw",              BOOL,        &TARGET.draw             }, \
-	{ NAMESPACE, "draw_foreground",   BOOL,        &TARGET.draw_foreground  },
+	{ NAMESPACE, "draw_foreground",   BOOL,        &TARGET.draw_foreground  }, \
+	{ NAMESPACE, "draw_shadow",       BOOL,        &TARGET.draw_shadow      },
 
 #define KEY(VALUE) \
 	{ "key",     #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_CONFIG_SWAP_DIRECT] }, \
@@ -241,6 +245,7 @@ static const struct resource resources[] =
 	{ "window",   "enable_disabled_substyle",    BOOL,        &config.window_enable_disabled         },
 	{ "window",   "enable_focused_substyle",     BOOL,        &config.window_enable_focused          },
 	{ "window",   "enable_locked_substyle",      BOOL,        &config.window_enable_locked           },
+	{ "window",   "allow_partial_redraws",       BOOL,        &config.window_enable_partial_redraws  },
 	{ "window",   "focus_on_activation",         BOOL,        &config.window_focus_on_activation     },
 
 	{ "popup",    "border_thickness",            LENGTH,      &config.popup_border                   },

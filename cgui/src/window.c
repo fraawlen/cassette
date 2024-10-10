@@ -960,6 +960,11 @@ window_draw(cgui_window *window)
 		return;
 	}
 
+	if (!CONFIG->window_enable_partial_redraws)
+	{
+		window->draw = WINDOW_DRAW_FULL;
+	}
+
 	timestamp = util_time();
 	delay     = window->draw_timestamp == 0 ? 0 : timestamp - window->draw_timestamp;
 
