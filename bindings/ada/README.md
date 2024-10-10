@@ -1,22 +1,19 @@
-<p align="center"><img src="./extras/banner.svg"></p>
+<p align="center"><img src="banner.svg"></p>
 
 
 Cassette Ada (CADA) is a set of first-party thick Ada bindings to Cassette libraries. Example programs programs have also been ported to Ada. The library is free and open-source software licensed under the [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html). It's made to run on modern POSIX-compliant systems.
 
 
-Notice
-------
+> [!IMPORTANT]
+> Only a few Cassette libraries have been ported so far (COBJ and CCFG). No bindings are currently provided for CGUI, which is undergoing a rewrite.
 
-Only a few Cassette libraries have been ported so far (COBJ and CCFG). No bindings are currently provided for CGUI, which is undergoing a rewrite.
-
-Features
---------
+## Features
 
 ### Packaging
 
 You no longer need to prefix every type, function, or macro with the library's name, including the 'c' for 'Cassette'. Instead, each component is now namespaced into its package with a root package called `Cassette`. This package serves as the central point for using the `use` Ada clause when working with Cassette libraries, and it defines a few common types used throughout the child packages. Previously, error codes and types were defined in a separate header called `cerr.h`; now, they are included inside the parent `Cassette` package. And the `cobj.h` meta header goes away. `ccfg` and `cgui` namespaces have also been renamed into `Cassette.Config` and `Cassette.Graphics`.
 
-![package tree](./extras/packages.svg)
+![package tree](packages.svg)
 
 ### Types
 
@@ -190,22 +187,14 @@ exception
 end Main;
 ```
 
-Dependencies
-------------
+## Dependencies
 
 - Tools :
 
 	- Ada 2012 GNAT
 	- [Gprbuild](https://github.com/AdaCore/gprbuild)
 
-- First-party libraries :
-
-	- [Cassette-Objects (COBJ)](/../../../../fraawlen/cassette-objects)
-	- [Cassette-Configuration (CCFG)](/../../../../fraawlen/cassette-configuration)
-	- [Cassette-Graphics (CGUI)](/../../../../fraawlen/cassette-graphics)
-
-Build
------
+## Build
 
 CADA bindings can be built with one Gprbuild command:
 
@@ -219,14 +208,12 @@ The examples can be built using the following command. Ensure that COBJ, CCFG, a
 gprbuild examples.gpr
 ```
 
-Usage
------
-
+## Usage
 
 To use the Ada library, first, make sure to obtain a local copy of the repository. Then, in your Gprbuild project file, include the following clause: 
 
 ``` Ada
-with ".../path_to_repo/cassette.gpr";
+with ".../path_to_repo/bindings/ada/cassette.gpr";
 ```
 
 Next, add the following block inside your project definition: 
@@ -247,9 +234,3 @@ with Cassette.Graphics;
 with Cassette.Config;
 ...
 ```
-
-Mirrors
--------
-
-- https://codeberg.org/fraawlen/cassette-ada
-- https://github.com/fraawlen/cassette-ada

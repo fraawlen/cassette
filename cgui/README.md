@@ -2,66 +2,6 @@
 
 Cassette Graphics, or Cassette GUI (CGUI) is a modular general-purpose GUI toolkit written in C for X11 end-user applications. It's designed as a universal GUI, equally targeting desktop, laptop, mobile, and miscellaneous devices with more or less limited inputs. All thanks to a flexible grid layout, simple widget appearance, and an advanced configuration system, allowing one to tailor the theme, behavior, keybinds and input interpretation for each device class. CGUI also tries to limit the amount of direct external dependencies to make it easier to set it up on any system running an X11 display server.
 
-Features
---------
-
-- C API
-- Retained mode
-- Responsive layouts
-- Font based window geometry
-- Pointer, Keyboard and Multi-Touch inputs
-- Run-time configuration and theme reload
-- Custom widgets support
-- Enhanced WM hinting
-- Fractional scaling
-- Native transparency
-- Vertically synced animations
-
-Dependencies
-------------
-
-- Tools :
-
-	- C11 compiler with a stdlib + POSIX 200809L
-	- Make
-
-- First-party libraries :
-
-	- [Cassette-Configuration](/../../../../fraawlen/cassette-configuration)
-	- [Cassette-Objects](/../../../../fraawlen/cassette-objects)
-
-- Third-party libraries :
-
-	- [Cairo](https://cgit.freedesktop.org/cairo/)
-	- [FontConfig](https://gitlab.freedesktop.org/fontconfig/fontconfig)
-	- [XKBCommon](https://github.com/xkbcommon/libxkbcommon)
-	- [XCB](https://gitlab.freedesktop.org/xorg/lib/libxcb)
-
-Installation
-------------
-
-First, edit the makefile if you want to change the installation destinations. These are represented by the variables `DIR_INSTALL_INC` and `DIR_INSTALL_LIB` for the public API headers and library files respectively. By default, they are set to `/usr/include/cassette/` and `/usr/lib`.
-Then, build and install COBJ with the following commands :
-
-```
-make
-make install
-```
-
-After these steps, both a shared binary and static archive will be generated and installed on your system. Examples will also be built and placed under `build/bin`.
-
-Post-Installation
------------------
-
-By default, the library is set to use the font "Monospace" with size 14 because it currently does not ship with its own built-in font. But because the windows geometry is dependent on the font, it is recommended to customize your font before anything else. Do note, that the font must be mono-spaced since CGUI has been specifically developed around this class of font. To set it, create a configuration file `~/.config/dg.conf` and add to it these two lines :
-
-```
-font face "FONT_NAME"
-font size  VALUE
-```
-
-Replace `FONT_NAME` and `VALUE` with your preferred font name and size. The font name follows the FontConfig naming convention. After that, if the rendered text still looks wrong, check out the other font configuration parameters `core.font_*` in the [sample configuration file](dg.conf) and add them to your current configuration to further tweak font rendering. A few themes are also provided in the `theme` directory. To install them, simply copy paste their contents into your working configuration file.
-
 Usage
 -----
 
@@ -134,12 +74,6 @@ cc hello.c -lcgui
 
 Output :
 
-![hello world output](./extras/hello.png)
+![hello world output](../extras/hello.png)
 
 Check out the `examples` directory for more in depth demonstrations.
-
-Mirrors
--------
-
-- https://github.com/fraawlen/cassette-graphics
-- https://codeberg.org/fraawlen/cassette-graphics
