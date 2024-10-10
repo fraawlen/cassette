@@ -118,6 +118,21 @@ package body Cassette.Book is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
+	function Rewrite (Book : in out T; Word : in Index; Str : in String) return Boolean
+	is
+		B : C.Extensions.bool;
+		S : C.Strings.chars_ptr := C.Strings.New_String (Str);	
+	begin
+
+		B := C_Rewrite (Book.Data, Word, S);
+		C.Strings.Free (S);
+
+		return Boolean(B);
+
+	end Rewrite;
+
+	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
+
 	procedure Undo_New_Group (Book : in out T)
 	is begin
 

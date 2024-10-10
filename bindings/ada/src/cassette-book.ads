@@ -163,6 +163,26 @@ package Cassette.Book is
 	procedure Repair (
 		Book : in out T);
 
+	-- Tries to rewrite a word at the given index. If the new word is longer than the original word,
+	-- this function exits without modifying anything.
+	--
+	-- [Params]
+	-- 
+	--	Book       : Book to interact with
+	-- 	Word_Index : Word index in book across all groups
+	-- 	Str        : String
+	--
+	-- [Return]
+	-- 
+	-- 	True if the word was rewriten, False otherwhise. If the book has errored, or if the
+	--    given Word index is out of bounds, then False is always returned.
+	--
+	function Rewrite (
+		Book : in out T;
+		Word : in Index;
+		Str  : in String)
+			return Boolean;
+
 	-- Reverts the effects of Prepare_New_Group().
 	--
 	-- [Params]
@@ -363,16 +383,17 @@ private
 	procedure C_Write             (Book : System.Address; Str : C.Strings.chars_ptr);
 	procedure C_Zero              (Book : System.Address);
 
-	function  C_Clone             (Book : System.Address)                                    return System.Address;
-	function  C_Create                                                                       return System.Address;
-	function  C_Error             (Book : System.Address)                                    return Error_Code;
-	function  C_Group_Length      (Book : System.Address; Group : C.size_t)                  return C.size_t;
-	function  C_Groups_Number     (Book : System.Address)                                    return C.size_t;
-	function  C_Length            (Book : System.Address)                                    return C.size_t;
-	function  C_Word              (Book : System.Address; Group : C.size_t)                  return C.Strings.chars_ptr;
-	function  C_Word_In_Group     (Book : System.Address; Group : C.size_t; Word : C.size_t) return C.Strings.chars_ptr;
-	function  C_Word_Index        (Book : System.Address; Group : C.size_t; Word : C.size_t) return C.size_t;
-	function  C_Words_Number      (Book : System.Address)                                    return C.size_t;
+	function  C_Clone             (Book : System.Address)                                              return System.Address;
+	function  C_Create                                                                                 return System.Address;
+	function  C_Error             (Book : System.Address)                                              return Error_Code;
+	function  C_Group_Length      (Book : System.Address; Group : C.size_t)                            return C.size_t;
+	function  C_Groups_Number     (Book : System.Address)                                              return C.size_t;
+	function  C_Length            (Book : System.Address)                                              return C.size_t;
+	function  C_Rewrite           (Book : System.Address; Word  : C.size_t; Str : C.Strings.chars_ptr) return C.Extensions.bool;
+	function  C_Word              (Book : System.Address; Group : C.size_t)                            return C.Strings.chars_ptr;
+	function  C_Word_In_Group     (Book : System.Address; Group : C.size_t; Word : C.size_t)           return C.Strings.chars_ptr;
+	function  C_Word_Index        (Book : System.Address; Group : C.size_t; Word : C.size_t)           return C.size_t;
+	function  C_Words_Number      (Book : System.Address)                                              return C.size_t;
 	
 	pragma Import (C, C_Clear,             "cbook_clear");
 	pragma Import (C, C_Clone,             "cbook_clone");
@@ -388,6 +409,7 @@ private
 	pragma Import (C, C_Prealloc,          "cbook_prealloc");
 	pragma Import (C, C_Prepare_New_Group, "cbook_prepare_new_group");
 	pragma Import (C, C_Repair,            "cbook_repair");
+	pragma Import (C, C_Rewrite,           "cbook_rewrite");
 	pragma Import (C, C_Undo_New_Group,    "cbook_undo_new_group");
 	pragma Import (C, C_Word,              "cbook_word");
 	pragma Import (C, C_Word_In_Group,     "cbook_word_in_group");
