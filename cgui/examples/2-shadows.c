@@ -157,4 +157,6 @@ on_draw(cgui_window *w, unsigned long delay_1, unsigned long delay_2)
 	ccfg_push_param(cgui_config_get_parser(), "shadow_x", r * cos(a));
 	ccfg_push_param(cgui_config_get_parser(), "shadow_y", r * sin(a));
 	cgui_reconfig();
+
+	printf("%lu - %lu\n", delay_1, delay_2);
 }

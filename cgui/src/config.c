@@ -392,6 +392,7 @@ void
 config_init(const char *app_name, const char *app_class)
 {
 	cstr *home;
+	cstr *home2;
 
 	if (cgui_error())
 	{
@@ -401,23 +402,29 @@ config_init(const char *app_name, const char *app_class)
 	/* instantiation */
 
 	home   = cstr_create();
+	home2  = cstr_create();
 	parser = ccfg_create();
 	dict   = cdict_create();
 
 	/* parser setup */
 
 	cstr_append(home, util_env_exists("HOME") ? getenv("HOME") : getpwuid(getuid())->pw_dir);
-	cstr_append(home, "/.config/cgui.conf");
+	cstr_append(home2, home);
+	cstr_append(home,  "/.config/cassette/cgui.conf");
+	cstr_append(home2, "/.config/cgui.conf");
 
 	ccfg_push_source(parser, util_env_exists(ENV_CONF_SOURCE) ? getenv(ENV_CONF_SOURCE) : "");
 	ccfg_push_source(parser, cstr_chars(home));
-	ccfg_push_source(parser, "/usr/share/cgui/cgui.conf");
+	ccfg_push_source(parser, cstr_chars(home2));
+	ccfg_push_source(parser, "/usr/share/cassette/cgui.conf");
+	ccfg_push_source(parser, "/etc/cassette/cgui.conf");
 	ccfg_push_source(parser, "/etc/cgui.conf");
 
 	ccfg_push_param(parser, "app_name",  app_name);
 	ccfg_push_param(parser, "app_class", app_class);
 
 	cstr_destroy(home);
+	cstr_destroy(home2);
 
 	/* dict setup */
 

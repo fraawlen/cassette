@@ -917,7 +917,7 @@ x11_window_present(xcb_window_t id, xcb_pixmap_t buffer, uint32_t serial, bool a
 			0,
 			0,
 			0,
-			async ? XCB_PRESENT_OPTION_ASYNC : XCB_PRESENT_OPTION_NONE,
+			async || CONFIG->anim_divider == 0 ? XCB_PRESENT_OPTION_ASYNC : XCB_PRESENT_OPTION_NONE,
 			0, async ? 0 : CONFIG->anim_divider, 0,
 			0,
 			NULL);
