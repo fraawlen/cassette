@@ -5,16 +5,13 @@ Cassette is a lightweight framework written in C11, with a UI inspired by the ca
 Cassette is free and open-source software, licensed under the [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html).
 
 > [!Warning]
-> You are currently viewing the 'rewrite' branch which is preparing a new release version (0.2.0). It is non-functional yet. In the meantime, checkout the 'trunk' branch or the release tab, where there are usable builds of the framework. Cassette is still in early development, and some features are missing, but the releases builds are fully functional, albeit the next version will COMPLETELY CHANGE THE API.
-
-> [!WARNING]
-> Readme and documentation under construction.
+> You are currently viewing the 'rewrite' branch which is preparing a new release version (0.2.0). It is non-functional yet. In the meantime, checkout the 'trunk' branch or the release tab, where there are usable builds of the framework. Cassette is still in early development, and some features are missing, but the releases builds are fully functional. However, the next version worked on this branch will COMPLETELY CHANGE THE API.
 
 > [!IMPORTANT]
 > Rewrite progress:  
 > COBJ : 100%, usable  
 > CCFG : 100%, usable  
-> CGUI :  70%, missing text drawing, widgets, copy-paste, popups, keyboard navigation
+> CGUI : 70%, missing text drawing, widgets, copy-paste, popups, keyboard navigation
 
 ## Table of Contents <a name="toc"></a>
 
@@ -26,13 +23,15 @@ Cassette is free and open-source software, licensed under the [LGPL-3.0](https:/
 - [Build and installation](#build)
 - [Post-Installation](#post-install)
 - [Gallery](#gallery)
+- [Planned features](#future)
+- [Credits](#credits)
 - [Mirrors](#mirrors)
 
 ## Libraries Overview <a name="overview"></a>
 
 ### CGUI
 
-A dynamic GUI toolkit library designed as a universal interface, equally targeting desktop, laptop, mobile, and miscellaneous devices with more or less limited inputs. All thanks to a flexible grid layout, simple widget appearance, and an advanced configuration system powered by CCFG, allowing one to tailor the theme, behavior, keybinds and input interpretation for each device class.
+A dynamic, retained-mode GUI toolkit library designed as a universal interface, equally targeting desktop, laptop, mobile, and miscellaneous devices with more or less limited inputs. All thanks to a flexible grid layout, simple widget appearance, and an advanced configuration system powered by CCFG, allowing one to tailor the theme, behavior, keybinds and input interpretation for each device class.
 
 [Usage information](cgui)
 
@@ -56,17 +55,19 @@ A set of thick Ada bindings are provided. Currently only COBJ and CCFG are suppo
 
 ## CGUI Features<a name="cgui"></a>
 
-- Retained mode
-- Responsive layouts
+![dynamic themes and config](extras/demos/results/reload.webp)
+![smart corners](extras/demos/results/corners.webp)
+![responsive layouts](extras/demos/results/layouts.webp)
+![transparency](extras/demos/results/transparency.webp)
+![fractional scaling](extras/demos/results/scale.png)
+
+**TODO cards**:
+
 - Font based window geometry
 - Pointer, Keyboard and Multi-Touch inputs
-- Run-time configuration and theme reload
 - Custom widgets support
 - Enhanced WM hinting
-- Fractional scaling
-- Native transparency
 - Vertically synced animations
-- Smart corner styling
 
 ## CCFG Features <a name="ccfg"></a>
 
@@ -148,9 +149,18 @@ Replace `FONT_NAME` and `VALUE` with your preferred font name and size. The font
 
 ## Gallery <a name="gallery"></a>
 
+![Screenshot 4](extras/screenshot-4.png)
 ![Screenshot 1](extras/screenshot-1.png)
 ![Screenshot 2](extras/screenshot-2.png)
 ![Screenshot 3](extras/screenshot-3.png)
+
+## Planned features <a name="future"></a>
+
+- Navigation-to-text output for complete accessibility
+- Drag and drop
+- Wayland support
+- Transition to a Vulkan backend (in part to support Wayland)
+	- Transition from cairo to vkvg
 
 ## Credits <a name="credits"></a>
 
@@ -159,7 +169,6 @@ The following third-party resources were used to make the visuals :
 - [Nostromo font](https://www.fontspring.com/fonts/great-scott/nostromo)
 - [Terminus font](https://terminus-font.sourceforge.net/)
 - [Scientifica font](https://github.com/nerdypepper/scientifica)
-- [Sevastopol Interface font](https://www.dafont.com/sevastopol-interface.font)
 - [NASA Curiosity's view of Mars sky at sunset](https://www.nasa.gov/)
 - [Picom for shadow and blur effects](https://github.com/yshui/picom)
 
