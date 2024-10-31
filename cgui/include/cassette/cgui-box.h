@@ -21,9 +21,9 @@
 #pragma once
 
 #include <cairo/cairo.h>
-#include <cassette/cobj.h>
 
 #include "cgui-attributes.h"
+#include "cgui-types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,19 +36,9 @@ extern "C" {
 /**
  *
  */
-enum cgui_box_corner
-{
-	CGUI_BOX_STRAIGHT,
-	CGUI_BOX_CHAMFER,
-	CGUI_BOX_RADII,
-};
-
-/**
- *
- */
 struct cgui_box
 {
-	enum cgui_box_corner corner[4];
+	enum cgui_corner corner[4];
 
 	double size_corner[4];
 	double size_outline;
@@ -86,7 +76,8 @@ cgui_box_clip(struct cgui_box box, double x, double y, double width, double heig
  *
  */
 void
-cgui_box_draw(struct cgui_box box, double x, double y, double width, double height, cairo_t *drawable);
+cgui_box_draw(struct cgui_box box, double x, double y, double width, double height, cairo_t *drawable)
+CGUI_NONNULL(6);
 
 /**
  *

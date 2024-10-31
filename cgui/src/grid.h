@@ -99,7 +99,8 @@ struct cgui_grid
 
 void
 grid_destroy(cgui_grid *grid)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
@@ -107,10 +108,12 @@ CGUI_NONNULL(1);
 
 void
 grid_repair(cgui_grid *grid)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 grid_update_geometry(cgui_grid *grid, double width, double height)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;

@@ -107,7 +107,8 @@ struct cgui_window
 
 void
 window_destroy(cgui_window *window)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
@@ -115,85 +116,99 @@ CGUI_NONNULL(1);
 
 void
 window_cancel_cell_events(cgui_window *window)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 window_draw(cgui_window *window)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 window_focus(cgui_window *window, struct grid_area area)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 window_focus_lock(cgui_window *window, bool lock)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 window_focus_pointer(cgui_window *window, double x, double y)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 window_present(cgui_window *window)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
 window_process_cell_event(cgui_window *window, struct grid_area area, struct cgui_cell_event *event)
-CGUI_NONNULL(1, 3);
+CGUI_NONNULL(1, 3)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 window_repair(cgui_window *window)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 window_set_async_present(cgui_window *window)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 window_set_draw_level(cgui_window *window, enum window_draw_level draw)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 window_update_size(cgui_window *window, double width, double height)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 window_update_size_hints(cgui_window *window)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 window_update_shown_grid(cgui_window *)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 window_update_state(cgui_window *window, enum cgui_window_state_mask mask, bool value)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
@@ -202,6 +217,7 @@ CGUI_NONNULL(1);
 struct grid_area
 window_area_at_coords(const cgui_window *window, double x, double y)
 CGUI_NONNULL(1)
+CGUI_HIDDEN
 CGUI_PURE;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -209,6 +225,7 @@ CGUI_PURE;
 struct grid_area
 window_cell_area(const cgui_window *window, const cgui_cell *cell)
 CGUI_NONNULL(1, 2)
+CGUI_HIDDEN
 CGUI_PURE;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -216,6 +233,7 @@ CGUI_PURE;
 size_t
 window_cell_touches(const cgui_window *window, const cgui_cell *cell)
 CGUI_NONNULL(1, 2)
+CGUI_HIDDEN
 CGUI_PURE;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -223,4 +241,5 @@ CGUI_PURE;
 struct grid_area
 window_touch_area(const cgui_window *window, uint32_t id)
 CGUI_NONNULL(1)
+CGUI_HIDDEN
 CGUI_PURE;

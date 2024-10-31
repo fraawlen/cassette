@@ -29,27 +29,32 @@
 
 bool
 util_env_exists(const char *name)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
 util_limit(double d, double min, double max)
+CGUI_HIDDEN
 CGUI_CONST;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
 util_str_to_double(const char *str, double min, double max)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 long
 util_str_to_long(const char *str, long min, long max)
-CGUI_NONNULL(1);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 unsigned long
-util_time(void);
+util_time(void)
+CGUI_HIDDEN;

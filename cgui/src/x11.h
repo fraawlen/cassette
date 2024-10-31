@@ -31,12 +31,14 @@
 
 void
 x11_init(int argc, char **argv, const char *class_name, const char *class_class, xcb_connection_t *conn)
-CGUI_NONNULL(3, 4);
+CGUI_NONNULL(3, 4)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_reset(bool kill_connection);
+x11_reset(bool kill_connection)
+CGUI_HIDDEN;
 
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
@@ -44,125 +46,149 @@ x11_reset(bool kill_connection);
 
 void
 x11_pointer_position(double *x, double *y)
-CGUI_NONNULL(1, 2);
+CGUI_NONNULL(1, 2)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct cgui_screen
 x11_screen(size_t i, size_t *n, size_t *primary)
-CGUI_NONNULL(2, 3);
+CGUI_NONNULL(2, 3)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_update(void);
+x11_update(void)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_activate(xcb_window_t id);
+x11_window_activate(xcb_window_t id)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
 x11_window_create(xcb_window_t *id, xcb_pixmap_t *buffer, double x, double y, double width, double height)
-CGUI_NONNULL(1, 2);
+CGUI_NONNULL(1, 2)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_deactivate(xcb_window_t id);
+x11_window_deactivate(xcb_window_t id)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_destroy(xcb_window_t id, xcb_pixmap_t buffer);
+x11_window_destroy(xcb_window_t id, xcb_pixmap_t buffer)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_move(xcb_window_t id, double x, double y);
+x11_window_move(xcb_window_t id, double x, double y)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_present(xcb_window_t id, xcb_pixmap_t buffer, uint32_t serial, bool async);
+x11_window_present(xcb_window_t id, xcb_pixmap_t buffer, uint32_t serial, bool async)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_rename(xcb_window_t id, const char *name);
+x11_window_rename(xcb_window_t id, const char *name)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_resize(xcb_window_t id, double width, double height);
+x11_window_resize(xcb_window_t id, double width, double height)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_set_accel(xcb_window_t id, int accel, const char *name);
+x11_window_set_accel(xcb_window_t id, int accel, const char *name)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_set_transient(xcb_window_t id, xcb_window_t id_under);
+x11_window_set_transient(xcb_window_t id, xcb_window_t id_under)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_set_type(xcb_window_t id, enum cgui_window_type type);
+x11_window_set_type(xcb_window_t id, enum cgui_window_type type)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_set_urgency(xcb_window_t id, bool set_on);
+x11_window_set_urgency(xcb_window_t id, bool set_on)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_toggle_fullscreen(xcb_window_t id);
+x11_window_toggle_fullscreen(xcb_window_t id)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 x11_window_update_buffer(xcb_window_t id, xcb_pixmap_t *buffer, double width, double height)
-CGUI_NONNULL(2);
+CGUI_NONNULL(2)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_update_focus_hints(xcb_window_t id, double x, double y, double width, double height);
+x11_window_update_focus_hints(xcb_window_t id, double x, double y, double width, double height)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_update_size_hints(xcb_window_t id, double min_width, double min_height, double max_width, double max_height);
+x11_window_update_size_hints(xcb_window_t id, double min_width, double min_height, double max_width, double max_height)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_window_update_state_hints(xcb_window_t id, struct cgui_window_state_flags state);
+x11_window_update_state_hints(xcb_window_t id, struct cgui_window_state_flags state)
+CGUI_HIDDEN;
 
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
 /************************************************************************************************************/
 
 xcb_connection_t *
-x11_connection(void);
+x11_connection(void)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 xcb_window_t
-x11_leader_window(void);
+x11_leader_window(void)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 xcb_visualtype_t *
-x11_visual(void);
+x11_visual(void)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 x11_key(uint8_t keycode, struct cgui_mods mods, uint32_t *keysym, uint32_t *utf32, char utf8[static 8])
-CGUI_NONNULL(3, 4, 5);
+CGUI_NONNULL(3, 4, 5)
+CGUI_HIDDEN;

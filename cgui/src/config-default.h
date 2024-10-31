@@ -55,7 +55,7 @@ static const struct cgui_config config_default =
 
 	/* window */
 
-	.window_corner      = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
+	.window_corner      = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
 	.window_size_corner = {0, 0, 0, 0},
 	.window_size_border = 10,
 	.window_padding     = 20,
@@ -142,7 +142,7 @@ static const struct cgui_config config_default =
 	.keys[ 27][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_MISC,   CGUI_SWAP_RECONFIG          },
 	.keys[ 54][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_MISC,   CGUI_SWAP_EXIT              },
 
-	/* buttons */
+	/* mouse buttons */
 	
 	.buttons = {{{0}}},
 
@@ -154,7 +154,7 @@ static const struct cgui_config config_default =
 
 	.filler_frame =
 	{
-		.corner           = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
+		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
 		.size_corner      = {0, 0, 0, 0},
 		.size_outline     =  0,
 		.size_border      = 10,
@@ -179,7 +179,7 @@ static const struct cgui_config config_default =
 
 	.stripes_frame =
 	{
-		.corner           = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
+		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
 		.size_corner      = {0, 0, 0, 0},
 		.size_outline     =  0,
 		.size_border      = 10,
@@ -208,7 +208,7 @@ static const struct cgui_config config_default =
 
 	.button_frame_idle =
 	{
-		.corner           = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
+		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
 		.size_corner      = {0, 0, 0, 0},
 		.size_outline     =  0,
 		.size_border      = 10,
@@ -231,7 +231,7 @@ static const struct cgui_config config_default =
 
 	.button_frame_focused =
 	{
-		.corner           = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
+		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
 		.size_corner      = {0, 0, 0, 0},
 		.size_outline     =  0,
 		.size_border      = 10,
@@ -254,7 +254,7 @@ static const struct cgui_config config_default =
 
 	.button_frame_pressed =
 	{
-		.corner           = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
+		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
 		.size_corner      = {0, 0, 0, 0},
 		.size_outline     =  0,
 		.size_border      = 10,
@@ -277,7 +277,7 @@ static const struct cgui_config config_default =
 
 	.button_frame_disabled =
 	{
-		.corner           = {CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT, CGUI_BOX_STRAIGHT},
+		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
 		.size_corner      = {0, 0, 0, 0},
 		.size_outline     =  0,
 		.size_border      = 10,
@@ -296,5 +296,37 @@ static const struct cgui_config config_default =
 		.draw_foreground  = true,
 		.draw_shadow      = false,
 		.hit_outline      = false,
+	},
+
+	.button_text_idle =
+	{
+		.color            = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_background = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
+		.draw_background  = false,
+		.bold             = false,
+	},
+
+	.button_text_focused =
+	{
+		.color            = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_background = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
+		.draw_background  = false,
+		.bold             = false,
+	},
+
+	.button_text_pressed =
+	{
+		.color            = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_background = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
+		.draw_background  = false,
+		.bold             = false,
+	},
+
+	.button_text_disabled =
+	{
+		.color            = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_background = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
+		.draw_background  = false,
+		.bold             = false,
 	},
 };

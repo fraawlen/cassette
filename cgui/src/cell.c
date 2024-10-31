@@ -131,11 +131,6 @@ cgui_cell_draw_frame(struct cgui_cell_context context)
 void *
 cgui_cell_data(const cgui_cell *cell)
 {
-	if (cgui_error() || !cell->valid)
-	{
-		return NULL;
-	}
-
 	return cell->data;
 }
 
@@ -386,6 +381,7 @@ cell_destroy(cgui_cell *cell)
 		return;
 	}
 
+	cell->fn_destroy(cell);
 	main_pull_instance(main_cells(), cell);
 	free(cell);
 }

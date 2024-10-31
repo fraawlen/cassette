@@ -21,63 +21,56 @@
 #pragma once
 
 #include <cairo/cairo.h>
-#include <cassette/cgui.h>
 #include <cassette/cobj.h>
+
+#include "cgui-attributes.h"
+#include "cgui-box.h"
+#include "cgui-types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /************************************************************************************************************/
 /* TYPES ****************************************************************************************************/
 /************************************************************************************************************/
 
-enum config_swap
+/**
+ *
+ */
+struct cgui_text
 {
-	CONFIG_SWAP_KEYS,
-	CONFIG_SWAP_BUTTONS,
+	struct ccolor color;
+	struct ccolor color_background;
+
+	bool draw_background;
+	bool bold;
 };
 
-/************************************************************************************************************/
-/* INIT / RESET *********************************************************************************************/
-/************************************************************************************************************/
-
-void
-config_init(const char *app_name, const char *app_class)
-CGUI_NONNULL(1, 2)
-CGUI_HIDDEN;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-config_reset(void)
-CGUI_HIDDEN;
+/**
+ *
+ */
+struct cgui_text_segment
+{
+	struct cgui_text segment;
+	size_t limit;
+};
 
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
 
+/**
+ *
+ */
 void
-config_load(void)
-CGUI_HIDDEN;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-config_repair(void)
-CGUI_HIDDEN;
+cgui_text_draw(struct cgui_text style, const cstr *str, double x, double y, enum cgui_origin origin, enum cgui_rotation rotation, cairo_t *drawable)
+CGUI_NONNULL(2, 7);
 
 /************************************************************************************************************/
-/* PURE METHODS *********************************************************************************************/
+/************************************************************************************************************/
 /************************************************************************************************************/
 
-#define CONFIG cgui_config_get()
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-cairo_font_options_t *
-config_font_options(void)
-CGUI_HIDDEN;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-struct cgui_swap
-config_swap_input(uint8_t id, struct cgui_mods mods, enum config_swap type)
-CGUI_HIDDEN;
-
+#ifdef __cplusplus
+}
+#endif

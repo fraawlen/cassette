@@ -86,12 +86,16 @@ static struct cgui_screen screen;
 	cgui_button_on_click(button_3, on_click);
 
 	cgui_button_set_label(button_1, "button");
-	cgui_button_set_label(button_2, "button");
-	cgui_button_set_label(button_3, "button");
+	cgui_button_set_label(button_2, "123456");
+	cgui_button_set_label(button_3, "button\ntest");
 
 	cgui_button_disable(button_3);
 
 	/* Grid 1 setup */
+
+	cgui_grid_resize_col(grid_1, 0, 6);
+	cgui_grid_resize_col(grid_1, 1, 6);
+	cgui_grid_resize_row(grid_2, 1, 2);
 
 	cgui_grid_set_col_flex(grid_1, 0, 1.0);
 	cgui_grid_set_col_flex(grid_1, 1, 1.0);
@@ -105,8 +109,12 @@ static struct cgui_screen screen;
 	
 	/* Grid 2 setup */
 
-	cgui_grid_set_col_flex(grid_2, 1, 1.0);
+	cgui_grid_resize_col(grid_2, 0, 6);
+	cgui_grid_resize_col(grid_2, 1, 6);
+	cgui_grid_resize_row(grid_2, 3, 2);
+
 	cgui_grid_set_row_flex(grid_2, 0, 1.0);
+	cgui_grid_set_col_flex(grid_2, 1, 1.0);
 
 	cgui_grid_assign_cell(grid_2, filler,   0, 0, 1, 1);
 	cgui_grid_assign_cell(grid_2, button_1, 0, 1, 1, 1);

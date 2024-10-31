@@ -344,13 +344,13 @@ CGUI_PURE;
  *
  */
 void
-cgui_cell_draw_frame(struct cgui_cell_context context);
+cgui_cell_clip_frame(struct cgui_cell_context context);
 
 /**
  *
  */
 void
-cgui_cell_clip_frame(struct cgui_cell_context context);
+cgui_cell_draw_frame(struct cgui_cell_context context);
 
 /**
  *

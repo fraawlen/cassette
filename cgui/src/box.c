@@ -21,8 +21,6 @@
 #include <cairo/cairo.h>
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
-#include <float.h>
-#include <math.h>
 
 #include "config.h"
 
@@ -130,14 +128,14 @@ cgui_box_is_in(struct cgui_box box, double x_test, double y_test, double x, doub
 void
 cgui_box_pad_corner(struct cgui_box *box, struct cgui_box box_parent, double pad, int id)
 {
-	if (!CONFIG->smart_corners || box_parent.corner[id] == CGUI_BOX_STRAIGHT)
+	if (!CONFIG->smart_corners || box_parent.corner[id] == CGUI_CORNER_STRAIGHT)
 	{
 		return;
 	}
 	
 	box->corner[id]      = box_parent.corner[id];
 	box->size_corner[id] = box_parent.size_corner[id]
-	                       - pad * (1 - (box_parent.corner[id] == CGUI_BOX_CHAMFER ? U : 0));
+	                       - pad * (1 - (box_parent.corner[id] == CGUI_CORNER_CHAMFER ? U : 0));
 }
 
 /************************************************************************************************************/
@@ -153,7 +151,7 @@ paint(cairo_t *drawable, struct ccolor color)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void
+void
 path(struct cgui_box box, double x, double y, double w, double h, cairo_t *drawable, bool shape, double pad)
 {
 	pad += box.margin;
@@ -175,10 +173,10 @@ path(struct cgui_box box, double x, double y, double w, double h, cairo_t *drawa
 
 	for (size_t i = 0; i < 4; i++)
 	{
-		box.size_corner[i] -= pad * (1 - (box.corner[i] == CGUI_BOX_CHAMFER ? U : 0));
+		box.size_corner[i] -= pad * (1 - (box.corner[i] == CGUI_CORNER_CHAMFER ? U : 0));
 		if (box.size_corner[i] < 0.0)
 		{
-			box.corner[i] = CGUI_BOX_STRAIGHT;
+			box.corner[i] = CGUI_CORNER_STRAIGHT;
 		}
 	}
 
@@ -200,16 +198,16 @@ subpath_1(struct cgui_box box, double x, double y, double w, double h, cairo_t *
 
 	switch (box.corner[0])
 	{
-		case CGUI_BOX_STRAIGHT:
+		case CGUI_CORNER_STRAIGHT:
 			cairo_move_to(d, x, y);
 			break;
 
-		case CGUI_BOX_RADII:
+		case CGUI_CORNER_RADII:
 			cairo_new_sub_path(d);
 			cairo_arc(d, x + r, y + r, r, PI, -PI / 2);
 			break;
 
-		case CGUI_BOX_CHAMFER:
+		case CGUI_CORNER_CHAMFER:
 			cairo_move_to(d, x,     y + r);
 			cairo_line_to(d, x + r, y);
 			break;
@@ -227,15 +225,15 @@ subpath_2(struct cgui_box box, double x, double y, double w, double h, cairo_t *
 
 	switch (box.corner[1])
 	{
-		case CGUI_BOX_STRAIGHT:
+		case CGUI_CORNER_STRAIGHT:
 			cairo_line_to(d, x + w, y);
 			break;
 
-		case CGUI_BOX_RADII:
+		case CGUI_CORNER_RADII:
 			cairo_arc(d, x + w - r, y + r, r, -PI / 2, 0);
 			break;
 
-		case CGUI_BOX_CHAMFER:
+		case CGUI_CORNER_CHAMFER:
 			cairo_line_to(d, x + w - r, y);
 			cairo_line_to(d, x + w,     y + r);
 			break;
@@ -251,15 +249,15 @@ subpath_3(struct cgui_box box, double x, double y, double w, double h, cairo_t *
 
 	switch (box.corner[2])
 	{
-		case CGUI_BOX_STRAIGHT:
+		case CGUI_CORNER_STRAIGHT:
 			cairo_line_to(d, x + w, y + h);
 			break;
 
-		case CGUI_BOX_RADII:
+		case CGUI_CORNER_RADII:
 			cairo_arc(d, x + w - r, y + h - r, r, 0, PI / 2);
 			break;
 
-		case CGUI_BOX_CHAMFER:
+		case CGUI_CORNER_CHAMFER:
 			cairo_line_to(d, x + w,     y + h - r);
 			cairo_line_to(d, x + w - r, y + h);
 			break;
@@ -277,15 +275,15 @@ subpath_4(struct cgui_box box, double x, double y, double w, double h, cairo_t *
 
 	switch (box.corner[3])
 	{
-		case CGUI_BOX_STRAIGHT:
+		case CGUI_CORNER_STRAIGHT:
 			cairo_line_to(d, x, y + h);
 			break;
 
-		case CGUI_BOX_RADII:
+		case CGUI_CORNER_RADII:
 			cairo_arc(d, x + r, y + h - r, r, PI / 2, PI);
 			break;
 
-		case CGUI_BOX_CHAMFER:
+		case CGUI_CORNER_CHAMFER:
 			cairo_line_to(d, x + r, y + h);
 			cairo_line_to(d, x,     y + h - r);
 			break;

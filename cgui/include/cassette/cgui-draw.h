@@ -20,13 +20,34 @@
 
 #pragma once
 
-#include <cassette/cgui.h>
+#include <cairo/cairo.h>
+#include <cassette/cobj.h>
+
+#include "cgui-attributes.h"
+#include "cgui-box.h"
+#include "cgui-types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
 
+
+
+/**
+ *
+ */
 void
-event_process(struct cgui_event *event)
-CGUI_NONNULL(1)
-CGUI_HIDDEN;
+cgui_text_draw(const cstr *str, double x, double y, enum cgui_origin origin, enum cgui_rotation rotation, struct cgui_box box, cairo_t *drawable)
+CGUI_NONNULL(1, 7);
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+#ifdef __cplusplus
+}
+#endif

@@ -28,35 +28,29 @@
 /************************************************************************************************************/
 
 void
-main_lock(void);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
 main_pull_instance(cref *ref, void *ptr)
-CGUI_NONNULL(1, 2);
+CGUI_NONNULL(1, 2)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
 main_push_instance(cref *ref, void *ptr)
-CGUI_NONNULL(1, 2);
+CGUI_NONNULL(1, 2)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-main_set_error(enum cerr error);
+main_set_error(enum cerr error)
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 main_update(struct cgui_event *event)
-CGUI_NONNULL(1);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-main_unlock(void);
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
 
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
@@ -64,16 +58,19 @@ main_unlock(void);
 
 cref *
 main_cells(void)
-CGUI_NONNULL_RETURN;
+CGUI_NONNULL_RETURN
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 cref *
 main_grids(void)
-CGUI_NONNULL_RETURN;
+CGUI_NONNULL_RETURN
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 cref *
 main_windows(void)
-CGUI_NONNULL_RETURN;
+CGUI_NONNULL_RETURN
+CGUI_HIDDEN;

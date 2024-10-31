@@ -59,7 +59,14 @@
 	{ NAMESPACE, "shape_border",      BOOL,        &TARGET.shape_border     }, \
 	{ NAMESPACE, "draw",              BOOL,        &TARGET.draw             }, \
 	{ NAMESPACE, "draw_foreground",   BOOL,        &TARGET.draw_foreground  }, \
-	{ NAMESPACE, "draw_shadow",       BOOL,        &TARGET.draw_shadow      },
+	{ NAMESPACE, "draw_shadow",       BOOL,        &TARGET.draw_shadow      }, \
+	{ NAMESPACE, "hit_outline",       BOOL,        &TARGET.draw_shadow      },
+
+#define TEXT(NAMESPACE, TARGET) \
+	{ NAMESPACE, "text_color",            COLOR, &TARGET.color            }, \
+	{ NAMESPACE, "text_color_background", COLOR, &TARGET.color_background }, \
+	{ NAMESPACE, "text_draw_background",  BOOL,  &TARGET.draw_background  }, \
+	{ NAMESPACE, "text_bold",             BOOL,  &TARGET.bold             },
 
 #define KEY(VALUE) \
 	{ "key",     #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_CONFIG_SWAP_DIRECT] }, \
@@ -142,11 +149,12 @@ static void update_err    (void);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static struct cgui_config config  = config_default;
-static void (*fn_load)(ccfg *cfg) = dummy_fn_load;
-static ccfg  *parser              = CCFG_PLACEHOLDER;
-static cdict *dict                = CDICT_PLACEHOLDER;
-bool first_load                   = true;
+static struct cgui_config config       = config_default;
+static void (*fn_load)(ccfg *cfg)      = dummy_fn_load;
+static ccfg  *parser                   = CCFG_PLACEHOLDER;
+static cdict *dict                     = CDICT_PLACEHOLDER;
+static bool first_load                 = true;
+static cairo_font_options_t *font_opts = NULL;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -204,9 +212,9 @@ static const struct word words[] =
 	{ "reconfig",   SWAP_ACTION, CGUI_SWAP_RECONFIG             },
 	{ "exit",       SWAP_ACTION, CGUI_SWAP_EXIT                 },
 
-	{ "straight",   CORNER_TYPE, CGUI_BOX_STRAIGHT              },
-	{ "chamfer",    CORNER_TYPE, CGUI_BOX_CHAMFER               },
-	{ "radii",      CORNER_TYPE, CGUI_BOX_RADII                 },
+	{ "straight",   CORNER_TYPE, CGUI_CORNER_STRAIGHT           },
+	{ "chamfer",    CORNER_TYPE, CGUI_CORNER_CHAMFER            },
+	{ "radii",      CORNER_TYPE, CGUI_CORNER_RADII              },
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -299,6 +307,11 @@ static const struct resource resources[] =
 	BOX( "button_focused",  config.button_frame_focused  )
 	BOX( "button_pressed",  config.button_frame_pressed  )
 	BOX( "button_disabled", config.button_frame_disabled )
+
+	TEXT( "button_idle",     config.button_text_idle     )
+	TEXT( "button_focused",  config.button_text_focused  )
+	TEXT( "button_pressed",  config.button_text_pressed  )
+	TEXT( "button_disabled", config.button_text_disabled )
 };
 
 /************************************************************************************************************/
@@ -388,6 +401,14 @@ cgui_config_str_width(size_t cols)
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
+cairo_font_options_t *
+config_font_options(void)
+{
+	return font_opts;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 config_init(const char *app_name, const char *app_class)
 {
@@ -433,6 +454,10 @@ config_init(const char *app_name, const char *app_class)
 	{
 		cdict_write(dict, words[i].name, words[i].type, words[i].value);
 	}
+
+	/* cairo font options */
+
+	font_opts = cairo_font_options_create();
 	
 	/* end */
 
@@ -495,13 +520,15 @@ config_repair(void)
 void
 config_reset(void)
 {
+	cairo_font_options_destroy(font_opts);
 	ccfg_destroy(parser);
 	cdict_destroy(dict);
 
-	fn_load = dummy_fn_load;
-	config  = config_default;
-	parser  = CCFG_PLACEHOLDER;
-	dict    = CDICT_PLACEHOLDER;
+	fn_load   = dummy_fn_load;
+	config    = config_default;
+	parser    = CCFG_PLACEHOLDER;
+	dict      = CDICT_PLACEHOLDER;
+	font_opts = NULL;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -662,12 +689,61 @@ fetch(const struct resource resource)
 static void
 font_setup(void)
 {
-	cairo_font_extents_t f_e;
-	cairo_text_extents_t t_e;
-	cairo_surface_t *c_srf;
-	cairo_t *c_ctx;
+	cairo_antialias_t      antialias    = CAIRO_ANTIALIAS_DEFAULT;
+	cairo_subpixel_order_t subpixel     = CAIRO_SUBPIXEL_ORDER_DEFAULT;
+	cairo_hint_metrics_t   hint_metrics = CAIRO_HINT_METRICS_DEFAULT;
+	cairo_hint_style_t     hint_style   = CAIRO_HINT_STYLE_SLIGHT;
 
-	/* get font geometry with cairo */
+	cairo_font_extents_t font_ext;
+	cairo_text_extents_t text_ext;
+	cairo_surface_t *surface;
+	cairo_t *context;
+
+	/* font options */
+
+	switch (config.font_antialias)
+	{
+		case CGUI_CONFIG_ANTIALIAS_NONE:
+			antialias = CAIRO_ANTIALIAS_NONE;
+			break;
+
+		case CGUI_CONFIG_ANTIALIAS_GRAY:
+			antialias = CAIRO_ANTIALIAS_GRAY;
+			break;
+
+		case CGUI_CONFIG_ANTIALIAS_SUBPIXEL:
+			antialias = CAIRO_ANTIALIAS_SUBPIXEL;
+			break;
+	}
+
+	switch (config.font_subpixel)
+	{
+		case CGUI_CONFIG_SUBPIXEL_RGB:
+			subpixel = CAIRO_SUBPIXEL_ORDER_RGB;
+			break;
+
+		case CGUI_CONFIG_SUBPIXEL_BGR:
+			subpixel = CAIRO_SUBPIXEL_ORDER_BGR;
+			break;
+
+		case CGUI_CONFIG_SUBPIXEL_VRGB:
+			subpixel = CAIRO_SUBPIXEL_ORDER_VRGB;
+			break;
+
+		case CGUI_CONFIG_SUBPIXEL_VBGR:
+			subpixel = CAIRO_SUBPIXEL_ORDER_VBGR;
+			break;
+	}
+
+	hint_metrics = config.font_enable_hint_metrics
+		? CAIRO_HINT_METRICS_ON : CAIRO_HINT_METRICS_OFF;
+
+	cairo_font_options_set_antialias(font_opts, antialias);
+	cairo_font_options_set_subpixel_order(font_opts, subpixel);
+	cairo_font_options_set_hint_metrics(font_opts, hint_metrics);
+	cairo_font_options_set_hint_style(font_opts, hint_style);
+
+	/* font geometry */
 
 	if (config.font_enable_overrides)
 	{
@@ -677,33 +753,34 @@ font_setup(void)
 		goto skip_auto_font;
 	}
 
-	c_srf = cairo_image_surface_create(CAIRO_FORMAT_A1, 0, 0);
-	c_ctx = cairo_create(c_srf);
-	if (cairo_surface_status(c_srf) != CAIRO_STATUS_SUCCESS
-	 || cairo_status(c_ctx)         != CAIRO_STATUS_SUCCESS)
+	surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 0, 0);
+	context = cairo_create(surface);
+	if (cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS
+	 || cairo_status(context)         != CAIRO_STATUS_SUCCESS)
 	{
 		main_set_error(CERR_CONFIG);
 		goto skip_font_setup;
 	}
 	
-	cairo_set_font_size(c_ctx, config.font_size);
+	cairo_set_font_size(context, config.font_size);
+	cairo_set_font_options(context, font_opts);
 	cairo_select_font_face(
-		c_ctx,
+		context,
 		config.font_face,
 		CAIRO_FONT_SLANT_NORMAL,
 		CAIRO_FONT_WEIGHT_NORMAL);
 	
-	cairo_font_extents(c_ctx, &f_e);
-	cairo_text_extents(c_ctx, "A", &t_e);
+	cairo_font_extents(context, &font_ext);
+	cairo_text_extents(context, "A", &text_ext);
 
-	config.font_descent = f_e.descent;
-	config.font_ascent  = f_e.ascent;
-	config.font_width   = t_e.width;
+	config.font_descent = font_ext.descent;
+	config.font_ascent  = font_ext.ascent;
+	config.font_width   = text_ext.width;
 
 skip_font_setup:
 
-	cairo_destroy(c_ctx);
-	cairo_surface_destroy(c_srf);
+	cairo_destroy(context);
+	cairo_surface_destroy(surface);
 
 skip_auto_font:
 
@@ -748,13 +825,13 @@ scale(const struct resource resource)
 static void
 set_corners(enum value variant, void *target)
 {
-	enum cgui_box_corner *types;
+	enum cgui_corner *types;
 	double *sizes;
 	const char *str;
 	size_t tmp;
 	size_t n = 0;
 
-	types = (enum cgui_box_corner*)target;
+	types = (enum cgui_corner*)target;
 	sizes = (double*)target;
 
 	/* fill array values */
@@ -866,7 +943,9 @@ swap(const char *str, uint8_t limit, struct cgui_swap *target)
 static void
 update_err(void)
 {
-	if (ccfg_error(parser) || cdict_error(dict))
+	if (ccfg_error(parser)
+	 || cdict_error(dict)
+	 || cairo_font_options_status(font_opts) != CAIRO_STATUS_SUCCESS)
 	{
 		main_set_error(CERR_CONFIG);
 	}

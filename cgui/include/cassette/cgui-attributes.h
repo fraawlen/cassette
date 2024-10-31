@@ -23,11 +23,13 @@
 #if __GNUC__ > 4
 	#define CGUI_NONNULL_RETURN __attribute__((returns_nonnull))
 	#define CGUI_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
+	#define CGUI_HIDDEN         __attribute__((visibility ("hidden")))
 	#define CGUI_PURE           __attribute__((pure))
 	#define CGUI_CONST          __attribute__((const))
 #else
 	#define CGUI_NONNULL_RETURN
 	#define CGUI_NONNULL(...)
+	#define CGUI_HIDDEN
 	#define CGUI_PURE
 	#define CGUI_CONST
 #endif

@@ -63,5 +63,5 @@ struct cgui_cell
 
 void
 cell_destroy(cgui_cell *cell)
-CGUI_NONNULL(1);
-
+CGUI_NONNULL(1)
+CGUI_HIDDEN;

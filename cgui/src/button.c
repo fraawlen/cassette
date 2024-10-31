@@ -57,12 +57,13 @@ struct data
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void destroy        (cgui_cell *)                           CGUI_NONNULL(1);
-static void draw           (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
-static void dummy_fn_click (cgui_cell *)                           CGUI_NONNULL(1);
-static void event          (cgui_cell *, struct cgui_cell_event *) CGUI_NONNULL(1, 2);
-static void frame          (cgui_cell *, struct cgui_box *)        CGUI_NONNULL(1, 2);
-static bool invalid        (const cgui_cell *)                     CGUI_NONNULL(1);
+static void             destroy        (cgui_cell *)                           CGUI_NONNULL(1);
+static void             draw           (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
+static void             dummy_fn_click (cgui_cell *)                           CGUI_NONNULL(1);
+static void             event          (cgui_cell *, struct cgui_cell_event *) CGUI_NONNULL(1, 2);
+static void             frame          (cgui_cell *, struct cgui_box *)        CGUI_NONNULL(1, 2);
+static bool             invalid        (const cgui_cell *)                     CGUI_NONNULL(1);
+static struct cgui_text text_style     (cgui_cell *cell)                       CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -83,7 +84,7 @@ cgui_button_create(void)
 	{
 		goto fail_data;
 	}
-	 
+
 	if ((data->label = cstr_create()) == CSTR_PLACEHOLDER)
 	{
 		goto fail_label;
@@ -98,7 +99,7 @@ cgui_button_create(void)
 	data->enabled  = true;
 	data->state    = IDLE;
 
-	cgui_cell_on_destroy (cell, destroy);
+	cgui_cell_on_destroy(cell, destroy);
 	cgui_cell_on_draw(cell, draw);
 	cgui_cell_on_event(cell, event);
 	cgui_cell_on_frame(cell, frame);
@@ -213,6 +214,14 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 	(void)cell;
 
 	cgui_cell_draw_frame(context);
+	cgui_text_draw(
+		text_style(cell),
+		DATA->label,
+		context.x + context.width  / 2,
+		context.y + context.height / 2,
+		CGUI_ORIGIN_CENTER,
+		CGUI_ROTATION_NORMAL,
+		context.drawable);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -342,3 +351,28 @@ invalid(const cgui_cell *cell)
 
 	return cgui_error() || !cell->valid;
 }
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static struct cgui_text
+text_style(cgui_cell *cell)
+{
+	if (!DATA->enabled)
+	{
+		return CONFIG->button_text_disabled;
+	}
+
+	switch (DATA->state)
+	{
+		case FOCUSED:
+			return CONFIG->button_text_focused;
+
+		case PRESSED:
+			return CONFIG->button_text_pressed;
+
+		case IDLE:
+		default:
+			return CONFIG->button_text_idle;
+	}
+}
+
