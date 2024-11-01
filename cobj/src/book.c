@@ -401,7 +401,7 @@ cbook_write(cbook *book, const char *str)
 
 	while (ns > nc - book->n_chars)
 	{
-		if (!safe_mul(&nc, nc, 2))
+		if (!csafe_mul(&nc, nc, 2))
 		{
 			book->err = CERR_OVERFLOW;
 			return;
@@ -469,8 +469,8 @@ grow(cbook *book, size_t n_chars, size_t n_words, size_t n_groups)
 {
 	void *tmp;
 
-	if (!safe_mul(NULL, n_words,  sizeof(size_t))
-	 || !safe_mul(NULL, n_groups, sizeof(size_t)))
+	if (!csafe_mul(NULL, n_words,  sizeof(size_t))
+	 || !csafe_mul(NULL, n_groups, sizeof(size_t)))
 	{
 		book->err = CERR_OVERFLOW;
 		return false;

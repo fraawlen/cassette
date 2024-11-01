@@ -333,7 +333,7 @@ cdict_write(cdict *dict, const char *key, size_t group, size_t value)
 
 	if (dict->n >= dict->n_alloc * dict->max_load)
 	{
-		if (!safe_mul(NULL, dict->n_alloc, 2))
+		if (!csafe_mul(NULL, dict->n_alloc, 2))
 		{
 			dict->err = CERR_OVERFLOW;
 			return;
@@ -435,7 +435,7 @@ grow(cdict *dict, size_t n)
 		return true;
 	}
 
-	if (!safe_mul(NULL, n, sizeof(struct slot)))
+	if (!csafe_mul(NULL, n, sizeof(struct slot)))
 	{
 		dict->err = CERR_OVERFLOW;
 		return false;

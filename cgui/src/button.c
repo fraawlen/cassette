@@ -57,13 +57,13 @@ struct data
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void             destroy        (cgui_cell *)                           CGUI_NONNULL(1);
-static void             draw           (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
-static void             dummy_fn_click (cgui_cell *)                           CGUI_NONNULL(1);
-static void             event          (cgui_cell *, struct cgui_cell_event *) CGUI_NONNULL(1, 2);
-static void             frame          (cgui_cell *, struct cgui_box *)        CGUI_NONNULL(1, 2);
-static bool             invalid        (const cgui_cell *)                     CGUI_NONNULL(1);
-static struct cgui_text text_style     (cgui_cell *cell)                       CGUI_NONNULL(1);
+static void destroy                      (cgui_cell *)                           CGUI_NONNULL(1);
+static void draw                         (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
+static void dummy_fn_click               (cgui_cell *)                           CGUI_NONNULL(1);
+static void event                        (cgui_cell *, struct cgui_cell_event *) CGUI_NONNULL(1, 2);
+static void frame                        (cgui_cell *, struct cgui_box *)        CGUI_NONNULL(1, 2);
+static bool invalid                      (const cgui_cell *)                     CGUI_NONNULL(1);
+static struct cgui_text_style text_style (const cgui_cell *)                     CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -211,17 +211,17 @@ destroy(cgui_cell *cell)
 static void
 draw(cgui_cell *cell, struct cgui_cell_context context)
 {
-	(void)cell;
+	struct cgui_text_context text_context =
+	{
+		.x        = context.x + context.width  / 2,
+		.y        = context.y + context.height / 2,
+		.align    = CGUI_ALIGN_CENTER,
+		.rotation = CGUI_ROTATION_NORMAL,
+		.drawable = context.drawable,
+	};
 
 	cgui_cell_draw_frame(context);
-	cgui_text_draw(
-		text_style(cell),
-		DATA->label,
-		context.x + context.width  / 2,
-		context.y + context.height / 2,
-		CGUI_ORIGIN_CENTER,
-		CGUI_ROTATION_NORMAL,
-		context.drawable);
+	cgui_text_draw(text_context, text_style(cell), DATA->label);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -354,8 +354,8 @@ invalid(const cgui_cell *cell)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static struct cgui_text
-text_style(cgui_cell *cell)
+static struct cgui_text_style
+text_style(const cgui_cell *cell)
 {
 	if (!DATA->enabled)
 	{

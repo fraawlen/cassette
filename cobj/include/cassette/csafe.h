@@ -37,7 +37,7 @@
  * @return : True if the operation is safe, false otherwhise
  */
 bool
-safe_add(size_t *result, size_t a, size_t b);
+csafe_add(size_t *result, size_t a, size_t b);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -51,7 +51,7 @@ safe_add(size_t *result, size_t a, size_t b);
  * @return : True if the operation is safe, false otherwhise
  */
 bool
-safe_div(size_t *result, size_t a, size_t b);
+csafe_div(size_t *result, size_t a, size_t b);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -65,7 +65,7 @@ safe_div(size_t *result, size_t a, size_t b);
  * @return : True if the operation is safe, false otherwhise
  */
 bool
-safe_mul(size_t *result, size_t a, size_t b);
+csafe_mul(size_t *result, size_t a, size_t b);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -79,4 +79,4 @@ safe_mul(size_t *result, size_t a, size_t b);
  * @return : True if the operation is safe, false otherwhise
  */
 bool
-safe_sub(size_t *result, size_t a, size_t b);
+csafe_sub(size_t *result, size_t a, size_t b);

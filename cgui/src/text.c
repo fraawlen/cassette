@@ -35,48 +35,77 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void draw_row (struct cgui_text, cairo_t *, const char *, size_t, double, double, enum cgui_origin) CGUI_NONNULL(2, 3);
+static void draw_row (struct cgui_text_context, struct cgui_text_segment *, size_t, cairo_glyph_t *, int, const char *, size_t) CGUI_NONNULL(2, 4, 6);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 void
-cgui_text_draw(struct cgui_text style, const cstr *str, double x, double y, enum cgui_origin origin, enum cgui_rotation rotation, cairo_t *drawable)
+cgui_text_draw(struct cgui_text_context context, struct cgui_text_style style, const cstr *str)
+{
+	struct cgui_text_segment seg =
+	{
+		.style  = style,
+		.length = SIZE_MAX,
+	};
+
+	cgui_text_draw_segments(context, &seg, 1, str);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_text_draw_segments(struct cgui_text_context context, struct cgui_text_segment *segments, size_t segments_number, const cstr *str)
 {
 	cairo_matrix_t matrix;
+	cairo_glyph_t *glyphs;
 	const char *s = cstr_chars(str);
-	double offset = CONFIG->font_ascent;
-	double a      = 0;
-	size_t n      = 0;
-	bool end      = false;
+	bool end = false;
+	size_t n = 0;
+	double a = 0;
+	size_t tmp;
+
+	/* glyph buffer setup */
+
+	if (!csafe_mul(&tmp, cstr_width(str), sizeof(cairo_glyph_t)))
+	{
+		main_set_error(CERR_OVERFLOW);
+		return;
+	}
+
+	if (!(glyphs = malloc(tmp)))
+	{
+		main_set_error(CERR_MEMORY);
+		return;
+	}
 
 	/* initial vertical offset */
 
-	switch (origin)
+	switch (context.align)
 	{
-		case CGUI_ORIGIN_TOP:
-		case CGUI_ORIGIN_TOP_LEFT:
-		case CGUI_ORIGIN_TOP_RIGHT:
+		case CGUI_ALIGN_TOP:
+		case CGUI_ALIGN_TOP_LEFT:
+		case CGUI_ALIGN_TOP_RIGHT:
 			break;
 
-		case CGUI_ORIGIN_CENTER:
-		case CGUI_ORIGIN_LEFT:
-		case CGUI_ORIGIN_RIGHT:
-			offset -= cgui_config_str_height(cstr_height(str)) / 2;
+		case CGUI_ALIGN_CENTER:
+		case CGUI_ALIGN_LEFT:
+		case CGUI_ALIGN_RIGHT:
+			context.y -= cgui_config_str_height(cstr_height(str)) / 2;
 			break;
 
-		case CGUI_ORIGIN_BOTTOM:
-		case CGUI_ORIGIN_BOTTOM_LEFT:
-		case CGUI_ORIGIN_BOTTOM_RIGHT:
-			offset -= cgui_config_str_height(cstr_height(str));
+		case CGUI_ALIGN_BOTTOM:
+		case CGUI_ALIGN_BOTTOM_LEFT:
+		case CGUI_ALIGN_BOTTOM_RIGHT:
+			context.y -= cgui_config_str_height(cstr_height(str));
 			break;
 	}
 
-	/* setup matrix context */
+	/* setup cairo context */
 
-	switch (rotation) {
-		
+	switch (context.rotation)
+	{
 		case CGUI_ROTATION_NORMAL:
 			a = 0;
 			break;
@@ -94,45 +123,40 @@ cgui_text_draw(struct cgui_text style, const cstr *str, double x, double y, enum
 			break;
 	}
 
-	cairo_get_matrix(drawable, &matrix);
-	cairo_translate(drawable, x, y);
-	cairo_rotate(drawable, a);
-	cairo_translate(drawable, - x, - y);
-
-	/* font setup */
-
-	cairo_set_font_size(drawable, CONFIG->font_size);
-	cairo_set_font_options(drawable, config_font_options());
-	cairo_select_font_face(
-		drawable,
-		CONFIG->font_face,
-		CAIRO_FONT_SLANT_NORMAL,
-		style.bold ? CAIRO_FONT_WEIGHT_BOLD  : CAIRO_FONT_WEIGHT_NORMAL);
+	cairo_set_font_size(context.drawable, CONFIG->font_size);
+	cairo_set_font_options(context.drawable, config_font_options());
+	cairo_get_matrix(context.drawable, &matrix);
+	cairo_translate(context.drawable, context.x, context.y);
+	cairo_rotate(context.drawable, a);
+	cairo_translate(context.drawable, -context.x, -context.y);
 
 	/* draw rows */
 
-	for (size_t i = 0; !end; i++)
+	for (const char *c = s; !end; c = cstr_next_char(c))
 	{
-		switch (s[i])
+		switch (*c)
 		{
 			case '\0':
 				end = true;
 				/* fallthrough */
 
 			case '\n':
-				draw_row(style, drawable, s + n, i - n, x, y + offset, origin);
-				offset += CONFIG->font_height + CONFIG->font_spacing_vertical;
-				n = i + 1;
+				draw_row(context, segments, segments_number, glyphs, n, s, c - s);
+				context.y += CONFIG->font_height + CONFIG->font_spacing_vertical;
+				s = c + 1;
+				n = 0;
 				break;
-				
+
 			default:
 				break;
 		}
+		n++;
 	}
 
 	/* end */
 		
-	cairo_set_matrix(drawable, &matrix);
+	cairo_set_matrix(context.drawable, &matrix);
+	free(glyphs);
 }
 
 /************************************************************************************************************/
@@ -140,20 +164,38 @@ cgui_text_draw(struct cgui_text style, const cstr *str, double x, double y, enum
 /************************************************************************************************************/
 
 static void
-draw_row(struct cgui_text style, cairo_t *drawable, const char *str, size_t str_n, double x, double y, enum cgui_origin origin)
+draw_row(
+	struct cgui_text_context context,
+	struct cgui_text_segment *segments,
+	size_t segments_number,
+	cairo_glyph_t *glyphs,
+	int glyphs_n,
+	const char *str,
+	size_t str_n)
 {
-	cairo_scaled_font_t *font;
-	cairo_glyph_t *glyphs = NULL;
 	cairo_status_t status;
 	struct ccolor color;
-	double offset = 0.0;
-	double og = 0.0;
-	int glyphs_n  = 0;
+
+	/* font setup */
+
+	cairo_select_font_face(
+		context.drawable,
+		CONFIG->font_face,
+		CAIRO_FONT_SLANT_NORMAL,
+		segments[0].style.bold ? CAIRO_FONT_WEIGHT_BOLD : CAIRO_FONT_WEIGHT_NORMAL);
 
 	/* get glyph array */
 
-	font   = cairo_get_scaled_font(drawable);
-	status = cairo_scaled_font_text_to_glyphs(font, x, y, str, str_n, &glyphs, &glyphs_n, NULL, NULL, NULL);
+	status = cairo_scaled_font_text_to_glyphs(
+		cairo_get_scaled_font(context.drawable),
+		context.x,
+		context.y,
+		str,
+		str_n,
+		&glyphs,
+		&glyphs_n,
+		NULL, NULL, NULL);
+
 	if (status != CAIRO_STATUS_SUCCESS)
 	{
 		main_set_error(CERR_CAIRO);
@@ -162,62 +204,47 @@ draw_row(struct cgui_text style, cairo_t *drawable, const char *str, size_t str_
 
 	/* initial horizontal offset */
 
-	switch (origin)
+	switch (context.align)
 	{
-		case CGUI_ORIGIN_TOP_LEFT:
-		case CGUI_ORIGIN_LEFT:
-		case CGUI_ORIGIN_BOTTOM_LEFT:
+		case CGUI_ALIGN_TOP_LEFT:
+		case CGUI_ALIGN_LEFT:
+		case CGUI_ALIGN_BOTTOM_LEFT:
 			break;
 
-		case CGUI_ORIGIN_TOP:
-		case CGUI_ORIGIN_CENTER:
-		case CGUI_ORIGIN_BOTTOM:
-			offset -= cgui_config_str_width(glyphs_n) / 2;
+		case CGUI_ALIGN_TOP:
+		case CGUI_ALIGN_CENTER:
+		case CGUI_ALIGN_BOTTOM:
+			context.x -= cgui_config_str_width(glyphs_n) / 2;
 			break;
 
-		case CGUI_ORIGIN_TOP_RIGHT:
-		case CGUI_ORIGIN_RIGHT:
-		case CGUI_ORIGIN_BOTTOM_RIGHT:
-			offset -= cgui_config_str_width(glyphs_n);
+		case CGUI_ALIGN_TOP_RIGHT:
+		case CGUI_ALIGN_RIGHT:
+		case CGUI_ALIGN_BOTTOM_RIGHT:
+			context.x -= cgui_config_str_width(glyphs_n);
 			break;
 	}
-
-	og = offset;
 
 	/* glyph position transformations */
 
 	for (int i = 0; i < glyphs_n; i++)
 	{
-		glyphs[i].x  = CONFIG->font_offset_x + x + offset;
-		glyphs[i].y += CONFIG->font_offset_y;
-		offset      += CONFIG->font_width + CONFIG->font_spacing_horizontal;
+		glyphs[i].x = context.x + CONFIG->font_offset_x;
+		glyphs[i].y = context.y + CONFIG->font_offset_y + CONFIG->font_ascent;
+		context.x  += CONFIG->font_width + CONFIG->font_spacing_horizontal;
 	}
-
-	/* draw text background */
-
-	if (!style.draw_background)
-	{
-		goto skip_background;
-	}
-
-	color = style.color_background;
-	
-	cairo_set_source_rgba(drawable, color.r, color.g, color.b, color.a);
-	cairo_rectangle(
-		drawable,
-		x + og,
-		y - CONFIG->font_ascent - CONFIG->font_spacing_vertical / 2,
-		cgui_config_str_width(glyphs_n),
-		CONFIG->font_height + CONFIG->font_spacing_vertical);
-	cairo_fill(drawable);
-
-skip_background:
 
 	/* draw text */
 
-	color = style.color;
+	color = segments[0].style.color;
 
-	cairo_set_source_rgba(drawable, color.r, color.g, color.b, color.a);
-	cairo_show_glyphs(drawable, glyphs, glyphs_n);
-	cairo_glyph_free(glyphs);
+	cairo_set_source_rgba(context.drawable, color.r, color.g, color.b, color.a);
+	cairo_show_glyphs(context.drawable, glyphs, glyphs_n);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+draw_segment(struct cgui_text_context context, struct cgui_text_segment segment, cairo_glyph_t *glyphs, int glyphs_n)
+{
+	// TODO
 }

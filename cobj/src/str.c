@@ -46,11 +46,10 @@ struct cstr
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static size_t      byte_offset     (const cstr *, size_t) CSTR_NONNULL(1) CSTR_PURE;
-static bool        is_head_byte    (uint8_t)              CSTR_CONST;
-static const char *next_codepoint  (const char *)         CSTR_NONNULL(1) CSTR_PURE;
-static size_t      tab_real_width  (const cstr *, size_t) CSTR_NONNULL(1) CSTR_PURE;
-static void        update_n_values (cstr *)               CSTR_NONNULL(1);
+static size_t byte_offset     (const cstr *, size_t) CSTR_NONNULL(1) CSTR_PURE;
+static bool   is_head_byte    (uint8_t)              CSTR_CONST;
+static size_t tab_real_width  (const cstr *, size_t) CSTR_NONNULL(1) CSTR_PURE;
+static void   update_n_values (cstr *)               CSTR_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -216,7 +215,7 @@ cstr_coords_offset(const cstr *str, size_t row, size_t col)
 		{
 			row--;
 		}
-		codepoint = next_codepoint(codepoint);
+		codepoint = cstr_next_char(codepoint);
 		offset++;
 	}
 
@@ -242,7 +241,7 @@ cstr_coords_offset(const cstr *str, size_t row, size_t col)
 				col--;
 				break;
 		}
-		codepoint = next_codepoint(codepoint);
+		codepoint = cstr_next_char(codepoint);
 		offset++;
 	}
 
@@ -390,7 +389,7 @@ cstr_insert_raw(cstr *str, const char *raw_str, size_t offset)
 		return;
 	}
 
-	if (!safe_add(&m, n = strlen(raw_str), str->n_chars))
+	if (!csafe_add(&m, n = strlen(raw_str), str->n_chars))
 	{
 		str->err = CERR_OVERFLOW;
 		return;
@@ -448,6 +447,23 @@ cstr_length(const cstr *str)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+const char *
+cstr_next_char(const char *byte)
+{
+	if (*byte != '\0')
+	{
+		do
+		{
+			byte++;
+		}
+		while (!is_head_byte(*byte));
+	}
+
+	return byte;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 {
@@ -467,8 +483,8 @@ cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 
 	/* alloc memory for the padding string */
 
-	if (!safe_mul(&n, length_diff, 4)
-	 || !safe_add(&n, n, 1))
+	if (!csafe_mul(&n, length_diff, 4)
+	 || !csafe_add(&n, n, 1))
 	{
 		str->err = CERR_OVERFLOW;
 		return;
@@ -608,7 +624,7 @@ cstr_test_wrap(const cstr *str, size_t max_width)
 		return str->n_rows;
 	}
 
-	for (const char *codepoint = str->chars; *codepoint != '\0'; codepoint = next_codepoint(codepoint))
+	for (const char *codepoint = str->chars; *codepoint != '\0'; codepoint = cstr_next_char(codepoint))
 	{
 		if (*codepoint == '\n')
 		{
@@ -715,10 +731,10 @@ cstr_unwrapped_offset(const cstr *str, const cstr *str_wrap, size_t offset)
 		}
 		else
 		{
-			codepoint_1 = next_codepoint(codepoint_1);
+			codepoint_1 = cstr_next_char(codepoint_1);
 		}
 
-		codepoint_2 = next_codepoint(codepoint_2);
+		codepoint_2 = cstr_next_char(codepoint_2);
 	}
 
 	return offset - diff;
@@ -759,7 +775,7 @@ cstr_wrap(cstr *str, size_t max_width)
 
 	/* alloc memory */
 
-	if (!safe_mul(&n, str->n_alloc, 2))
+	if (!csafe_mul(&n, str->n_alloc, 2))
 	{
 		str->err = CERR_OVERFLOW;
 		return;
@@ -846,7 +862,7 @@ byte_offset(const cstr *str, size_t offset)
 {
 	const char *codepoint = str->chars;
 
-	while (offset > 0 && *(codepoint = next_codepoint(codepoint)) != '\0')
+	while (offset > 0 && *(codepoint = cstr_next_char(codepoint)) != '\0')
 	{
 		offset--;
 	}
@@ -869,23 +885,6 @@ is_head_byte(uint8_t c)
 	 */
 
 	return (c & 0xC0) != 0x80;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static const char *
-next_codepoint(const char *codepoint)
-{
-	if (*codepoint != '\0')
-	{
-		do
-		{
-			codepoint++;
-		}
-		while (!is_head_byte(*codepoint));
-	}
-
-	return codepoint;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

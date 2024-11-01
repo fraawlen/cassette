@@ -318,8 +318,8 @@ cgui_grid_create(size_t cols, size_t rows)
 
 	if (cols == 0
 	 || rows == 0
-	 || !safe_mul(NULL, cols, sizeof(struct grid_line))
-	 || !safe_mul(NULL, rows, sizeof(struct grid_line))
+	 || !csafe_mul(NULL, cols, sizeof(struct grid_line))
+	 || !csafe_mul(NULL, rows, sizeof(struct grid_line))
 	 || !(grid = malloc(sizeof(cgui_grid))))
 	{
 		goto fail_grid;

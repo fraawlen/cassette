@@ -38,11 +38,22 @@ extern "C" {
 /**
  *
  */
-struct cgui_text
+struct cgui_text_context
+{
+	double x;
+	double y;
+	enum cgui_align align;
+	enum cgui_rotation rotation;
+	cairo_t *drawable;
+};
+
+/**
+ *
+ */
+struct cgui_text_style
 {
 	struct ccolor color;
 	struct ccolor color_background;
-
 	bool draw_background;
 	bool bold;
 };
@@ -52,8 +63,8 @@ struct cgui_text
  */
 struct cgui_text_segment
 {
-	struct cgui_text segment;
-	size_t limit;
+	struct cgui_text_style style;
+	size_t length;
 };
 
 /************************************************************************************************************/
@@ -64,8 +75,15 @@ struct cgui_text_segment
  *
  */
 void
-cgui_text_draw(struct cgui_text style, const cstr *str, double x, double y, enum cgui_origin origin, enum cgui_rotation rotation, cairo_t *drawable)
-CGUI_NONNULL(2, 7);
+cgui_text_draw(struct cgui_text_context context, struct cgui_text_style style, const cstr *str)
+CGUI_NONNULL(3);
+
+/**
+ *
+ */
+void
+cgui_text_draw_segments(struct cgui_text_context context, struct cgui_text_segment *segments, size_t segments_number, const cstr *str)
+CGUI_NONNULL(2, 4);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

@@ -95,7 +95,7 @@ static struct cgui_screen screen;
 
 	cgui_grid_resize_col(grid_1, 0, 6);
 	cgui_grid_resize_col(grid_1, 1, 6);
-	cgui_grid_resize_row(grid_2, 1, 2);
+	cgui_grid_resize_row(grid_1, 1, 2);
 
 	cgui_grid_set_col_flex(grid_1, 0, 1.0);
 	cgui_grid_set_col_flex(grid_1, 1, 1.0);

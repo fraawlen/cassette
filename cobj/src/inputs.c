@@ -349,7 +349,7 @@ resize(cinputs *inputs, size_t n)
 		return false;
 	}
 
-	if (!safe_mul(NULL, n, sizeof(struct slot)))
+	if (!csafe_mul(NULL, n, sizeof(struct slot)))
 	{
 		inputs->err = CERR_OVERFLOW;
 		return false;

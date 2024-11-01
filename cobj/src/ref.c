@@ -313,7 +313,7 @@ cref_push(cref *ref, void *ptr)
 
 	if (ref->n >= ref->n_alloc)
 	{
-		if (!safe_mul(NULL, ref->n_alloc, 2))
+		if (!csafe_mul(NULL, ref->n_alloc, 2))
 		{
 			ref->err = CERR_OVERFLOW;
 			return;
@@ -367,7 +367,7 @@ grow(cref *ref, size_t n)
 		return true;
 	}
 
-	if (!safe_mul(NULL, n, sizeof(struct slot)))
+	if (!csafe_mul(NULL, n, sizeof(struct slot)))
 	{
 		ref->err = CERR_OVERFLOW;
 		return false;

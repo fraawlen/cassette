@@ -201,10 +201,10 @@ struct cgui_config
 	struct cgui_box button_frame_pressed;
 	struct cgui_box button_frame_disabled;
 
-	struct cgui_text button_text_idle;
-	struct cgui_text button_text_focused;
-	struct cgui_text button_text_pressed;
-	struct cgui_text button_text_disabled;
+	struct cgui_text_style button_text_idle;
+	struct cgui_text_style button_text_focused;
+	struct cgui_text_style button_text_pressed;
+	struct cgui_text_style button_text_disabled;
 };
 
 /************************************************************************************************************/

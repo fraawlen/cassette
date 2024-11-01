@@ -28,7 +28,7 @@
 /************************************************************************************************************/
 
 bool
-safe_add(size_t *result, size_t a, size_t b)
+csafe_add(size_t *result, size_t a, size_t b)
 {
 	bool safe;
 
@@ -45,7 +45,7 @@ safe_add(size_t *result, size_t a, size_t b)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-safe_div(size_t *result, size_t a, size_t b)
+csafe_div(size_t *result, size_t a, size_t b)
 {
 	bool safe;
 
@@ -62,7 +62,7 @@ safe_div(size_t *result, size_t a, size_t b)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-safe_mul(size_t *result, size_t a, size_t b)
+csafe_mul(size_t *result, size_t a, size_t b)
 {
 	bool safe;
 
@@ -79,7 +79,7 @@ safe_mul(size_t *result, size_t a, size_t b)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-safe_sub(size_t *result, size_t a, size_t b)
+csafe_sub(size_t *result, size_t a, size_t b)
 {
 	bool safe;
 
