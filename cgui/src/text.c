@@ -35,7 +35,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void draw_row (struct cgui_text_context, struct cgui_text_segment *, size_t, cairo_glyph_t *, int, const char *, size_t) CGUI_NONNULL(2, 4, 6);
+static void draw_row    (struct cgui_text_context, struct cgui_text_segment *, size_t, cairo_glyph_t *, int, const char *, size_t) CGUI_NONNULL(2, 4, 6);
+static void draw_segment(struct cgui_text_context, struct cgui_text_style, cairo_glyph_t *, int, const char *, size_t)             CGUI_NONNULL(3, 5);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -80,7 +81,7 @@ cgui_text_draw_segments(struct cgui_text_context context, struct cgui_text_segme
 		return;
 	}
 
-	/* initial vertical offset */
+	/* adjust starting position */
 
 	switch (context.align)
 	{
@@ -101,6 +102,9 @@ cgui_text_draw_segments(struct cgui_text_context context, struct cgui_text_segme
 			context.y -= cgui_config_str_height(cstr_height(str));
 			break;
 	}
+
+	context.x += CONFIG->font_offset_x;
+	context.y += CONFIG->font_offset_y + CONFIG->font_ascent;
 
 	/* setup cairo context */
 
@@ -173,36 +177,7 @@ draw_row(
 	const char *str,
 	size_t str_n)
 {
-	cairo_status_t status;
-	struct ccolor color;
-
-	/* font setup */
-
-	cairo_select_font_face(
-		context.drawable,
-		CONFIG->font_face,
-		CAIRO_FONT_SLANT_NORMAL,
-		segments[0].style.bold ? CAIRO_FONT_WEIGHT_BOLD : CAIRO_FONT_WEIGHT_NORMAL);
-
-	/* get glyph array */
-
-	status = cairo_scaled_font_text_to_glyphs(
-		cairo_get_scaled_font(context.drawable),
-		context.x,
-		context.y,
-		str,
-		str_n,
-		&glyphs,
-		&glyphs_n,
-		NULL, NULL, NULL);
-
-	if (status != CAIRO_STATUS_SUCCESS)
-	{
-		main_set_error(CERR_CAIRO);
-		return;
-	}
-
-	/* initial horizontal offset */
+	/* adjust horizontal offset */
 
 	switch (context.align)
 	{
@@ -224,27 +199,66 @@ draw_row(
 			break;
 	}
 
-	/* glyph position transformations */
+	/* draw segments */
 
-	for (int i = 0; i < glyphs_n; i++)
-	{
-		glyphs[i].x = context.x + CONFIG->font_offset_x;
-		glyphs[i].y = context.y + CONFIG->font_offset_y + CONFIG->font_ascent;
-		context.x  += CONFIG->font_width + CONFIG->font_spacing_horizontal;
-	}
-
-	/* draw text */
-
-	color = segments[0].style.color;
-
-	cairo_set_source_rgba(context.drawable, color.r, color.g, color.b, color.a);
-	cairo_show_glyphs(context.drawable, glyphs, glyphs_n);
+	draw_segment(context, segments[0].style, glyphs, glyphs_n, str, str_n);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-draw_segment(struct cgui_text_context context, struct cgui_text_segment segment, cairo_glyph_t *glyphs, int glyphs_n)
+draw_segment(
+	struct cgui_text_context context,
+	struct cgui_text_style style,
+	cairo_glyph_t *glyphs,
+	int glyphs_n,
+	const char *str,
+	size_t str_n)
 {
-	// TODO
+	cairo_status_t status;
+	struct ccolor color;
+
+	/* font setup */
+
+	cairo_select_font_face(
+		context.drawable,
+		CONFIG->font_face,
+		CAIRO_FONT_SLANT_NORMAL,
+		style.bold ? CAIRO_FONT_WEIGHT_BOLD : CAIRO_FONT_WEIGHT_NORMAL);
+
+	/* get glyph array */
+
+	status = cairo_scaled_font_text_to_glyphs(
+		cairo_get_scaled_font(context.drawable),
+		0,
+		0,
+		str,
+		str_n,
+		&glyphs,
+		&glyphs_n,
+		NULL,
+		NULL,
+		NULL);
+
+	if (status != CAIRO_STATUS_SUCCESS)
+	{
+		main_set_error(CERR_CAIRO);
+		return;
+	}
+
+	/* glyph position transformations */
+
+	for (int i = 0; i < glyphs_n; i++)
+	{
+		glyphs[i].x = context.x;
+		glyphs[i].y = context.y;
+		context.x  += CONFIG->font_width + CONFIG->font_spacing_horizontal;
+	}
+
+	/* draw text */
+
+	color = style.color;
+
+	cairo_set_source_rgba(context.drawable, color.r, color.g, color.b, color.a);
+	cairo_show_glyphs(context.drawable, glyphs, glyphs_n);
 }
