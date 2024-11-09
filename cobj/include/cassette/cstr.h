@@ -506,6 +506,21 @@ CSTR_NONNULL(1)
 CSTR_PURE;
 
 /**
+ * Gets the number of columns of a given row. The NUL terminator and newline characters are not included.
+ * This function is bounds-protected, so the row parameter is capped at the string's height, even if
+ * a SIZE_MAX value is supplied.
+ *
+ * @param str : String to interact with
+ *
+ * @return     : Number of columns
+ * @return_err : 0
+ */
+size_t
+cstr_row_width(const cstr *str, size_t row)
+CSTR_NONNULL(1)
+CSTR_PURE;
+
+/**
  * Calculates the number of rows a string wrapped with max_width will have. But unlike cstr_wrap() the string
  * is not modified.
  *
@@ -566,6 +581,21 @@ CSTR_PURE;
  */
 const char *
 cstr_next_char(const char *byte)
+CSTR_NONNULL(1)
+CSTR_PURE;
+
+/**
+ * Traverses the given C string until the next row starts.
+ *
+ * @param byte      : Character to start from
+ * @param tab_width : Optional, only used to calculate the row width.
+ * @param row_width : Optional, if non-NULL, the width (in columns) of the traversed row from the start byte.
+ *                    NUL terminator and newline characters are not included.
+ *
+ * @return : Pointer to next row.
+ */
+const char *
+cstr_next_row(const char *byte, size_t tab_width, size_t *row_width)
 CSTR_NONNULL(1)
 CSTR_PURE;
 

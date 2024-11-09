@@ -48,7 +48,7 @@ struct cstr
 
 static size_t byte_offset     (const cstr *, size_t) CSTR_NONNULL(1) CSTR_PURE;
 static bool   is_head_byte    (uint8_t)              CSTR_CONST;
-static size_t tab_real_width  (const cstr *, size_t) CSTR_NONNULL(1) CSTR_PURE;
+static size_t tab_real_width  (size_t, size_t)       CSTR_CONST;
 static void   update_n_values (cstr *)               CSTR_NONNULL(1);
 
 /************************************************************************************************************/
@@ -230,11 +230,11 @@ cstr_coords_offset(const cstr *str, size_t row, size_t col)
 				return offset;
 
 			case '\t':
-				if (col <= tab_real_width(str, offset))
+				if (col <= tab_real_width(str->tab_width, offset))
 				{
 					return offset;
 				}
-				col -= tab_real_width(str, offset);
+				col -= tab_real_width(str->tab_width, offset);
 				break;
 
 			default:
@@ -464,6 +464,41 @@ cstr_next_char(const char *byte)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+const char *
+cstr_next_row(const char *byte, size_t tab_width, size_t *row_width)
+{
+	size_t col = 0;
+
+	for (const char *codepoint = byte;; codepoint = cstr_next_char(codepoint))
+	{
+		switch (*codepoint)
+		{
+			case '\n':
+				codepoint++;
+				/* fallthrough */
+
+			case '\0':
+				if (row_width)
+				{
+					*row_width = col;
+				}
+				return codepoint;
+
+			case '\t':
+				col += tab_real_width(tab_width, col);
+				break;
+
+			default:
+				col++;
+				break;
+		}
+	}
+
+	return byte;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 {
@@ -556,6 +591,28 @@ cstr_repair(cstr *str)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+size_t
+cstr_row_width(const cstr *str, size_t row)
+{
+	const char *codepoint = str->chars;
+	size_t width = 0;
+
+	if (row >= str->n_rows)
+	{
+		row = str->n_rows - 1;
+	}
+
+	do
+	{
+		codepoint = cstr_next_row(codepoint, str->tab_width, &width);
+	}
+	while (row-- > 0);
+
+	return width;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 cstr_set_precision(cstr *str, int precision)
 {
@@ -633,7 +690,7 @@ cstr_test_wrap(const cstr *str, size_t max_width)
 		}
 		else if (*codepoint == '\t')
 		{
-			col += tab_real_width(str, col);
+			col += tab_real_width(str->tab_width, col);
 		}
 		else if (col >= max_width)
 		{
@@ -814,7 +871,7 @@ cstr_wrap(cstr *str, size_t max_width)
 			}
 			else if (str->chars[i] == '\t')
 			{
-				col += tab_real_width(str, col);
+				col += tab_real_width(str->tab_width, col);
 			}
 			else if (col >= max_width)
 			{
@@ -890,9 +947,9 @@ is_head_byte(uint8_t c)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static size_t
-tab_real_width(const cstr *str, size_t col)
+tab_real_width(size_t tab_width, size_t col)
 {
-	return str->tab_width - (col % str->tab_width);
+	return tab_width - (col % tab_width);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -925,7 +982,7 @@ update_n_values(cstr *str)
 
 			case '\t':
 				str->n_codepoints++;
-				col += tab_real_width(str, col);
+				col += tab_real_width(str->tab_width, col);
 				break;
 
 			default:
