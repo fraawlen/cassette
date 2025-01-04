@@ -70,14 +70,27 @@ struct cgui_box
  *
  */
 void
-cgui_box_clip(struct cgui_box box, double x, double y, double width, double height, double pad, cairo_t *drawable);
+cgui_box_align(enum cgui_align alignment);
 
 /**
  *
  */
 void
-cgui_box_draw(struct cgui_box box, double x, double y, double width, double height, cairo_t *drawable)
-CGUI_NONNULL(6);
+cgui_box_clip(cairo_t *drawable, double pad)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_box_draw(cairo_t *drawable)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_box_height(double height);
 
 /**
  *
@@ -85,6 +98,36 @@ CGUI_NONNULL(6);
 void
 cgui_box_pad_corner(struct cgui_box *box, struct cgui_box box_parent, double pad, int id)
 CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_box_reset(void);
+
+/**
+ *
+ */
+void
+cgui_box_style(struct cgui_box box);
+
+/**
+ *
+ */
+void
+cgui_box_width(double width);
+
+/**
+ *
+ */
+void
+cgui_box_x(double x);
+
+/**
+ *
+ */
+void
+cgui_box_y(double y);
 
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
@@ -94,8 +137,8 @@ CGUI_NONNULL(1);
  *
  */
 bool
-cgui_box_is_in(struct cgui_box box, double x_test, double y_test, double x, double y, double width, double height, cairo_t *drawable)
-CGUI_NONNULL(8);
+cgui_box_is_in(cairo_t *drawable, double x, double y)
+CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

@@ -59,14 +59,12 @@ cgui_cell cgui_cell_placeholder_instance =
 void
 cgui_cell_clip_frame(struct cgui_cell_context context)
 {
-	cgui_box_clip(
-		context.frame,
-		context.x,
-		context.y,
-		context.width,
-		context.height,
-		context.frame.size_border + context.frame.padding,
-		context.drawable);
+	cgui_box_x(context.x);
+	cgui_box_y(context.y);
+	cgui_box_width(context.width);
+	cgui_box_height(context.height);
+	cgui_box_style(context.frame);
+	cgui_box_clip(context.drawable, context.frame.size_border + context.frame.padding);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -117,13 +115,12 @@ fail_main:
 void
 cgui_cell_draw_frame(struct cgui_cell_context context)
 {
-	cgui_box_draw(
-		context.frame,
-		context.x,
-		context.y,
-		context.width,
-		context.height,
-		context.drawable);
+	cgui_box_x(context.x);
+	cgui_box_y(context.y);
+	cgui_box_width(context.width);
+	cgui_box_height(context.height);
+	cgui_box_style(context.frame);
+	cgui_box_draw(context.drawable);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -236,15 +233,13 @@ cgui_cell_is_event_in(const struct cgui_cell_event *event)
 			return false;
 	}
 
-	return cgui_box_is_in(
-		event->frame,
-		x,
-		y,
-		event->x,
-		event->y,
-		event->width,
-		event->height,
-		event->drawable);
+	cgui_box_x(event->x);
+	cgui_box_y(event->y);
+	cgui_box_width(event->width);
+	cgui_box_height(event->height);
+	cgui_box_style(event->frame);
+
+	return cgui_box_is_in(event->drawable, x, y);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

@@ -853,7 +853,6 @@ struct grid_area
 window_area_at_coords(const cgui_window *window, double x, double y)
 {
 	struct grid_area area;
-	struct cgui_box box;
 
 	x -= CONFIG->window_padding;
 	y -= CONFIG->window_padding;
@@ -861,8 +860,12 @@ window_area_at_coords(const cgui_window *window, double x, double y)
 	CREF_FOR_EACH(window->shown_grid->areas, i)
 	{
 		area = *(struct grid_area*)cref_ptr(window->shown_grid->areas, i);
-		box  = cell_frame(window, area);
-		if (cgui_box_is_in(box, x, y, area.x, area.y, area.width, area.height, window->drawable))
+		cgui_box_x(area.x);
+		cgui_box_y(area.y);
+		cgui_box_width(area.width);
+		cgui_box_height(area.height);
+		cgui_box_style(cell_frame(window, area));
+		if (cgui_box_is_in(window->drawable, x, y))
 		{
 			return area;
 		}
@@ -971,9 +974,12 @@ window_draw(cgui_window *window)
 
 	if (window->draw == WINDOW_DRAW_FULL)
 	{
-		cairo_new_path(window->drawable);
-		cairo_set_operator(window->drawable, CAIRO_OPERATOR_SOURCE);
-		cgui_box_draw(frame(window), 0.0, 0.0, window->width, window->height, window->drawable);
+		cgui_box_x(0.0);
+		cgui_box_y(0.0);
+		cgui_box_width(window->width);
+		cgui_box_height(window->height);
+		cgui_box_style(frame(window));
+		cgui_box_draw(window->drawable);
 	}
 
 	/* draw cells */
@@ -1463,19 +1469,7 @@ cairo_setup(cgui_window *window, double width, double height)
 static struct cgui_box
 cell_frame(const cgui_window *window, struct grid_area area)
 {
-	struct cgui_box box   =
-	{
-		.corner           =   {0},
-		.size_corner      = {0.0},
-		.size_outline     =  0.0,
-		.size_border      =  0.0,
-		.color_outline    = {0.0},
-		.color_border     = {0.0},
-		.color_background = {0.0},
-		.shape_outline    = false,
-		.shape_border     = false,
-		.draw             = false,
-	};
+	struct cgui_box box = {0};
 
 	area.cell->fn_frame(area.cell, &box);
 
