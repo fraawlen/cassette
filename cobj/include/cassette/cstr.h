@@ -317,10 +317,12 @@ CSTR_NONNULL(1);
  *
  * @param str   : String to interact with
  * @param width : Tab width
- */
+ *
+ * TODO temporarily disabled until proper tab support is built in CGUI
 void
 cstr_set_tab_width(cstr *str, size_t width)
 CSTR_NONNULL(1);
+*/
 
 /**
  * Slices out a set number of UTF-8 characters at a specific offset and discards the rest.

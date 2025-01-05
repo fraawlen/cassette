@@ -208,7 +208,14 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 	cgui_text_x(x);
 	cgui_text_y(y);
 	cgui_text_align(DATA->align);
+
 	cgui_text_style(CONFIG->label_text);
+	cgui_text_draw(context.drawable, DATA->label);
+
+	cgui_text_row_range(2, 5);
+	cgui_text_col_range(2, 4);
+	cgui_text_link_ranges();
+	cgui_text_style(CONFIG->button_text_disabled);
 	cgui_text_draw(context.drawable, DATA->label);
 }
 

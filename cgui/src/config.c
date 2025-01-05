@@ -237,6 +237,8 @@ static const struct resource resources[] =
 	{ "font",     "enable_hint_metrics",         BOOL,        &config.font_enable_hint_metrics       },
 	{ "font",     "antialias_mode",              ANTIALIAS,   &config.font_antialias                 },
 	{ "font",     "subpixel_mode",               SUBPIXEL,    &config.font_subpixel                  },
+	{ "font",     "background_vertical_pad",     LENGTH,      &config.font_background_vpad           },
+	{ "font",     "background_horizontal_pad",   LENGTH,      &config.font_background_hpad           },
 
 	{ "grid",     "padding",                     LENGTH,      &config.grid_padding                   },
 	{ "grid",     "spacing",                     LENGTH,      &config.grid_spacing                   },

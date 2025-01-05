@@ -47,6 +47,8 @@ static const struct cgui_config config_default =
 	.font_enable_hint_metrics = true,
 	.font_antialias           = CGUI_CONFIG_ANTIALIAS_SUBPIXEL,
 	.font_subpixel            = CGUI_CONFIG_SUBPIXEL_RGB,
+	.font_background_hpad     = 0,
+	.font_background_vpad     = 0,
 
 	/* grid */
 

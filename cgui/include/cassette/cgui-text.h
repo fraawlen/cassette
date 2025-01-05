@@ -56,11 +56,6 @@ struct cgui_text
 void
 cgui_text_align(enum cgui_align alignment);
 
-/**
- *
- */
-void
-cgui_text_codepoint_range(size_t codepoint_min, size_t codepoint_max);
 
 /**
  *
@@ -74,6 +69,12 @@ cgui_text_col_range(size_t col_min, size_t col_max);
 void
 cgui_text_draw(cairo_t *drawable, const cstr *str)
 CGUI_NONNULL(1, 2);
+
+/**
+ *
+ */
+void
+cgui_text_link_ranges(void);
 
 /**
  *
@@ -98,6 +99,12 @@ cgui_text_row_range(size_t row_min, size_t row_max);
  */
 void
 cgui_text_style(struct cgui_text style);
+
+/**
+ *
+ */
+void
+cgui_text_unlink_ranges(void);
 
 /**
  *

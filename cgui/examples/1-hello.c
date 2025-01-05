@@ -83,7 +83,7 @@ static struct cgui_screen screen;
 
 	/* Cell setup */
 
-	cgui_label_set_label(label, "line 1\nline 2\nline 3\nline 4");
+	cgui_label_set_label(label, "line 1\nline 2\nline 3\nline 4\n\t\nline 5");
 	cgui_label_align(label, CGUI_ALIGN_BOTTOM_RIGHT);
 
 	cgui_button_on_click(button_1, on_click);

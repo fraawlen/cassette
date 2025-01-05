@@ -626,6 +626,9 @@ cstr_set_precision(cstr *str, int precision)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+/**
+ * TODO temporarily disabled until proper tab support is built in CGUI
+ *
 void
 cstr_set_tab_width(cstr *str, size_t width)
 {
@@ -638,6 +641,7 @@ cstr_set_tab_width(cstr *str, size_t width)
 
 	update_n_values(str);
 }
+*/
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

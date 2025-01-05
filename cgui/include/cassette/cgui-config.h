@@ -116,6 +116,8 @@ struct cgui_config
 	double font_override_descent;
 	double font_offset_x;
  	double font_offset_y;
+	double font_background_vpad;
+	double font_background_hpad;
 
 	bool font_enable_overrides;
 	bool font_enable_hint_metrics;
