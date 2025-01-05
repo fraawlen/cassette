@@ -38,7 +38,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void draw_row (cairo_t *, const char *, const char *, size_t, size_t, size_t, double) CGUI_NONNULL(1, 2);
+static void draw_row (cairo_t *, const char *, const char *, size_t, size_t, double) CGUI_NONNULL(1, 2);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -82,18 +82,16 @@ cgui_text_col_range(size_t col_min, size_t col_max)
 void
 cgui_text_draw(cairo_t *drawable, const cstr *str)
 {
-	cairo_font_weight_t weight;
 	cairo_matrix_t matrix;
 	double y;
 
 	/* row parsing params */
 
-	const char *s1 = NULL; /* first byte to render        */
-	const char *s2 = NULL; /* last  byte to render        */
-	size_t b1 = 0;         /* row render boundary col 1   */
-	size_t b2 = 0;         /* row render boundary col 2   */
-	size_t n = 0;          /* total row width             */
-	size_t r = 0;          /* row offset                  */
+	const char *s1 = NULL; /* first byte to rende  */
+	const char *s2 = NULL; /* last  byte to render */
+	size_t o = 0;          /* row render offset    */
+	size_t n = 0;          /* total row width      */
+	size_t r = 0;          /* row offset           */
 
 	/* setup rotation matrix */
 
@@ -104,11 +102,13 @@ cgui_text_draw(cairo_t *drawable, const cstr *str)
 
 	/* setup cairo font */
 
-	weight = ctx_style.bold ? CAIRO_FONT_WEIGHT_BOLD : CAIRO_FONT_WEIGHT_NORMAL;
-
 	cairo_set_font_size(drawable, CONFIG->font_size);
 	cairo_set_font_options(drawable, config_font_options());
-	cairo_select_font_face(drawable, CONFIG->font_face, CAIRO_FONT_SLANT_NORMAL, weight);
+	cairo_select_font_face(
+		drawable,
+		CONFIG->font_face,
+		CAIRO_FONT_SLANT_NORMAL,
+		ctx_style.bold ? CAIRO_FONT_WEIGHT_BOLD : CAIRO_FONT_WEIGHT_NORMAL);
 
 	/* vertical alignment */
 
@@ -125,7 +125,7 @@ cgui_text_draw(cairo_t *drawable, const cstr *str)
 		{
 			if (r >= ctx_row_min && n > 0)
 			{
-				draw_row(drawable, s1, s2, b1, b2, n, y);
+				draw_row(drawable, s1, s2, o, n, y);
 			}
 			if (*c == '\0' || ++r > ctx_row_max)
 			{
@@ -133,7 +133,7 @@ cgui_text_draw(cairo_t *drawable, const cstr *str)
 			}
 			y += CONFIG->font_height + CONFIG->font_spacing_vertical;
 			s1 = c + 1;
-			b1 = 0;
+			o  = 0;
 			n  = 0;
 		}
 		else
@@ -141,12 +141,11 @@ cgui_text_draw(cairo_t *drawable, const cstr *str)
 			if (n <= ctx_col_min && (r == ctx_row_min || !ctx_link))
 			{
 				s1 = c;
-				b1 = n;
+				o  = n;
 			}
 			if (n <= ctx_col_max || (r != ctx_row_max && ctx_link))
 			{
 				s2 = c;
-				b2 = n;
 			}
 			n++;
 		}
@@ -238,9 +237,8 @@ cgui_text_y(double y)
 /************************************************************************************************************/
 
 static void 
-draw_row(cairo_t *drawable, const char *s1, const char *s2, size_t c1, size_t c2, size_t w, double y)
+draw_row(cairo_t *drawable, const char *s1, const char *s2, size_t o, size_t w, double y)
 {
-	cairo_scaled_font_t *font;
 	cairo_glyph_t arr[GLYPH_ARR];
 	cairo_glyph_t *glyphs;
 	cairo_status_t status;
@@ -253,15 +251,21 @@ draw_row(cairo_t *drawable, const char *s1, const char *s2, size_t c1, size_t c2
 
 	x = ctx_x 
 	  + CONFIG->font_offset_x
-	  + cgui_config_str_width(c1)
-	  + (c1 > 0 ? l : 0)
+	  + cgui_config_str_width(o)
+	  + (o > 0 ? l : 0)
 	  - cgui_align_offset_x(ctx_align, cgui_config_str_width(w));
 
 	/* get glyphs */
 
 	glyphs = arr;
-	font   = cairo_get_scaled_font(drawable);
-	status = cairo_scaled_font_text_to_glyphs(font, 0, 0, s1, s2 - s1 + 1, &glyphs, &n, NULL, NULL, NULL);
+	status = cairo_scaled_font_text_to_glyphs(
+		cairo_get_scaled_font(drawable),
+		0, 0,
+		s1,
+		cstr_next_char(s2) - s1,
+		&glyphs,
+		&n,
+		NULL, NULL, NULL);
 	
 	if (status != CAIRO_STATUS_SUCCESS)
 	{
@@ -279,7 +283,7 @@ draw_row(cairo_t *drawable, const char *s1, const char *s2, size_t c1, size_t c2
 		cairo_rectangle(drawable,
 			x - CONFIG->font_background_hpad,
 			y - CONFIG->font_background_vpad - CONFIG->font_ascent,
-			2 * CONFIG->font_background_hpad + cgui_config_str_width(c2 - c1 + 1),
+			2 * CONFIG->font_background_hpad + cgui_config_str_width(n),
 			2 * CONFIG->font_background_vpad + CONFIG->font_height);
 		cairo_fill(drawable);
 	}

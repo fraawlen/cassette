@@ -181,7 +181,7 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 	cgui_text_align(cgui_align_rotation(DATA->align, DATA->rot));
 	cgui_text_rotation(DATA->rot);
 	cgui_text_style(CONFIG->label_text);
-	cgui_text_draw(context.drawable, DATA->label);
+	cgui_text_draw(context.drawable, DATA->label);	
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

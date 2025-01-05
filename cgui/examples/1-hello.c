@@ -55,6 +55,17 @@ static cgui_grid   *grid_2   = CGUI_GRID_PLACEHOLDER;
 static cgui_window *window   = CGUI_WINDOW_PLACEHOLDER;
 
 static struct cgui_screen screen;
+static const char *text =
+	"qwertyuiop\n"
+	"asdfghjkl\n"
+	"zxcvbnm\n"
+	"[];'#,./\n"
+	"}{~@:?><\n"
+	"Çéüñøÿ\n"
+	"ĒŌĢŮĦĶ\n"
+	"АΒГΔЕΖ\n"
+	"ДΨЖΛΩБ\n"
+	"☺♥☼";
 
 /************************************************************************************************************/
 /* MAIN *****************************************************************************************************/
@@ -85,9 +96,8 @@ static struct cgui_screen screen;
 
 	/* Cell setup */
 
-	cgui_label_set_label(label_1, "line 1\nline 2\nline 3\nline 4\n\t\nline 5");
+	cgui_label_set_label(label_1, text);
 	cgui_label_align(label_1, CGUI_ALIGN_BOTTOM_RIGHT);
-	cgui_label_rotate(label_1, CGUI_ROTATION_INVERTED);
 
 	cgui_label_set_label(label_2, "something something ...");
 	cgui_label_align(label_2, CGUI_ALIGN_TOP);

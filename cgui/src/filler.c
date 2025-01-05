@@ -57,6 +57,8 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 {
 	(void)cell;
 
+	/* frame */
+
 	cgui_cell_draw_frame(context);
 }
 
