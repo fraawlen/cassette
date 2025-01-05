@@ -60,10 +60,10 @@ enum cgui_align
  */
 enum cgui_rotation
 {
+	CGUI_ROTATION_NORMAL,
+	CGUI_ROTATION_INVERTED,
 	CGUI_ROTATION_LEFT,
 	CGUI_ROTATION_RIGHT,
-	CGUI_ROTATION_INVERTED,
-	CGUI_ROTATION_NORMAL,
 };
 
 /**
@@ -75,3 +75,35 @@ enum cgui_corner
 	CGUI_CORNER_CHAMFER,
 	CGUI_CORNER_RADII,
 };
+
+/************************************************************************************************************/
+/* PURE METHODS *********************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ *
+ */
+double
+cgui_align_offset_x(enum cgui_align alignment, double width)
+CGUI_CONST;
+
+/**
+ *
+ */
+double
+cgui_align_offset_y(enum cgui_align alignment, double heigh)
+CGUI_CONST;
+
+/**
+ *
+ */
+enum cgui_align
+cgui_align_rotation(enum cgui_align alignment, enum cgui_rotation)
+CGUI_CONST;
+
+/**
+ *
+ */
+double
+cgui_rotation_angle(enum cgui_rotation rotation)
+CGUI_CONST;

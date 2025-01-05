@@ -32,7 +32,6 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define PI        3.14159265358979323846
 #define GLYPH_ARR 512
 
 /************************************************************************************************************/
@@ -86,7 +85,6 @@ cgui_text_draw(cairo_t *drawable, const cstr *str)
 	cairo_font_weight_t weight;
 	cairo_matrix_t matrix;
 	double y;
-	double a = 0.0;
 
 	/* row parsing params */
 
@@ -97,54 +95,12 @@ cgui_text_draw(cairo_t *drawable, const cstr *str)
 	size_t n = 0;          /* total row width             */
 	size_t r = 0;          /* row offset                  */
 
-	/* vertical alignment */
-
-	y = ctx_y + CONFIG->font_offset_y + CONFIG->font_ascent;
-
-	switch (ctx_align)
-	{
-		case CGUI_ALIGN_TOP:
-		case CGUI_ALIGN_TOP_LEFT:
-		case CGUI_ALIGN_TOP_RIGHT:
-			break;
-
-		case CGUI_ALIGN_CENTER:
-		case CGUI_ALIGN_LEFT:
-		case CGUI_ALIGN_RIGHT:
-			y -= cgui_config_str_height(cstr_height(str)) / 2;
-			break;
-
-		case CGUI_ALIGN_BOTTOM:
-		case CGUI_ALIGN_BOTTOM_LEFT:
-		case CGUI_ALIGN_BOTTOM_RIGHT:
-			y -= cgui_config_str_height(cstr_height(str));
-			break;
-	}
-
 	/* setup rotation matrix */
 
-	switch (ctx_rot)
-	{
-		case CGUI_ROTATION_NORMAL:
-			break;
-
-		case CGUI_ROTATION_INVERTED:
-			a = PI;
-			break;
-
-		case CGUI_ROTATION_LEFT:
-			a = PI / 2;
-			break;
-
-		case CGUI_ROTATION_RIGHT:
-			a = -PI / 2;
-			break;
-	}
-
 	cairo_get_matrix(drawable, &matrix);
-	cairo_translate(drawable, ctx_x, y);
-	cairo_rotate(drawable, a);
-	cairo_translate(drawable, -ctx_x, -y);
+	cairo_translate(drawable, ctx_x, ctx_y);
+	cairo_rotate(drawable, cgui_rotation_angle(ctx_rot));
+	cairo_translate(drawable, -ctx_x, -ctx_y);
 
 	/* setup cairo font */
 
@@ -153,6 +109,13 @@ cgui_text_draw(cairo_t *drawable, const cstr *str)
 	cairo_set_font_size(drawable, CONFIG->font_size);
 	cairo_set_font_options(drawable, config_font_options());
 	cairo_select_font_face(drawable, CONFIG->font_face, CAIRO_FONT_SLANT_NORMAL, weight);
+
+	/* vertical alignment */
+
+	y = ctx_y
+	  + CONFIG->font_offset_y
+	  + CONFIG->font_ascent
+	  - cgui_align_offset_y(ctx_align, cgui_config_str_height(cstr_height(str)));
 
 	/* draw rows */
 
@@ -288,27 +251,11 @@ draw_row(cairo_t *drawable, const char *s1, const char *s2, size_t c1, size_t c2
 
 	/* horizontal alignment */
 
-	x = ctx_x + CONFIG->font_offset_x + cgui_config_str_width(c1) + (c1 > 0 ? l : 0); 
-
-	switch (ctx_align)
-	{
-		case CGUI_ALIGN_TOP_LEFT:
-		case CGUI_ALIGN_LEFT:
-		case CGUI_ALIGN_BOTTOM_LEFT:
-			break;
-
-		case CGUI_ALIGN_TOP:
-		case CGUI_ALIGN_CENTER:
-		case CGUI_ALIGN_BOTTOM:
-			x -= cgui_config_str_width(w) / 2;
-			break;
-
-		case CGUI_ALIGN_TOP_RIGHT:
-		case CGUI_ALIGN_RIGHT:
-		case CGUI_ALIGN_BOTTOM_RIGHT:
-			x -= cgui_config_str_width(w);
-			break;
-	}
+	x = ctx_x 
+	  + CONFIG->font_offset_x
+	  + cgui_config_str_width(c1)
+	  + (c1 > 0 ? l : 0)
+	  - cgui_align_offset_x(ctx_align, cgui_config_str_width(w));
 
 	/* get glyphs */
 

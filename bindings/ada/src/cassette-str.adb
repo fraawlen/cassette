@@ -239,15 +239,6 @@ package body Cassette.Str is
 
 	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
-	procedure Set_Tab_Width (Str : in out T; Width : in Size)
-	is begin
-
-		C_Set_Tab_Width (Str.Data, Width);
-
-	end Set_Tab_Width;
-
-	-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
-
 	procedure Slice (Str : in out T; Offset : in Index; Length : in Size)
 	is begin
 

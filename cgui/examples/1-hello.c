@@ -44,7 +44,8 @@ static void on_state (cgui_window *, enum cgui_window_state_mask);
 /************************************************************************************************************/
 
 static cgui_cell   *filler   = CGUI_CELL_PLACEHOLDER;
-static cgui_cell   *label    = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *label_1  = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *label_2  = CGUI_CELL_PLACEHOLDER;
 static cgui_cell   *stripes  = CGUI_CELL_PLACEHOLDER;
 static cgui_cell   *button_1 = CGUI_CELL_PLACEHOLDER;
 static cgui_cell   *button_2 = CGUI_CELL_PLACEHOLDER;
@@ -71,10 +72,11 @@ static struct cgui_screen screen;
 	cgui_init(argc, argv);
 
 	window   = cgui_window_create();
-	grid_1   = cgui_grid_create(2, 2);
-	grid_2   = cgui_grid_create(2, 4);
+	grid_1   = cgui_grid_create(3, 2);
+	grid_2   = cgui_grid_create(3, 4);
 	filler   = cgui_filler_create();
-	label    = cgui_label_create();
+	label_1  = cgui_label_create();
+	label_2  = cgui_label_create();
 	stripes  = cgui_stripes_create();
 	button_1 = cgui_button_create();
 	button_2 = cgui_button_create();
@@ -83,8 +85,13 @@ static struct cgui_screen screen;
 
 	/* Cell setup */
 
-	cgui_label_set_label(label, "line 1\nline 2\nline 3\nline 4\n\t\nline 5");
-	cgui_label_align(label, CGUI_ALIGN_BOTTOM_RIGHT);
+	cgui_label_set_label(label_1, "line 1\nline 2\nline 3\nline 4\n\t\nline 5");
+	cgui_label_align(label_1, CGUI_ALIGN_BOTTOM_RIGHT);
+	cgui_label_rotate(label_1, CGUI_ROTATION_INVERTED);
+
+	cgui_label_set_label(label_2, "something something ...");
+	cgui_label_align(label_2, CGUI_ALIGN_TOP);
+	cgui_label_rotate(label_2, CGUI_ROTATION_LEFT);
 
 	cgui_button_on_click(button_1, on_click);
 	cgui_button_on_click(button_2, on_click);
@@ -93,14 +100,16 @@ static struct cgui_screen screen;
 	cgui_button_set_label(button_1, "button");
 	cgui_button_set_label(button_2, "123456");
 	cgui_button_set_label(button_3, "button\ntest");
+	cgui_button_rotate_label(button_3, CGUI_ROTATION_INVERTED);
 
 	cgui_button_disable(button_3);
 
 	/* Grid 1 setup */
 
-	cgui_grid_resize_col(grid_1, 0, 6);
-	cgui_grid_resize_col(grid_1, 1, 6);
-	cgui_grid_resize_row(grid_1, 1, 2);
+	cgui_grid_resize_col(grid_1, 0,  6);
+	cgui_grid_resize_col(grid_1, 1,  6);
+	cgui_grid_resize_col(grid_1, 2, -1);
+	cgui_grid_resize_row(grid_1, 1,  2);
 
 	cgui_grid_set_col_flex(grid_1, 0, 1.0);
 	cgui_grid_set_col_flex(grid_1, 1, 1.0);
@@ -109,14 +118,16 @@ static struct cgui_screen screen;
 
 	cgui_grid_assign_cell(grid_1, button_1, 0, 0, 1, 1);
 	cgui_grid_assign_cell(grid_1, button_2, 1, 0, 1, 1);
-	cgui_grid_assign_cell(grid_1, button_3, 0, 1, 1, 1);
+	cgui_grid_assign_cell(grid_1, label_1,  0, 1, 1, 1);
+	cgui_grid_assign_cell(grid_1, label_2,  2, 0, 1, 2);
 	cgui_grid_assign_cell(grid_1, stripes,  1, 1, 1, 1);
 	
 	/* Grid 2 setup */
 
-	cgui_grid_resize_col(grid_2, 0, 6);
-	cgui_grid_resize_col(grid_2, 1, 6);
-	cgui_grid_resize_row(grid_2, 3, 2);
+	cgui_grid_resize_col(grid_2, 0,  6);
+	cgui_grid_resize_col(grid_2, 1,  6);
+	cgui_grid_resize_col(grid_2, 2, -1);
+	cgui_grid_resize_row(grid_2, 3,  2);
 
 	cgui_grid_set_row_flex(grid_2, 0, 1.0);
 	cgui_grid_set_col_flex(grid_2, 1, 1.0);
@@ -125,8 +136,9 @@ static struct cgui_screen screen;
 	cgui_grid_assign_cell(grid_2, button_1, 0, 1, 1, 1);
 	cgui_grid_assign_cell(grid_2, button_2, 0, 2, 1, 1);
 	cgui_grid_assign_cell(grid_2, button_3, 0, 3, 1, 1);
-	cgui_grid_assign_cell(grid_2, label,    1, 0, 1, 3);
-	cgui_grid_assign_cell(grid_2, stripes,  1, 3, 1, 1);
+	cgui_grid_assign_cell(grid_2, label_1,  1, 0, 1, 3);
+	cgui_grid_assign_cell(grid_2, label_2,  2, 0, 1, 3);
+	cgui_grid_assign_cell(grid_2, stripes,  1, 3, 2, 1);
 	
 	/* Window setup */
 
@@ -155,7 +167,8 @@ static struct cgui_screen screen;
 	cgui_grid_destroy(grid_1);
 	cgui_grid_destroy(grid_2);
 	cgui_cell_destroy(filler);
-	cgui_cell_destroy(label);
+	cgui_cell_destroy(label_1);
+	cgui_cell_destroy(label_2);
 	cgui_cell_destroy(stripes);
 	cgui_cell_destroy(button_1);
 	cgui_cell_destroy(button_2);

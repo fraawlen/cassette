@@ -22,6 +22,7 @@
 
 #include "cgui-attributes.h"
 #include "cgui-cell.h"
+#include "cgui-types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,6 +47,13 @@ CGUI_NONNULL_RETURN;
  *
  */
 void
+cgui_button_align_label(cgui_cell *cell, enum cgui_align alignment)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
 cgui_button_disable(cgui_cell *cell)
 CGUI_NONNULL(1);
 
@@ -63,6 +71,12 @@ void
 cgui_button_on_click(cgui_cell *cell, void (*fn)(cgui_cell *cell))
 CGUI_NONNULL(1);
 
+/**
+ *
+ */
+void
+cgui_button_rotate_label(cgui_cell *cell, enum cgui_rotation rotation)
+CGUI_NONNULL(1);
 
 /**
  *

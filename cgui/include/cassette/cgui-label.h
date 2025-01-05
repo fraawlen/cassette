@@ -54,5 +54,12 @@ CGUI_NONNULL(1);
  *
  */
 void
+cgui_label_rotate(cgui_cell *cell, enum cgui_rotation rotation)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
 cgui_label_set_label(cgui_cell *cell, const char *label)
 CGUI_NONNULL(1, 2);

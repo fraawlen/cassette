@@ -307,18 +307,6 @@ package Cassette.Str is
 		Str   : in out T;
 		Value : in Precision);
 
-	-- Sets the width of a '\t' character. This will affect the results of 2d procedures like
-	-- Coords_Offset(), Test_Wrap(), Width() and, Wrap().
-	--
-	-- [Params]
-	--
-	-- 	Str   : String to interact with
-	-- 	Width : Tab width
-	--
-	procedure Set_Tab_Width (
-		Str   : in out T;
-		Width : in Size);
-
 	-- Slices out a set number of UTF-8 characters at a specific offset and discards the rest. This
 	-- procedure is bounds-protected, meaning that offset and length parameters will be capped at the
 	-- string's length, even if a Size'Last or Index'Last values are supplied.
@@ -611,7 +599,6 @@ private
 	procedure C_Prealloc         (Str : System.Address; Bytes : C.size_t);
 	procedure C_Repair           (Str : System.Address);
 	procedure C_Set_Precision    (Str : System.Address; Value : C.int);
-	procedure C_Set_Tab_Width    (Str : System.Address; Width : C.size_t);
 	procedure C_Slice            (Str : System.Address; Offset : C.size_t; Length : C.size_t);
 	procedure C_Trim             (Str : System.Address);
 	procedure C_Wrap             (Str : System.Address; Width : C.size_t);

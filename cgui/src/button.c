@@ -48,6 +48,8 @@ enum state
 struct data
 {
 	void (*fn_click)(cgui_cell *);
+	enum cgui_align align;
+	enum cgui_rotation rot;
 	enum state state;
 	bool enabled;
 	cstr *label;
@@ -68,6 +70,21 @@ static struct cgui_text text_style (const cgui_cell *)                     CGUI_
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
+
+void
+cgui_button_align_label(cgui_cell *cell, enum cgui_align alignment)
+{
+	if (invalid(cell))
+	{
+		return;
+	}
+	
+	DATA->align = alignment;
+	
+	cgui_cell_redraw(cell);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 cgui_cell *
 cgui_button_create(void)
@@ -96,6 +113,8 @@ cgui_button_create(void)
 	}
 
 	data->fn_click = dummy_fn_click;
+	data->align    = CGUI_ALIGN_CENTER;
+	data->rot      = CGUI_ROTATION_NORMAL;
 	data->enabled  = true;
 	data->state    = IDLE;
 
@@ -167,6 +186,21 @@ cgui_button_on_click(cgui_cell *cell, void (*fn)(cgui_cell *cell))
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cgui_button_rotate_label(cgui_cell *cell, enum cgui_rotation rotation)
+{
+	if (invalid(cell))
+	{
+		return;
+	}
+	
+	DATA->rot = rotation;
+	
+	cgui_cell_redraw(cell);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cgui_button_set_label(cgui_cell *cell, const char *label)
 {
 	if (invalid(cell))
@@ -211,15 +245,19 @@ destroy(cgui_cell *cell)
 static void
 draw(cgui_cell *cell, struct cgui_cell_context context)
 {
+	const double l = context.frame.margin + context.frame.size_border + context.frame.padding;
+
 	/* frame */
 
 	cgui_cell_draw_frame(context);
+	cgui_cell_clip_frame(context);
 
 	/* label */
 
-	cgui_text_x(context.x + context.width  / 2);
-	cgui_text_y(context.y + context.height / 2);
-	cgui_text_align(CGUI_ALIGN_CENTER);
+	cgui_text_x(context.x + l + cgui_align_offset_x(DATA->align, context.width  - l * 2));
+	cgui_text_y(context.y + l + cgui_align_offset_y(DATA->align, context.height - l * 2));
+	cgui_text_align(cgui_align_rotation(DATA->align, DATA->rot));
+	cgui_text_rotation(DATA->rot);
 	cgui_text_style(text_style(cell));
 	cgui_text_draw(context.drawable, DATA->label);
 }

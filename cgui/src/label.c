@@ -40,6 +40,7 @@ struct data
 {
 	cstr *label;
 	enum cgui_align align;
+	enum cgui_rotation rot;
 };
 
 /************************************************************************************************************/
@@ -96,7 +97,8 @@ cgui_label_create(void)
 		goto fail_cell;
 	}
 
-	data->align = CGUI_ALIGN_TOP_LEFT;
+	data->align = CGUI_ALIGN_CENTER;
+	data->rot   = CGUI_ROTATION_NORMAL;
 
 	cgui_cell_on_destroy(cell, destroy);
 	cgui_cell_on_draw(cell, draw);
@@ -116,6 +118,21 @@ fail_data:
 	main_set_error(CERR_INSTANCE);
 fail_main:
 	return CGUI_CELL_PLACEHOLDER;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_label_rotate(cgui_cell *cell, enum cgui_rotation rotation)
+{
+	if (invalid(cell))
+	{
+		return;
+	}
+	
+	DATA->rot = rotation;
+	
+	cgui_cell_redraw(cell);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -150,72 +167,20 @@ destroy(cgui_cell *cell)
 static void
 draw(cgui_cell *cell, struct cgui_cell_context context)
 {
-	double l = context.frame.margin + context.frame.size_border + context.frame.padding;
-	double x = context.x + l;
-	double y = context.y + l;
+	const double l = context.frame.margin + context.frame.size_border + context.frame.padding;
 
 	/* frame */
 
 	cgui_cell_draw_frame(context);
+	cgui_cell_clip_frame(context);
 
 	/* label */
 
-	context.width  -= l * 2;
-	context.height -= l * 2;
-
-	switch (DATA->align)
-	{
-		case CGUI_ALIGN_TOP_LEFT:
-			break;
-
-		case CGUI_ALIGN_TOP:
-			y += context.height / 2;
-			break;
-
-		case CGUI_ALIGN_TOP_RIGHT:
-			y += context.height;
-			break;
-
-		case CGUI_ALIGN_LEFT:
-			x += context.width / 2;
-			break;
-
-		case CGUI_ALIGN_CENTER:
-			x += context.width  / 2;
-			y += context.height / 2;
-			break;
-
-		case CGUI_ALIGN_RIGHT:
-			x += context.width / 2;
-			y += context.height;
-			break;
-
-		case CGUI_ALIGN_BOTTOM_LEFT:
-			x += context.width;
-			break;
-
-		case CGUI_ALIGN_BOTTOM:
-			x += context.width;
-			y += context.height / 2;
-			break;
-
-		case CGUI_ALIGN_BOTTOM_RIGHT:
-			x += context.width;
-			y += context.height;
-			break;
-	}
-
-	cgui_text_x(x);
-	cgui_text_y(y);
-	cgui_text_align(DATA->align);
-
+	cgui_text_x(context.x + l + cgui_align_offset_x(DATA->align, context.width  - l * 2));
+	cgui_text_y(context.y + l + cgui_align_offset_y(DATA->align, context.height - l * 2));
+	cgui_text_align(cgui_align_rotation(DATA->align, DATA->rot));
+	cgui_text_rotation(DATA->rot);
 	cgui_text_style(CONFIG->label_text);
-	cgui_text_draw(context.drawable, DATA->label);
-
-	cgui_text_row_range(2, 5);
-	cgui_text_col_range(2, 4);
-	cgui_text_link_ranges();
-	cgui_text_style(CONFIG->button_text_disabled);
 	cgui_text_draw(context.drawable, DATA->label);
 }
 

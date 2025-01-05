@@ -138,6 +138,8 @@ cgui_box_is_in(cairo_t *drawable, double x, double y)
 	path(drawable, ctx_box.shape_border, ctx_box.hit_outline ? -ctx_box.size_outline : 0);
 
 	return cairo_in_fill(drawable, x, y);
+
+	// TODO checking without using cairo
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

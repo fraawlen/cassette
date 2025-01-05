@@ -65,7 +65,9 @@ cgui_grid cgui_grid_placeholder_instance =
 
 static const enum cgui_grid_relative_size compare_size[4][4] =
 {
-	/* EQUAL                     BIGGER                    SMALLER                   UNDEFINED  */
+	/* 
+	 EQUAL                     BIGGER                    SMALLER                   UNDEFINED 
+	 */
 	{CGUI_GRID_SIZE_EQUAL,     CGUI_GRID_SIZE_BIGGER,    CGUI_GRID_SIZE_SMALLER,   CGUI_GRID_SIZE_UNDEFINED}, /* EQUAL    */
 	{CGUI_GRID_SIZE_BIGGER,    CGUI_GRID_SIZE_BIGGER,    CGUI_GRID_SIZE_UNDEFINED, CGUI_GRID_SIZE_UNDEFINED}, /* BIGGER   */
 	{CGUI_GRID_SIZE_SMALLER,   CGUI_GRID_SIZE_UNDEFINED, CGUI_GRID_SIZE_SMALLER,   CGUI_GRID_SIZE_UNDEFINED}, /* SMALLER  */
