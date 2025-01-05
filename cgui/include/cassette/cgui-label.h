@@ -20,49 +20,39 @@
 
 #pragma once
 
-#include <cassette/cgui.h>
-#include <stdbool.h>
+#include "cgui-attributes.h"
+#include "cgui-cell.h"
+#include "cgui-types.h"
 
-/************************************************************************************************************/
-/* TYPES ****************************************************************************************************/
-/************************************************************************************************************/
-
-enum cell_serial
-{
-	CELL_INVALID = 0,
-	CELL_BUTTON,
-	CELL_LABEL,
-	CELL_FILLER,
-	CELL_STRIPES,
-};
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-struct cgui_cell
-{
-	/* data */
-
-	void *data;
-	int serial;
-
-	/* callbacks */
-
-	void (*fn_destroy) (cgui_cell *);
-	void (*fn_draw)    (cgui_cell *, struct cgui_cell_context);
-	void (*fn_event)   (cgui_cell *, struct cgui_cell_event *);
-	void (*fn_frame)   (cgui_cell *, struct cgui_box        *);
-
-	/* states */
-
-	bool valid;
-	bool draw;
-};
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /************************************************************************************************************/
 /* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
 /************************************************************************************************************/
 
+/**
+ *
+ */
+cgui_cell *
+cgui_label_create(void)
+CGUI_NONNULL_RETURN;
+
+/************************************************************************************************************/
+/* IMPURE METHODS *******************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ *
+ */
 void
-cell_destroy(cgui_cell *cell)
-CGUI_NONNULL(1)
-CGUI_HIDDEN;
+cgui_label_align(cgui_cell *cell, enum cgui_align alignment)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_label_set_label(cgui_cell *cell, const char *label)
+CGUI_NONNULL(1, 2);

@@ -44,6 +44,7 @@ static void on_state (cgui_window *, enum cgui_window_state_mask);
 /************************************************************************************************************/
 
 static cgui_cell   *filler   = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *label    = CGUI_CELL_PLACEHOLDER;
 static cgui_cell   *stripes  = CGUI_CELL_PLACEHOLDER;
 static cgui_cell   *button_1 = CGUI_CELL_PLACEHOLDER;
 static cgui_cell   *button_2 = CGUI_CELL_PLACEHOLDER;
@@ -73,6 +74,7 @@ static struct cgui_screen screen;
 	grid_1   = cgui_grid_create(2, 2);
 	grid_2   = cgui_grid_create(2, 4);
 	filler   = cgui_filler_create();
+	label    = cgui_label_create();
 	stripes  = cgui_stripes_create();
 	button_1 = cgui_button_create();
 	button_2 = cgui_button_create();
@@ -80,6 +82,9 @@ static struct cgui_screen screen;
 	screen   = cgui_screen_primary_specs();
 
 	/* Cell setup */
+
+	cgui_label_set_label(label, "line 1\nline 2\nline 3\nline 4");
+	cgui_label_align(label, CGUI_ALIGN_BOTTOM_RIGHT);
 
 	cgui_button_on_click(button_1, on_click);
 	cgui_button_on_click(button_2, on_click);
@@ -120,7 +125,7 @@ static struct cgui_screen screen;
 	cgui_grid_assign_cell(grid_2, button_1, 0, 1, 1, 1);
 	cgui_grid_assign_cell(grid_2, button_2, 0, 2, 1, 1);
 	cgui_grid_assign_cell(grid_2, button_3, 0, 3, 1, 1);
-	cgui_grid_assign_cell(grid_2, filler,   1, 0, 1, 3);
+	cgui_grid_assign_cell(grid_2, label,    1, 0, 1, 3);
 	cgui_grid_assign_cell(grid_2, stripes,  1, 3, 1, 1);
 	
 	/* Window setup */
@@ -150,6 +155,7 @@ static struct cgui_screen screen;
 	cgui_grid_destroy(grid_1);
 	cgui_grid_destroy(grid_2);
 	cgui_cell_destroy(filler);
+	cgui_cell_destroy(label);
 	cgui_cell_destroy(stripes);
 	cgui_cell_destroy(button_1);
 	cgui_cell_destroy(button_2);

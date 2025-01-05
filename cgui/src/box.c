@@ -50,20 +50,11 @@ static double          ctx_x      = 0.0;
 static double          ctx_y      = 0.0;
 static double          ctx_width  = 0.0;
 static double          ctx_height = 0.0;
-static enum cgui_align ctx_align  = CGUI_ALIGN_TOP_LEFT;
 static struct cgui_box ctx_box    = {0};
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
-
-void
-cgui_box_align(enum cgui_align alignment)
-{
-	ctx_align = alignment;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 cgui_box_clip(cairo_t *drawable, double pad)
@@ -173,7 +164,6 @@ cgui_box_reset(void)
 	ctx_y      = 0.0;
 	ctx_width  = 0.0;
 	ctx_height = 0.0;
-	ctx_align  = CGUI_ALIGN_TOP_LEFT;
 	ctx_box    = (struct cgui_box){0};
 }
 

@@ -41,6 +41,7 @@
 
 #include "cgui-button.h"
 #include "cgui-filler.h"
+#include "cgui-label.h"
 #include "cgui-stripes.h"
 
 /* Independent headers */

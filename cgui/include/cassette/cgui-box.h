@@ -70,12 +70,6 @@ struct cgui_box
  *
  */
 void
-cgui_box_align(enum cgui_align alignment);
-
-/**
- *
- */
-void
 cgui_box_clip(cairo_t *drawable, double pad)
 CGUI_NONNULL(1);
 

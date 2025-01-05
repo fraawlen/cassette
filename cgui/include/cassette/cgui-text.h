@@ -38,33 +38,12 @@ extern "C" {
 /**
  *
  */
-struct cgui_text_context
-{
-	double x;
-	double y;
-	enum cgui_align align;
-	enum cgui_rotation rotation;
-	cairo_t *drawable;
-};
-
-/**
- *
- */
-struct cgui_text_style
+struct cgui_text
 {
 	struct ccolor color;
 	struct ccolor color_background;
 	bool draw_background;
 	bool bold;
-};
-
-/**
- *
- */
-struct cgui_text_segment
-{
-	struct cgui_text_style style;
-	size_t length;
 };
 
 /************************************************************************************************************/
@@ -75,15 +54,62 @@ struct cgui_text_segment
  *
  */
 void
-cgui_text_draw(struct cgui_text_context context, struct cgui_text_style style, const cstr *str)
-CGUI_NONNULL(3);
+cgui_text_align(enum cgui_align alignment);
 
 /**
  *
  */
 void
-cgui_text_draw_segments(struct cgui_text_context context, struct cgui_text_segment *segments, size_t segments_number, const cstr *str)
-CGUI_NONNULL(2, 4);
+cgui_text_codepoint_range(size_t codepoint_min, size_t codepoint_max);
+
+/**
+ *
+ */
+void
+cgui_text_col_range(size_t col_min, size_t col_max);
+
+/**
+ *
+ */
+void
+cgui_text_draw(cairo_t *drawable, const cstr *str)
+CGUI_NONNULL(1, 2);
+
+/**
+ *
+ */
+void
+cgui_text_reset(void);
+
+/**
+ *
+ */
+void
+cgui_text_rotation(enum cgui_rotation rotation);
+
+/**
+ *
+ */
+void
+cgui_text_row_range(size_t row_min, size_t row_max);
+
+/**
+ *
+ */
+void
+cgui_text_style(struct cgui_text style);
+
+/**
+ *
+ */
+void
+cgui_text_x(double x);
+
+/**
+ *
+ */
+void
+cgui_text_y(double y);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

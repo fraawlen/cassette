@@ -307,11 +307,13 @@ static const struct resource resources[] =
 	BOX( "button_focused",  config.button_frame_focused  )
 	BOX( "button_pressed",  config.button_frame_pressed  )
 	BOX( "button_disabled", config.button_frame_disabled )
+	BOX( "label",           config.label_frame           )
 
 	TEXT( "button_idle",     config.button_text_idle     )
 	TEXT( "button_focused",  config.button_text_focused  )
 	TEXT( "button_pressed",  config.button_text_pressed  )
 	TEXT( "button_disabled", config.button_text_disabled )
+	TEXT( "label",           config.label_text           )
 };
 
 /************************************************************************************************************/

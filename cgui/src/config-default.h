@@ -329,4 +329,37 @@ static const struct cgui_config config_default =
 		.draw_background  = false,
 		.bold             = false,
 	},
+
+	/* cell - label */
+
+	.label_frame =
+	{
+		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
+		.size_corner      = {0, 0, 0, 0},
+		.size_outline     =  0,
+		.size_border      = 10,
+		.padding          = 10,
+		.margin           =  0,
+		.shadow_x_offset  =  0,
+		.shadow_y_offset  =  0,
+		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_foreground = { .r = 0.000, .g = 0.200, .b = 0.200, .a = 1.000 },
+		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.shape_outline    = true,
+		.shape_border     = true,
+		.draw             = true,
+		.draw_foreground  = true,
+		.draw_shadow      = false,
+		.hit_outline      = false,
+	},
+
+	.label_text =
+	{
+		.color            = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_background = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
+		.draw_background  = false,
+		.bold             = false,
+	},
 };

@@ -1528,6 +1528,8 @@ draw_area(cgui_window *window, struct grid_area area, unsigned long delay)
 
 	cairo_new_path(window->drawable);
 	cairo_save(window->drawable);
+	cgui_box_reset();
+	cgui_text_reset();
 	area.cell->fn_draw(area.cell, context);
 	cairo_restore(window->drawable);
 }
