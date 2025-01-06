@@ -71,15 +71,6 @@ cgui_text_align(enum cgui_align alignment)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_text_col_range(size_t col_min, size_t col_max)
-{
-	ctx_col_min = col_min;
-	ctx_col_max = col_max;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
 cgui_text_draw(cairo_t *drawable, const cstr *str)
 {
 	cairo_matrix_t matrix;
@@ -159,9 +150,36 @@ cgui_text_draw(cairo_t *drawable, const cstr *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_text_link_ranges(void)
+cgui_text_limit_cols(size_t col_1, size_t col_2)
+{
+	ctx_col_min = col_1 > col_2 ? col_2 : col_1;
+	ctx_col_max = col_1 > col_2 ? col_1 : col_2;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_text_limit_rows(size_t row_1, size_t row_2)
+{
+	ctx_row_min = row_1 > row_2 ? row_2 : row_1;
+	ctx_row_max = row_1 > row_2 ? row_1 : row_2;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_text_link_limits(void)
 {
 	ctx_link = true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_text_move(double x, double y)
+{
+	ctx_x = x;
+	ctx_y = y;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -186,16 +204,7 @@ cgui_text_reset(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_text_row_range(size_t row_min, size_t row_max)
-{
-	ctx_row_min = row_min;
-	ctx_row_max = row_max;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_text_rotation(enum cgui_rotation rotation)
+cgui_text_rotate(enum cgui_rotation rotation)
 {
 	ctx_rot = rotation;
 }
@@ -211,25 +220,9 @@ cgui_text_style(struct cgui_text style)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_text_unlink_ranges(void)
+cgui_text_unlink_limits(void)
 {
 	ctx_link = false;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_text_x(double x)
-{
-	ctx_x = x;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_text_y(double y)
-{
-	ctx_y = y;
 }
 
 /************************************************************************************************************/

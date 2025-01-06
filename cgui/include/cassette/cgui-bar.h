@@ -21,7 +21,6 @@
 #pragma once
 
 #include <cairo/cairo.h>
-#include <cassette/cobj.h>
 
 #include "cgui-attributes.h"
 #include "cgui-box.h"
@@ -32,89 +31,7 @@ extern "C" {
 #endif
 
 /************************************************************************************************************/
-/* TYPES ****************************************************************************************************/
-/************************************************************************************************************/
-
-/**
- *
- */
-struct cgui_text
-{
-	struct ccolor color;
-	struct ccolor color_background;
-	bool draw_background;
-	bool bold;
-};
-
-/************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
 
-/**
- *
- */
-void
-cgui_text_align(enum cgui_align alignment);
 
-/**
- *
- */
-void
-cgui_text_draw(cairo_t *drawable, const cstr *str)
-CGUI_NONNULL(1, 2);
-
-/**
- *
- */
-void
-cgui_text_limit_cols(size_t col_1, size_t col_2);
-
-/**
- *
- */
-void
-cgui_text_limit_rows(size_t row_1, size_t row_2);
-
-/**
- *
- */
-void
-cgui_text_link_limits(void);
-
-/**
- *
- */
-void
-cgui_text_move(double x, double y);
-
-/**
- *
- */
-void
-cgui_text_reset(void);
-
-/**
- *
- */
-void
-cgui_text_rotate(enum cgui_rotation rotation);
-
-/**
- *
- */
-void
-cgui_text_style(struct cgui_text style);
-
-/**
- *
- */
-void
-cgui_text_unlink_limits(void);
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-#ifdef __cplusplus
-}
-#endif

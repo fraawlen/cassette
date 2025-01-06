@@ -860,12 +860,10 @@ window_area_at_coords(const cgui_window *window, double x, double y)
 	CREF_FOR_EACH(window->shown_grid->areas, i)
 	{
 		area = *(struct grid_area*)cref_ptr(window->shown_grid->areas, i);
-		cgui_box_x(area.x);
-		cgui_box_y(area.y);
-		cgui_box_width(area.width);
-		cgui_box_height(area.height);
+		cgui_box_move(area.x, area.y);
+		cgui_box_resize(area.width, area.height);
 		cgui_box_style(cell_frame(window, area));
-		if (cgui_box_is_in(window->drawable, x, y))
+		if (cgui_box_inside(window->drawable, x, y))
 		{
 			return area;
 		}
@@ -974,10 +972,8 @@ window_draw(cgui_window *window)
 
 	if (window->draw == WINDOW_DRAW_FULL)
 	{
-		cgui_box_x(0.0);
-		cgui_box_y(0.0);
-		cgui_box_width(window->width);
-		cgui_box_height(window->height);
+		cgui_box_move(0.0, 0.0);
+		cgui_box_resize(window->width, window->height);
 		cgui_box_style(frame(window));
 		cgui_box_draw(window->drawable);
 	}

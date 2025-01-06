@@ -168,6 +168,8 @@ static void
 draw(cgui_cell *cell, struct cgui_cell_context context)
 {
 	const double l = context.frame.margin + context.frame.size_border + context.frame.padding;
+	const double x = context.x + l + cgui_align_offset_x(DATA->align, context.width  - l * 2);
+	const double y = context.y + l + cgui_align_offset_y(DATA->align, context.height - l * 2);
 
 	/* frame */
 
@@ -176,10 +178,9 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 
 	/* label */
 
-	cgui_text_x(context.x + l + cgui_align_offset_x(DATA->align, context.width  - l * 2));
-	cgui_text_y(context.y + l + cgui_align_offset_y(DATA->align, context.height - l * 2));
+	cgui_text_move(x, y);
 	cgui_text_align(cgui_align_rotation(DATA->align, DATA->rot));
-	cgui_text_rotation(DATA->rot);
+	cgui_text_rotate(DATA->rot);
 	cgui_text_style(CONFIG->label_text);
 	cgui_text_draw(context.drawable, DATA->label);	
 }
