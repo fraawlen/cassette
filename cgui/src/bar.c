@@ -1,7 +1,7 @@
 /**
  * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Graphics (CGUI) library.
+ * This file is part of the Cassette Objects (COBJ) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
@@ -18,103 +18,24 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#pragma once
-
-#include <cairo/cairo.h>
-#include <cassette/cobj.h>
-
-#include "cgui-attributes.h"
-#include "cgui-box.h"
-#include "cgui-types.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/************************************************************************************************************/
-/* TYPES ****************************************************************************************************/
-/************************************************************************************************************/
-
-/**
- *
- */
-struct cgui_text
-{
-	struct ccolor color;
-	struct ccolor color_background;
-	bool draw_background;
-	bool bold;
-};
-
-/************************************************************************************************************/
-/* IMPURE METHODS *******************************************************************************************/
-/************************************************************************************************************/
-
-/**
- *
- */
-void
-cgui_text_align(enum cgui_align alignment);
-
-/**
- *
- */
-void
-cgui_text_draw(cairo_t *drawable, const cstr *str)
-CGUI_NONNULL(1, 2);
-
-/**
- *
- */
-void
-cgui_text_limit_cols(size_t col_1, size_t col_2);
-
-/**
- *
- */
-void
-cgui_text_limit_rows(size_t row_1, size_t row_2);
-
-/**
- *
- */
-void
-cgui_text_link_limits(void);
-
-/**
- *
- */
-void
-cgui_text_move(double x, double y);
-
-/**
- *
- */
-void
-cgui_text_reset(void);
-
-/**
- *
- */
-void
-cgui_text_rotate(enum cgui_rotation rotation);
-
-/**
- *
- */
-void
-cgui_text_style(struct cgui_text style);
-
-/**
- *
- */
-void
-cgui_text_unlink_limits(void);
+#include <cassette/cgui.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#ifdef __cplusplus
-}
-#endif
+static double ctx_x      = 0.0;
+static double ctx_y      = 0.0;
+static double ctx_width  = 0.0;
+static double ctx_height = 0.0;
+
+static enum   cgui_rotation ctx_rot = CGUI_ROTATION_NORMAL;
+static struct cgui_box ctx_style_1  = {0};
+static struct cgui_box ctx_style_2  = {0};
+static struct cgui_box ctx_style_3  = {0};
+
+/************************************************************************************************************/
+/* PUBLIC ***************************************************************************************************/
+/************************************************************************************************************/
+
+

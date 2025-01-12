@@ -84,7 +84,7 @@ CGUI_NONNULL(1);
  *
  */
 void
-cgui_box_height(double height);
+cgui_box_move(double x, double y);
 
 /**
  *
@@ -103,25 +103,13 @@ cgui_box_reset(void);
  *
  */
 void
+cgui_box_resize(double width, double height);
+
+/**
+ *
+ */
+void
 cgui_box_style(struct cgui_box box);
-
-/**
- *
- */
-void
-cgui_box_width(double width);
-
-/**
- *
- */
-void
-cgui_box_x(double x);
-
-/**
- *
- */
-void
-cgui_box_y(double y);
 
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
@@ -131,7 +119,7 @@ cgui_box_y(double y);
  *
  */
 bool
-cgui_box_is_in(cairo_t *drawable, double x, double y)
+cgui_box_inside(cairo_t *drawable, double x, double y)
 CGUI_NONNULL(1);
 
 /************************************************************************************************************/

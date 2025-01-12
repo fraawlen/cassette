@@ -123,16 +123,8 @@ cgui_box_draw(cairo_t *drawable)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-cgui_box_height(double height)
-{
-	ctx_height = height;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 bool
-cgui_box_is_in(cairo_t *drawable, double x, double y)
+cgui_box_inside(cairo_t *drawable, double x, double y)
 {
 	cairo_new_path(drawable);
 	path(drawable, ctx_box.shape_border, ctx_box.hit_outline ? -ctx_box.size_outline : 0);
@@ -140,6 +132,15 @@ cgui_box_is_in(cairo_t *drawable, double x, double y)
 	return cairo_in_fill(drawable, x, y);
 
 	// TODO checking without using cairo
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_box_move(double x, double y)
+{
+	ctx_x = x;
+	ctx_y = y;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -172,33 +173,18 @@ cgui_box_reset(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cgui_box_resize(double width, double height)
+{
+	ctx_width  = width;
+	ctx_height = height;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cgui_box_style(struct cgui_box box)
 {
 	ctx_box = box;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_box_width(double width)
-{
-	ctx_width = width;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_box_x(double x)
-{
-	ctx_x = x;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_box_y(double y)
-{
-	ctx_y = y;
 }
 
 /************************************************************************************************************/

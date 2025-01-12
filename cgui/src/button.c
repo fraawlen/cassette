@@ -246,6 +246,8 @@ static void
 draw(cgui_cell *cell, struct cgui_cell_context context)
 {
 	const double l = context.frame.margin + context.frame.size_border + context.frame.padding;
+	const double x = context.x + l + cgui_align_offset_x(DATA->align, context.width  - l * 2);
+	const double y = context.y + l + cgui_align_offset_y(DATA->align, context.height - l * 2);
 
 	/* frame */
 
@@ -254,10 +256,9 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 
 	/* label */
 
-	cgui_text_x(context.x + l + cgui_align_offset_x(DATA->align, context.width  - l * 2));
-	cgui_text_y(context.y + l + cgui_align_offset_y(DATA->align, context.height - l * 2));
+	cgui_text_move(x, y);
 	cgui_text_align(cgui_align_rotation(DATA->align, DATA->rot));
-	cgui_text_rotation(DATA->rot);
+	cgui_text_rotate(DATA->rot);
 	cgui_text_style(text_style(cell));
 	cgui_text_draw(context.drawable, DATA->label);
 }
@@ -305,7 +306,7 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 
 		case CGUI_CELL_EVENT_BUTTON_RELEASE:
 			DATA->state = event->button_id == 1 ? FOCUSED : DATA->state;
-			trigger     = event->button_id == 1 && cgui_cell_is_event_in(event);
+			trigger     = event->button_id == 1 && cgui_cell_event_inside(event);
 			break;
 
 		case CGUI_CELL_EVENT_TOUCH_BEGIN:
@@ -314,7 +315,7 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 
 		case CGUI_CELL_EVENT_TOUCH_END:
 			DATA->state = event->touch_n == 0 ? (event->is_focused ? FOCUSED : IDLE) : DATA->state;
-			trigger     = event->touch_n == 0 && cgui_cell_is_event_in(event);
+			trigger     = event->touch_n == 0 && cgui_cell_event_inside(event);
 			break;
 
 		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_REFERENCE:
