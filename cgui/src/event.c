@@ -59,11 +59,12 @@ static void unmap                (struct cgui_event *) CGUI_NONNULL(1);
 
 /* other functions */
 
-static void   action_cell   (uint8_t, cgui_window *) CGUI_NONNULL(2);
-static void   action_focus  (uint8_t, cgui_window *) CGUI_NONNULL(2);
+static void   action_cell   (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
+static void   action_focus  (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
 static void   action_misc   (uint8_t);
-static void   action_window (uint8_t, cgui_window *) CGUI_NONNULL(2);
-static size_t swap_input    (struct cgui_event *)    CGUI_NONNULL(1);
+static void   action_window (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
+static void   clipboard     (enum cgui_cell_event_type, uint8_t, cgui_window *) CGUI_NONNULL(3);
+static size_t swap_input    (struct cgui_event *)                               CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -202,11 +203,6 @@ static void
 action_cell(uint8_t type, cgui_window *window)
 {
 	struct cgui_cell_event event;
-
-	if (!window->focus.cell->valid)
-	{
-		return;
-	}
 
 	switch (type)
 	{
@@ -375,6 +371,20 @@ button_release(struct cgui_event *event)
 	/* update focus in case of a drag action that ended up out of bounds of the cell */
 
 	window_focus_pointer(event->window, event->button_x, event->button_y);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+clipboard(enum cgui_cell_event_type type, uint8_t id, cgui_window *window)
+{
+	struct cgui_cell_event event =
+	{
+		.type      = type,
+		.clipboard = id,
+	};
+
+	window_process_cell_event(window, window->focus, &event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -643,9 +653,15 @@ swap_input(struct cgui_event *event)
 			break;
 
 		case CGUI_SWAP_TO_CLIPBOARD_CUT:
+			clipboard(CGUI_CELL_EVENT_CLIPBOARD_CUT,   swap.value, event->window);
+			break;
+
 		case CGUI_SWAP_TO_CLIPBOARD_COPY:
+			clipboard(CGUI_CELL_EVENT_CLIPBOARD_COPY,  swap.value, event->window);
+			break;
+
 		case CGUI_SWAP_TO_CLIPBOARD_PASTE:
-			// TODO
+			clipboard(CGUI_CELL_EVENT_CLIPBOARD_PASTE, swap.value, event->window);
 			break;
 
 		case CGUI_SWAP_TO_ACTION_CELL:

@@ -921,7 +921,7 @@ swap(const char *str, uint8_t limit, struct cgui_swap *target)
 		case CGUI_SWAP_TO_CLIPBOARD_CUT:
 		case CGUI_SWAP_TO_CLIPBOARD_COPY:
 		case CGUI_SWAP_TO_CLIPBOARD_PASTE:
-			target->value = util_str_to_long(r, 1, CGUI_CONFIG_CLIPBOARDS);
+			target->value = util_str_to_long(r, 1, CGUI_CLIPBOARDS);
 			break;
 
 		case CGUI_SWAP_TO_ACTION_CELL:

@@ -39,12 +39,11 @@ extern "C" {
 /* GLOBALS **************************************************************************************************/
 /************************************************************************************************************/
 
-#define CGUI_CONFIG_STR_LEN    64
-#define CGUI_CONFIG_CLIPBOARDS 3
-#define CGUI_CONFIG_ACCELS     12
-#define CGUI_CONFIG_BUTTONS    12
-#define CGUI_CONFIG_KEYS       128
-#define CGUI_CONFIG_TOUCHES    10
+#define CGUI_CONFIG_STR_LEN 64
+#define CGUI_CONFIG_ACCELS  12
+#define CGUI_CONFIG_BUTTONS 12
+#define CGUI_CONFIG_KEYS    128
+#define CGUI_CONFIG_TOUCHES 10
 
 /************************************************************************************************************/
 /* TYPES ****************************************************************************************************/

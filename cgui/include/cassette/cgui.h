@@ -30,6 +30,7 @@
 /* Init dependent headers */
 
 #include "cgui-cell.h"
+#include "cgui-clipboard.h"
 #include "cgui-config.h"
 #include "cgui-event.h"
 #include "cgui-grid.h"
