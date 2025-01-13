@@ -39,39 +39,39 @@
  *
  */
 void
-cgui_clipboard_copy(int clipboard, const char *str)
+cgui_clipboard_copy(int id, const char *str)
 CGUI_NONNULL(2);
 
 /**
  *
  */
 void
-cgui_clipboard_clear(int clipboard);
+cgui_clipboard_clear(int id);
 
 /**
  *
  */
 void
-cgui_clipboard_on_copy(int clipboard, void (*fn)(int clipboard));
+cgui_clipboard_on_copy(int id, void (*fn)(int id));
 
 /**
  *
  */
 void
-cgui_clipboard_on_lose(int clipboard, void (*fn)(int clipboard));
+cgui_clipboard_on_lose(int id, void (*fn)(int id));
 
 /**
  *
  */
 void
-cgui_clipboard_pair_cell(int clipboard, cgui_cell *cell)
+cgui_clipboard_pair_cell(int id, cgui_cell *cell)
 CGUI_NONNULL(2);
 
 /**
  *
  */
 const char *
-cgui_clipboard_paste(int clipboard, size_t *length)
+cgui_clipboard_paste(int id, size_t *length)
 CGUI_NONNULL_RETURN;
 
 /************************************************************************************************************/
@@ -82,14 +82,14 @@ CGUI_NONNULL_RETURN;
  *
  */
 bool
-cgui_clipboard_owned(int clipboard)
+cgui_clipboard_owned(int id)
 CGUI_PURE;
 
 /**
  *
  */
 cgui_cell *
-cgui_clipboard_paired_cell(int clipboard)
+cgui_clipboard_paired_cell(int id)
 CGUI_NONNULL_RETURN
 CGUI_PURE;
 

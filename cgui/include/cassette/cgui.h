@@ -48,7 +48,6 @@
 /* Independent headers */
 
 #include "cgui-attributes.h"
-#include "cgui-bar.h"
 #include "cgui-box.h"
 #include "cgui-text.h"
 #include "cgui-types.h"

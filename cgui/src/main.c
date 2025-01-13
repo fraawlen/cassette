@@ -283,6 +283,11 @@ cgui_reset(void)
 		((cgui_cell*)cref_ptr(cells, i))->valid = false;
 	}
 
+	for (int i = 1; i <= CGUI_CLIPBOARDS; i++)
+	{
+		cgui_clipboard_clear(i);
+	}
+
 	if (!ext_connection || util_env_exists(ENV_FORCE_CLEAN))
 	{
 		cairo_debug_reset_static_data();

@@ -21,7 +21,10 @@
 #include <cassette/cgui.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
+#include <xcb/xcb.h>
 
+#include "clipboard.h"
 #include "main.h"
 #include "x11.h"
 
@@ -29,136 +32,217 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void dummy_fn_copy (int clipboard);
-static void dummy_fn_lose (int clipboard);
-static bool invalid       (int clipboard);
+static void dummy_fn_copy (int);
+static void dummy_fn_lose (int);
+static bool invalid       (int *);
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+static const struct clipboard empty =
+{
+	.time    = 0,
+	.owned   = false,
+	.data    = NULL,
+	.data_n  = 0,
+	.fn_copy = dummy_fn_copy,
+	.fn_lose = dummy_fn_lose,
+	.cell    = CGUI_CELL_PLACEHOLDER,
+};
+
+static struct clipboard clipboards[CGUI_CLIPBOARDS] =
+{
+	empty,
+	empty,
+	empty,
+};
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 void
-cgui_clipboard_copy(int clipboard, const char *str)
+cgui_clipboard_copy(int id, const char *str)
 {
-	if (invalid(clipboard))
+	xcb_timestamp_t time;
+	size_t n;
+	char *tmp;
+
+	if (invalid(&id))
 	{
 		return;
 	}
 
-	(void)str;
-	// TODO
+	/* copy data */
+
+	n = strlen(str) + 1;
+	if (!(tmp = malloc(n)))
+	{
+		main_set_error(CERR_MEMORY);
+		return;
+	}
+
+	memcpy(tmp, str, n);
+
+	/* update clipboard on backend */
+
+	time = x11_timestamp();
+	x11_selection_copy(id, time);
+	if (cgui_error())
+	{
+		free(tmp);
+		return;
+	}
+
+	/* update clipboard info */
+
+	free(clipboards[id].data);
+
+	clipboards[id]        = empty;
+	clipboards[id].time   = time;
+	clipboards[id].owned  = true;
+	clipboards[id].data   = tmp;
+	clipboards[id].data_n = n;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_clipboard_clear(int clipboard)
+cgui_clipboard_clear(int id)
 {
-	if (invalid(clipboard))
+	if (invalid(&id) || !clipboards[id].owned)
 	{
 		return;
 	}
 
-	// TODO
+	x11_selection_clear(id);
+	clipboard_clear(id);	
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_clipboard_on_copy(int clipboard, void (*fn)(int clipboard))
+cgui_clipboard_on_copy(int id, void (*fn)(int id))
 {
-	if (invalid(clipboard))
+	if (invalid(&id))
 	{
 		return;
 	}
 
-	(void)fn;
-
-	// TODO
+	clipboards[id].fn_copy = fn ? fn : dummy_fn_copy;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_clipboard_on_lose(int clipboard, void (*fn)(int clipboard))
+cgui_clipboard_on_lose(int id, void (*fn)(int id))
 {
-	if (invalid(clipboard))
+	if (invalid(&id))
 	{
 		return;
 	}
 
-	(void)fn;
-
-	// TODO
+	clipboards[id].fn_lose = fn ? fn : dummy_fn_lose;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-cgui_clipboard_owned(int clipboard)
+cgui_clipboard_owned(int id)
 {
-	if (invalid(clipboard))
+	if (invalid(&id))
 	{
 		return false;
 	}
 
-	// TODO
-
-	return false;
+	return clipboards[id].owned;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_clipboard_pair_cell(int clipboard, cgui_cell *cell)
+cgui_clipboard_pair_cell(int id, cgui_cell *cell)
 {
-	if (invalid(clipboard))
+	if (invalid(&id))
 	{
 		return;
 	}
 
-	(void)cell;
-
-	// TODO
+	clipboards[id].cell = cell;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 cgui_cell *
-cgui_clipboard_paired_cell(int clipboard)
+cgui_clipboard_paired_cell(int id)
 {
-	if (invalid(clipboard))
+	if (invalid(&id))
 	{
 		return CGUI_CELL_PLACEHOLDER;
 	}
 
-	// TODO
-
-	return CGUI_CELL_PLACEHOLDER;
+	return clipboards[id].cell;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-cgui_clipboard_paste(int clipboard, size_t *length)
+cgui_clipboard_paste(int id, size_t *length)
 {
-	if (invalid(clipboard))
-	{
-		if (length)
-		{
-			*length = 0;
-		}
-		return "";
-	}
+	const char *data   = "";
+	size_t      data_n = 0;
 
-	// TODO
+	if (!invalid(&id))
+	{
+		if (!clipboards[id].owned)
+		{
+			free(clipboards[id].data);
+			clipboards[id].data = x11_selection_paste(id, &clipboards[id].data_n);
+		}
+
+		if (clipboards[id].data)
+		{
+			data   = clipboards[id].data;
+			data_n = clipboards[id].data_n;
+		}
+	}
 
 	if (length)
 	{
-		*length = 0;
+		*length = data_n;
 	}
 
-	return "";
+	return data;
+}
+
+/************************************************************************************************************/
+/* PRIVATE **************************************************************************************************/
+/************************************************************************************************************/
+
+void
+clipboard_clear(int id)
+{
+	if (id < 0 || id >= CGUI_CLIPBOARDS)
+	{
+		return;
+	}
+
+	free(clipboards[id].data);
+	clipboards[id] = empty;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct clipboard
+clipboard_get(int id)
+{
+	if (id < 0 || id >= CGUI_CLIPBOARDS)
+	{
+		return empty;
+	}
+
+	return clipboards[id];
 }
 
 /************************************************************************************************************/
@@ -166,25 +250,25 @@ cgui_clipboard_paste(int clipboard, size_t *length)
 /************************************************************************************************************/
 
 static void
-dummy_fn_copy(int clipboard)
+dummy_fn_copy(int id)
 {
-	(void)clipboard;
+	(void)id;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-dummy_fn_lose(int clipboard)
+dummy_fn_lose(int id)
 {
-	(void)clipboard;
+	(void)id;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-invalid(int clipboard)
+invalid(int *id)
 {
-	if (clipboard == 0 || clipboard > CGUI_CLIPBOARDS)
+	if (*id == 0 || (*id)-- > CGUI_CLIPBOARDS)
 	{
 		main_set_error(CERR_PARAM);
 	}

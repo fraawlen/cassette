@@ -19,6 +19,7 @@
 /************************************************************************************************************/
 
 #include <cassette/cgui.h>
+#include <cassette/cobj.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -33,16 +34,19 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void on_accel (cgui_window *, int);
-static void on_click (cgui_cell   *);
-static void on_close (cgui_window *);
-static void on_draw  (cgui_window *, unsigned long, unsigned long);
-static void on_state (cgui_window *, enum cgui_window_state_mask);
+static void on_accel     (cgui_window *, int);
+static void on_click     (cgui_cell *);
+static void on_clip_copy (int);
+static void on_clip_lose (int);
+static void on_close     (cgui_window *);
+static void on_draw      (cgui_window *, unsigned long, unsigned long);
+static void on_state     (cgui_window *, enum cgui_window_state_mask);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static cstr        *text     = CSTR_PLACEHOLDER;
 static cgui_cell   *filler   = CGUI_CELL_PLACEHOLDER;
 static cgui_cell   *label_1  = CGUI_CELL_PLACEHOLDER;
 static cgui_cell   *label_2  = CGUI_CELL_PLACEHOLDER;
@@ -55,7 +59,7 @@ static cgui_grid   *grid_2   = CGUI_GRID_PLACEHOLDER;
 static cgui_window *window   = CGUI_WINDOW_PLACEHOLDER;
 
 static struct cgui_screen screen;
-static const char *text =
+static const char *default_text =
 	"qwertyuiop\n"
 	"asdfghjkl\n"
 	"zxcvbnm\n"
@@ -82,6 +86,7 @@ static const char *text =
 
 	cgui_init(argc, argv);
 
+	text     = cstr_create();
 	window   = cgui_window_create();
 	grid_1   = cgui_grid_create(3, 2);
 	grid_2   = cgui_grid_create(3, 4);
@@ -94,9 +99,13 @@ static const char *text =
 	button_3 = cgui_button_create();
 	screen   = cgui_screen_primary_specs();
 
+	/* Default text */
+
+	cstr_append(text, default_text);
+
 	/* Cell setup */
 
-	cgui_label_set_label(label_1, text);
+	cgui_label_set_label(label_1, default_text);
 	cgui_label_align(label_1, CGUI_ALIGN_BOTTOM_RIGHT);
 
 	cgui_label_set_label(label_2, "something something ...");
@@ -183,6 +192,7 @@ static const char *text =
 	cgui_cell_destroy(button_1);
 	cgui_cell_destroy(button_2);
 	cgui_cell_destroy(button_3);
+	cstr_destroy(text);
 
 	cgui_reset();
 
@@ -206,9 +216,40 @@ on_accel(cgui_window *w, int id)
 static void
 on_click(cgui_cell *c)
 {
-	(void)c;
+	if (c == button_1)
+	{
+		cstr_clear(text);
+		cstr_append(text, cgui_clipboard_paste(1, NULL));
+		cgui_label_set_label(label_1, cstr_chars(text));
+	}
+	else if (c == button_2)
+	{
+		cgui_clipboard_copy(1, cstr_chars(text));
+		cgui_clipboard_on_copy(1, on_clip_copy);
+		cgui_clipboard_on_lose(1, on_clip_lose);
+	}
 
 	printf("button clicked\n");
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+on_clip_copy(int clipboard)
+{
+	(void)clipboard;
+
+	printf("clipboard content transmitted\n");
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+on_clip_lose(int clipboard)
+{
+	(void)clipboard;
+
+	printf("clipboard ownership lost\n");
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

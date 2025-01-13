@@ -34,6 +34,7 @@
 #include <xcb/xinput.h>
 #include <xkbcommon/xkbcommon.h>
 
+#include "clipboard.h"
 #include "config.h"
 #include "main.h"
 #include "window.h"
@@ -86,6 +87,10 @@ static xcb_atom_t       get_atom             (const char *) CGUI_NONNULL(1);
 static uint8_t          get_extension_opcode (const char *) CGUI_NONNULL(1);
 static bool             prop_add             (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
 static bool             prop_set             (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
+static int              selection_id         (xcb_atom_t);
+static xcb_atom_t       selection_name       (int);
+static bool             selection_send_data  (int, xcb_window_t, xcb_atom_t, xcb_atom_t);
+static xcb_atom_t       selection_target     (int);
 static bool             test_cookie          (xcb_void_cookie_t);
 static struct cgui_mods translate_mods       (uint16_t state);
 
@@ -158,6 +163,8 @@ static xcb_atom_t atom_wovr = 0; /* "_NET_WM_WINDOW_TYPE_OVERLAY" */
 static xcb_atom_t atom_wdlg = 0; /* "_NET_WM_WINDOW_TYPE_DIALOG"  */
 static xcb_atom_t atom_nstt = 0; /* "_NET_WM_STATE"               */
 static xcb_atom_t atom_full = 0; /* "_NET_WM_STATE_FULLSREEN"     */
+
+static xcb_atom_t atom_sel_types[4];
 
 /* CGUI custom atoms */
 
@@ -377,7 +384,13 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 	atom_conf = get_atom(ATOM_RECONFIG);
 	atom_acl  = get_atom(ATOM_ACCEL);
 
-	for (int i = 0; i < CGUI_CONFIG_ACCELS; i++) {
+	atom_sel_types[0] = atom_trgt;
+	atom_sel_types[1] = atom_time;
+	atom_sel_types[2] = atom_mult;
+	atom_sel_types[3] = atom_utf8;
+
+	for (int i = 0; i < CGUI_CONFIG_ACCELS; i++)
+	{
 		sprintf(s, ATOM_ACCEL "_%i", i + 1);
 		atom_aclx[i] = get_atom(s);
 	}
@@ -566,6 +579,155 @@ x11_screen(size_t i, size_t *n, size_t *primary)
 	free(xr);
 
 	return s;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_selection_clear(int id)
+{
+	xcb_void_cookie_t xc;
+
+	xc = xcb_set_selection_owner_checked(connection, XCB_WINDOW_NONE, selection_name(id), x11_timestamp());
+	xcb_flush(connection);
+
+	if (!test_cookie(xc))
+	{
+		main_set_error(CERR_XCB);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_selection_copy(int id, xcb_timestamp_t time)
+{
+	xcb_void_cookie_t xc;
+
+	xc = xcb_set_selection_owner_checked(connection, win_leader, selection_name(id), time);
+	xcb_flush(connection);
+
+	if (!test_cookie(xc))
+	{
+		main_set_error(CERR_XCB);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+char *
+x11_selection_paste(int id, size_t *n)
+{
+	xcb_selection_notify_event_t *event;
+	xcb_get_property_reply_t *xr;
+	xcb_get_property_cookie_t xc;
+	xcb_void_cookie_t xc_err;
+
+	const xcb_timestamp_t time   = x11_timestamp();
+	const xcb_atom_t      name   = selection_name(id);
+	const xcb_atom_t      target = selection_target(id);
+	char                  *tmp   = NULL;
+
+	/* send selection request */
+
+	xc_err = xcb_convert_selection_checked(connection, win_leader, name, atom_utf8, target, time);
+	if (!test_cookie(xc_err))
+	{
+		main_set_error(CERR_XCB);
+		return NULL;
+	}
+
+	/* wait for matching selection notification event */
+
+	while ((event = (xcb_selection_notify_event_t*)xcb_wait_for_event(connection)))
+	{
+		if ((event->response_type & ~0x80) == XCB_SELECTION_NOTIFY
+		  && event->selection == name
+		  && event->requestor == win_leader
+		  && event->target    == atom_utf8
+		  && event->time      == time)
+		{
+			if (event->property == XCB_ATOM_NONE)
+			{
+				free(event);
+				return NULL;
+			}
+			free(event);
+			break;
+		}
+		else
+		{
+			cref_push(events, event);
+			main_set_error(cref_error(events));
+		}
+	}
+
+	/* grab the contents of the selection and delete the property holding it */
+
+	xc = xcb_get_property(connection, XCB_PROPERTY_DELETE, win_leader, target, XCB_ATOM_ANY, 0, UINT32_MAX);
+	xr = xcb_get_property_reply(connection, xc, NULL);
+	if (!xr)
+	{
+		main_set_error(CERR_XCB);
+		return NULL;
+	}
+
+	if ((*n = xcb_get_property_value_length(xr) + 1) == 1)
+	{
+		return NULL;
+	}
+
+	if (!(tmp = malloc(*n)))
+	{
+		main_set_error(CERR_XCB);
+		return NULL;
+	}
+
+	memcpy(tmp, xcb_get_property_value(xr), *n);
+	free(xr);
+
+	/* end */
+
+	return tmp;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+xcb_timestamp_t
+x11_timestamp(void)
+{
+	xcb_property_notify_event_t *event;
+	xcb_timestamp_t time = 0;
+
+	/*****/
+
+	prop_set(win_leader, atom_time, atom_time, 0, NULL);
+	xcb_flush(connection);
+
+	/* wait for property notification event to obtain timestamp    */
+	/* other events are pushed to the stack buffer to be processed */
+	/* by the main event tree in x11_update()                      */
+
+	while ((event = (xcb_property_notify_event_t*)xcb_wait_for_event(connection)))
+	{
+		if ((event->response_type & ~0x80) == XCB_PROPERTY_NOTIFY
+		  && event->window == win_leader
+		  && event->atom   == atom_time)
+		{
+			time = event->time;
+			free(event);
+			break;
+		}
+		else
+		{
+			cref_push(events, event);
+			main_set_error(cref_error(events));
+		}
+	}
+
+	/*****/
+
+	return time;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1412,17 +1574,10 @@ event_present(xcb_present_generic_event_t *xcb_event)
 static void
 event_selection_clear(xcb_selection_clear_event_t *xcb_event)
 {
-	struct cgui_event event =
-	{
-		.type   = CGUI_EVENT_NONE,
-		.window = CGUI_WINDOW_PLACEHOLDER,
-	};
+	int id = selection_id(xcb_event->selection);
 
-	(void)xcb_event;
-
-	// TODO
-
-	main_update(&event);
+	clipboard_get(id).fn_lose(id);
+	clipboard_clear(id);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1430,17 +1585,85 @@ event_selection_clear(xcb_selection_clear_event_t *xcb_event)
 static void
 event_selection_request(xcb_selection_request_event_t *xcb_event)
 {
-	struct cgui_event event =
+	int  id   = selection_id(xcb_event->selection);
+	bool sent = false; /* should be set to true only if actual data was sent, not time or targets */
+
+	xcb_window_t src = xcb_event->requestor;
+	xcb_atom_t prop  = xcb_event->property;
+	xcb_atom_t *xa;
+	xcb_get_property_cookie_t xc;
+	xcb_get_property_reply_t *xr;
+	xcb_selection_notify_event_t notif =
 	{
-		.type   = CGUI_EVENT_NONE,
-		.window = CGUI_WINDOW_PLACEHOLDER,
+		.response_type = XCB_SELECTION_NOTIFY,
+		.sequence      = xcb_event->sequence,
+		.time          = xcb_event->time,
+		.requestor     = xcb_event->requestor,
+		.selection     = xcb_event->selection,
+		.target        = xcb_event->target,
+		.property      = XCB_ATOM_NONE,
 	};
 
-	(void)xcb_event;
+	/* filtering */
 
-	// TODO
+	if (id == -1
+	 || (xcb_event->time   != XCB_TIME_CURRENT_TIME && xcb_event->time < clipboard_get(id).time)
+	 || (xcb_event->target == atom_mult && prop == XCB_ATOM_NONE))
+	{
+		goto refuse;
+	}
 
-	main_update(&event);
+	for (unsigned long i = 0; i < sizeof(atom_sel_types) / sizeof(xcb_atom_t); i++)
+	{
+		if (xcb_event->target == atom_sel_types[i])
+		{
+			goto found;
+		}
+	}
+	goto refuse;
+
+found:;
+
+	/* send data depending on selection type */
+
+	if (xcb_event->target != atom_mult)
+	{
+		prop = prop == XCB_ATOM_NONE ? xcb_event->target : prop;
+		sent = selection_send_data(id, src, prop, xcb_event->target);
+		goto success;
+	}
+
+	/* if selection type is 'multiple', process each requested type */
+
+	xc = xcb_get_property(connection, XCB_PROPERTY_DELETE, src, prop, XCB_ATOM_ATOM, 0, UINT32_MAX);
+	xr = xcb_get_property_reply(connection, xc, NULL);
+	if (!xr)
+	{
+		main_set_error(CERR_XCB);
+		goto refuse;
+	}
+
+	xa = (xcb_atom_t*)xcb_get_property_value(xr);
+	for (size_t i = 0; i + 1 < xr->value_len; i += 2)
+	{
+		sent |= selection_send_data(id, src, xa[i], xa[i + 1]);
+	}
+
+	free(xr);
+
+	/* send notification event as reply to request */
+
+success:
+
+	notif.property = prop;
+	if (sent)
+	{
+		clipboard_get(id).fn_copy(id);
+	}
+
+refuse:
+
+	test_cookie(xcb_send_event_checked( connection, 0, src, XCB_EVENT_MASK_NO_EVENT, (char*)&notif));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1609,6 +1832,98 @@ prop_set(xcb_window_t win, xcb_atom_t prop, xcb_atom_t type, uint32_t data_n, co
 		data);
 
 	return test_cookie(xc);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static int
+selection_id(xcb_atom_t name)
+{
+	if (name == atom_clip)
+	{
+		return 0;
+	}
+	else if (name == XCB_ATOM_PRIMARY)
+	{
+		return 1;
+	}
+	else if (name == XCB_ATOM_SECONDARY)
+	{
+		return 2;
+	}
+	else 
+	{
+		return -1;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static xcb_atom_t
+selection_name(int id)
+{
+	switch (id)
+	{
+		case 0:
+			return atom_clip;
+
+		case 1: 
+			return XCB_ATOM_PRIMARY;
+
+		case 2:
+			return XCB_ATOM_SECONDARY;
+
+		default:
+			return XCB_ATOM_NONE;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static bool
+selection_send_data(int id, xcb_window_t win, xcb_atom_t prop, xcb_atom_t target)
+{
+	xcb_timestamp_t t;
+
+	/* true is returned only when actual data is sent, ie. a string of utf8 */
+
+	if (target == atom_utf8)
+	{
+		prop_set(win, prop, atom_utf8, clipboard_get(id).data_n, clipboard_get(id).data);
+		return true;
+	}
+	else if (target == atom_trgt)
+	{
+		prop_set(win, prop, XCB_ATOM_ATOM, sizeof(atom_sel_types) / sizeof(xcb_atom_t), atom_sel_types);
+	}
+	else if (target == atom_time)
+	{
+		t = clipboard_get(id).time;
+		prop_set(win, prop, XCB_ATOM_INTEGER, 1, &t);
+	}
+
+	return false;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static xcb_atom_t
+selection_target(int id)
+{
+	switch (id)
+	{
+		case 0:
+			return atom_tmp1;
+
+		case 1: 
+			return atom_tmp2;
+
+		case 2:
+			return atom_tmp3;
+
+		default:
+			return XCB_ATOM_NONE;
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
