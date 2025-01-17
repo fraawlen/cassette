@@ -318,11 +318,11 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 			trigger     = event->touch_n == 0 && cgui_cell_event_inside(event);
 			break;
 
-		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_REFERENCE:
 		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_ACTION:
+		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_REFERENCE:
 		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_POINTER:
 		case CGUI_CELL_EVENT_FOCUS_GAIN_BY_TOUCH:
-			DATA->state = FOCUSED;
+			DATA->state = DATA->state == PRESSED ? PRESSED : FOCUSED;
 			break;
 
 		case CGUI_CELL_EVENT_FOCUS_LOSE:

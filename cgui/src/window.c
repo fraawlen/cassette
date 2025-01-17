@@ -371,10 +371,11 @@ cgui_window_deactivate(cgui_window *window)
 		return;
 	}
 
+	window_cancel_cell_events(window);
+	window_focus_lock(window, false);
+	window_focus(window, GRID_AREA_NONE);
 	x11_window_deactivate(window->x_id);
 	window_update_state(window, CGUI_WINDOW_ACTIVE, false);
-	window_focus(window, GRID_AREA_NONE);
-	window_cancel_cell_events(window);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -399,10 +400,11 @@ cgui_window_disable(cgui_window *window)
 		return;
 	}
 
+	window_cancel_cell_events(window);
+	window_focus_lock(window, false);
+	window_focus(window, GRID_AREA_NONE);
 	window_update_state(window, CGUI_WINDOW_DISABLED,    true);
 	window_update_state(window, CGUI_WINDOW_LOCKED_GRID, false);
-	window_focus(window, GRID_AREA_NONE);
-	window_cancel_cell_events(window);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1014,16 +1016,14 @@ window_focus(cgui_window *window, struct grid_area area)
 		.focus_info_height = area.height,
 	};
 
-	if (window->focus.cell == area.cell)
-	{
-		return;
-	}
-
 	/* first, unfocus the previously unfocused cell (if any). It's assumed that the focus event was   */
 	/* sent by the caller of this function. If a GRID_AREA_NONE is given (with an invalid cell), then */
 	/* it means that the window loses focus completely.                                               */
 
-	window_process_cell_event(window, window->focus, &event_unfoc);
+	if (window->focus.cell != area.cell)
+	{
+		window_process_cell_event(window, window->focus, &event_unfoc);
+	}
 
 	window->focus = area;
 
@@ -1125,27 +1125,10 @@ window_present(cgui_window *window)
 bool
 window_process_cell_event(cgui_window *window, struct grid_area area, struct cgui_cell_event *event)
 {
-	if (!area.cell->valid)
+	if (!area.cell->valid || window->state.disabled)
 	{
 		return false;
 	}
-
-	/* filter out some events depending on the window state */
-
-	if (!window->state.disabled)
-	{
-		goto skip_filter;
-	}
-
-	switch (event->type)
-	{
-		// TODO
-
-		default:
-			return false;
-	}
-
-skip_filter:
 
 	/* fill out common fields */
 	

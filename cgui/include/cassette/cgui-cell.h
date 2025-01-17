@@ -76,6 +76,7 @@ enum cgui_cell_event_type
 	CGUI_CELL_EVENT_FOCUS_UNLOCK,
 	CGUI_CELL_EVENT_FOCUS_INFO,
 	CGUI_CELL_EVENT_FOCUS_SEEK,
+	CGUI_CELL_EVENT_SUBFOCUS,
 	CGUI_CELL_EVENT_SELECT_LESS,
 	CGUI_CELL_EVENT_SELECT_MORE,
 	CGUI_CELL_EVENT_SELECT_NONE,
@@ -146,7 +147,7 @@ struct cgui_cell_event
 			double focus_y;
 		};
 		/* CGUI_CELL_EVENT_FOCUS_GAIN_BY_ACTION    */
-		// TODO
+		enum cgui_focus focus;
 		/* CGUI_CELL_EVENT_FOCUS_GAIN_BY_REFERENCE */
 		cgui_cell *focus_cell;
 		/* CGUI_CELL_EVENT_FOCUS_INFO */
@@ -160,6 +161,8 @@ struct cgui_cell_event
 		};
 		/* CGUI_CELL_EVENT_FOCUS_SEEK */
 		cgui_cell *seek_cell;
+		/* CGUI_CELL_EVENT_SUBFOCUS */
+		enum cgui_focus subfocus;
 		/* CGUI_CELL_EVENT_CLIPBOARD_CUT   */
 		/* CGUI_CELL_EVENT_CLIPBOARD_COPY  */
 		/* CGUI_CELL_EVENT_CLIPBOARD_PASTE */

@@ -30,15 +30,16 @@
 
 struct grid_area
 {
-	cgui_cell *cell; /* hosted cell          */
-	size_t col;      /* start col            */
-	size_t row;      /* start row            */
-	size_t n_cols;   /* width  in cols       */
-	size_t n_rows;   /* height in rows       */
-	double x;        /* pixel x offset cache */
-	double y;        /* pixel y offset cache */
-	double width;    /* pixel width  cache   */
-	double height;   /* pixel height cache   */
+	cgui_cell *cell; /* hosted cell                         */
+	size_t col;      /* start col                           */
+	size_t row;      /* start row                           */
+	size_t n_cols;   /* width  in cols                      */
+	size_t n_rows;   /* height in rows                      */
+	double x;        /* pixel x offset cache                */
+	double y;        /* pixel y offset cache                */
+	double width;    /* pixel width  cache                  */
+	double height;   /* pixel height cache                  */
+	size_t id;       /* position of the area in parent grid */
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -83,14 +84,15 @@ struct cgui_grid
 #define GRID_AREA_NONE (struct grid_area)\
 { \
 	.cell   = CGUI_CELL_PLACEHOLDER, \
-	.col    = 0,   \
-	.row    = 0,   \
-	.n_cols = 0,   \
-	.n_rows = 0,   \
+	.col    = 0, \
+	.row    = 0, \
+	.n_cols = 0, \
+	.n_rows = 0, \
 	.x      = 0.0, \
 	.y      = 0.0, \
 	.width  = 0.0, \
 	.height = 0.0, \
+	.id     = SIZE_MAX, \
 }
 
 /************************************************************************************************************/
@@ -105,6 +107,13 @@ CGUI_HIDDEN;
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
+
+void
+grid_find_focus(cgui_grid *grid, struct grid_area *area, enum cgui_focus *focus)
+CGUI_NONNULL(1, 2, 3)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 grid_repair(cgui_grid *grid)

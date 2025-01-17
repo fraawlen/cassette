@@ -103,6 +103,7 @@ enum value
 	MOD_KEY,
 	ANTIALIAS,
 	SUBPIXEL,
+	FOCUS,
 	SWAP_KIND,
 	SWAP_ACTION,
 
@@ -176,12 +177,12 @@ static const struct word words[] =
 	{ "default",    SWAP_KIND,   CGUI_SWAP_TO_DEFAULT           },
 	{ "none",       SWAP_KIND,   CGUI_SWAP_TO_NONE              },
 	{ "value",      SWAP_KIND,   CGUI_SWAP_TO_VALUE             },
+	{ "focus",      SWAP_KIND,   CGUI_SWAP_TO_FOCUS             },
 	{ "accel",      SWAP_KIND,   CGUI_SWAP_TO_ACCELERATOR       },
 	{ "cut",        SWAP_KIND,   CGUI_SWAP_TO_CLIPBOARD_CUT     },
 	{ "copy",       SWAP_KIND,   CGUI_SWAP_TO_CLIPBOARD_COPY    },
 	{ "paste",      SWAP_KIND,   CGUI_SWAP_TO_CLIPBOARD_PASTE   },
 	{ "cell",       SWAP_KIND,   CGUI_SWAP_TO_ACTION_CELL       },
-	{ "focus",      SWAP_KIND,   CGUI_SWAP_TO_ACTION_FOCUS      },
 	{ "window",     SWAP_KIND,   CGUI_SWAP_TO_ACTION_WINDOW     },
 	{ "misc",       SWAP_KIND,   CGUI_SWAP_TO_ACTION_MISC       },
 
@@ -190,20 +191,6 @@ static const struct word words[] =
 	{ "unselect",   SWAP_ACTION, CGUI_SWAP_CELL_SELECT_NONE     },
 	{ "select_all", SWAP_ACTION, CGUI_SWAP_CELL_SELECT_ALL      },
 	{ "redraw",     SWAP_ACTION, CGUI_SWAP_CELL_SELECT_ALL      },
-
-	{ "left",       SWAP_ACTION, CGUI_SWAP_FOCUS_LEFT           },
-	{ "right",      SWAP_ACTION, CGUI_SWAP_FOCUS_RIGHT          },
-	{ "up",         SWAP_ACTION, CGUI_SWAP_FOCUS_UP             },
-	{ "down",       SWAP_ACTION, CGUI_SWAP_FOCUS_DOWN           },
-	{ "leftmost",   SWAP_ACTION, CGUI_SWAP_FOCUS_LEFTMOST       },
-	{ "rightmost",  SWAP_ACTION, CGUI_SWAP_FOCUS_RIGHTMOST      },
-	{ "top",        SWAP_ACTION, CGUI_SWAP_FOCUS_TOP            },
-	{ "bottom",     SWAP_ACTION, CGUI_SWAP_FOCUS_BOTTOM         },
-	{ "next",       SWAP_ACTION, CGUI_SWAP_FOCUS_NEXT           },
-	{ "previous",   SWAP_ACTION, CGUI_SWAP_FOCUS_PREV           },
-	{ "first",      SWAP_ACTION, CGUI_SWAP_FOCUS_FIRST          },
-	{ "last",       SWAP_ACTION, CGUI_SWAP_FOCUS_LAST           },
-	{ "none",       SWAP_ACTION, CGUI_SWAP_FOCUS_NONE           },
 
 	{ "lock_grid",  SWAP_ACTION, CGUI_SWAP_WINDOW_LOCK_GRID     },
 	{ "lock_focus", SWAP_ACTION, CGUI_SWAP_WINDOW_LOCK_FOCUS    },
@@ -215,6 +202,12 @@ static const struct word words[] =
 	{ "straight",   CORNER_TYPE, CGUI_CORNER_STRAIGHT           },
 	{ "chamfer",    CORNER_TYPE, CGUI_CORNER_CHAMFER            },
 	{ "radii",      CORNER_TYPE, CGUI_CORNER_RADII              },
+
+	{ "next",       FOCUS,       CGUI_FOCUS_NEXT                },
+	{ "previous",   FOCUS,       CGUI_FOCUS_PREV                },
+	{ "first",      FOCUS,       CGUI_FOCUS_FIRST               },
+	{ "last",       FOCUS,       CGUI_FOCUS_LAST                },
+	{ "none",       FOCUS,       CGUI_FOCUS_NONE                },
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -924,8 +917,13 @@ swap(const char *str, uint8_t limit, struct cgui_swap *target)
 			target->value = util_str_to_long(r, 1, CGUI_CLIPBOARDS);
 			break;
 
+		case CGUI_SWAP_TO_FOCUS:
+			tmp = 0;
+			cdict_find(dict, r, FOCUS, &tmp);
+			target->value = tmp;
+			break;
+
 		case CGUI_SWAP_TO_ACTION_CELL:
-		case CGUI_SWAP_TO_ACTION_FOCUS:
 		case CGUI_SWAP_TO_ACTION_WINDOW:
 		case CGUI_SWAP_TO_ACTION_MISC:
 			tmp = 0;

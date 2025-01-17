@@ -35,9 +35,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static double col_width            (struct grid_line)                              CGUI_PURE;
-static double row_height           (struct grid_line)                              CGUI_PURE;
-static void   update_area_geometry (const cgui_grid *grid, struct grid_area *area) CGUI_NONNULL(1, 2);
+#define AREA(GRID, I) (const struct grid_area*)cref_ptr(GRID->areas, I)
+
+static double col_width            (struct grid_line)                      CGUI_PURE;
+static double row_height           (struct grid_line)                      CGUI_PURE;
+static void   update_area_geometry (const cgui_grid *, struct grid_area *) CGUI_NONNULL(1, 2);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -114,6 +116,7 @@ cgui_grid_assign_cell(cgui_grid *grid, cgui_cell *cell, size_t x, size_t y, size
 		return;
 	}
 
+	area->id     = cref_length(grid->areas) - 1;
 	area->cell   = cell;
 	area->col    = x;
 	area->row    = y;
@@ -165,7 +168,7 @@ cgui_grid_clone(const cgui_grid *grid)
 
 	CREF_FOR_EACH(grid->areas, i)
 	{
-		area = (const struct grid_area*)cref_ptr(grid->areas, i);
+		area = AREA(grid, i);
 		cgui_grid_assign_cell(grid_new, area->cell, area->col, area->row, area->n_cols, area->n_rows);
 		if (cgui_error())
 		{
@@ -623,6 +626,55 @@ grid_destroy(cgui_grid *grid)
 	free(grid->cols);
 	free(grid->rows);
 	free(grid);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+grid_find_focus(cgui_grid *grid, struct grid_area *area, enum cgui_focus *focus)
+{
+	size_t n;
+	size_t i;
+	bool v;
+
+	if (!grid->valid || cref_length(grid->areas) == 0)
+	{
+		*area = GRID_AREA_NONE;
+		return;
+	}
+
+	n = cref_length(grid->areas);
+	v = area->cell->valid;
+	i = area->id;
+
+	/* find new area                                             */
+	/* focus search starting from a grid edge (_FIRST and _LAST) */
+	/* change the focus direction for the next iteration         */
+	
+	switch (*focus)
+	{
+		case CGUI_FOCUS_NEXT:
+			*area = !v ? *AREA(grid, 0) : (i < n - 1 ? *AREA(grid, i + 1) : GRID_AREA_NONE);
+			break;
+
+		case CGUI_FOCUS_PREV:
+			*area = !v ? *AREA(grid, n - 1) : (i > 0 ? *AREA(grid, i - 1) : GRID_AREA_NONE);
+			break;
+
+		case CGUI_FOCUS_FIRST:
+			*area  = *AREA(grid, 0);
+			*focus = CGUI_FOCUS_NEXT;
+			break;
+
+		case CGUI_FOCUS_LAST:
+			*area  = *AREA(grid, n - 1);
+			*focus = CGUI_FOCUS_PREV;
+			break;
+
+		default:
+			*area = GRID_AREA_NONE;
+			break;
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

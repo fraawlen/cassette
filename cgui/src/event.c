@@ -41,7 +41,7 @@ static void button_press         (struct cgui_event *) CGUI_NONNULL(1);
 static void button_release       (struct cgui_event *) CGUI_NONNULL(1);
 static void close                (struct cgui_event *) CGUI_NONNULL(1);
 static void dummy_callback_event (struct cgui_event *) CGUI_NONNULL(1);
-static void focus                (struct cgui_event *) CGUI_NONNULL(1);
+static void focus_window         (struct cgui_event *) CGUI_NONNULL(1);
 static void key_press            (struct cgui_event *) CGUI_NONNULL(1);
 static void key_release          (struct cgui_event *) CGUI_NONNULL(1);
 static void leave                (struct cgui_event *) CGUI_NONNULL(1);
@@ -60,10 +60,10 @@ static void unmap                (struct cgui_event *) CGUI_NONNULL(1);
 /* other functions */
 
 static void   action_cell   (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
-static void   action_focus  (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
 static void   action_misc   (uint8_t);
 static void   action_window (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
 static void   clipboard     (enum cgui_cell_event_type, uint8_t, cgui_window *) CGUI_NONNULL(3);
+static void   focus_cell    (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
 static size_t swap_input    (struct cgui_event *)                               CGUI_NONNULL(1);
 
 /************************************************************************************************************/
@@ -115,7 +115,7 @@ event_process(struct cgui_event *event)
 			break;
 
 		case CGUI_EVENT_FOCUS:
-			focus(event);
+			focus_window(event);
 			break;
 
 		case CGUI_EVENT_UNFOCUS:
@@ -236,22 +236,6 @@ action_cell(uint8_t type, cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-action_focus(uint8_t type, cgui_window *window)
-{
-	(void)window;
-
-	switch (type)
-	{
-		// TODO
-
-		default:
-			break;
-	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
 action_misc(uint8_t type)
 {
 	switch (type)
@@ -275,7 +259,7 @@ static void
 action_window(uint8_t type, cgui_window *window)
 {
 	(void)window;
-
+	
 	switch (type)
 	{
 		case CGUI_SWAP_WINDOW_LOCK_GRID:
@@ -403,10 +387,91 @@ dummy_callback_event(struct cgui_event *event)
 	(void)event;
 }
 
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-focus(struct cgui_event *event)
+focus_cell(uint8_t type, cgui_window *window)
+{
+	size_t id;
+	enum cgui_focus focus;
+	struct grid_area area;
+	struct cgui_cell_event cell_event =
+	{
+		.type     = CGUI_CELL_EVENT_SUBFOCUS,
+		.subfocus = type,
+	};
+
+	/* explicit focus change through a swap input always break focus lock */
+
+	window_focus_lock(window, false);
+
+	/* focus removal                                                              */
+	/* special case : if the window did not have a focused area, and the window   */
+	/* happend to be a popup, then deactivate that window and any popup childrens */
+
+	if (type == CGUI_FOCUS_NONE)
+	{
+		if (window->focus.cell->valid)
+		{
+			window_focus(window, GRID_AREA_NONE);
+		}
+		else
+		{
+			// TODO popup handling
+		}
+		return;
+	}
+
+	/* in case the focused area hosts a meta-cell with its own subfocus, send a subfocus event first */
+	/* if it is accepted, then it means that the focused cell updated its subfocus and therefore the */
+	/* window-level focus should not be modified.                                                    */
+	/* note : only the focus values that are entirely relative to the current top-level focus        */
+	/* position are relevant to this event. (For example, CGUI_FOCUS_LAST is relative to the grid    */
+	/* and the position of the focused area doesn't matter.)                                         */
+
+	switch (type)
+	{
+		case CGUI_FOCUS_NEXT:
+		case CGUI_FOCUS_PREV:
+			if (window_process_cell_event(window, window->focus, &cell_event))
+			{
+				return;
+			}
+			break;
+
+		default:
+			break;
+	};
+
+	/* query the current grid to find the next area that matches the new focus direction   */
+	/* continue to seek until the focus event is accepted                                  */
+	/* if the query does not returns any valid area, nor any cell accepts the focus event, */
+	/* exit without updating the current focus.                                            */
+
+	area  = window->focus;
+	focus = type;
+	id    = area.id;
+
+	do
+	{
+		grid_find_focus(window->shown_grid, &area, &focus);
+		if (!area.cell->valid)
+		{
+			return;
+		}
+		cell_event.type  = CGUI_CELL_EVENT_FOCUS_GAIN_BY_ACTION;
+		cell_event.focus = type;
+	}
+	while (!window_process_cell_event(window, area, &cell_event) && area.id != id);
+
+	window_focus(window, area);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+focus_window(struct cgui_event *event)
 {
 	if (!event->window->valid)
 	{
@@ -664,12 +729,12 @@ swap_input(struct cgui_event *event)
 			clipboard(CGUI_CELL_EVENT_CLIPBOARD_PASTE, swap.value, event->window);
 			break;
 
-		case CGUI_SWAP_TO_ACTION_CELL:
-			action_cell(swap.value, event->window);
+		case CGUI_SWAP_TO_FOCUS:
+			focus_cell(swap.value, event->window);
 			break;
 
-		case CGUI_SWAP_TO_ACTION_FOCUS:
-			action_focus(swap.value, event->window);
+		case CGUI_SWAP_TO_ACTION_CELL:
+			action_cell(swap.value, event->window);
 			break;
 
 		case CGUI_SWAP_TO_ACTION_WINDOW:
