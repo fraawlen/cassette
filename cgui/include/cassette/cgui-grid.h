@@ -70,7 +70,7 @@ enum cgui_grid_relative_flex
 #define CGUI_GRID_PLACEHOLDER (&cgui_grid_placeholder_instance)
 
 /**
- * Global grid instance with the error state set to CGUI_GRID_INVALID. This instance is only made available to
+ * Global grid instance with the error state set to CERR_INVALID. This instance is only made available to
  * allow the static initialization of grid pointers with the macro CGUI_GRID_PLACEHOLDER.
  */
 extern cgui_grid cgui_grid_placeholder_instance;

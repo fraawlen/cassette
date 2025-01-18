@@ -161,6 +161,7 @@ static xcb_atom_t atom_wnom = 0; /* "_NET_WM_WINDOW_TYPE_NORMAL"  */
 static xcb_atom_t atom_wdsk = 0; /* "_NET_WM_WINDOW_TYPE_DESKTOP" */
 static xcb_atom_t atom_wovr = 0; /* "_NET_WM_WINDOW_TYPE_OVERLAY" */
 static xcb_atom_t atom_wdlg = 0; /* "_NET_WM_WINDOW_TYPE_DIALOG"  */
+static xcb_atom_t atom_cmbo = 0; /* "_NET_WM_WINDOW_TYPE_COMBO"   */
 static xcb_atom_t atom_nstt = 0; /* "_NET_WM_STATE"               */
 static xcb_atom_t atom_full = 0; /* "_NET_WM_STATE_FULLSREEN"     */
 
@@ -367,6 +368,7 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 	atom_wdsk = get_atom("_NET_WM_WINDOW_TYPE_DESKTOP");
 	atom_wovr = get_atom("_NET_WM_WINDOW_TYPE_DOCK");
 	atom_wdlg = get_atom("_NET_WM_WINDOW_TYPE_DIALOG");
+	atom_cmbo = get_atom("_NET_WM_WINDOW_TYPE_COMBO");
 	atom_nstt = get_atom("_NET_WM_STATE");
 	atom_full = get_atom("_NET_WM_STATE_FULLSCREEN");
 
@@ -451,6 +453,64 @@ fail_server:
 	main_set_error(CERR_XCB);
 	cref_destroy(events);
 	events = CREF_PLACEHOLDER;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+x11_inputs_grab(void)
+{
+	xcb_grab_keyboard_cookie_t xc1;
+	xcb_grab_pointer_cookie_t  xc2;
+	xcb_grab_keyboard_reply_t *xr1;
+	xcb_grab_pointer_reply_t  *xr2;
+
+	bool fail = false;
+
+	/* no need to explicitely grab touch events as they get interpreted as pointer events after the grab */
+	/* this also means that multitouch won't work on popups                                              */
+
+	xc1 = xcb_grab_keyboard(
+		connection,
+		0,
+		screen->root,
+		XCB_CURRENT_TIME,
+		XCB_GRAB_MODE_ASYNC,
+		XCB_GRAB_MODE_ASYNC);
+
+	xc2 = xcb_grab_pointer(
+		connection,
+		0,
+		screen->root,
+		XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE | XCB_EVENT_MASK_POINTER_MOTION,
+		XCB_GRAB_MODE_ASYNC,
+		XCB_GRAB_MODE_ASYNC,
+		XCB_NONE,
+		XCB_NONE,
+		XCB_CURRENT_TIME);
+
+	xr1 = xcb_grab_keyboard_reply(connection, xc1, NULL);
+	xr2 = xcb_grab_pointer_reply(connection,  xc2, NULL);
+
+	if ((fail = !xr1 || !xr2))
+	{
+		main_set_error(CERR_XCB);
+		x11_inputs_ungrab();
+	}
+
+	free(xr1);
+	free(xr2);
+	
+	return !fail;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_inputs_ungrab(void)
+{
+	test_cookie(xcb_ungrab_keyboard_checked(connection, XCB_CURRENT_TIME));
+	test_cookie(xcb_ungrab_pointer_checked(connection,  XCB_CURRENT_TIME));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1053,6 +1113,14 @@ x11_window_destroy(xcb_window_t id, xcb_pixmap_t buffer)
 void
 x11_window_move(xcb_window_t id, double x, double y)
 {
+	const xcb_size_hints_t xhints =
+	{
+		.flags = XCB_ICCCM_SIZE_HINT_P_POSITION,
+		.x     = TO_INT(x),
+		.y     = TO_INT(y),
+	};
+
+	prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &xhints);
 	test_cookie(
 		xcb_configure_window_checked(
 			connection,
@@ -1114,6 +1182,14 @@ x11_window_rename(xcb_window_t id, const char *name)
 void
 x11_window_resize(xcb_window_t id, double width, double height)
 {
+	const xcb_size_hints_t xhints =
+	{
+		.flags  = XCB_ICCCM_SIZE_HINT_P_SIZE,
+		.width  = TO_UINT(width),
+		.height = TO_UINT(height),
+	};
+
+	prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &xhints);
 	test_cookie(
 		xcb_configure_window_checked(
 			connection,
@@ -1147,6 +1223,7 @@ x11_window_set_transient(xcb_window_t id, xcb_window_t id_under)
 void
 x11_window_set_type(xcb_window_t id, enum cgui_window_type type)
 {
+	uint32_t attr = 0;
 	xcb_atom_t atom;
 
 	switch (type)
@@ -1167,11 +1244,17 @@ x11_window_set_type(xcb_window_t id, enum cgui_window_type type)
 			atom = atom_wovr;
 			break;
 
+		case CGUI_WINDOW_POPUP:
+			atom = atom_cmbo;
+			attr = 1;
+			break;
+
 		default:
 			return;
 	}
 
 	prop_set(id, atom_wtyp, XCB_ATOM_ATOM, 1, &atom);
+	xcb_change_window_attributes(connection,id, XCB_CW_OVERRIDE_REDIRECT, &attr);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

@@ -206,7 +206,7 @@ struct cgui_cell_context
 #define CGUI_CELL_PLACEHOLDER (&cgui_cell_placeholder_instance)
 
 /**
- * Global cell instance with the error state set to CGUI_CELL_INVALID. This instance is only made available to
+ * Global cell instance with the error state set to CERR_INVALID. This instance is only made available to
  * allow the static initialization of cell pointers with the macro CGUI_CELL_PLACEHOLDER.
  */
 extern cgui_cell cgui_cell_placeholder_instance;

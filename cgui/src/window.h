@@ -49,12 +49,19 @@ struct window_accel
 
 struct cgui_window
 {
-	/* geometry */
+	/* real geometry */
 
 	double x;
 	double y;
 	double width;
 	double height;
+
+	/* requested tmp geometry (after _move() and _resize() but before the transform event)*/
+
+	double tmp_x;
+	double tmp_y;
+	double tmp_width;
+	double tmp_height;
 
 	/* backend stuff */
 
@@ -89,12 +96,13 @@ struct cgui_window
 	bool wait_present;
 	bool async_present;
 	bool valid;
-	bool size_requested;
+	bool popup;
+	bool wait_resize;
+	bool wait_move;
 	unsigned long draw_timestamp;
 
 	/* wm data */
 
-	bool wait_resize;
 	bool wm_move;
 	bool wm_resize;
 	double old_width;

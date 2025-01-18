@@ -575,18 +575,27 @@ pointer(struct cgui_event *event)
 	}
 
 	/* drag or resize window if event is rejected */
+	/* unless the window is a popup               */
 
-	if (event->window->wm_move && cinputs_find(event->window->buttons, CONFIG->wm_button_move, &i))
+	if (event->window->popup)
+	{
+		return;
+	}
+	else if (
+	   !event->window->wait_move
+	 && event->window->wm_move
+	 && cinputs_find(event->window->buttons, CONFIG->wm_button_move, &i))
 	{
 		cgui_window_move(
 			event->window,
 			event->pointer_x - cinputs_x(event->window->buttons, i) + event->window->x,
 			event->pointer_y - cinputs_y(event->window->buttons, i) + event->window->y);
 	}
-	else if (!event->window->wait_resize
-	 && event->window->wm_resize && cinputs_find(event->window->buttons, CONFIG->wm_button_resize, &i))
+	else if (
+	   !event->window->wait_resize
+	 && event->window->wm_resize
+	 && cinputs_find(event->window->buttons, CONFIG->wm_button_resize, &i))
 	{
-		event->window->wait_resize = true; /* this is to avoid spamming resizes that are slow */
 		cgui_window_resize(
 			event->window,
 			event->pointer_x - cinputs_x(event->window->buttons, i) + event->window->old_width,
@@ -872,6 +881,7 @@ transform(struct cgui_event *event)
 	}
 
 	window->wait_resize = false;
+	window->wait_move   = false;
 	window->x           = event->transform_x;
 	window->y           = event->transform_y;
 

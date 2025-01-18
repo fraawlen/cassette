@@ -78,6 +78,10 @@ cgui_window cgui_window_placeholder_instance =
 	.y              = 0.0,
 	.width          = 0.0,
 	.height         = 0.0,
+	.tmp_x          = 0.0,
+	.tmp_y          = 0.0,
+	.tmp_width      = 0.0,
+	.tmp_height     = 0.0,
 	.x_serial       = 0,
 	.x_id           = 0,
 	.x_buffer       = 0,
@@ -98,8 +102,9 @@ cgui_window cgui_window_placeholder_instance =
 	.wait_present   = false,
 	.async_present  = false,
 	.valid          = false,
-	.size_requested = false,
+	.popup          = false,
 	.wait_resize    = false,
+	.wait_move      = false,
 	.wm_move        = false,
 	.wm_resize      = false,
 	.old_width      = 0.0,
@@ -138,13 +143,29 @@ cgui_window cgui_window_placeholder_instance =
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-void
+bool
 cgui_window_activate(cgui_window *window)
 {
 	if (cgui_error() || !window->valid || window->state.active || cref_length(window->grids) == 0)
 	{
-		return;
+		return false;
 	}
+
+	/* special activation for popups */
+
+	if (!window->popup)
+	{
+		goto skip_popup;
+	}
+
+	/*
+	if (!x11_inputs_grab())
+	{
+		return false;
+	}
+	*/
+
+skip_popup:
 
 	/* if no grid is shown, select the first grid and resize the window */
 	/* (if no custom size has been requested)                           */
@@ -152,18 +173,14 @@ cgui_window_activate(cgui_window *window)
 	if (!window->shown_grid->valid)
 	{
 		window->shown_grid = (cgui_grid*)cref_ptr(window->grids, 0);
-		if (!window->size_requested)
+		if (!window->wait_resize)
 		{
-			x11_window_resize(
-				window->x_id,
-				WIDTH(window->shown_grid),
-				HEIGHT(window->shown_grid));
+			cgui_window_resize(window, WIDTH(window->shown_grid), HEIGHT(window->shown_grid));
 		}
 	}
 
 	/* activate the window */
 
-	window->size_requested = false;
 	window->draw_timestamp = 0;
 
 	x11_window_activate(window->x_id);
@@ -173,6 +190,16 @@ cgui_window_activate(cgui_window *window)
 	{
 		window_update_state(window, CGUI_WINDOW_FOCUSED, true);
 	}
+
+	/* if a window move was requested before activation, repeat it */
+	/* now because otherwhise the WM can override the position     */
+
+	if (window->wait_move)
+	{
+		cgui_window_move(window, window->tmp_x, window->tmp_y);
+	}
+
+	return !cgui_error();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -317,6 +344,10 @@ cgui_window_create(void)
 	window->y              = y;
 	window->width          = width;
 	window->height         = height;
+	window->tmp_x          = x;
+	window->tmp_y          = y;
+	window->tmp_width      = width;
+	window->tmp_height     = height;
 	window->x_serial       = 0;
 	window->name           = NULL;
 	window->fn_close       = dummy_fn_close;
@@ -331,8 +362,9 @@ cgui_window_create(void)
 	window->wait_present   = false;
 	window->async_present  = false;
 	window->valid          = true;
-	window->size_requested = false;
+	window->popup          = false;
 	window->wait_resize    = false;
+	window->wait_move      = false;
 	window->wm_move        = false;
 	window->wm_resize      = false;
 	window->old_width      = width;
@@ -469,6 +501,9 @@ cgui_window_move(cgui_window *window, double x, double y)
 		return;
 	}
 
+	window->tmp_x     = x;
+	window->tmp_y     = y;
+	window->wait_move = true;
 	x11_window_move(window->x_id, x, y);
 }
 
@@ -645,11 +680,9 @@ cgui_window_resize(cgui_window *window, double width, double height)
 		return;
 	}
 
-	if (!window->state.active)
-	{
-		window->size_requested = true;
-	}
-
+	window->tmp_width   = width;
+	window->tmp_height  = height;
+	window->wait_resize = true;
 	size_limits(window, &min_w, &min_h, &max_w, &max_h);
 	x11_window_resize(
 		window->x_id,
@@ -693,12 +726,13 @@ cgui_window_set_accelerator(cgui_window *window, int id, const char *name, void 
 void
 cgui_window_set_type(cgui_window *window, enum cgui_window_type type)
 {
-	if (cgui_error() || !window->valid)
+	if (cgui_error() || !window->valid || window->state.active)
 	{
 		return;
 	}
 	
 	x11_window_set_type(window->x_id, type);
+	window->popup = type == CGUI_WINDOW_POPUP;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

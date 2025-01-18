@@ -169,6 +169,9 @@ static const char *default_text =
 	cgui_window_on_draw(window, on_draw);
 	cgui_window_on_close(window, on_close);
 	cgui_window_on_state(window, on_state);
+	cgui_window_move(window, 2000, 100);
+	cgui_window_resize(window, 1000, 1000);
+	cgui_window_set_type(window, CGUI_WINDOW_OVERLAY);
 	cgui_window_activate(window);
 
 	/* Run */
@@ -227,6 +230,7 @@ on_click(cgui_cell *c)
 		cgui_clipboard_copy(1, cstr_chars(text));
 		cgui_clipboard_on_copy(1, on_clip_copy);
 		cgui_clipboard_on_lose(1, on_clip_lose);
+		cgui_window_deactivate(window);
 	}
 
 	printf("button clicked\n");

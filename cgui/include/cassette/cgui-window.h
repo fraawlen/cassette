@@ -50,6 +50,7 @@ enum cgui_window_type
 	CGUI_WINDOW_DIALOG,
 	CGUI_WINDOW_DESKTOP,
 	CGUI_WINDOW_OVERLAY,
+	CGUI_WINDOW_POPUP,
 };
 
 /**
@@ -90,7 +91,7 @@ struct cgui_window_state_flags
 #define CGUI_WINDOW_PLACEHOLDER (&cgui_window_placeholder_instance)
 
 /**
- * Global window instance with the error state set to CGUI_WINDOW_INVALID. This instance is only made
+ * Global window instance with the error state set to CERR_INVALID. This instance is only made
  * available to allow the static initialization of window pointers with the macro CGUI_WINDOW_PLACEHOLDER.
  */
 extern cgui_window cgui_window_placeholder_instance;
@@ -120,7 +121,7 @@ CGUI_NONNULL(1);
 /**
  *
  */
-void
+bool
 cgui_window_activate(cgui_window *window)
 CGUI_NONNULL(1);
 
