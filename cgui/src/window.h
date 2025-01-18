@@ -56,7 +56,7 @@ struct cgui_window
 	double width;
 	double height;
 
-	/* requested tmp geometry (after _move() and _resize() but before the transform event)*/
+	/* requested dimensions (after _move() and _resize() but before the transform event)*/
 
 	double tmp_x;
 	double tmp_y;

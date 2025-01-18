@@ -20,6 +20,7 @@
 
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
+#include <float.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -619,6 +620,7 @@ x11_screen(size_t i, size_t *n, size_t *primary)
 	xi = xcb_randr_get_monitors_monitors_iterator(xr);
 	for (size_t j = 0; xi.rem; j++)
 	{
+		s.id      = j;
 		s.x       = xi.data->x;
 		s.y       = xi.data->y;
 		s.width   = xi.data->width;
@@ -626,7 +628,7 @@ x11_screen(size_t i, size_t *n, size_t *primary)
 		s.primary = xi.data->primary;
 		if (s.primary)
 		{
-			*primary = i;
+			*primary = j;
 		}
 
 		xcb_randr_monitor_info_next(&xi);
@@ -634,6 +636,48 @@ x11_screen(size_t i, size_t *n, size_t *primary)
 		{
 			break;
 		}
+	}
+
+	free(xr);
+
+	return s;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct cgui_screen
+x11_screen_at(double x, double y)
+{
+	xcb_randr_get_monitors_cookie_t xc;
+	xcb_randr_get_monitors_reply_t *xr;
+	xcb_randr_monitor_info_iterator_t xi;
+	struct cgui_screen s = {0};
+	size_t i = 0;
+
+	xc = xcb_randr_get_monitors(connection, screen->root, 1);
+	xr = xcb_randr_get_monitors_reply(connection, xc, NULL);
+	if (!xr)
+	{
+		main_set_error(CERR_XCB);
+		return s;
+	}
+
+	for (xi = xcb_randr_get_monitors_monitors_iterator(xr); xi.rem; xcb_randr_monitor_info_next(&xi))
+	{
+		if (x > xi.data->x - DBL_EPSILON
+		 && y > xi.data->y - DBL_EPSILON
+		 && x < xi.data->x + DBL_EPSILON + xi.data->width
+		 && y < xi.data->y + DBL_EPSILON + xi.data->height)
+		{
+			s.id      = i;
+			s.x       = xi.data->x;
+			s.y       = xi.data->y;
+			s.width   = xi.data->width;
+			s.height  = xi.data->height;
+			s.primary = xi.data->primary;
+			break;
+		}
+		i++;
 	}
 
 	free(xr);
@@ -1113,20 +1157,20 @@ x11_window_destroy(xcb_window_t id, xcb_pixmap_t buffer)
 void
 x11_window_move(xcb_window_t id, double x, double y)
 {
-	const xcb_size_hints_t xhints =
+	const xcb_size_hints_t hints =
 	{
 		.flags = XCB_ICCCM_SIZE_HINT_P_POSITION,
 		.x     = TO_INT(x),
 		.y     = TO_INT(y),
 	};
 
-	prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &xhints);
+	prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &hints);
 	test_cookie(
 		xcb_configure_window_checked(
 			connection,
 			id,
 			XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y,
-			(uint32_t[2]){TO_INT(x), TO_INT(y)}));
+			(uint32_t[2]){hints.x, hints.y}));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1182,20 +1226,20 @@ x11_window_rename(xcb_window_t id, const char *name)
 void
 x11_window_resize(xcb_window_t id, double width, double height)
 {
-	const xcb_size_hints_t xhints =
+	const xcb_size_hints_t hints =
 	{
 		.flags  = XCB_ICCCM_SIZE_HINT_P_SIZE,
 		.width  = TO_UINT(width),
 		.height = TO_UINT(height),
 	};
 
-	prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &xhints);
+	prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &hints);
 	test_cookie(
 		xcb_configure_window_checked(
 			connection,
 			id,
 			XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT,
-			(uint32_t[2]){TO_UINT(width), TO_UINT(height)}));
+			(uint32_t[2]){hints.width, hints.height}));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

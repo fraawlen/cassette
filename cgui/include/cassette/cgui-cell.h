@@ -99,6 +99,8 @@ struct cgui_cell_event
 	struct cgui_box frame;
 	double x;
 	double y;
+	double x_root;
+	double y_root;
 	double width;
 	double height;
 	union

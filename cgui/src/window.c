@@ -192,14 +192,14 @@ skip_popup:
 	}
 
 	/* if a window move was requested before activation, repeat it */
-	/* now because otherwhise the WM can override the position     */
+	/* because otherwhise the WM can override the position         */
 
 	if (window->wait_move)
 	{
 		cgui_window_move(window, window->tmp_x, window->tmp_y);
 	}
 
-	return !cgui_error();
+	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -510,6 +510,48 @@ cgui_window_move(cgui_window *window, double x, double y)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cgui_window_move_smart(cgui_window *window, double x_1, double y_1, double x_2, double y_2)
+{
+	struct cgui_screen s;
+	double w;
+	double h;
+
+	if (cgui_error() || !window->valid || cref_length(window->grids) == 0)
+	{
+		return;
+	}
+
+	/* get window's size */
+
+	if (window->wait_resize)
+	{
+		w = window->tmp_width;
+		h = window->tmp_height;
+	}
+	else if (window->state.active)
+	{	
+		w = window->width;
+		h = window->height;
+	}
+	else
+	{
+		w = WIDTH ((const cgui_grid *)cref_ptr(window->grids, 0));
+		h = HEIGHT((const cgui_grid *)cref_ptr(window->grids, 0));
+	}
+
+	/* move the window to fit within a screen */
+
+	s = x11_screen_at(x_1, y_1);
+
+	cgui_window_move(
+		window,
+		s.width  < DBL_EPSILON || x_1 + w < s.x + DBL_EPSILON + s.width  ? x_1 : x_2 - w,
+		s.height < DBL_EPSILON || y_1 + h < s.y + DBL_EPSILON + s.height ? y_1 : y_2 - h);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cgui_window_non_urgent(cgui_window *window)
 {
 	if (cgui_error() || !window->valid)
@@ -680,14 +722,13 @@ cgui_window_resize(cgui_window *window, double width, double height)
 		return;
 	}
 
-	window->tmp_width   = width;
-	window->tmp_height  = height;
-	window->wait_resize = true;
 	size_limits(window, &min_w, &min_h, &max_w, &max_h);
-	x11_window_resize(
-		window->x_id,
-		util_limit(width,  min_w, max_w),
-		util_limit(height, min_h, max_h));
+
+	window->tmp_width   = util_limit(width,  min_w, max_w);
+	window->tmp_height  = util_limit(height, min_h, max_h);
+	window->wait_resize = true;
+
+	x11_window_resize(window->x_id, width, height);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1169,6 +1210,8 @@ window_process_cell_event(cgui_window *window, struct grid_area area, struct cgu
 	event->msg        = CGUI_CELL_MSG_NONE;
 	event->x          = area.x + CONFIG->window_padding;
 	event->y          = area.y + CONFIG->window_padding;
+	event->x_root     = area.x + CONFIG->window_padding + window->x;
+	event->y_root     = area.y + CONFIG->window_padding + window->y;
 	event->width      = area.width;
 	event->height     = area.height;
 	event->frame      = cell_frame(window, area);

@@ -157,6 +157,13 @@ CGUI_NONNULL(1);
  *
  */
 void
+cgui_window_move_smart(cgui_window *window, double x_1, double y_1, double x_2, double y_2)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
 cgui_window_non_urgent(cgui_window *window)
 CGUI_NONNULL(1);
 

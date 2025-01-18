@@ -82,6 +82,9 @@ static const char *default_text =
  int
  main(int argc, char **argv)
  {
+ 	double x;
+	double y;
+
 	/* Setup */
 
 	cgui_init(argc, argv);
@@ -161,6 +164,9 @@ static const char *default_text =
 	
 	/* Window setup */
 
+	x = screen.x + screen.width  - 20;
+	y = screen.y + screen.height - 20;
+
 	cgui_window_push_grid(window, grid_2);
 	cgui_window_push_grid(window, grid_1);
 	cgui_window_rename(window, "Hi");
@@ -169,9 +175,8 @@ static const char *default_text =
 	cgui_window_on_draw(window, on_draw);
 	cgui_window_on_close(window, on_close);
 	cgui_window_on_state(window, on_state);
-	cgui_window_move(window, 2000, 100);
-	cgui_window_resize(window, 1000, 1000);
 	cgui_window_set_type(window, CGUI_WINDOW_OVERLAY);
+	cgui_window_move_smart(window, x, y, x, y);
 	cgui_window_activate(window);
 
 	/* Run */

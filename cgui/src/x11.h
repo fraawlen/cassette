@@ -57,20 +57,6 @@ CGUI_HIDDEN;
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_pointer_position(double *x, double *y)
-CGUI_NONNULL(1, 2)
-CGUI_HIDDEN;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-struct cgui_screen
-x11_screen(size_t i, size_t *n, size_t *primary)
-CGUI_NONNULL(2, 3)
-CGUI_HIDDEN;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
 x11_selection_clear(int id)
 CGUI_HIDDEN;
 
@@ -207,18 +193,6 @@ CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-xcb_window_t
-x11_leader_window(void)
-CGUI_HIDDEN;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-xcb_visualtype_t *
-x11_visual(void)
-CGUI_HIDDEN;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 void
 x11_key(uint8_t keycode, struct cgui_mods mods, uint32_t *keysym, uint32_t *utf32, char utf8[static 8])
 CGUI_NONNULL(3, 4, 5)
@@ -226,5 +200,38 @@ CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+xcb_window_t
+x11_leader_window(void)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_pointer_position(double *x, double *y)
+CGUI_NONNULL(1, 2)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct cgui_screen
+x11_screen(size_t i, size_t *n, size_t *primary)
+CGUI_NONNULL(2, 3)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct cgui_screen
+x11_screen_at(double x, double y)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 xcb_timestamp_t
-x11_timestamp(void);
+x11_timestamp(void)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+xcb_visualtype_t *
+x11_visual(void)
+CGUI_HIDDEN;
