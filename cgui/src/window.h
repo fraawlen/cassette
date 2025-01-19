@@ -49,6 +49,8 @@ struct window_accel
 
 struct cgui_window
 {
+	enum cgui_window_type type;
+
 	/* real geometry */
 
 	double x;
@@ -96,7 +98,6 @@ struct cgui_window
 	bool wait_present;
 	bool async_present;
 	bool valid;
-	bool popup;
 	bool wait_resize;
 	bool wait_move;
 	unsigned long draw_timestamp;

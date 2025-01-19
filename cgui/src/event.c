@@ -577,7 +577,8 @@ pointer(struct cgui_event *event)
 	/* drag or resize window if event is rejected */
 	/* unless the window is a popup               */
 
-	if (event->window->popup)
+	if (event->window->type == CGUI_WINDOW_POPUP
+	 || event->window->type == CGUI_WINDOW_FIXED)
 	{
 		return;
 	}

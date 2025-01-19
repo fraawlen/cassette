@@ -48,8 +48,9 @@ enum cgui_window_type
 {
 	CGUI_WINDOW_NORMAL,
 	CGUI_WINDOW_DIALOG,
-	CGUI_WINDOW_DESKTOP,
+	CGUI_WINDOW_UNDERLAY,
 	CGUI_WINDOW_OVERLAY,
+	CGUI_WINDOW_FIXED,
 	CGUI_WINDOW_POPUP,
 };
 
@@ -77,6 +78,18 @@ struct cgui_window_state_flags
 	bool disabled;
 	bool locked_grid;
 	bool locked_focus;
+};
+
+/**
+ *
+ */
+struct cgui_window_style
+{
+	enum cgui_corner corner[4];
+	double size_corner[4];
+	double size_border;
+	struct ccolor color_border;
+	struct ccolor color_background;
 };
 
 /************************************************************************************************************/

@@ -119,8 +119,8 @@ static const char *default_text =
 	cgui_button_on_click(button_2, on_click);
 	cgui_button_on_click(button_3, on_click);
 
-	cgui_button_set_label(button_1, "button");
-	cgui_button_set_label(button_2, "123456");
+	cgui_button_set_label(button_1, "copy");
+	cgui_button_set_label(button_2, "quit");
 	cgui_button_set_label(button_3, "button\ntest");
 	cgui_button_rotate_label(button_3, CGUI_ROTATION_INVERTED);
 
@@ -175,8 +175,9 @@ static const char *default_text =
 	cgui_window_on_draw(window, on_draw);
 	cgui_window_on_close(window, on_close);
 	cgui_window_on_state(window, on_state);
-	cgui_window_set_type(window, CGUI_WINDOW_OVERLAY);
+	cgui_window_resize(window, 1000, 1000);
 	cgui_window_move_smart(window, x, y, x, y);
+	cgui_window_set_type(window, CGUI_WINDOW_FIXED);
 	cgui_window_activate(window);
 
 	/* Run */

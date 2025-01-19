@@ -57,17 +57,43 @@ static const struct cgui_config config_default =
 
 	/* window */
 
-	.window_corner      = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-	.window_size_corner = {0, 0, 0, 0},
-	.window_size_border = 10,
-	.window_padding     = 20,
+	.window =
+	{
+		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
+		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
+		.size_corner      = { 0.0, 0.0, 0.0, 0.0 },
+		.size_border      = 10,
+	},
 
-	.window_color_border          = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.window_color_border_focused  = { .r = 0.671, .g = 0.671, .b = 0.671, .a = 1.000 },
-	.window_color_border_disabled = { .r = 0.400, .g = 0.400, .b = 0.400, .a = 1.000 },
-	.window_color_border_locked   = { .r = 0.500, .g = 0.100, .b = 0.100, .a = 1.000 },
-	.window_color_background      = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
+	.window_focused =
+	{
+		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
+		.color_border     = { .r = 0.671, .g = 0.671, .b = 0.671, .a = 1.000 },
+		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
+		.size_corner      = { 0.0, 0.0, 0.0, 0.0 },
+		.size_border      = 10,
+	},
 
+	.window_locked =
+	{
+		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
+		.color_border     = { .r = 0.500, .g = 0.100, .b = 0.100, .a = 1.000 },
+		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
+		.size_corner      = { 0.0, 0.0, 0.0, 0.0 },
+		.size_border      = 10,
+	},
+
+	.window_disabled =
+	{
+		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
+		.color_border     = { .r = 0.400, .g = 0.400, .b = 0.400, .a = 1.000 },
+		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
+		.size_corner      = { 0.0, 0.0, 0.0, 0.0 },
+		.size_border      = 10,
+	},
+
+	.window_padding                = 20,
 	.window_enable_disabled        = true,
 	.window_enable_focused         = true,
 	.window_enable_locked          = true,
@@ -76,21 +102,15 @@ static const struct cgui_config config_default =
 
 	/* popup */
 
-	.popup_color_background = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.popup_color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-
-	.popup_border          = 2,
-	.popup_padding         = 10,
-	.popup_max_width       = 0,
-	.popup_max_height      = 0,
-	.popup_override_width  = 0,
-	.popup_override_height = 0,
-	.popup_override_x      = 0,
-	.popup_override_y      = 0,
-
-	.popup_enable_override_position = false,
-	.popup_enable_override_width    = false,
-	.popup_enable_override_height   = false,
+	.popup_padding = 10,
+	.popup =
+	{
+		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
+		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
+		.size_corner      = { 0.0, 0.0, 0.0, 0.0 },
+		.size_border      = 10,
+	},
 
 	/* behavior */
 

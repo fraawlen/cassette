@@ -41,6 +41,13 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#define WINDOW(NAMESPACE, TARGET) \
+	{ NAMESPACE, "corner_type",      CORNER_TYPE,  TARGET.corner           }, \
+	{ NAMESPACE, "corner_size",      CORNER_SIZE,  TARGET.size_corner      }, \
+	{ NAMESPACE, "border_thickness", LENGTH,      &TARGET.size_border      }, \
+	{ NAMESPACE, "color_border",     COLOR,       &TARGET.color_border     }, \
+	{ NAMESPACE, "color_background", COLOR,       &TARGET.color_background },
+
 #define BOX(NAMESPACE, TARGET) \
 	{ NAMESPACE, "corner_type",       CORNER_TYPE,  TARGET.corner           }, \
 	{ NAMESPACE, "corner_size",       CORNER_SIZE,  TARGET.size_corner      }, \
@@ -214,70 +221,50 @@ static const struct word words[] =
 
 static const struct resource resources[] =
 {
-	{ "global",   "scale",                       SCALE,       &config.scale                          },
-	{ "global",   "modkey",                      MOD_KEY,     &config.modkey                         },
+	{ "global",   "scale",                       SCALE,         &config.scale                          },
+	{ "global",   "modkey",                      MOD_KEY,       &config.modkey                         },
 
-	{ "font",     "face",                        STRING,       config.font_face                      },
-	{ "font",     "size",                        LENGTH,      &config.font_size                      },
-	{ "font",     "horizontal_spacing",          LENGTH,      &config.font_spacing_horizontal        },
-	{ "font",     "vertical_spacing",            LENGTH,      &config.font_spacing_vertical          },
-	{ "font",     "width_override",              LENGTH,      &config.font_override_width            },
-	{ "font",     "ascent_override",             LENGTH,      &config.font_override_ascent           },
-	{ "font",     "descent_override",            LENGTH,      &config.font_override_descent          },
-	{ "font",     "x_offset",                    POSITION,    &config.font_offset_x                  },
-	{ "font",     "y_offset",                    POSITION,    &config.font_offset_y                  },
-	{ "font",     "enable_overrides",            BOOL,        &config.font_enable_overrides          },
-	{ "font",     "enable_hint_metrics",         BOOL,        &config.font_enable_hint_metrics       },
-	{ "font",     "antialias_mode",              ANTIALIAS,   &config.font_antialias                 },
-	{ "font",     "subpixel_mode",               SUBPIXEL,    &config.font_subpixel                  },
-	{ "font",     "background_vertical_pad",     LENGTH,      &config.font_background_vpad           },
-	{ "font",     "background_horizontal_pad",   LENGTH,      &config.font_background_hpad           },
+	{ "font",     "face",                        STRING,         config.font_face                      },
+	{ "font",     "size",                        LENGTH,        &config.font_size                      },
+	{ "font",     "horizontal_spacing",          LENGTH,        &config.font_spacing_horizontal        },
+	{ "font",     "vertical_spacing",            LENGTH,        &config.font_spacing_vertical          },
+	{ "font",     "width_override",              LENGTH,        &config.font_override_width            },
+	{ "font",     "ascent_override",             LENGTH,        &config.font_override_ascent           },
+	{ "font",     "descent_override",            LENGTH,        &config.font_override_descent          },
+	{ "font",     "x_offset",                    POSITION,      &config.font_offset_x                  },
+	{ "font",     "y_offset",                    POSITION,      &config.font_offset_y                  },
+	{ "font",     "enable_overrides",            BOOL,          &config.font_enable_overrides          },
+	{ "font",     "enable_hint_metrics",         BOOL,          &config.font_enable_hint_metrics       },
+	{ "font",     "antialias_mode",              ANTIALIAS,     &config.font_antialias                 },
+	{ "font",     "subpixel_mode",               SUBPIXEL,      &config.font_subpixel                  },
+	{ "font",     "background_vertical_pad",     LENGTH,        &config.font_background_vpad           },
+	{ "font",     "background_horizontal_pad",   LENGTH,        &config.font_background_hpad           },
 
-	{ "grid",     "padding",                     LENGTH,      &config.grid_padding                   },
-	{ "grid",     "spacing",                     LENGTH,      &config.grid_spacing                   },
+	{ "grid",     "padding",                     LENGTH,        &config.grid_padding                   },
+	{ "grid",     "spacing",                     LENGTH,        &config.grid_spacing                   },
 
-	{ "window",   "corner_type",                 CORNER_TYPE,  config.window_corner                  },
-	{ "window",   "corner_size",                 CORNER_SIZE,  config.window_size_corner             },
-	{ "window",   "border_thickness",            LENGTH,      &config.window_size_border             },
-	{ "window",   "padding",                     LENGTH,      &config.window_padding                 },
-	{ "window",   "color_border_default",        COLOR,       &config.window_color_border            },
-	{ "window",   "color_border_focused",        COLOR,       &config.window_color_border_focused    },
-	{ "window",   "color_border_disabled",       COLOR,       &config.window_color_border_disabled   },
-	{ "window",   "color_border_locked",         COLOR,       &config.window_color_border_locked     },
-	{ "window",   "color_background",            COLOR,       &config.window_color_background        },
-	{ "window",   "enable_disabled_substyle",    BOOL,        &config.window_enable_disabled         },
-	{ "window",   "enable_focused_substyle",     BOOL,        &config.window_enable_focused          },
-	{ "window",   "enable_locked_substyle",      BOOL,        &config.window_enable_locked           },
-	{ "window",   "allow_partial_redraws",       BOOL,        &config.window_enable_partial_redraws  },
-	{ "window",   "focus_on_activation",         BOOL,        &config.window_focus_on_activation     },
+	{ "window",   "padding",                     LENGTH,        &config.window_padding                 },
+	{ "window",   "enable_disabled_substyle",    BOOL,          &config.window_enable_disabled         },
+	{ "window",   "enable_focused_substyle",     BOOL,          &config.window_enable_focused          },
+	{ "window",   "enable_locked_substyle",      BOOL,          &config.window_enable_locked           },
+	{ "window",   "allow_partial_redraws",       BOOL,          &config.window_enable_partial_redraws  },
+	{ "window",   "focus_on_activation",         BOOL,          &config.window_focus_on_activation     },
 
-	{ "popup",    "border_thickness",            LENGTH,      &config.popup_border                   },
-	{ "popup",    "padding",                     LENGTH,      &config.popup_padding                  },
-	{ "popup",    "color_background",            COLOR,       &config.popup_color_background         },
-	{ "popup",    "color_border",                COLOR,       &config.popup_color_border             },
-	{ "popup",    "max_width",                   LENGTH,      &config.popup_max_width                },
-	{ "popup",    "max_height",                  LENGTH,      &config.popup_max_height               },
-	{ "popup",    "width_override",              LENGTH,      &config.popup_override_width           },
-	{ "popup",    "height_override",             LENGTH,      &config.popup_override_height          },
-	{ "popup",    "x_position_override",         POSITION,    &config.popup_override_x               },
-	{ "popup",    "y_position_override",         POSITION,    &config.popup_override_y               },
-	{ "popup",    "enable_position_overrides",   BOOL,        &config.popup_enable_override_position },
-	{ "popup",    "enable_width_override",       BOOL,        &config.popup_enable_override_width    },
-	{ "popup",    "ennable_height_override",     BOOL,        &config.popup_enable_override_height   },
+	{ "popup",    "padding",                     LENGTH,        &config.popup_padding                  },
 
-	{ "behavior", "async_present",               BOOL,        &config.async_present                  },
-	{ "behavior", "smart_corner",                BOOL,        &config.smart_corners                  },
-	{ "behavior", "enable_cell_auto_lock",       BOOL,        &config.cell_auto_lock                 },
-	{ "behavior", "enable_persistent_pointer",   BOOL,        &config.persistent_pointer             },
-	{ "behavior", "enable_persistent_touch",     BOOL,        &config.persistent_touch               },
-	{ "behavior", "animation_framerate_divider", ULONG,       &config.anim_divider                   },
-	{ "behavior", "window_button_move",          BUTTON_ID,   &config.wm_button_move                 },
-	{ "behavior", "window_button_resize",        BUTTON_ID,   &config.wm_button_resize               },
-	{ "behavior", "window_button_fullscreen",    BUTTON_ID,   &config.wm_button_fullscreen           },
+	{ "behavior", "async_present",               BOOL,          &config.async_present                  },
+	{ "behavior", "smart_corner",                BOOL,          &config.smart_corners                  },
+	{ "behavior", "enable_cell_auto_lock",       BOOL,          &config.cell_auto_lock                 },
+	{ "behavior", "enable_persistent_pointer",   BOOL,          &config.persistent_pointer             },
+	{ "behavior", "enable_persistent_touch",     BOOL,          &config.persistent_touch               },
+	{ "behavior", "animation_framerate_divider", ULONG,         &config.anim_divider                   },
+	{ "behavior", "window_button_move",          BUTTON_ID,     &config.wm_button_move                 },
+	{ "behavior", "window_button_resize",        BUTTON_ID,     &config.wm_button_resize               },
+	{ "behavior", "window_button_fullscreen",    BUTTON_ID,     &config.wm_button_fullscreen           },
 
-	{ "stripes",  "color",                       COLOR,       &config.stripes_color                  },
-	{ "stripes",  "width",                       LENGTH,      &config.stripes_width                  },
-	{ "stripes",  "spacing",                     LENGTH,      &config.stripes_spacing                },
+	{ "stripes",  "color",                       COLOR,         &config.stripes_color                  },
+	{ "stripes",  "width",                       LENGTH,        &config.stripes_width                  },
+	{ "stripes",  "spacing",                     LENGTH,        &config.stripes_spacing                },
 
 	KEY(  1) KEY(  2) KEY(  3) KEY(  4) KEY(  5) KEY(  6) KEY(  7) KEY(  8) KEY(  9) KEY( 10)
 	KEY( 11) KEY( 12) KEY( 13) KEY( 14) KEY( 15) KEY( 16) KEY( 17) KEY( 18) KEY( 19) KEY( 20)
@@ -295,6 +282,12 @@ static const struct resource resources[] =
 
 	BUTTON( 1) BUTTON( 2) BUTTON( 3) BUTTON( 4) BUTTON( 5) BUTTON( 6) BUTTON( 7) BUTTON( 8)
 	BUTTON( 9) BUTTON(10) BUTTON(11) BUTTON(12)
+
+	WINDOW( "window",          config.window          )
+	WINDOW( "window_focused",  config.window_focused  )
+	WINDOW( "window_disabled", config.window_disabled )
+	WINDOW( "window_locked",   config.window_locked   )
+	WINDOW( "popup",           config.popup           )
 
 	BOX( "filler",          config.filler_frame          )
 	BOX( "stripes",         config.stripes_frame         )

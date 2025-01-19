@@ -207,6 +207,7 @@ void
 cgui_reconfig(void)
 {
 	cgui_window *window;
+	double padding;
 
 	if (err)
 	{
@@ -217,7 +218,8 @@ cgui_reconfig(void)
 
 	CREF_FOR_EACH(windows, i)
 	{
-		window = (cgui_window*)cref_ptr(windows, i);
+		window  = (cgui_window*)cref_ptr(windows, i);
+		padding = window->type == CGUI_WINDOW_POPUP ? CONFIG->popup_padding : CONFIG->window_padding;
 		if (!window->valid || !window->state.active)
 		{
 			continue;
@@ -230,8 +232,8 @@ cgui_reconfig(void)
 		window_update_shown_grid(window);
 		grid_update_geometry(
 			window->shown_grid,
-			window->width  - CONFIG->window_padding * 2,
-			window->height - CONFIG->window_padding * 2);
+			window->width  - padding * 2,
+			window->height - padding * 2);
 	}
 }
 
@@ -297,6 +299,7 @@ cgui_reset(void)
 	cref_destroy(cells);
 	cref_destroy(grids);
 	cref_destroy(windows);
+	x11_inputs_ungrab();
 	x11_reset(!ext_connection);
 	config_reset();
 	cgui_unlock();

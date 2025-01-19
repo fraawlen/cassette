@@ -30,6 +30,7 @@
 #include "cgui-box.h"
 #include "cgui-text.h"
 #include "cgui-swap.h"
+#include "cgui-window.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -130,17 +131,11 @@ struct cgui_config
 
 	/* window */
 
-	enum cgui_corner window_corner[4];
-
-	double window_size_corner[4];
-	double window_size_border;
 	double window_padding;
-
-	struct ccolor window_color_border;
-	struct ccolor window_color_border_focused;
-	struct ccolor window_color_border_disabled;
-	struct ccolor window_color_border_locked;
-	struct ccolor window_color_background;
+	struct cgui_window_style window;
+	struct cgui_window_style window_focused;
+	struct cgui_window_style window_disabled;
+	struct cgui_window_style window_locked;
 
 	bool window_focus_on_activation;
 	bool window_enable_disabled;
@@ -150,21 +145,8 @@ struct cgui_config
 	
 	/* popup */
 
-	struct ccolor popup_color_background;
-	struct ccolor popup_color_border;
-
-	double popup_border;
+	struct cgui_window_style popup;
 	double popup_padding;
-	double popup_max_width;
-	double popup_max_height;
-	double popup_override_width;
-	double popup_override_height;
-	double popup_override_x;
-	double popup_override_y;
-
-	bool popup_enable_override_position;
-	bool popup_enable_override_width;
-	bool popup_enable_override_height;
 
 	/* behavior */
 

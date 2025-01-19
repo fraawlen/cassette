@@ -83,17 +83,20 @@ struct xi_input_mask
 
 /* helpers */
 
+static xcb_atom_t       atom                 (const char *) CGUI_NONNULL(1);
+static uint8_t          extension_opcode     (const char *) CGUI_NONNULL(1);
 static cgui_window     *find_window          (xcb_window_t);
-static xcb_atom_t       get_atom             (const char *) CGUI_NONNULL(1);
-static uint8_t          get_extension_opcode (const char *) CGUI_NONNULL(1);
 static bool             prop_add             (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
 static bool             prop_set             (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
 static int              selection_id         (xcb_atom_t);
 static xcb_atom_t       selection_name       (int);
 static bool             selection_send_data  (int, xcb_window_t, xcb_atom_t, xcb_atom_t);
 static xcb_atom_t       selection_target     (int);
+static xcb_size_hints_t size_hints           (xcb_window_t);
 static bool             test_cookie          (xcb_void_cookie_t);
 static struct cgui_mods translate_mods       (uint16_t state);
+
+
 
 /* event handlers */
 
@@ -345,47 +348,47 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 
 	/* get atoms */
 
-	atom_clip = get_atom("CLIPBOARD");
-	atom_time = get_atom("TIMESTAMP");
-	atom_mult = get_atom("MULTIPLE");
-	atom_trgt = get_atom("TARGETS");
-	atom_utf8 = get_atom("UTF8_STRING");
-	atom_prot = get_atom("WM_PROTOCOLS");
-	atom_del  = get_atom("WM_DELETE_WINDOW");
-	atom_foc  = get_atom("WM_TAKE_FOCUS");
-	atom_nam  = get_atom("WM_NAME");
-	atom_ico  = get_atom("WM_ICON_NAME");
-	atom_cls  = get_atom("WM_CLASS");
-	atom_cmd  = get_atom("WM_COMMAND");
-	atom_host = get_atom("WM_CLIENT_MACHINE");
-	atom_lead = get_atom("WM_CLIENT_LEADER");
-	atom_ping = get_atom("_NET_WM_PING");
-	atom_pid  = get_atom("_NET_WM_PID");
-	atom_nnam = get_atom("_NET_WM_NAME");
-	atom_nico = get_atom("_NET_WM_ICON_NAME");
-	atom_isig = get_atom("_INTERNAL_LOOP_SIGNAL");
-	atom_wtyp = get_atom("_NET_WM_WINDOW_TYPE");
-	atom_wnom = get_atom("_NET_WM_WINDOW_TYPE_NORMAL");
-	atom_wdsk = get_atom("_NET_WM_WINDOW_TYPE_DESKTOP");
-	atom_wovr = get_atom("_NET_WM_WINDOW_TYPE_DOCK");
-	atom_wdlg = get_atom("_NET_WM_WINDOW_TYPE_DIALOG");
-	atom_cmbo = get_atom("_NET_WM_WINDOW_TYPE_COMBO");
-	atom_nstt = get_atom("_NET_WM_STATE");
-	atom_full = get_atom("_NET_WM_STATE_FULLSCREEN");
+	atom_clip = atom("CLIPBOARD");
+	atom_time = atom("TIMESTAMP");
+	atom_mult = atom("MULTIPLE");
+	atom_trgt = atom("TARGETS");
+	atom_utf8 = atom("UTF8_STRING");
+	atom_prot = atom("WM_PROTOCOLS");
+	atom_del  = atom("WM_DELETE_WINDOW");
+	atom_foc  = atom("WM_TAKE_FOCUS");
+	atom_nam  = atom("WM_NAME");
+	atom_ico  = atom("WM_ICON_NAME");
+	atom_cls  = atom("WM_CLASS");
+	atom_cmd  = atom("WM_COMMAND");
+	atom_host = atom("WM_CLIENT_MACHINE");
+	atom_lead = atom("WM_CLIENT_LEADER");
+	atom_ping = atom("_NET_WM_PING");
+	atom_pid  = atom("_NET_WM_PID");
+	atom_nnam = atom("_NET_WM_NAME");
+	atom_nico = atom("_NET_WM_ICON_NAME");
+	atom_isig = atom("_INTERNAL_LOOP_SIGNAL");
+	atom_wtyp = atom("_NET_WM_WINDOW_TYPE");
+	atom_wnom = atom("_NET_WM_WINDOW_TYPE_NORMAL");
+	atom_wdsk = atom("_NET_WM_WINDOW_TYPE_DESKTOP");
+	atom_wovr = atom("_NET_WM_WINDOW_TYPE_DOCK");
+	atom_wdlg = atom("_NET_WM_WINDOW_TYPE_DIALOG");
+	atom_cmbo = atom("_NET_WM_WINDOW_TYPE_COMBO");
+	atom_nstt = atom("_NET_WM_STATE");
+	atom_full = atom("_NET_WM_STATE_FULLSCREEN");
 
-	atom_sig  = get_atom(ATOM_SIGNALS);
-	atom_vers = get_atom(ATOM_VERSION);
-	atom_stt  = get_atom(ATOM_WINDOW_STATES);
-	atom_wfoc = get_atom(ATOM_WINDOW_FOCUS);
-	atom_tmp1 = get_atom(ATOM_PASTE_TMP_1);
-	atom_tmp2 = get_atom(ATOM_PASTE_TMP_2);
-	atom_tmp3 = get_atom(ATOM_PASTE_TMP_3);
-	atom_won  = get_atom(ATOM_WINDOW_ACTIVE);
-	atom_wena = get_atom(ATOM_WINDOW_DISABLED);
-	atom_plck = get_atom(ATOM_WINDOW_GRID_LOCK);
-	atom_flck = get_atom(ATOM_WINDOW_FOCUS_LOCK);
-	atom_conf = get_atom(ATOM_RECONFIG);
-	atom_acl  = get_atom(ATOM_ACCEL);
+	atom_sig  = atom(ATOM_SIGNALS);
+	atom_vers = atom(ATOM_VERSION);
+	atom_stt  = atom(ATOM_WINDOW_STATES);
+	atom_wfoc = atom(ATOM_WINDOW_FOCUS);
+	atom_tmp1 = atom(ATOM_PASTE_TMP_1);
+	atom_tmp2 = atom(ATOM_PASTE_TMP_2);
+	atom_tmp3 = atom(ATOM_PASTE_TMP_3);
+	atom_won  = atom(ATOM_WINDOW_ACTIVE);
+	atom_wena = atom(ATOM_WINDOW_DISABLED);
+	atom_plck = atom(ATOM_WINDOW_GRID_LOCK);
+	atom_flck = atom(ATOM_WINDOW_FOCUS_LOCK);
+	atom_conf = atom(ATOM_RECONFIG);
+	atom_acl  = atom(ATOM_ACCEL);
 
 	atom_sel_types[0] = atom_trgt;
 	atom_sel_types[1] = atom_time;
@@ -395,7 +398,7 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 	for (int i = 0; i < CGUI_CONFIG_ACCELS; i++)
 	{
 		sprintf(s, ATOM_ACCEL "_%i", i + 1);
-		atom_aclx[i] = get_atom(s);
+		atom_aclx[i] = atom(s);
 	}
 
 	/* set leader window ICCCM properties */
@@ -427,8 +430,8 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 
 	/* get extensions opcodes */
 
-	opcode_present = get_extension_opcode("Present");
-	opcode_xinput  = get_extension_opcode("XInputExtension");
+	opcode_present = extension_opcode("Present");
+	opcode_xinput  = extension_opcode("XInputExtension");
 
 	/* end */
 	
@@ -467,6 +470,10 @@ x11_inputs_grab(void)
 	xcb_grab_pointer_reply_t  *xr2;
 
 	bool fail = false;
+
+	// TODO
+
+	return true;
 
 	/* no need to explicitely grab touch events as they get interpreted as pointer events after the grab */
 	/* this also means that multitouch won't work on popups                                              */
@@ -1157,12 +1164,12 @@ x11_window_destroy(xcb_window_t id, xcb_pixmap_t buffer)
 void
 x11_window_move(xcb_window_t id, double x, double y)
 {
-	const xcb_size_hints_t hints =
-	{
-		.flags = XCB_ICCCM_SIZE_HINT_P_POSITION,
-		.x     = TO_INT(x),
-		.y     = TO_INT(y),
-	};
+	xcb_size_hints_t hints;
+
+	hints        = size_hints(id);
+	hints.x      = TO_INT(x);
+	hints.y      = TO_INT(y);
+	hints.flags |= XCB_ICCCM_SIZE_HINT_P_POSITION;
 
 	prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &hints);
 	test_cookie(
@@ -1226,20 +1233,12 @@ x11_window_rename(xcb_window_t id, const char *name)
 void
 x11_window_resize(xcb_window_t id, double width, double height)
 {
-	const xcb_size_hints_t hints =
-	{
-		.flags  = XCB_ICCCM_SIZE_HINT_P_SIZE,
-		.width  = TO_UINT(width),
-		.height = TO_UINT(height),
-	};
-
-	prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &hints);
 	test_cookie(
 		xcb_configure_window_checked(
 			connection,
 			id,
 			XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT,
-			(uint32_t[2]){hints.width, hints.height}));
+			(uint32_t[2]){TO_UINT(width), TO_UINT(height)}));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1280,7 +1279,7 @@ x11_window_set_type(xcb_window_t id, enum cgui_window_type type)
 			atom = atom_wdlg;
 			break;
 
-		case CGUI_WINDOW_DESKTOP:
+		case CGUI_WINDOW_UNDERLAY:
 			atom = atom_wdsk;
 			break;
 
@@ -1288,6 +1287,7 @@ x11_window_set_type(xcb_window_t id, enum cgui_window_type type)
 			atom = atom_wovr;
 			break;
 
+		case CGUI_WINDOW_FIXED:
 		case CGUI_WINDOW_POPUP:
 			atom = atom_cmbo;
 			attr = 1;
@@ -1306,7 +1306,7 @@ x11_window_set_type(xcb_window_t id, enum cgui_window_type type)
 void
 x11_window_set_urgency(xcb_window_t id, bool set_on)
 {
-	xcb_icccm_wm_hints_t *xhints;
+	xcb_icccm_wm_hints_t *hints;
 	xcb_get_property_reply_t *xr;
 	xcb_get_property_cookie_t xc;
 
@@ -1318,17 +1318,17 @@ x11_window_set_urgency(xcb_window_t id, bool set_on)
 		return;
 	}
 
-	xhints = xcb_get_property_value(xr);
+	hints = xcb_get_property_value(xr);
 	if (set_on)
 	{
-		xhints->flags |= XCB_ICCCM_WM_HINT_X_URGENCY;
+		hints->flags |= XCB_ICCCM_WM_HINT_X_URGENCY;
 	}
 	else
 	{
-		xhints->flags &= ~XCB_ICCCM_WM_HINT_X_URGENCY;
+		hints->flags &= ~XCB_ICCCM_WM_HINT_X_URGENCY;
 	}
 
-	prop_set(id, XCB_ATOM_WM_HINTS, XCB_ATOM_WM_HINTS, sizeof(xcb_icccm_wm_hints_t), xhints);
+	prop_set(id, XCB_ATOM_WM_HINTS, XCB_ATOM_WM_HINTS, sizeof(xcb_icccm_wm_hints_t), hints);
 
 	free(xr);
 }
@@ -1396,16 +1396,16 @@ x11_window_update_focus_hints(xcb_window_t id, double x, double y, double width,
 void
 x11_window_update_size_hints(xcb_window_t id, double min_width, double min_height, double max_width, double max_height)
 {
-	const xcb_size_hints_t xhints =
-	{
-		.flags      = XCB_ICCCM_SIZE_HINT_P_MIN_SIZE | XCB_ICCCM_SIZE_HINT_P_MAX_SIZE,
-		.min_width  = TO_UINT(min_width),
-		.min_height = TO_UINT(min_height),
-		.max_width  = TO_UINT(max_width),
-		.max_height = TO_UINT(max_height),
-	};
+	xcb_size_hints_t hints;
 
-	prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &xhints);
+	hints            = size_hints(id);
+	hints.min_width  = TO_UINT(min_width);
+	hints.min_height = TO_UINT(min_height);
+	hints.max_width  = TO_UINT(max_width);
+	hints.max_height = TO_UINT(max_height);
+	hints.flags     |= XCB_ICCCM_SIZE_HINT_P_MIN_SIZE | XCB_ICCCM_SIZE_HINT_P_MAX_SIZE;
+
+	prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &hints);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1439,6 +1439,29 @@ x11_window_update_state_hints(xcb_window_t id, struct cgui_window_state_flags st
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
+
+static xcb_atom_t
+atom(const char *name)
+{
+	xcb_intern_atom_cookie_t xc;
+	xcb_intern_atom_reply_t *xr;
+	xcb_atom_t xa;
+
+	xc = xcb_intern_atom(connection, 0, strlen(name), name);
+	xr = xcb_intern_atom_reply(connection, xc, NULL);
+	if (!xr)
+	{
+		main_set_error(CERR_XCB);
+		return 0;
+	}
+
+	xa = xr->atom;
+	free(xr);
+
+	return xa;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
 event_button(xcb_button_press_event_t *xcb_event, bool press)
@@ -1858,49 +1881,8 @@ event_xinput_touch(xcb_input_touch_begin_event_t *xcb_event)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static cgui_window *
-find_window(xcb_window_t id)
-{
-	const cref *windows = main_windows();
-
-	CREF_FOR_EACH(windows, i)
-	{
-		if (((cgui_window*)cref_ptr(windows, i))->x_id == id)
-		{
-			return (cgui_window*)cref_ptr(windows, i);
-		}
-	}
-
-	return CGUI_WINDOW_PLACEHOLDER;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static xcb_atom_t
-get_atom(const char *name)
-{
-	xcb_intern_atom_cookie_t xc;
-	xcb_intern_atom_reply_t *xr;
-	xcb_atom_t xa;
-
-	xc = xcb_intern_atom(connection, 0, strlen(name), name);
-	xr = xcb_intern_atom_reply(connection, xc, NULL);
-	if (!xr)
-	{
-		main_set_error(CERR_XCB);
-		return 0;
-	}
-
-	xa = xr->atom;
-	free(xr);
-
-	return xa;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 static uint8_t
-get_extension_opcode(const char *name)
+extension_opcode(const char *name)
 {
 	xcb_query_extension_cookie_t xc;
 	xcb_query_extension_reply_t *xr;
@@ -1919,6 +1901,25 @@ get_extension_opcode(const char *name)
 	free(xr);
 
 	return opcode;
+}
+
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static cgui_window *
+find_window(xcb_window_t id)
+{
+	const cref *windows = main_windows();
+
+	CREF_FOR_EACH(windows, i)
+	{
+		if (((cgui_window*)cref_ptr(windows, i))->x_id == id)
+		{
+			return (cgui_window*)cref_ptr(windows, i);
+		}
+	}
+
+	return CGUI_WINDOW_PLACEHOLDER;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -2051,6 +2052,31 @@ selection_target(int id)
 		default:
 			return XCB_ATOM_NONE;
 	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static xcb_size_hints_t
+size_hints(xcb_window_t id)
+{
+	xcb_size_hints_t hints = {0};
+	xcb_get_property_reply_t *xr;
+	xcb_get_property_cookie_t xc;
+
+	xc = xcb_get_property(connection, 0, id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, 0, UINT32_MAX);
+	xr = xcb_get_property_reply(connection, xc, NULL);
+
+	if (!xr)
+	{
+		main_set_error(CERR_XCB);
+	}
+	else
+	{
+		hints = *(xcb_size_hints_t*)xcb_get_property_value(xr);
+		free(xr);
+	}
+
+	return hints;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
