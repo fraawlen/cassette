@@ -146,7 +146,7 @@ on_click(cgui_cell *c)
 	w = popups[i].window;
 	p = popups[i + 1].window;
 	x = cgui_window_x(w) + cgui_window_width(w);
-	y = cgui_window_y(w);
+	y = cgui_window_y(w) + cgui_window_width(w) / 2;
 
 	cgui_window_move_smart(p, x, y, x, y);
 	cgui_window_activate(p);
@@ -201,11 +201,27 @@ popup_setup(int i)
 	popups[i].button = cgui_button_create();
 	popups[i].filler = cgui_filler_create();
 
-	/* Cell setup */
-
+	/* Special cases */
+	
 	cstr_clear(str);
-	cstr_append(str, "Popup nº");
-	cstr_append(str, i);
+
+	if (i == 0)
+	{
+		cstr_append(str, "Main window");
+		cgui_window_on_close(popups[i].window, on_close);
+	}
+	else
+	{
+		cstr_append(str, "Popup nº");
+		cstr_append(str, i);
+		cgui_window_set_type(popups[i].window, CGUI_WINDOW_POPUP);
+		if (i == N - 1)
+		{
+			cgui_button_disable(popups[i].button);
+		}
+	}
+
+	/* Cell setup */
 
 	cgui_label_set_label(popups[i].label, cstr_chars(str));
 	cgui_label_align(popups[i].label, CGUI_ALIGN_CENTER);
@@ -226,19 +242,4 @@ popup_setup(int i)
 	cgui_window_push_grid(popups[i].window, popups[i].grid);
 	cgui_window_rename(popups[i].window, cstr_chars(str));
 	cgui_window_set_accelerator(popups[i].window, 1, "close popups", on_accel);
-
-	/* Special cases */
-
-	if (i == 0)
-	{
-		cgui_window_on_close(popups[i].window, on_close);
-	}
-	else
-	{
-		cgui_window_set_type(popups[i].window, CGUI_WINDOW_POPUP);
-		if (i == N - 1)
-		{
-			cgui_button_disable(popups[i].button);
-		}
-	}
 }
