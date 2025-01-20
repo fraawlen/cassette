@@ -416,9 +416,9 @@ focus_cell(uint8_t type, cgui_window *window)
 		{
 			window_focus(window, GRID_AREA_NONE);
 		}
-		else
+		else if (window->type == CGUI_WINDOW_POPUP)
 		{
-			// TODO popup handling
+			cgui_window_deactivate(window);
 		}
 		return;
 	}
@@ -492,6 +492,11 @@ key_press(struct cgui_event *event)
 		.key_mods = event->key_mods,
 	};
 
+	if (window_popup_last() != CGUI_WINDOW_PLACEHOLDER)
+	{
+		event->window = window_popup_last();
+	}
+
 	if (!event->window->valid || (cell_event.key_code = swap_input(event)) == 0)
 	{
 		return;
@@ -511,6 +516,11 @@ key_release(struct cgui_event *event)
 		.type     = CGUI_CELL_EVENT_KEY_RELEASE,
 		.key_mods = event->key_mods,
 	};
+
+	if (window_popup_last() != CGUI_WINDOW_PLACEHOLDER)
+	{
+		event->window = window_popup_last();
+	}
 
 	if (!event->window->valid || (cell_event.key_code = swap_input(event)) == 0)
 	{
@@ -693,7 +703,7 @@ swap_input(struct cgui_event *event)
 			break;
 
 		default:
-			return false;
+			return 0;
 	}
 
 	/* press and release swaps */

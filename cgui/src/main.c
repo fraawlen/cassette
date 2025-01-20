@@ -328,7 +328,7 @@ cgui_run(void)
 
 	running = true;
 
-	while (running && is_any_window_activated())
+	while (!err && running && is_any_window_activated())
 	{
 		 x11_update();
 	}

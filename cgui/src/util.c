@@ -47,6 +47,14 @@ util_limit(double d, double min, double max)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+bool
+util_point_inside(double x_check, double y_check, double x, double y, double width, double height)
+{
+	return !(x_check < x || x_check > x + width || y_check < y || y_check > y + height);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 double
 util_str_to_double(const char *str, double min, double max)
 {

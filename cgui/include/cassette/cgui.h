@@ -27,28 +27,28 @@
 #include <stdlib.h>
 #include <xcb/xcb.h>
 
-/* Init dependent headers */
+/* Top-level headers */
 
-#include "cgui-cell.h"
 #include "cgui-clipboard.h"
-#include "cgui-config.h"
 #include "cgui-event.h"
 #include "cgui-grid.h"
 #include "cgui-screen.h"
-#include "cgui-swap.h"
 #include "cgui-window.h"
 
-/* Init dependent headers - Cells */
+/* Top-level headers - Cells */
 
 #include "cgui-button.h"
 #include "cgui-filler.h"
 #include "cgui-label.h"
 #include "cgui-stripes.h"
 
-/* Independent headers */
+/* Low-level headers */
 
 #include "cgui-attributes.h"
 #include "cgui-box.h"
+#include "cgui-cell.h"
+#include "cgui-config.h"
+#include "cgui-swap.h"
 #include "cgui-text.h"
 #include "cgui-types.h"
 

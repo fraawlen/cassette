@@ -77,9 +77,11 @@ struct cgui_window
 
 	char *name;
 	struct window_accel accels[CGUI_CONFIG_ACCELS];
-	cref *grids;
+	cgui_window *popup_parent;
+	cgui_window *popup_child;
 	cinputs *buttons;
 	cinputs *touches;
+	cref *grids;
 
 	/* callbacks */
 
@@ -244,6 +246,22 @@ window_cell_touches(const cgui_window *window, const cgui_cell *cell)
 CGUI_NONNULL(1, 2)
 CGUI_HIDDEN
 CGUI_PURE;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cgui_window *
+window_popup_at_coords(double x, double y)
+CGUI_NONNULL_RETURN
+CGUI_PURE
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cgui_window *
+window_popup_last(void)
+CGUI_NONNULL_RETURN
+CGUI_PURE
+CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

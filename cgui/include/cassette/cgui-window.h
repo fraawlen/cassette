@@ -149,6 +149,19 @@ CGUI_NONNULL(1);
  *
  */
 void
+cgui_window_deactivate_all_popups(void);
+
+/**
+ *
+ */
+void
+cgui_window_deactivate_children_popups(cgui_window *window)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
 cgui_window_disable(cgui_window *window)
 CGUI_NONNULL(1);
 
@@ -357,6 +370,22 @@ CGUI_PURE;
  */
 bool
 cgui_window_is_valid(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+double
+cgui_window_min_height(const cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+double
+cgui_window_min_width(const cgui_window *window)
 CGUI_NONNULL(1)
 CGUI_PURE;
 

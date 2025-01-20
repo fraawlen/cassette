@@ -221,7 +221,7 @@ CGUI_HIDDEN;
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct cgui_screen
-x11_screen_at(double x, double y)
+x11_screen_at_coords(double x, double y)
 CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

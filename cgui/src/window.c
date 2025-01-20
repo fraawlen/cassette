@@ -73,6 +73,10 @@ static const struct cgui_window_state_flags default_states = {false};
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+cgui_window *last_popup = CGUI_WINDOW_PLACEHOLDER;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 cgui_window cgui_window_placeholder_instance =
 {
 	.type           = CGUI_WINDOW_NORMAL,
@@ -90,9 +94,11 @@ cgui_window cgui_window_placeholder_instance =
 	.surface        = NULL,
 	.drawable       = NULL,
 	.name           = NULL,
-	.grids          = CREF_PLACEHOLDER,
+	.popup_parent   = CGUI_WINDOW_PLACEHOLDER,
+	.popup_child    = CGUI_WINDOW_PLACEHOLDER,
 	.buttons        = CINPUTS_PLACEHOLDER,
 	.touches        = CINPUTS_PLACEHOLDER,
+	.grids          = CREF_PLACEHOLDER,
 	.fn_close       = dummy_fn_close,
 	.fn_draw        = dummy_fn_draw,
 	.fn_focus       = dummy_fn_focus,
@@ -152,6 +158,25 @@ cgui_window_activate(cgui_window *window)
 		return false;
 	}
 
+	/* special activation steps for popups */
+
+	if (window->type == CGUI_WINDOW_POPUP)
+	{
+		if (last_popup == CGUI_WINDOW_PLACEHOLDER)
+		{
+			if (!x11_inputs_grab())
+			{
+				return false;
+			}
+		}
+		else
+		{
+			last_popup->popup_child = window;
+		}
+		window->popup_parent = last_popup;
+		last_popup = window;
+	}
+
 	/* if no grid is shown, select the first grid and resize the window */
 	/* (if no custom size has been requested)                           */
 
@@ -165,13 +190,6 @@ cgui_window_activate(cgui_window *window)
 				min_width(window,  window->shown_grid),
 				min_height(window, window->shown_grid));
 		}
-	}
-
-	/* special activation steps for popups */
-
-	if (window->type == CGUI_WINDOW_POPUP && !x11_inputs_grab())
-	{
-		return false;
 	}
 
 	/* activate the window */
@@ -189,7 +207,10 @@ cgui_window_activate(cgui_window *window)
 	/* if a window move was requested before activation, repeat it */
 	/* because otherwhise the WM can override the position         */
 
-	if (window->wait_move && window->type != CGUI_WINDOW_POPUP)
+	if (window->wait_move
+	 && window->type != CGUI_WINDOW_NORMAL
+	 && window->type != CGUI_WINDOW_POPUP
+	 && window->type != CGUI_WINDOW_FIXED)
 	{
 		cgui_window_move(window, window->tmp_x, window->tmp_y);
 	}
@@ -346,6 +367,8 @@ cgui_window_create(void)
 	window->tmp_height     = height;
 	window->x_serial       = 0;
 	window->name           = NULL;
+	window->popup_parent   = CGUI_WINDOW_PLACEHOLDER;
+	window->popup_child    = CGUI_WINDOW_PLACEHOLDER;
 	window->fn_close       = dummy_fn_close;
 	window->fn_draw        = dummy_fn_draw;
 	window->fn_focus       = dummy_fn_focus;
@@ -398,6 +421,33 @@ cgui_window_deactivate(cgui_window *window)
 		return;
 	}
 
+	/* popup handling */
+
+	if (window->type == CGUI_WINDOW_POPUP)
+	{
+		if (window == last_popup)
+		{
+			if ((last_popup = window->popup_parent) == CGUI_WINDOW_PLACEHOLDER)
+			{
+				x11_inputs_ungrab();
+			}
+			else
+			{
+				last_popup->popup_child = CGUI_WINDOW_PLACEHOLDER;
+			}
+		}
+		else
+		{
+			cgui_window_deactivate_children_popups(window);
+		}
+
+		last_popup           = window->popup_parent;
+		window->popup_child  = CGUI_WINDOW_PLACEHOLDER;
+		window->popup_parent = CGUI_WINDOW_PLACEHOLDER;
+	}
+
+	/* deactivate */
+
 	window_cancel_cell_events(window);
 	window_focus_lock(window, false);
 	window_focus(window, GRID_AREA_NONE);
@@ -409,8 +459,29 @@ cgui_window_deactivate(cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cgui_window_deactivate_all_popups(void)
+{
+	while (last_popup != CGUI_WINDOW_PLACEHOLDER)
+	{
+		cgui_window_deactivate(last_popup);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_deactivate_children_popups(cgui_window *window)
+{
+	cgui_window_deactivate(window->popup_child);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cgui_window_destroy(cgui_window *window)
 {
+	cgui_window_deactivate(window);
+
 	window->valid = false;
 	if (!cgui_is_running())
 	{
@@ -489,6 +560,32 @@ cgui_window_is_valid(const cgui_window *window)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+double
+cgui_window_min_height(const cgui_window *window)
+{
+	if (cgui_error() || !window->valid)
+	{
+		return 0.0;
+	}
+
+	return min_height(window, min_grid(window));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+double
+cgui_window_min_width(const cgui_window *window)
+{
+	if (cgui_error() || !window->valid)
+	{
+		return 0.0;
+	}
+
+	return min_width(window, min_grid(window));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 cgui_window_move(cgui_window *window, double x, double y)
 {
@@ -537,12 +634,12 @@ cgui_window_move_smart(cgui_window *window, double x_1, double y_1, double x_2, 
 
 	/* move the window to fit within a screen */
 
-	s = x11_screen_at(x_1, y_1);
+	s = x11_screen_at_coords(x_1, y_1);
 
 	cgui_window_move(
 		window,
-		s.width  < DBL_EPSILON || x_1 + w < s.x + DBL_EPSILON + s.width  ? x_1 : x_2 - w,
-		s.height < DBL_EPSILON || y_1 + h < s.y + DBL_EPSILON + s.height ? y_1 : y_2 - h);
+		s.width  > 0.0 && x_1 + w > s.x + s.width  ? x_2 - w : x_1,
+		s.height > 0.0 && y_1 + h > s.y + s.height ? y_2 - h : y_1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1184,6 +1281,30 @@ window_focus_pointer(cgui_window *window, double x, double y)
 	{
 		window_focus(window, GRID_AREA_NONE);
 	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cgui_window *
+window_popup_at_coords(double x, double y)
+{
+	for (cgui_window *tmp = last_popup; tmp != CGUI_WINDOW_PLACEHOLDER; tmp = tmp->popup_parent)
+	{
+		if (util_point_inside(x, y, tmp->x, tmp->y, tmp->width, tmp->height))
+		{
+			return tmp;
+		}
+	}
+
+	return CGUI_WINDOW_PLACEHOLDER;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cgui_window *
+window_popup_last(void)
+{
+	return last_popup;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

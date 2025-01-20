@@ -207,4 +207,3 @@ invalid(const cgui_cell *cell)
 
 	return cgui_error() || !cell->valid;
 }
-

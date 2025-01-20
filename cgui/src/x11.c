@@ -653,7 +653,7 @@ x11_screen(size_t i, size_t *n, size_t *primary)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct cgui_screen
-x11_screen_at(double x, double y)
+x11_screen_at_coords(double x, double y)
 {
 	xcb_randr_get_monitors_cookie_t xc;
 	xcb_randr_get_monitors_reply_t *xr;
@@ -1169,7 +1169,7 @@ x11_window_move(xcb_window_t id, double x, double y)
 	hints        = size_hints(id);
 	hints.x      = TO_INT(x);
 	hints.y      = TO_INT(y);
-	hints.flags |= XCB_ICCCM_SIZE_HINT_P_POSITION;
+	hints.flags |= XCB_ICCCM_SIZE_HINT_US_POSITION;
 
 	prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &hints);
 	test_cookie(
@@ -1283,11 +1283,14 @@ x11_window_set_type(xcb_window_t id, enum cgui_window_type type)
 			atom = atom_wdsk;
 			break;
 
+		case CGUI_WINDOW_FIXED:
+			attr = 1;
+			/* fallthrough */
+
 		case CGUI_WINDOW_OVERLAY:
 			atom = atom_wovr;
 			break;
 
-		case CGUI_WINDOW_FIXED:
 		case CGUI_WINDOW_POPUP:
 			atom = atom_cmbo;
 			attr = 1;

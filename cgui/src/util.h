@@ -41,6 +41,13 @@ CGUI_CONST;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+bool
+util_point_inside(double x_check, double y_check, double x, double y, double width, double height)
+CGUI_HIDDEN
+CGUI_CONST;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 double
 util_str_to_double(const char *str, double min, double max)
 CGUI_NONNULL(1)

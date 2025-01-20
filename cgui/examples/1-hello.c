@@ -177,7 +177,7 @@ static const char *default_text =
 	cgui_window_on_state(window, on_state);
 	cgui_window_resize(window, 1000, 1000);
 	cgui_window_move_smart(window, x, y, x, y);
-	cgui_window_set_type(window, CGUI_WINDOW_FIXED);
+	cgui_window_set_type(window, CGUI_WINDOW_OVERLAY);
 	cgui_window_activate(window);
 
 	/* Run */
@@ -227,15 +227,12 @@ on_click(cgui_cell *c)
 {
 	if (c == button_1)
 	{
-		cstr_clear(text);
-		cstr_append(text, cgui_clipboard_paste(1, NULL));
-		cgui_label_set_label(label_1, cstr_chars(text));
-	}
-	else if (c == button_2)
-	{
 		cgui_clipboard_copy(1, cstr_chars(text));
 		cgui_clipboard_on_copy(1, on_clip_copy);
 		cgui_clipboard_on_lose(1, on_clip_lose);
+	}
+	else if (c == button_2)
+	{
 		cgui_window_deactivate(window);
 	}
 

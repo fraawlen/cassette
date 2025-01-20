@@ -40,7 +40,7 @@ cgui_screen_at_coordinates(double x, double y)
 		return screen_zero;
 	}
 
-	return x11_screen_at(x, y);
+	return x11_screen_at_coords(x, y);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
