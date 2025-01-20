@@ -59,12 +59,13 @@ static void unmap                (struct cgui_event *) CGUI_NONNULL(1);
 
 /* other functions */
 
-static void   action_cell   (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
-static void   action_misc   (uint8_t);
-static void   action_window (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
-static void   clipboard     (enum cgui_cell_event_type, uint8_t, cgui_window *) CGUI_NONNULL(3);
-static void   focus_cell    (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
-static size_t swap_input    (struct cgui_event *)                               CGUI_NONNULL(1);
+static void   action_cell    (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
+static void   action_misc    (uint8_t);
+static void   action_window  (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
+static void   clipboard      (enum cgui_cell_event_type, uint8_t, cgui_window *) CGUI_NONNULL(3);
+static void   focus_cell     (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
+static void   popup_redirect (struct cgui_event *)                               CGUI_NONNULL(1);
+static size_t swap_input     (struct cgui_event *)                               CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -94,6 +95,8 @@ cgui_event_on_event(void (*fn)(struct cgui_event *event))
 void
 event_process(struct cgui_event *event)
 {
+	popup_redirect(event);
+
 	fn_event(event);
 
 	switch (event->type)
@@ -492,11 +495,6 @@ key_press(struct cgui_event *event)
 		.key_mods = event->key_mods,
 	};
 
-	if (window_popup_last() != CGUI_WINDOW_PLACEHOLDER)
-	{
-		event->window = window_popup_last();
-	}
-
 	if (!event->window->valid || (cell_event.key_code = swap_input(event)) == 0)
 	{
 		return;
@@ -516,11 +514,6 @@ key_release(struct cgui_event *event)
 		.type     = CGUI_CELL_EVENT_KEY_RELEASE,
 		.key_mods = event->key_mods,
 	};
-
-	if (window_popup_last() != CGUI_WINDOW_PLACEHOLDER)
-	{
-		event->window = window_popup_last();
-	}
 
 	if (!event->window->valid || (cell_event.key_code = swap_input(event)) == 0)
 	{
@@ -612,6 +605,92 @@ pointer(struct cgui_event *event)
 			event->pointer_x - cinputs_x(event->window->buttons, i) + event->window->old_width,
 			event->pointer_y - cinputs_y(event->window->buttons, i) + event->window->old_height);
 	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+popup_redirect(struct cgui_event *event)
+{
+	cgui_window *popup;
+	cinputs *inputs;
+	bool motion;
+	double *x;
+	double *y;
+
+	if ((popup = window_popup_last()) == CGUI_WINDOW_PLACEHOLDER)
+	{
+		return;
+	}
+
+	/* get input parameters, other events do not matter      */
+	/* keyboard events, because they don't have coordinates, */
+	/* they always target the last popup                     */
+
+	switch (event->type)
+	{
+		case CGUI_EVENT_BUTTON_PRESS:
+		case CGUI_EVENT_BUTTON_RELEASE:
+			x = &event->button_x;
+			y = &event->button_y;
+			inputs = popup->buttons;
+			motion = false;
+			break;
+
+		case CGUI_EVENT_POINTER_MOTION:
+			x = &event->pointer_x;
+			y = &event->pointer_y;
+			inputs = popup->buttons;
+			motion = true;
+			break;
+
+		case CGUI_EVENT_TOUCH_BEGIN:
+		case CGUI_EVENT_TOUCH_END:
+			x = &event->touch_x;
+			y = &event->touch_y;
+			inputs = popup->touches;
+			motion = false;
+			break;
+
+		case CGUI_EVENT_TOUCH_UPDATE:
+			x = &event->touch_x;
+			y = &event->touch_y;
+			inputs = popup->touches;
+			motion = true;
+			break;
+
+		case CGUI_EVENT_KEY_PRESS:
+		case CGUI_EVENT_KEY_RELEASE:
+			event->window = window_popup_last();
+			return;
+	
+		default:
+			return;
+	}
+
+	/* redirect input only if there's no already ongoing input */
+
+	if (cinputs_load(inputs) == 0)
+	{
+		popup = window_popup_at_coords(*x, *y);
+		if (!motion)
+		{
+			if (popup == CGUI_WINDOW_PLACEHOLDER)
+			{
+				cgui_window_deactivate_all_popups();
+			}
+			else
+			{
+				cgui_window_deactivate_children_popups(popup);
+			}
+		}
+	}
+
+	/* transform input coordinates (that are relative to the root window) to popup's */
+
+	*x -= popup->x;
+	*y -= popup->y;
+	event->window = popup;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

@@ -148,7 +148,6 @@ on_click(cgui_cell *c)
 	x = cgui_window_x(w) + cgui_window_width(w);
 	y = cgui_window_y(w);
 
-	cgui_window_deactivate_children_popups(p);
 	cgui_window_move_smart(p, x, y, x, y);
 	cgui_window_activate(p);
 }

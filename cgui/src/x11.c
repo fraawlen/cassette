@@ -471,10 +471,6 @@ x11_inputs_grab(void)
 
 	bool fail = false;
 
-	// TODO
-
-	return true;
-
 	/* no need to explicitely grab touch events as they get interpreted as pointer events after the grab */
 	/* this also means that multitouch won't work on popups                                              */
 
