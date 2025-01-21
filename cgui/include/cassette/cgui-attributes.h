@@ -4,7 +4,7 @@
  * This file is part of the Cassette Configuration (CCFG) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
- * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
+ * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
  * License or (at your option) any later version.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
