@@ -1164,12 +1164,19 @@ window_draw(cgui_window *window)
 		cgui_box_draw(window->drawable);
 	}
 
-	/* draw cells */
+	/* draw cells unfocused cells first and the focused area last so that */
+	/* it's always drawn on top of other cells if they happen to overlap  */
+	/* (it is possible thanks to boxes margins)                           */
 	
 	CREF_FOR_EACH(window->shown_grid->areas, i)
 	{
-		draw_area(window, *(struct grid_area*)cref_ptr(window->shown_grid->areas, i), delay);
+		if (i != window->focus.id)
+		{
+			draw_area(window, *(struct grid_area*)cref_ptr(window->shown_grid->areas, i), delay);
+		}
 	}
+
+	draw_area(window, window->focus, delay);
 
 	/* end */
 
@@ -1706,7 +1713,7 @@ draw_area(cgui_window *window, struct grid_area area, unsigned long delay)
 		.height   = area.height,
 	};
 
-	if (window->draw != WINDOW_DRAW_FULL && !area.cell->draw)
+	if ((window->draw != WINDOW_DRAW_FULL && !area.cell->draw) || area.id == SIZE_MAX)
 	{
 		return;
 	}

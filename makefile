@@ -2,10 +2,12 @@
 # INSTALLATION DESTINATIONS #################################################################################
 #############################################################################################################
 
-FAMILY          := cassette
-PREFIX          := /usr
-DIR_INSTALL_INC := $(PREFIX)/include/$(FAMILY)
-DIR_INSTALL_LIB := $(PREFIX)/lib
+FAMILY           := cassette
+PREFIX           := /usr
+DIR_INSTALL_INC  := $(PREFIX)/include/$(FAMILY)
+DIR_INSTALL_LIB  := $(PREFIX)/lib
+DIR_VIM_SYNTAX   := /usr/share/vim/vimfiles/syntax
+DIR_VIM_FTDETECT := /usr/share/vim/vimfiles/ftdetect
 
 #############################################################################################################
 # SOURCE DIRS ###############################################################################################
@@ -64,6 +66,12 @@ install:
 	$(MAKE) -C cobj install
 	$(MAKE) -C ccfg install
 	$(MAKE) -C cgui install
+
+install-syntax:
+	mkdir -p $(DIR_VIM_SYNTAX)
+	mkdir -p $(DIR_VIM_FTDETECT)
+	cp ccfg/vim/syntax/*   $(DIR_VIM_SYNTAX)
+	cp ccfg/vim/ftdetect/* $(DIR_VIM_FTDETECT)
 
 clean:
 	$(MAKE) -C cobj clean
