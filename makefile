@@ -70,8 +70,8 @@ install:
 install-syntax:
 	mkdir -p $(DIR_VIM_SYNTAX)
 	mkdir -p $(DIR_VIM_FTDETECT)
-	cp ccfg/vim/syntax/*   $(DIR_VIM_SYNTAX)
-	cp ccfg/vim/ftdetect/* $(DIR_VIM_FTDETECT)
+	cp ccfg/syntax/vim/syntax/*   $(DIR_VIM_SYNTAX)
+	cp ccfg/syntax/vim/ftdetect/* $(DIR_VIM_FTDETECT)
 
 clean:
 	$(MAKE) -C cobj clean

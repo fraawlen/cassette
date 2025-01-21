@@ -1,11 +1,4 @@
-<p align="center"><img src="banner.svg"></p>
-
-
-Cassette Ada (CADA) is a set of first-party thick Ada bindings to Cassette libraries. Example programs programs have also been ported to Ada. The library is free and open-source software licensed under the [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html). It's made to run on modern POSIX-compliant systems.
-
-
-> [!IMPORTANT]
-> Only a few Cassette libraries have been ported so far (COBJ and CCFG). No bindings are currently provided for CGUI, which is undergoing a rewrite.
+# Ada Bindings
 
 ## Features
 

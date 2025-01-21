@@ -46,6 +46,7 @@ This document specifies and details all of CCFG's features and syntax rules. It'
 5. [Full examples](#examples)
 	1. [GUI Configuration](#gui-conf)
 	2. [Network Simulator](#net-sim)
+	3. [Fizz Buzz](#fizz-buzz)
 
 ## 1. Fundamentals <a name="fundamentals"></a>
 
@@ -840,6 +841,34 @@ n_2 range 30
 n_3 range 18
 n_4 range 18
 n_5 range 28
+```
+
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
+
+### 5.3. Fizz Buzz <a name="fizz-buzz"></a>
+
+Here's a Fizz Buzz example that prints the results to stderr using DEBUG_PRINT sequences. It's important to note that although it is possible, CCFG is not intended to be used for computation. Instead, all language features and functions have been created with dynamic configurations in mind.
+
+```
+LET_ENUM n 1 100
+FOR_EACH n
+
+	SECTION_DEL Fizz Buzz No_Fizz No_Buzz
+
+	SECTION_ADD (== (MOD ((% n) 3) 0 Fizz No_Fizz)
+	SECTION_ADD (== (MOD ((% n) 5) 0 Buzz No_Buzz)
+
+	SECTION Fizz Buzz
+		DEBUG_PRINT "Fizz Buzz"
+	SECTION Fizz No_Buzz
+		DEBUG_PRINT "Fizz"
+	SECTION No_Fizz Buzz
+		DEBUG_PRINT "Buzz"
+	SECTION No_Fizz No_Buzz
+		DEBUG_PRINT (% n)
+	SECTION
+
+FOR_END
 ```
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>

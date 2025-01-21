@@ -1,10 +1,12 @@
-// Configuration example
+	// Configuration example
+
+	LET windows window window_focused window_disabled window_locked
 
 	global scale 1.0
 	global alternative_present_mode TRUE
 
-	font face               "Terminus (TTF)"
-	font size               28
+	font face               "Terminus"
+	font size               32
 	font horizontal_spacing 0
 	font vertical_spacing   2
 	font x_offset           0
@@ -32,12 +34,21 @@
 	button M2 misc:reconfig
 
 	window padding 50
-	window border_thickness 20
-	window corner_type radii
-	window corner_size 90
-	window color_background (RGB 20 20 20)
-	window color_border_default #505050
 	window enable_focused_substyle TRUE
+	window color_border #505050
+
+	FOR_EACH windows
+		(% windows) border_thickness 20
+		(% windows) corner_type radii
+		(% windows) corner_size 90
+		(% windows) color_background (RGB 20 20 20)
+	FOR_END
+
+	popup padding 35
+	popup border_thickess 10
+	popup corner_type chamfer
+	popup corner_size 50
+	popup color_border #ff5050
 
 	filler color_border     (RGB 200 140   0)
 	filler color_background (RGB 0   100 100)
@@ -53,9 +64,9 @@
 	label border_thickness 14
 	label outline_thickness 14
 	label color_outline #ffffff
-	label padding 20
+	label padding 14
 	label draw_foreground FALSE
-	label text_bold TRUE
+	label padding 46
 	label text_color #ffffff
 
 	stripes color_border     (RGB 200 140   0)
@@ -79,7 +90,6 @@
 	button_idle border_thickness 14
 	button_idle outline_thickness 14
 	button_idle padding 14
-	button_idle text_bold TRUE
 
 	button_focused color_border     (RGB 0  50  50)
 	button_focused color_background #ffffff
@@ -89,7 +99,6 @@
 	button_focused border_thickness 14
 	button_focused outline_thickness 14
 	button_focused draw_foreground FALSE
-	button_focused text_bold TRUE
 
 	button_disabled color_border     (RGB 0  50  50)
 	button_disabled color_background #ffffff
@@ -100,9 +109,8 @@
 	button_disabled border_thickness 14
 	button_disabled outline_thickness 14
 	button_disabled padding 14
+	button_disabled text_color_background #999999
 	button_disabled text_draw_background TRUE
-	button_disabled text_color_background #aaaaaa
-	button_disabled text_bold TRUE
 
 	button_pressed color_border     #ffffff
 	button_pressed color_background (RGB 0 50 50 )
@@ -112,8 +120,6 @@
 	button_pressed border_thickness 14
 	button_pressed outline_thickness 16
 	button_pressed padding 14
-	button_pressed draw_foreground FALSE
-	button_pressed text_bold TRUE
 
 	// Shadow-example specifics
 
@@ -126,7 +132,7 @@ SECTION Shadow
 	window corner_size 130
 	window color_background #505050
 	window enable_focused_substyle FALSE
-	window color_border_default #101010
+	window color_border #101010
 	button_pressed outline_thickness 0
 
 	LET max_offset 20
@@ -144,4 +150,3 @@ SECTION Shadow
 		(% widget) shadow_x_offset (* ($$ shadow_x) ($ max_offset))
 		(% widget) shadow_y_offset (* ($$ shadow_y) ($ max_offset))
 	FOR_END
-

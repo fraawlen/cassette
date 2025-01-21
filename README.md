@@ -5,113 +5,73 @@ Cassette is a lightweight framework written in C11, with a UI inspired by the ca
 ## Table of Contents <a name="toc"></a>
 
 - [Overview](#overview)
+- [Documentation](#documentation)
 - [Dependencies](#dependencies)
-- [Build and installation](#build)
+- [Build and Installation](#build)
 - [Post-Installation](#post-install)
-- [Planned features](#future)
-- [Credits](#credits)
+- [Gallery](#gallery)
+- [Planned Features](#future)
+- [Third-Party Visual Resources](#credits)
 - [Mirrors](#mirrors)
 
 ## Overview <a name="overview"></a>
 
 #### [CGUI - Cassette Graphics](cgui)
 
-A dynamic, retained-mode GUI toolkit library designed as a universal interface, equally targeting desktop, laptop, mobile, and miscellaneous devices with more or less limited inputs. All thanks to a flexible grid layout, simple widget appearance, and an advanced configuration system powered by CCFG, allowing one to tailor the theme, behavior, keybinds and input interpretation for each device class.
-
-##### Features:
-
-- Retained mode
-- Responsive layouts
-- Font based window geometry
-- Pointer, Keyboard and Multi-Touch inputs
-- Run-time configuration and theme reload
-- Custom widgets support
-- Enhanced WM hinting
-- Fractional scaling
-- Native transparency
-- Vertically synced animations
+The main component of the framework - a retained-mode X11 GUI toolkit library designed as a universal interface, equally targeting desktop, laptop, mobile, and miscellaneous devices with more or less limited inputs. All thanks to a flexible and responsive grid layout, simple widget appearance, and an advanced configuration system powered by CCFG, allowing one to tailor the theme, behavior, keybinds and input interpretation for each device class.
 
 #### [CCFG - Cassette Configuration](ccfg)
 
 A configuration language and parser library featuring array based values and short s-like expressions based functions. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
 
-##### Features:
-
-- comments
-- user-defined sections
-- user-defined variables
-- program-defined parameters
-- arithmetic operations
-- string operations
-- color operations
-- iteration loops
-- conditionals
-- child file inclusion
-
 #### [COBJ - Cassette Objects](cobj)
 
 A collection of self-contained data structures and utilities shared by both CCFG and CGUI. Notably, it includes a versatile 2D UTF-8 string object with associated methods, designed for easy manipulation of strings in monospace text displays.
 
-
-##### Features;
-
-- cbook, dynamic C-strings stack with grouping features
-- ccolor, RGBA color representation, manipulation and conversion
-- cdict, hashmap with string + group keys, FNV-1A hashing and linear probing
-- cerr, error codes used by every Cassette component
-- cinputs, 2D input (screen touches, key / button presses) tracker array
-- crand, re-implementation of POSIX's rand48 functions with a slightly more convenient API
-- cref, reference counter used to keep track of instanced components
-- cseg, 1D segment represenation and manipulation with bound checks and UB prevention
-- cstr, UTF-8 strings with 2D (rows, columns, tabsize, wrapping) features
-
 #### [Bindings](bindings/ada)
 
-Thick bindings for Ada 2012 are provided.
+COBJ and CCFG Thick bindings for Ada 2012 are provided. CGUI bindings coming soon.
+
+## Documentation <a name="documentation"></a>
+
+- [UI model](docs/ui-model.md)
+- [UI inputs and focus](docs/ui-inputs-and-focus.md)
+- [CCFG language](docs/ccfg-language.md)
+- [CGUI theming](docs/cgui-theming.md)
 
 ## Dependencies <a name="dependencies"></a>
 
-- Tools :
-	- C11 compiler with a stdlib + POSIX 200809L
-	- Make
+Tools :
 
-- Libraries :
-	- [Cairo](https://cgit.freedesktop.org/cairo/)
-	- [FontConfig](https://gitlab.freedesktop.org/fontconfig/fontconfig)
-	- [XKBCommon](https://github.com/xkbcommon/libxkbcommon)
-	- [XCB](https://gitlab.freedesktop.org/xorg/lib/libxcb)
-	- [XCB-ICCCM](https://gitlab.freedesktop.org/xorg/lib/libxcb)
-	- [XCB-Keysyms](https://gitlab.freedesktop.org/xorg/lib/libxcb)
-	- [XCB-Present](https://gitlab.freedesktop.org/xorg/lib/libxcb)
-	- [XCB-Randr](https://gitlab.freedesktop.org/xorg/lib/libxcb)
-	- [XCB-Render](https://gitlab.freedesktop.org/xorg/lib/libxcb)
-	- [XCB-XInput](https://gitlab.freedesktop.org/xorg/lib/libxcb)
+- C11 compiler with a stdlib + POSIX 200809L
+- Make
 
-For Debian
-```
-sudo apt install libcairo2-dev libfontconfig1-dev libxkbcommon-dev libxcb1-dev libxcb-icccm4-dev libxcb-keysyms1-dev libxcb-present-dev libxcb-randr0-dev libxcb-render0-dev libxcb-xinput-dev
-```
-For Fedora
-```
-sudo dnf install cairo-devel fontconfig-devel libxkbcommon-devel libxcb-devel libxcb-icccm-devel libxcb-keysyms-devel libxcb-present-devel libxcb-randr-devel libxcb-render-devel libxcb-xinput-devel
-```
-For Arch
-```
-sudo pacman -S cairo fontconfig libxkbcommon libxcb xcb-util xcb-util-keysyms xcb-util-renderutil xcb-util-wm xcb-util-image
-```
-For Alpine
-```
-sudo apk add cairo-dev fontconfig-dev libxkbcommon-dev libxcb-dev xcb-util-dev xcb-util-keysyms-dev xcb-util-wm-dev xcb-util-renderutil-dev xcb-util-image-dev
-```
+Libraries:
+
+- [Cairo](https://cgit.freedesktop.org/cairo/)
+- [FontConfig](https://gitlab.freedesktop.org/fontconfig/fontconfig)
+- [XKBCommon](https://github.com/xkbcommon/libxkbcommon)
+- [XCB](https://gitlab.freedesktop.org/xorg/lib/libxcb)
+- [XCB-ICCCM](https://gitlab.freedesktop.org/xorg/lib/libxcb-wm)
+- [XCB-Keysyms](https://gitlab.freedesktop.org/xorg/lib/libxcb-keysyms)
+- [XCB-Present](https://gitlab.freedesktop.org/xorg/lib/libxcb)
+- [XCB-Randr](https://gitlab.freedesktop.org/xorg/lib/libxcb)
+- [XCB-XInput](https://gitlab.freedesktop.org/xorg/lib/libxcb)
 
 ## Build and Installation <a name="build"></a>
 
 First, edit the makefile if you want to change the installation destinations. These are represented by the variables `DIR_INSTALL_INC` and `DIR_INSTALL_LIB` for the public API headers and library files respectively. By default, they are set to `/usr/include/cassette/` and `/usr/lib`.
-Then, build and install Cassette with the following commands (Examples will also be built and placed under `*/build/bin`):
+Then, build and install Cassette with the following commands (Examples will also be built and placed under the `*/build/bin` directory of each library):
 
 ```
 make
 make install
+```
+
+Optional step to install CCFG vim syntax highlighting:
+
+```
+make install-syntax
 ```
 
 Once you're done you can get rid of build files with:
@@ -128,29 +88,76 @@ make uninstall
 
 ## Post-Installation <a name="post-install"></a>
 
-By default, the CGUI library is set to use the font "Monospace" with size 14 because it currently does not ship with its own built-in font. But because the windows geometry is dependent on the font, it is recommended to customize your font before anything else. Do note, that the font must be mono-spaced since CGUI has been specifically developed around this class of font. To set it, create a configuration file `~/.config/cgui.conf` and add to it these two lines :
+By default, the CGUI library is set to use the font "Monospace" with size 14 because it currently does not ship with its own built-in font. But because the windows geometry is dependent on the font, it is recommended to customize your font before anything else. Do note, that the font must be mono-spaced since CGUI has been specifically developed around this class of font. To set it, create a configuration file `~/.config/cassette/cgui.ccfg` and add to it these two lines :
 
 ```
 font face "FONT_NAME"
 font size  VALUE
 ```
 
-Replace `FONT_NAME` and `VALUE` with your preferred font name and size. The font name follows the FontConfig naming convention. After that, if the rendered text still looks wrong, check out the other font configuration parameters in the [sample configuration file](cgui/test/cgui.conf) and add them to your current configuration to further tweak font rendering. 
+Replace `FONT_NAME` and `VALUE` with your preferred font name and size. The font name follows the FontConfig naming convention. After that, if the rendered text still looks wrong, check out the other font configuration parameters in the [sample configuration file](cgui/test/cgui.ccfg) and add them to your current configuration to further tweak font rendering. 
 
-## Planned features <a name="future"></a>
+## Usage
 
-- Documentation
-- Navigation-to-text output for complete accessibility
+Add these includes to access the functions of each library :
+
+```
+#include <cassette/cgui.h>
+#include <cassette/ccfg.h>
+#incluce <cassette/cobj.h>
+```
+
+As well as these compilation flags :
+
+```
+-lcgui
+-lccfg
+-lcobj
+```
+Minimal examples:
+
+- [Hello world window](docs/cgui-example.md)
+- [Simple resource lookup](docs/ccfg-example.md)
+
+More elaborate demos:
+
+- [CGUI](cgui/examples)
+- [CCFG](ccfg/examples)
+- [COBJ](cobj/examples)
+
+## Gallery <a name="gallery"></a>
+
+<table> 
+<tr>
+<td><img src="extras/screenshots/1.png" alt="Screenshot 1"></td> 
+<td><img src="extras/screenshots/2.png" alt="Screenshot 3"></td>
+</tr> 
+<tr>
+<td><img src="extras/screenshots/3.png" alt="Screenshot 3"></td>
+<td><img src="extras/screenshots/4.png" alt="Screenshot 4"></td>
+</tr>
+</table>
+
+## Planned Features <a name="future"></a>
+
+- Proper Unicode Plane-0 EGC handling
+- Native Wayland backend
+- Navigation-to-text output for screen-readers accessibility
 - Drag and drop
-- Wayland support
-- Transition to a Vulkan backend (in part to support Wayland)
-	- Transition from cairo to vkvg
+- More cells (widgets)
+- Auto-generated API reference pages
+- Step-by-step CGUI tutorial
 
-## Credits <a name="credits"></a>
+## Third-Party Visual Resources<a name="credits"></a>
 
 - [Nostromo font](https://www.fontspring.com/fonts/great-scott/nostromo)
+- [Terminus font](https://terminus-font.sourceforge.net/)
+- [Scientifica font](https://github.com/nerdypepper/scientifica)
+- [Mars picture background](https://www.nasa.gov/)
+- [Picom shadow and blur effects](https://github.com/yshui/picom)
 
 ## Mirrors <a name="mirrors"></a>
 
 - https://github.com/fraawlen/cassette
 - https://codeberg.org/fraawlen/cassette
+
