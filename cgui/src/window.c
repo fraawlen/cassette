@@ -44,16 +44,16 @@
 
 /* impure */
 
-static void cairo_data_destroy (cgui_window *)                                  CGUI_NONNULL(1);
-static bool cairo_setup        (cgui_window *, double, double)                  CGUI_NONNULL(1);
-static void draw_area          (cgui_window *, struct grid_area, unsigned long) CGUI_NONNULL(1);
-static void dummy_fn_accel     (cgui_window *, int)                             CGUI_NONNULL(1);
-static void dummy_fn_close     (cgui_window *)                                  CGUI_NONNULL(1);
-static void dummy_fn_draw      (cgui_window *, unsigned long, unsigned long)    CGUI_NONNULL(1);
-static void dummy_fn_focus     (cgui_window *, cgui_cell *)                     CGUI_NONNULL(1, 2);
-static void dummy_fn_grid      (cgui_window *, cgui_grid *)                     CGUI_NONNULL(1, 2);
-static void dummy_fn_state     (cgui_window *, enum cgui_window_state_mask)     CGUI_NONNULL(1);
-static void refocus            (cgui_window *)                                  CGUI_NONNULL(1);
+static void cairo_data_destroy (cgui_window *)                                                          CGUI_NONNULL(1);
+static bool cairo_setup        (cgui_window *, double, double)                                          CGUI_NONNULL(1);
+static void draw_area          (cgui_window *, struct grid_area, enum window_draw_level, unsigned long) CGUI_NONNULL(1);
+static void dummy_fn_accel     (cgui_window *, int)                                                     CGUI_NONNULL(1);
+static void dummy_fn_close     (cgui_window *)                                                          CGUI_NONNULL(1);
+static void dummy_fn_draw      (cgui_window *, unsigned long, unsigned long)                            CGUI_NONNULL(1);
+static void dummy_fn_focus     (cgui_window *, cgui_cell *)                                             CGUI_NONNULL(1, 2);
+static void dummy_fn_grid      (cgui_window *, cgui_grid *)                                             CGUI_NONNULL(1, 2);
+static void dummy_fn_state     (cgui_window *, enum cgui_window_state_mask)                             CGUI_NONNULL(1);
+static void refocus            (cgui_window *)                                                          CGUI_NONNULL(1);
 
 /* pure */
 
@@ -79,45 +79,45 @@ cgui_window *last_popup = CGUI_WINDOW_PLACEHOLDER;
 
 cgui_window cgui_window_placeholder_instance =
 {
-	.type           = CGUI_WINDOW_NORMAL,
-	.x              = 0.0,
-	.y              = 0.0,
-	.width          = 0.0,
-	.height         = 0.0,
-	.tmp_x          = 0.0,
-	.tmp_y          = 0.0,
-	.tmp_width      = 0.0,
-	.tmp_height     = 0.0,
-	.x_serial       = 0,
-	.x_id           = 0,
-	.x_buffer       = 0,
-	.surface        = NULL,
-	.drawable       = NULL,
-	.name           = NULL,
-	.popup_parent   = CGUI_WINDOW_PLACEHOLDER,
-	.popup_child    = CGUI_WINDOW_PLACEHOLDER,
-	.buttons        = CINPUTS_PLACEHOLDER,
-	.touches        = CINPUTS_PLACEHOLDER,
-	.grids          = CREF_PLACEHOLDER,
-	.fn_close       = dummy_fn_close,
-	.fn_draw        = dummy_fn_draw,
-	.fn_focus       = dummy_fn_focus,
-	.fn_grid        = dummy_fn_grid,
-	.fn_state       = dummy_fn_state,
-	.state          = default_states,
-	.shown_grid     = CGUI_GRID_PLACEHOLDER,
-	.draw           = WINDOW_DRAW_NONE,
-	.wait_present   = false,
-	.async_present  = false,
-	.valid          = false,
-	.wait_resize    = false,
-	.wait_move      = false,
-	.wm_move        = false,
-	.wm_resize      = false,
-	.old_width      = 0.0,
-	.old_height     = 0.0,
-	.draw_timestamp = 0,
-	.focus          =
+	.type          = CGUI_WINDOW_NORMAL,
+	.x             = 0.0,
+	.y             = 0.0,
+	.width         = 0.0,
+	.height        = 0.0,
+	.tmp_x         = 0.0,
+	.tmp_y         = 0.0,
+	.tmp_width     = 0.0,
+	.tmp_height    = 0.0,
+	.x_serial      = 0,
+	.x_id          = 0,
+	.x_buffer      = 0,
+	.surface       = NULL,
+	.drawable      = NULL,
+	.name          = NULL,
+	.popup_parent  = CGUI_WINDOW_PLACEHOLDER,
+	.popup_child   = CGUI_WINDOW_PLACEHOLDER,
+	.buttons       = CINPUTS_PLACEHOLDER,
+	.touches       = CINPUTS_PLACEHOLDER,
+	.grids         = CREF_PLACEHOLDER,
+	.fn_close      = dummy_fn_close,
+	.fn_draw       = dummy_fn_draw,
+	.fn_focus      = dummy_fn_focus,
+	.fn_grid       = dummy_fn_grid,
+	.fn_state      = dummy_fn_state,
+	.state         = default_states,
+	.shown_grid    = CGUI_GRID_PLACEHOLDER,
+	.draw          = WINDOW_DRAW_NONE,
+	.wait_present  = false,
+	.async_present = false,
+	.valid         = false,
+	.wait_resize   = false,
+	.wait_move     = false,
+	.wm_move       = false,
+	.wm_resize     = false,
+	.old_width     = 0.0,
+	.old_height    = 0.0,
+	.draw_time     = 0,
+	.focus         =
 	{
 		.cell   = CGUI_CELL_PLACEHOLDER,
 		.col    = 0,
@@ -194,7 +194,7 @@ cgui_window_activate(cgui_window *window)
 
 	/* activate the window */
 
-	window->draw_timestamp = 0;
+	window->draw_time = 0;
 
 	x11_window_activate(window->x_id);
 	window_update_size_hints(window);
@@ -345,38 +345,38 @@ cgui_window_create(void)
 	cref_set_default_ptr(window->grids, CGUI_GRID_PLACEHOLDER);
 	cinputs_set_default_ptr(window->touches, CGUI_CELL_PLACEHOLDER);
 
-	window->type           = CGUI_WINDOW_NORMAL;
-	window->x              = x;
-	window->y              = y;
-	window->width          = width;
-	window->height         = height;
-	window->tmp_x          = x;
-	window->tmp_y          = y;
-	window->tmp_width      = width;
-	window->tmp_height     = height;
-	window->x_serial       = 0;
-	window->name           = NULL;
-	window->popup_parent   = CGUI_WINDOW_PLACEHOLDER;
-	window->popup_child    = CGUI_WINDOW_PLACEHOLDER;
-	window->fn_close       = dummy_fn_close;
-	window->fn_draw        = dummy_fn_draw;
-	window->fn_focus       = dummy_fn_focus;
-	window->fn_grid        = dummy_fn_grid;
-	window->fn_state       = dummy_fn_state;
-	window->state          = default_states;
-	window->shown_grid     = CGUI_GRID_PLACEHOLDER;
-	window->focus          = GRID_AREA_NONE;
-	window->draw           = WINDOW_DRAW_NONE;
-	window->wait_present   = false;
-	window->async_present  = false;
-	window->valid          = true;
-	window->wait_resize    = false;
-	window->wait_move      = false;
-	window->wm_move        = false;
-	window->wm_resize      = false;
-	window->old_width      = width;
-	window->old_height     = height;
-	window->draw_timestamp = 0;
+	window->type          = CGUI_WINDOW_NORMAL;
+	window->x             = x;
+	window->y             = y;
+	window->width         = width;
+	window->height        = height;
+	window->tmp_x         = x;
+	window->tmp_y         = y;
+	window->tmp_width     = width;
+	window->tmp_height    = height;
+	window->x_serial      = 0;
+	window->name          = NULL;
+	window->popup_parent  = CGUI_WINDOW_PLACEHOLDER;
+	window->popup_child   = CGUI_WINDOW_PLACEHOLDER;
+	window->fn_close      = dummy_fn_close;
+	window->fn_draw       = dummy_fn_draw;
+	window->fn_focus      = dummy_fn_focus;
+	window->fn_grid       = dummy_fn_grid;
+	window->fn_state      = dummy_fn_state;
+	window->state         = default_states;
+	window->shown_grid    = CGUI_GRID_PLACEHOLDER;
+	window->focus         = GRID_AREA_NONE;
+	window->draw          = WINDOW_DRAW_NONE;
+	window->wait_present  = false;
+	window->async_present = false;
+	window->valid         = true;
+	window->wait_resize   = false;
+	window->wait_move     = false;
+	window->wm_move       = false;
+	window->wm_resize     = false;
+	window->old_width     = width;
+	window->old_height    = height;
+	window->draw_time     = 0;
 
 	return window;
 
@@ -1127,6 +1127,7 @@ window_destroy(cgui_window *window)
 void
 window_draw(cgui_window *window)
 {
+	enum window_draw_level level;
 	unsigned long timestamp;
 	unsigned long delay;
 
@@ -1140,12 +1141,15 @@ window_draw(cgui_window *window)
 		window->draw = WINDOW_DRAW_FULL;
 	}
 
-	timestamp = util_time();
-	delay     = window->draw_timestamp == 0 ? 0 : timestamp - window->draw_timestamp;
+	timestamp         = util_time();
+	delay             = window->draw_time == 0 ? 0 : timestamp - window->draw_time;
+	level             = window->draw;
+	window->draw      = WINDOW_DRAW_NONE;
+	window->draw_time = timestamp;
 
 	/* draw border and background */
 
-	if (window->draw == WINDOW_DRAW_FULL)
+	if (level == WINDOW_DRAW_FULL)
 	{
 		cgui_box_move(0.0, 0.0);
 		cgui_box_resize(window->width, window->height);
@@ -1161,16 +1165,13 @@ window_draw(cgui_window *window)
 	{
 		if (i != window->focus.id)
 		{
-			draw_area(window, *(struct grid_area*)cref_ptr(window->shown_grid->areas, i), delay);
+			draw_area(window, *(struct grid_area*)cref_ptr(window->shown_grid->areas, i), level, delay);
 		}
 	}
 
-	draw_area(window, window->focus, delay);
+	draw_area(window, window->focus, level, delay);
 
 	/* end */
-
-	window->draw           = WINDOW_DRAW_NONE;
-	window->draw_timestamp = timestamp;
 
 	cairo_new_path(window->drawable);
 	window->fn_draw(window, delay, util_time() - timestamp);
@@ -1690,7 +1691,7 @@ cell_frame(const cgui_window *window, struct grid_area area)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-draw_area(cgui_window *window, struct grid_area area, unsigned long delay)
+draw_area(cgui_window *window, struct grid_area area, enum window_draw_level level, unsigned long delay)
 {
 	struct cgui_cell_context context =
 	{
@@ -1702,7 +1703,7 @@ draw_area(cgui_window *window, struct grid_area area, unsigned long delay)
 		.height   = area.height,
 	};
 
-	if ((window->draw != WINDOW_DRAW_FULL && !area.cell->draw) || area.id == SIZE_MAX)
+	if ((level != WINDOW_DRAW_FULL && !area.cell->draw) || area.id == SIZE_MAX)
 	{
 		return;
 	}

@@ -106,8 +106,9 @@ static const char *default_text =
 	cgui_label_set_label(label, default_text);
 	cgui_label_align(label, CGUI_ALIGN_BOTTOM_RIGHT);
 
+	cgui_beacon_set_blink_speed(beacon, 2);
 	cgui_beacon_set_label(beacon, "something something ...");
-	cgui_beacon_set_state(beacon, CGUI_BEACON_ON);
+	cgui_beacon_set_state(beacon, CGUI_BEACON_CRITICAL);
 	cgui_beacon_align_label(beacon, CGUI_ALIGN_TOP);
 	cgui_beacon_rotate_label(beacon, CGUI_ROTATION_LEFT);
 

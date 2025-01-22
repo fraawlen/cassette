@@ -102,7 +102,7 @@ struct cgui_window
 	bool valid;
 	bool wait_resize;
 	bool wait_move;
-	unsigned long draw_timestamp;
+	unsigned long draw_time;
 
 	/* wm data */
 

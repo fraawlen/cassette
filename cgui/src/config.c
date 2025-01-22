@@ -266,6 +266,9 @@ static const struct resource resources[] =
 	{ "stripes",  "width",                       LENGTH,        &config.stripes_width                  },
 	{ "stripes",  "spacing",                     LENGTH,        &config.stripes_spacing                },
 
+	{ "beacon",   "blink_animation_speed_on",    ULONG,         &config.beacon_blink_speed_on          },
+	{ "beacon",   "blink_animation_speed_off",   ULONG,         &config.beacon_blink_speed_off         },
+
 	KEY(  1) KEY(  2) KEY(  3) KEY(  4) KEY(  5) KEY(  6) KEY(  7) KEY(  8) KEY(  9) KEY( 10)
 	KEY( 11) KEY( 12) KEY( 13) KEY( 14) KEY( 15) KEY( 16) KEY( 17) KEY( 18) KEY( 19) KEY( 20)
 	KEY( 21) KEY( 22) KEY( 23) KEY( 24) KEY( 25) KEY( 26) KEY( 27) KEY( 28) KEY( 29) KEY( 30)
@@ -289,19 +292,27 @@ static const struct resource resources[] =
 	WINDOW( "window_locked",   config.window_locked   )
 	WINDOW( "popup",           config.popup           )
 
-	BOX( "filler",          config.filler_frame          )
-	BOX( "stripes",         config.stripes_frame         )
-	BOX( "button_idle",     config.button_frame_idle     )
-	BOX( "button_focused",  config.button_frame_focused  )
-	BOX( "button_pressed",  config.button_frame_pressed  )
-	BOX( "button_disabled", config.button_frame_disabled )
-	BOX( "label",           config.label_frame           )
+	BOX( "filler",              config.filler_frame          )
+	BOX( "stripes",             config.stripes_frame         )
+	BOX( "button_idle",         config.button_frame_idle     )
+	BOX( "button_focused",      config.button_frame_focused  )
+	BOX( "button_pressed",      config.button_frame_pressed  )
+	BOX( "button_disabled",     config.button_frame_disabled )
+	BOX( "beacon_off",          config.beacon_frame_off      )
+	BOX( "beacon_on",           config.beacon_frame_on       )
+	BOX( "beacon_critical_off", config.beacon_frame_crit_off )
+	BOX( "beacon_critical_on",  config.beacon_frame_crit_on  )
+	BOX( "label",               config.label_frame           )
 
-	TEXT( "button_idle",     config.button_text_idle     )
-	TEXT( "button_focused",  config.button_text_focused  )
-	TEXT( "button_pressed",  config.button_text_pressed  )
-	TEXT( "button_disabled", config.button_text_disabled )
-	TEXT( "label",           config.label_text           )
+	TEXT( "button_idle",         config.button_text_idle     )
+	TEXT( "button_focused",      config.button_text_focused  )
+	TEXT( "button_pressed",      config.button_text_pressed  )
+	TEXT( "button_disabled",     config.button_text_disabled )
+	TEXT( "beacon_off",          config.beacon_text_off      )
+	TEXT( "beacon_on",           config.beacon_text_on       )
+	TEXT( "beacon_critical_off", config.beacon_text_crit_off )
+	TEXT( "beacon_critical_on",  config.beacon_text_crit_on  )
+	TEXT( "label",               config.label_text           )
 };
 
 /************************************************************************************************************/

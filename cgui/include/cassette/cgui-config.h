@@ -193,6 +193,21 @@ struct cgui_config
 
 	struct cgui_box  label_frame;
 	struct cgui_text label_text;
+
+	/* cell - beacon */
+
+	struct cgui_box beacon_frame_off;
+	struct cgui_box beacon_frame_on;
+	struct cgui_box beacon_frame_crit_off;
+	struct cgui_box beacon_frame_crit_on;
+
+	struct cgui_text beacon_text_off;
+	struct cgui_text beacon_text_on;
+	struct cgui_text beacon_text_crit_off;
+	struct cgui_text beacon_text_crit_on;
+
+	unsigned long beacon_blink_speed_on;
+	unsigned long beacon_blink_speed_off;
 };
 
 /************************************************************************************************************/

@@ -37,6 +37,7 @@
 
 /* Top-level headers - Cells */
 
+#include "cgui-beacon.h"
 #include "cgui-button.h"
 #include "cgui-filler.h"
 #include "cgui-label.h"

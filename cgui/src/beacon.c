@@ -37,26 +37,32 @@
 
 struct data
 {
-	cstr *label;
+	unsigned long anim_count;
+	unsigned int  anim_factor;
+	enum cgui_beacon_state state;
 	enum cgui_align align;
 	enum cgui_rotation rot;
+	bool blink_on;
+	cstr *label;
 };
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void destroy (cgui_cell *)                           CGUI_NONNULL(1);
-static void draw    (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
-static void frame   (cgui_cell *, struct cgui_box *)        CGUI_NONNULL(1, 2);
-static bool invalid (const cgui_cell *)                     CGUI_NONNULL(1);
+static void animate                (cgui_cell *, unsigned long)            CGUI_NONNULL(1);
+static void destroy                (cgui_cell *)                           CGUI_NONNULL(1);
+static void draw                   (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
+static void frame                  (cgui_cell *, struct cgui_box *)        CGUI_NONNULL(1, 2);
+static bool invalid                (const cgui_cell *)                     CGUI_NONNULL(1);
+static struct cgui_text text_style (const cgui_cell *)                     CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 void
-cgui_label_align(cgui_cell *cell, enum cgui_align alignment)
+cgui_beacon_align_label(cgui_cell *cell, enum cgui_align alignment)
 {
 	if (invalid(cell))
 	{
@@ -71,7 +77,7 @@ cgui_label_align(cgui_cell *cell, enum cgui_align alignment)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 cgui_cell *
-cgui_label_create(void)
+cgui_beacon_create(void)
 {
 	cgui_cell   *cell;
 	struct data *data;
@@ -96,14 +102,18 @@ cgui_label_create(void)
 		goto fail_cell;
 	}
 
-	data->align = CGUI_ALIGN_CENTER;
-	data->rot   = CGUI_ROTATION_NORMAL;
+	data->state       = CGUI_BEACON_OFF;
+	data->align       = CGUI_ALIGN_CENTER;
+	data->rot         = CGUI_ROTATION_NORMAL;
+	data->blink_on    = false;
+	data->anim_count  = 0;
+	data->anim_factor = 1;
 
 	cgui_cell_on_destroy(cell, destroy);
 	cgui_cell_on_draw(cell, draw);
 	cgui_cell_on_frame(cell, frame);
 	cgui_cell_set_data(cell, data);
-	cgui_cell_set_serial(cell, CELL_LABEL);
+	cgui_cell_set_serial(cell, CELL_BEACON);
 
 	return cell;
 
@@ -122,7 +132,7 @@ fail_main:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_label_rotate(cgui_cell *cell, enum cgui_rotation rotation)
+cgui_beacon_rotate_label(cgui_cell *cell, enum cgui_rotation rotation)
 {
 	if (invalid(cell))
 	{
@@ -137,7 +147,26 @@ cgui_label_rotate(cgui_cell *cell, enum cgui_rotation rotation)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_label_set_label(cgui_cell *cell, const char *label)
+cgui_beacon_set_blink_speed(cgui_cell *cell, unsigned int factor)
+{
+	if (factor == 0)
+	{
+		main_set_error(CERR_PARAM);
+		return;
+	}
+
+	if (invalid(cell))
+	{
+		return;
+	}
+
+	DATA->anim_factor = factor;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_beacon_set_label(cgui_cell *cell, const char *label)
 {
 	if (invalid(cell))
 	{
@@ -150,9 +179,51 @@ cgui_label_set_label(cgui_cell *cell, const char *label)
 	cgui_cell_redraw(cell);
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_beacon_set_state(cgui_cell *cell, enum cgui_beacon_state state)
+{
+	if (invalid(cell))
+	{
+		return;
+	}
+
+	if ((DATA->state = state) != CGUI_BEACON_CRITICAL)
+	{
+		DATA->anim_count = 0;
+		DATA->blink_on   = false;
+	}
+
+	cgui_cell_redraw(cell);
+}
+
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
+
+static void
+animate(cgui_cell *cell, unsigned long delay)
+{
+	double speed;
+
+	if (DATA->state == CGUI_BEACON_OFF || DATA->state == CGUI_BEACON_OFF)
+	{
+		return;
+	}
+
+	DATA->anim_count += delay;
+	speed = DATA->blink_on ? CONFIG->beacon_blink_speed_on : CONFIG->beacon_blink_speed_off;
+	if (DATA->anim_count >= speed * 1000 / DATA->anim_factor)
+	{
+		DATA->anim_count = 0;
+		DATA->blink_on   = !DATA->blink_on;
+	}
+
+	cgui_cell_redraw(cell);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
 destroy(cgui_cell *cell)
@@ -170,6 +241,10 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 	double x = context.x + l + cgui_align_offset_x(DATA->align, context.width  - l * 2);
 	double y = context.y + l + cgui_align_offset_y(DATA->align, context.height - l * 2);
 
+	/* update animation */
+
+	animate(cell, context.delay);
+
 	/* frame */
 
 	cgui_cell_draw_frame(context);
@@ -180,8 +255,8 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 	cgui_text_move(x, y);
 	cgui_text_align(cgui_align_rotation(DATA->align, DATA->rot));
 	cgui_text_rotate(DATA->rot);
-	cgui_text_style(CONFIG->label_text);
-	cgui_text_draw(context.drawable, DATA->label);	
+	cgui_text_style(text_style(cell));
+	cgui_text_draw(context.drawable, DATA->label);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -189,9 +264,21 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 static void
 frame(cgui_cell *cell, struct cgui_box *box)
 {
-	(void)cell;
+	switch (DATA->state)
+	{
+		case CGUI_BEACON_CRITICAL:
+			*box = DATA->blink_on ? CONFIG->beacon_frame_crit_on : CONFIG->beacon_frame_crit_off;
+			break;
 
-	*box = CONFIG->label_frame;
+		case CGUI_BEACON_ON:
+			*box = CONFIG->beacon_frame_on;
+			break;
+
+		case CGUI_BEACON_OFF:
+		default:
+			*box = CONFIG->beacon_frame_off;
+			break;
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -199,10 +286,30 @@ frame(cgui_cell *cell, struct cgui_box *box)
 static bool
 invalid(const cgui_cell *cell)
 {
-	if (cell->serial != CELL_LABEL)
+	if (cell->serial != CELL_BEACON)
 	{
 		main_set_error(CERR_PARAM);
 	}
 
 	return cgui_error() || !cell->valid;
 }
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static struct cgui_text
+text_style(const cgui_cell *cell)
+{
+	switch (DATA->state)
+	{
+		case CGUI_BEACON_CRITICAL:
+			return DATA->blink_on ? CONFIG->beacon_text_crit_on : CONFIG->beacon_text_crit_off;
+
+		case CGUI_BEACON_ON:
+			return CONFIG->beacon_text_on;
+
+		case CGUI_BEACON_OFF:
+		default:
+			return CONFIG->beacon_text_off;
+	}
+}
+
