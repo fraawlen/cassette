@@ -92,11 +92,8 @@ static int              selection_id         (xcb_atom_t);
 static xcb_atom_t       selection_name       (int);
 static bool             selection_send_data  (int, xcb_window_t, xcb_atom_t, xcb_atom_t);
 static xcb_atom_t       selection_target     (int);
-static xcb_size_hints_t size_hints           (xcb_window_t);
 static bool             test_cookie          (xcb_void_cookie_t);
 static struct cgui_mods translate_mods       (uint16_t state);
-
-
 
 /* event handlers */
 
@@ -1160,20 +1157,12 @@ x11_window_destroy(xcb_window_t id, xcb_pixmap_t buffer)
 void
 x11_window_move(xcb_window_t id, double x, double y)
 {
-	xcb_size_hints_t hints;
-
-	hints        = size_hints(id);
-	hints.x      = TO_INT(x);
-	hints.y      = TO_INT(y);
-	hints.flags |= XCB_ICCCM_SIZE_HINT_US_POSITION;
-
-	prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &hints);
 	test_cookie(
 		xcb_configure_window_checked(
 			connection,
 			id,
 			XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y,
-			(uint32_t[2]){hints.x, hints.y}));
+			(uint32_t[2]){TO_INT(x), TO_INT(y)}));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1262,7 +1251,8 @@ x11_window_set_transient(xcb_window_t id, xcb_window_t id_under)
 void
 x11_window_set_type(xcb_window_t id, enum cgui_window_type type)
 {
-	uint32_t attr = 0;
+	uint32_t stack = XCB_STACK_MODE_ABOVE;
+	uint32_t attr  = 0;
 	xcb_atom_t atom;
 
 	switch (type)
@@ -1276,7 +1266,9 @@ x11_window_set_type(xcb_window_t id, enum cgui_window_type type)
 			break;
 
 		case CGUI_WINDOW_UNDERLAY:
-			atom = atom_wdsk;
+			stack = XCB_STACK_MODE_BELOW;
+			atom  = atom_wdsk;
+			attr  = 1;
 			break;
 
 		case CGUI_WINDOW_OVERLAY:
@@ -1293,8 +1285,9 @@ x11_window_set_type(xcb_window_t id, enum cgui_window_type type)
 			return;
 	}
 
-	prop_set(id, atom_wtyp, XCB_ATOM_ATOM, 1, &atom);
+	test_cookie(xcb_configure_window_checked(connection, id, XCB_CONFIG_WINDOW_STACK_MODE, &stack));
 	xcb_change_window_attributes(connection,id, XCB_CW_OVERRIDE_REDIRECT, &attr);
+	prop_set(id, atom_wtyp, XCB_ATOM_ATOM, 1, &atom);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1392,9 +1385,19 @@ x11_window_update_focus_hints(xcb_window_t id, double x, double y, double width,
 void
 x11_window_update_size_hints(xcb_window_t id, double min_width, double min_height, double max_width, double max_height)
 {
-	xcb_size_hints_t hints;
+	xcb_size_hints_t hints = {0};
+	xcb_get_property_reply_t *xr;
+	xcb_get_property_cookie_t xc;
 
-	hints            = size_hints(id);
+	xc = xcb_get_property(connection, 0, id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, 0, UINT32_MAX);
+	xr = xcb_get_property_reply(connection, xc, NULL);
+	if (!xr)
+	{
+		main_set_error(CERR_XCB);
+		return;
+	}
+	
+	hints            = *(xcb_size_hints_t*)xcb_get_property_value(xr);
 	hints.min_width  = TO_UINT(min_width);
 	hints.min_height = TO_UINT(min_height);
 	hints.max_width  = TO_UINT(max_width);
@@ -1402,6 +1405,8 @@ x11_window_update_size_hints(xcb_window_t id, double min_width, double min_heigh
 	hints.flags     |= XCB_ICCCM_SIZE_HINT_P_MIN_SIZE | XCB_ICCCM_SIZE_HINT_P_MAX_SIZE;
 
 	prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &hints);
+	
+	free(xr);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -2048,31 +2053,6 @@ selection_target(int id)
 		default:
 			return XCB_ATOM_NONE;
 	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static xcb_size_hints_t
-size_hints(xcb_window_t id)
-{
-	xcb_size_hints_t hints = {0};
-	xcb_get_property_reply_t *xr;
-	xcb_get_property_cookie_t xc;
-
-	xc = xcb_get_property(connection, 0, id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, 0, UINT32_MAX);
-	xr = xcb_get_property_reply(connection, xc, NULL);
-
-	if (!xr)
-	{
-		main_set_error(CERR_XCB);
-	}
-	else
-	{
-		hints = *(xcb_size_hints_t*)xcb_get_property_value(xr);
-		free(xr);
-	}
-
-	return hints;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

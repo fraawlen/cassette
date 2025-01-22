@@ -204,14 +204,6 @@ cgui_window_activate(cgui_window *window)
 		window_update_state(window, CGUI_WINDOW_FOCUSED, true);
 	}
 
-	/* if a window move was requested before activation, repeat it */
-	/* because otherwhise the WM can override the position         */
-
-	if (window->wait_move)
-	{
-		cgui_window_move(window, window->tmp_x, window->tmp_y);
-	}
-
 	return true;
 }
 

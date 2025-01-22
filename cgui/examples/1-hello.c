@@ -48,8 +48,8 @@ static void on_state     (cgui_window *, enum cgui_window_state_mask);
 
 static cstr        *text     = CSTR_PLACEHOLDER;
 static cgui_cell   *filler   = CGUI_CELL_PLACEHOLDER;
-static cgui_cell   *label_1  = CGUI_CELL_PLACEHOLDER;
-static cgui_cell   *label_2  = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *label  = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *beacon   = CGUI_CELL_PLACEHOLDER;
 static cgui_cell   *stripes  = CGUI_CELL_PLACEHOLDER;
 static cgui_cell   *button_1 = CGUI_CELL_PLACEHOLDER;
 static cgui_cell   *button_2 = CGUI_CELL_PLACEHOLDER;
@@ -58,7 +58,6 @@ static cgui_grid   *grid_1   = CGUI_GRID_PLACEHOLDER;
 static cgui_grid   *grid_2   = CGUI_GRID_PLACEHOLDER;
 static cgui_window *window   = CGUI_WINDOW_PLACEHOLDER;
 
-static struct cgui_screen screen;
 static const char *default_text =
 	"qwertyuiop\n"
 	"asdfghjkl\n"
@@ -82,9 +81,6 @@ static const char *default_text =
  int
  main(int argc, char **argv)
  {
- 	double x;
-	double y;
-
 	/* Setup */
 
 	cgui_init(argc, argv);
@@ -94,13 +90,12 @@ static const char *default_text =
 	grid_1   = cgui_grid_create(3, 2);
 	grid_2   = cgui_grid_create(3, 4);
 	filler   = cgui_filler_create();
-	label_1  = cgui_label_create();
-	label_2  = cgui_label_create();
+	label    = cgui_label_create();
+	beacon   = cgui_beacon_create();
 	stripes  = cgui_stripes_create();
 	button_1 = cgui_button_create();
 	button_2 = cgui_button_create();
 	button_3 = cgui_button_create();
-	screen   = cgui_screen_primary_specs();
 
 	/* Default text */
 
@@ -108,12 +103,13 @@ static const char *default_text =
 
 	/* Cell setup */
 
-	cgui_label_set_label(label_1, default_text);
-	cgui_label_align(label_1, CGUI_ALIGN_BOTTOM_RIGHT);
+	cgui_label_set_label(label, default_text);
+	cgui_label_align(label, CGUI_ALIGN_BOTTOM_RIGHT);
 
-	cgui_label_set_label(label_2, "something something ...");
-	cgui_label_align(label_2, CGUI_ALIGN_TOP);
-	cgui_label_rotate(label_2, CGUI_ROTATION_LEFT);
+	cgui_beacon_set_label(beacon, "something something ...");
+	cgui_beacon_set_state(beacon, CGUI_BEACON_ON);
+	cgui_beacon_align_label(beacon, CGUI_ALIGN_TOP);
+	cgui_beacon_rotate_label(beacon, CGUI_ROTATION_LEFT);
 
 	cgui_button_on_click(button_1, on_click);
 	cgui_button_on_click(button_2, on_click);
@@ -140,8 +136,8 @@ static const char *default_text =
 
 	cgui_grid_assign_cell(grid_1, button_1, 0, 0, 1, 1);
 	cgui_grid_assign_cell(grid_1, button_2, 1, 0, 1, 1);
-	cgui_grid_assign_cell(grid_1, label_1,  0, 1, 1, 1);
-	cgui_grid_assign_cell(grid_1, label_2,  2, 0, 1, 2);
+	cgui_grid_assign_cell(grid_1, label,    0, 1, 1, 1);
+	cgui_grid_assign_cell(grid_1, beacon,   2, 0, 1, 2);
 	cgui_grid_assign_cell(grid_1, stripes,  1, 1, 1, 1);
 	
 	/* Grid 2 setup */
@@ -158,14 +154,11 @@ static const char *default_text =
 	cgui_grid_assign_cell(grid_2, button_1, 0, 1, 1, 1);
 	cgui_grid_assign_cell(grid_2, button_2, 0, 2, 1, 1);
 	cgui_grid_assign_cell(grid_2, button_3, 0, 3, 1, 1);
-	cgui_grid_assign_cell(grid_2, label_1,  1, 0, 1, 3);
-	cgui_grid_assign_cell(grid_2, label_2,  2, 0, 1, 3);
+	cgui_grid_assign_cell(grid_2, label,    1, 0, 1, 3);
+	cgui_grid_assign_cell(grid_2, beacon,   2, 0, 1, 3);
 	cgui_grid_assign_cell(grid_2, stripes,  1, 3, 2, 1);
 	
 	/* Window setup */
-
-	x = screen.x + screen.width  - 20;
-	y = screen.y + screen.height - 20;
 
 	cgui_window_push_grid(window, grid_2);
 	cgui_window_push_grid(window, grid_1);
@@ -176,8 +169,6 @@ static const char *default_text =
 	cgui_window_on_close(window, on_close);
 	cgui_window_on_state(window, on_state);
 	cgui_window_resize(window, 1000, 1000);
-	cgui_window_move_smart(window, x, y, x, y);
-	cgui_window_set_type(window, CGUI_WINDOW_OVERLAY);
 	cgui_window_activate(window);
 
 	/* Run */
@@ -195,8 +186,8 @@ static const char *default_text =
 	cgui_grid_destroy(grid_1);
 	cgui_grid_destroy(grid_2);
 	cgui_cell_destroy(filler);
-	cgui_cell_destroy(label_1);
-	cgui_cell_destroy(label_2);
+	cgui_cell_destroy(label);
+	cgui_cell_destroy(beacon);
 	cgui_cell_destroy(stripes);
 	cgui_cell_destroy(button_1);
 	cgui_cell_destroy(button_2);
