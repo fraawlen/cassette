@@ -132,6 +132,18 @@ cgui_lock(void);
 /**
  *
  */
+ void
+cgui_on_exit(void (*fn)(void));
+
+/**
+ *
+ */
+void
+cgui_on_run(void (*fn)(void));
+
+/**
+ *
+ */
 void
 cgui_reconfig(void);
 

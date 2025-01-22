@@ -103,7 +103,7 @@ static const char *default_text =
 
 	/* Cell setup */
 
-	cgui_label_set_label(label, default_text);
+	cgui_label_set(label, default_text);
 	cgui_label_align(label, CGUI_ALIGN_BOTTOM_RIGHT);
 
 	cgui_beacon_set_label(beacon, "something something ...");

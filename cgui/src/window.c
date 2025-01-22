@@ -1309,7 +1309,10 @@ window_popup_last(void)
 void
 window_present(cgui_window *window)
 {
-	if (!window->state.mapped || window->wait_present || window->draw == WINDOW_DRAW_NONE)
+	if (!window->state.mapped
+	 || !window->state.active
+	 ||  window->wait_present
+	 ||  window->draw == WINDOW_DRAW_NONE)
 	{
 		return;
 	}

@@ -260,7 +260,7 @@ CGUI_NONNULL(1);
  *
  */
 void
-cgui_cell_on_frame(cgui_cell *cell, void (fn)(cgui_cell *cell, struct cgui_box *box))
+cgui_cell_on_frame(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_box *box))
 CGUI_NONNULL(1);
 
 /**

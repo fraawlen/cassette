@@ -223,7 +223,7 @@ popup_setup(int i)
 
 	/* Cell setup */
 
-	cgui_label_set_label(popups[i].label, cstr_chars(str));
+	cgui_label_set(popups[i].label, cstr_chars(str));
 	cgui_label_align(popups[i].label, CGUI_ALIGN_CENTER);
 
 	cgui_button_set_label(popups[i].button, "Open next popup");

@@ -137,7 +137,7 @@ cgui_label_rotate(cgui_cell *cell, enum cgui_rotation rotation)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_label_set_label(cgui_cell *cell, const char *label)
+cgui_label_set(cgui_cell *cell, const char *label)
 {
 	if (invalid(cell))
 	{

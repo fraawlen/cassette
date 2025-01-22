@@ -48,6 +48,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static void dummy_fn_exit           (void);
+static void dummy_fn_run            (void);
 static bool is_any_window_activated (void) CGUI_PURE;
 static void mutex_init              (void);
 static void mutex_reset             (void);
@@ -73,6 +75,11 @@ static cref *windows = CREF_PLACEHOLDER;
 static bool running  = false;
 static bool usr_exit = true;
 static enum cerr err = CERR_INVALID;
+
+/* callbacks */
+
+static void (*fn_run)  (void) = dummy_fn_run;
+static void (*fn_exit) (void) = dummy_fn_exit;
 
 /* misc */
 
@@ -163,7 +170,7 @@ cgui_init(int argc, char **argv)
 	config_init(app_name, app_class);
 	config_load();
 	mutex_init();
-	cgui_lock();
+	main_lock();
 	x11_init(argc, argv, app_name, app_class, ext_connection);
 
 	if (err)
@@ -198,7 +205,33 @@ cgui_lock(void)
 		return;
 	}
 
-	pthread_mutex_lock(&mutex);
+	main_lock();
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_on_exit(void (*fn)(void))
+{
+	if (err)
+	{
+		return;
+	}
+
+	fn_exit = fn ? fn : dummy_fn_exit;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_on_run(void (*fn)(void))
+{
+	if (err)
+	{
+		return;
+	}
+
+	fn_run = fn ? fn : dummy_fn_run;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -302,7 +335,7 @@ cgui_reset(void)
 	x11_inputs_ungrab();
 	x11_reset(!ext_connection);
 	config_reset();
-	cgui_unlock();
+	main_unlock();
 	mutex_reset();
 
 	cells          = CREF_PLACEHOLDER;
@@ -328,12 +361,20 @@ cgui_run(void)
 
 	running = true;
 
+	main_unlock();
+	fn_run();
+	main_lock();
+
 	while (!err && running && is_any_window_activated())
 	{
 		 x11_update();
 	}
 
 	running = false;
+
+	main_unlock();
+	fn_exit();
+	main_lock();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -396,12 +437,19 @@ cgui_x11_leader_window(void)
 void
 cgui_unlock(void)
 {
+	struct cgui_event event =
+	{
+		.window = CGUI_WINDOW_PLACEHOLDER,
+		.type   = CGUI_EVENT_NONE,
+	};
+
 	if (err)
 	{
 		return;
 	}
 
-	pthread_mutex_unlock(&mutex);
+	main_update(&event);
+	main_unlock();
 }
 
 /************************************************************************************************************/
@@ -420,6 +468,14 @@ cref *
 main_grids(void)
 {
 	return grids;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+main_lock(void)
+{
+	pthread_mutex_lock(&mutex);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -459,6 +515,14 @@ main_windows(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+main_unlock(void)
+{
+	pthread_mutex_unlock(&mutex);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 main_update(struct cgui_event *event)
 {
 	event_process(event);
@@ -483,6 +547,22 @@ main_update(struct cgui_event *event)
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
+
+static void
+dummy_fn_exit(void)
+{
+	/* nothing */
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+dummy_fn_run(void)
+{
+	/* nothing */
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
 is_any_window_activated(void)

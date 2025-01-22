@@ -170,19 +170,19 @@ static xcb_atom_t atom_sel_types[4];
 
 /* CGUI custom atoms */
 
-static xcb_atom_t atom_sig  = 0; /* _ATOM_SIGNALS           */
-static xcb_atom_t atom_vers = 0; /* _ATOM_VERSION           */
-static xcb_atom_t atom_stt  = 0; /* _ATOM_WINDOW_STATES     */
-static xcb_atom_t atom_wfoc = 0; /* _ATOM_WINDOW_FOCUS      */
-static xcb_atom_t atom_tmp1 = 0; /* _ATOM_PASTE_TMP_1       */
-static xcb_atom_t atom_tmp2 = 0; /* _ATOM_PASTE_TMP_2       */
-static xcb_atom_t atom_tmp3 = 0; /* _ATOM_PASTE_TMP_3       */
-static xcb_atom_t atom_won  = 0; /* _ATOM_WINDOW_ACTIVE     */
-static xcb_atom_t atom_wena = 0; /* _ATOM_WINDOW_DISABLED   */
-static xcb_atom_t atom_plck = 0; /* _ATOM_WINDOW_GRID_LOCK  */
-static xcb_atom_t atom_flck = 0; /* _ATOM_WINDOW_FOCUS_LOCK */
-static xcb_atom_t atom_conf = 0; /* _ATOM_RECONFIG          */
-static xcb_atom_t atom_acl  = 0; /* _ATOM_ACCEL             */
+static xcb_atom_t atom_sig  = 0; /* ATOM_SIGNALS           */
+static xcb_atom_t atom_vers = 0; /* ATOM_VERSION           */
+static xcb_atom_t atom_stt  = 0; /* ATOM_WINDOW_STATES     */
+static xcb_atom_t atom_wfoc = 0; /* ATOM_WINDOW_FOCUS      */
+static xcb_atom_t atom_tmp1 = 0; /* ATOM_PASTE_TMP_1       */
+static xcb_atom_t atom_tmp2 = 0; /* ATOM_PASTE_TMP_2       */
+static xcb_atom_t atom_tmp3 = 0; /* ATOM_PASTE_TMP_3       */
+static xcb_atom_t atom_won  = 0; /* ATOM_WINDOW_ACTIVE     */
+static xcb_atom_t atom_wena = 0; /* ATOM_WINDOW_DISABLED   */
+static xcb_atom_t atom_plck = 0; /* ATOM_WINDOW_GRID_LOCK  */
+static xcb_atom_t atom_flck = 0; /* ATOM_WINDOW_FOCUS_LOCK */
+static xcb_atom_t atom_conf = 0; /* ATOM_RECONFIG          */
+static xcb_atom_t atom_acl  = 0; /* ATOM_ACCEL             */
 
 static xcb_atom_t atom_isig = 0;                       /* "_INTERNAL_LOOP_SIGNAL"          */
 static xcb_atom_t atom_aclx[CGUI_CONFIG_ACCELS] = {0}; /* "_CGUI_WINDOW_ACCEL_x" x = 1..12 */
@@ -694,11 +694,7 @@ x11_selection_clear(int id)
 
 	xc = xcb_set_selection_owner_checked(connection, XCB_WINDOW_NONE, selection_name(id), x11_timestamp());
 	xcb_flush(connection);
-
-	if (!test_cookie(xc))
-	{
-		main_set_error(CERR_XCB);
-	}
+	test_cookie(xc);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -710,11 +706,7 @@ x11_selection_copy(int id, xcb_timestamp_t time)
 
 	xc = xcb_set_selection_owner_checked(connection, win_leader, selection_name(id), time);
 	xcb_flush(connection);
-
-	if (!test_cookie(xc))
-	{
-		main_set_error(CERR_XCB);
-	}
+	test_cookie(xc);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -856,9 +848,9 @@ x11_update(void)
 	}
 	else
 	{
-		cgui_unlock();
+		main_unlock();
 		event = xcb_wait_for_event(connection);
-		cgui_lock();
+		main_lock();
 	}
 
 	if (!event)
@@ -1192,6 +1184,8 @@ x11_window_present(xcb_window_t id, xcb_pixmap_t buffer, uint32_t serial, bool a
 	{
 		xcb_present_notify_msc(connection, id, serial, 0, async ? 0 : CONFIG->anim_divider, 0);
 	}
+
+	xcb_flush(connection);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1385,28 +1379,16 @@ x11_window_update_focus_hints(xcb_window_t id, double x, double y, double width,
 void
 x11_window_update_size_hints(xcb_window_t id, double min_width, double min_height, double max_width, double max_height)
 {
-	xcb_size_hints_t hints = {0};
-	xcb_get_property_reply_t *xr;
-	xcb_get_property_cookie_t xc;
-
-	xc = xcb_get_property(connection, 0, id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, 0, UINT32_MAX);
-	xr = xcb_get_property_reply(connection, xc, NULL);
-	if (!xr)
+	xcb_size_hints_t hints = 
 	{
-		main_set_error(CERR_XCB);
-		return;
-	}
-	
-	hints            = *(xcb_size_hints_t*)xcb_get_property_value(xr);
-	hints.min_width  = TO_UINT(min_width);
-	hints.min_height = TO_UINT(min_height);
-	hints.max_width  = TO_UINT(max_width);
-	hints.max_height = TO_UINT(max_height);
-	hints.flags     |= XCB_ICCCM_SIZE_HINT_P_MIN_SIZE | XCB_ICCCM_SIZE_HINT_P_MAX_SIZE;
+		.min_width  = TO_UINT(min_width),
+		.min_height = TO_UINT(min_height),
+		.max_width  = TO_UINT(max_width),
+		.max_height = TO_UINT(max_height),
+		.flags      = XCB_ICCCM_SIZE_HINT_P_MIN_SIZE | XCB_ICCCM_SIZE_HINT_P_MAX_SIZE,
+	};
 
 	prop_set(id, XCB_ATOM_WM_NORMAL_HINTS, XCB_ATOM_WM_SIZE_HINTS, sizeof(xcb_size_hints_t), &hints);
-	
-	free(xr);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

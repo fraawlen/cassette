@@ -61,5 +61,5 @@ CGUI_NONNULL(1);
  *
  */
 void
-cgui_label_set_label(cgui_cell *cell, const char *label)
+cgui_label_set(cgui_cell *cell, const char *label)
 CGUI_NONNULL(1, 2);

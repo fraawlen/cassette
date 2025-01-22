@@ -28,6 +28,12 @@
 /************************************************************************************************************/
 
 void
+main_lock(void)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 main_pull_instance(cref *ref, void *ptr)
 CGUI_NONNULL(1, 2)
 CGUI_HIDDEN;
@@ -43,6 +49,12 @@ CGUI_HIDDEN;
 
 void
 main_set_error(enum cerr error)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+main_unlock(void)
 CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
