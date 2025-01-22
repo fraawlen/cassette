@@ -1279,12 +1279,9 @@ x11_window_set_type(xcb_window_t id, enum cgui_window_type type)
 			atom = atom_wdsk;
 			break;
 
-		case CGUI_WINDOW_FIXED:
-			attr = 1;
-			/* fallthrough */
-
 		case CGUI_WINDOW_OVERLAY:
 			atom = atom_wovr;
+			attr = 1;
 			break;
 
 		case CGUI_WINDOW_POPUP:

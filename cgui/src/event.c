@@ -580,12 +580,13 @@ pointer(struct cgui_event *event)
 	/* drag or resize window if event is rejected */
 	/* unless the window is a popup               */
 
-	if (event->window->type == CGUI_WINDOW_POPUP
-	 || event->window->type == CGUI_WINDOW_FIXED)
+	if (event->window->type != CGUI_WINDOW_NORMAL
+	 && event->window->type != CGUI_WINDOW_DIALOG)
 	{
 		return;
 	}
-	else if (
+
+	if (
 	   !event->window->wait_move
 	 && event->window->wm_move
 	 && cinputs_find(event->window->buttons, CONFIG->wm_button_move, &i))

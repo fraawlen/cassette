@@ -1,6 +1,6 @@
-<h1 align="center"><img src="extras/banner.svg"></h1>
+<h1 align="center"><img src="extras/banner.svg" alt="project banner"></h1>
 
-Cassette is a lightweight framework written in C11, with a UI inspired by the cassette-futurism aesthetic. Built for modern POSIX systems, it's made out of three libraries: CGUI, CCFG and COBJ. Cassette is free and open-source software, licensed under the [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html).
+Cassette is a GUI application framework written in C11, with a UI inspired by the cassette-futurism aesthetic. Built for modern POSIX systems, it's made out of three libraries: CGUI, CCFG and COBJ. Cassette is free and open-source software, licensed under the [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html).
 
 ## Table of Contents <a name="toc"></a>
 
