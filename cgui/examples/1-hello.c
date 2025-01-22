@@ -4,7 +4,7 @@
  * This file is part of the Cassette Graphics (CGUI) library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
- * Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the
+ * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
  * License or (at your option) any later version.
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
@@ -106,7 +106,6 @@ static const char *default_text =
 	cgui_label_set_label(label, default_text);
 	cgui_label_align(label, CGUI_ALIGN_BOTTOM_RIGHT);
 
-	cgui_beacon_set_blink_speed(beacon, 2);
 	cgui_beacon_set_label(beacon, "something something ...");
 	cgui_beacon_set_state(beacon, CGUI_BEACON_CRITICAL);
 	cgui_beacon_align_label(beacon, CGUI_ALIGN_TOP);
@@ -222,6 +221,7 @@ on_click(cgui_cell *c)
 		cgui_clipboard_copy(1, cstr_chars(text));
 		cgui_clipboard_on_copy(1, on_clip_copy);
 		cgui_clipboard_on_lose(1, on_clip_lose);
+		cgui_beacon_set_state(beacon, CGUI_BEACON_OFF);
 	}
 	else if (c == button_2)
 	{
