@@ -753,6 +753,20 @@ cgui_window_redraw(cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cgui_window_redraw_async(cgui_window *window)
+{
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+
+	window_set_draw_level(window, WINDOW_DRAW_FULL);
+	window_set_async_present(window);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cgui_window_rename(cgui_window *window, const char *name)
 {
 	char *tmp;
@@ -1340,16 +1354,17 @@ window_process_cell_event(cgui_window *window, struct grid_area area, struct cgu
 
 	/* fill out common fields */
 	
-	event->msg        = CGUI_CELL_MSG_NONE;
-	event->x          = area.x + PADDING(window);
-	event->y          = area.y + PADDING(window);
-	event->x_root     = area.x + PADDING(window) + window->x;
-	event->y_root     = area.y + PADDING(window) + window->y;
-	event->width      = area.width;
-	event->height     = area.height;
-	event->frame      = cell_frame(window, area);
-	event->drawable   = window->drawable;
-	event->is_focused = window->focus.cell == area.cell;
+	event->msg          = CGUI_CELL_MSG_NONE;
+	event->x            = area.x + PADDING(window);
+	event->y            = area.y + PADDING(window);
+	event->x_root       = area.x + PADDING(window) + window->x;
+	event->y_root       = area.y + PADDING(window) + window->y;
+	event->width        = area.width;
+	event->height       = area.height;
+	event->frame        = cell_frame(window, area);
+	event->drawable     = window->drawable;
+	event->is_focused   = window->focus.cell == area.cell;
+	event->focus_locked = window->state.locked_focus;
 
 	/* send event */
 

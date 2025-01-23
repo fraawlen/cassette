@@ -94,6 +94,7 @@ struct cgui_cell_event
 {
 	cairo_t *drawable;
 	bool is_focused;
+	bool focus_locked;
 	enum cgui_cell_msg msg;
 	enum cgui_cell_event_type type;
 	struct cgui_box frame;

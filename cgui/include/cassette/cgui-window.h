@@ -252,6 +252,13 @@ CGUI_NONNULL(1);
  *
  */
 void
+cgui_window_redraw_async(cgui_window *window)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
 cgui_window_rename(cgui_window *window, const char *name)
 CGUI_NONNULL(1, 2);
 
