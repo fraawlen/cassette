@@ -155,7 +155,8 @@ CCFG_NONNULL(1);
 /**
  * Looks-up a resource by its namespace and property name. If found, its reference is kept around and the
  * resource values will become accessible through ccfg_iterate() and ccfg_resource(). To get the number of
- * values a resource has, use ccfg_resouce_length().
+ * values a resource has, use ccfg_resouce_length(). If not found, a second search is done under the
+ * special namespace "_".
  *
  * Usage example :
  *
