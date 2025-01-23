@@ -81,7 +81,7 @@ static const char *default_text =
  int
  main(int argc, char **argv)
  {
-	/* Setup */
+	/* Instantiation */
 
 	cgui_init(argc, argv);
 

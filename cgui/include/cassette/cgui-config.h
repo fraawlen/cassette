@@ -152,7 +152,6 @@ struct cgui_config
 
 	bool alt_present;
 	bool async_present;
-	bool smart_corners;
 	bool cell_auto_lock;
 	bool persistent_pointer;
 	bool persistent_touch;

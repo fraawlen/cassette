@@ -67,6 +67,7 @@
 	{ NAMESPACE, "draw",              BOOL,        &TARGET.draw             }, \
 	{ NAMESPACE, "draw_foreground",   BOOL,        &TARGET.draw_foreground  }, \
 	{ NAMESPACE, "draw_shadow",       BOOL,        &TARGET.draw_shadow      }, \
+	{ NAMESPACE, "smart_corners",     BOOL,        &TARGET.smart_corners    }, \
 	{ NAMESPACE, "hit_outline",       BOOL,        &TARGET.draw_shadow      },
 
 #define TEXT(NAMESPACE, TARGET) \
@@ -253,7 +254,6 @@ static const struct resource resources[] =
 	{ "popup",    "padding",                     LENGTH,        &config.popup_padding                  },
 
 	{ "behavior", "async_present",               BOOL,          &config.async_present                  },
-	{ "behavior", "smart_corner",                BOOL,          &config.smart_corners                  },
 	{ "behavior", "enable_cell_auto_lock",       BOOL,          &config.cell_auto_lock                 },
 	{ "behavior", "enable_persistent_pointer",   BOOL,          &config.persistent_pointer             },
 	{ "behavior", "enable_persistent_touch",     BOOL,          &config.persistent_touch               },

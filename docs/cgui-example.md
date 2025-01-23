@@ -12,7 +12,7 @@ main(int argc, char **argv)
 	cgui_grid   *grid;
 	cgui_label  *label;
 
-	/* Setup */
+	/* Instantiation */
 
 	cgui_init(argc, argv);
 

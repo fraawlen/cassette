@@ -116,7 +116,6 @@ static const struct cgui_config config_default =
 
 	.alt_present          = false,
 	.async_present        = true,
-	.smart_corners        = true,
 	.cell_auto_lock       = true,
 	.persistent_pointer   = false,
 	.persistent_touch     = false,
@@ -186,6 +185,7 @@ static const struct cgui_config config_default =
 		.draw             = true,
 		.draw_foreground  = true,
 		.draw_shadow      = false,
+		.smart_corners    = true,
 		.hit_outline      = false,
 	},
 
@@ -211,6 +211,7 @@ static const struct cgui_config config_default =
 		.draw             = true,
 		.draw_foreground  = true,
 		.draw_shadow      = false,
+		.smart_corners    = true,
 		.hit_outline      = false,
 	},
 
@@ -240,6 +241,7 @@ static const struct cgui_config config_default =
 		.draw             = true,
 		.draw_foreground  = true,
 		.draw_shadow      = false,
+		.smart_corners    = true,
 		.hit_outline      = false,
 	},
 
@@ -263,6 +265,7 @@ static const struct cgui_config config_default =
 		.draw             = true,
 		.draw_foreground  = true,
 		.draw_shadow      = false,
+		.smart_corners    = true,
 		.hit_outline      = false,
 	},
 
@@ -286,6 +289,7 @@ static const struct cgui_config config_default =
 		.draw             = true,
 		.draw_foreground  = true,
 		.draw_shadow      = false,
+		.smart_corners    = true,
 		.hit_outline      = false,
 	},
 
@@ -309,6 +313,7 @@ static const struct cgui_config config_default =
 		.draw             = true,
 		.draw_foreground  = true,
 		.draw_shadow      = false,
+		.smart_corners    = true,
 		.hit_outline      = false,
 	},
 
@@ -366,6 +371,7 @@ static const struct cgui_config config_default =
 		.draw             = true,
 		.draw_foreground  = true,
 		.draw_shadow      = false,
+		.smart_corners    = true,
 		.hit_outline      = false,
 	},
 
@@ -399,6 +405,7 @@ static const struct cgui_config config_default =
 		.draw             = true,
 		.draw_foreground  = true,
 		.draw_shadow      = false,
+		.smart_corners    = true,
 		.hit_outline      = false,
 	},
 
@@ -422,6 +429,7 @@ static const struct cgui_config config_default =
 		.draw             = true,
 		.draw_foreground  = true,
 		.draw_shadow      = false,
+		.smart_corners    = true,
 		.hit_outline      = false,
 	},
 
@@ -445,6 +453,7 @@ static const struct cgui_config config_default =
 		.draw             = true,
 		.draw_foreground  = true,
 		.draw_shadow      = false,
+		.smart_corners    = true,
 		.hit_outline      = false,
 	},
 
@@ -468,6 +477,7 @@ static const struct cgui_config config_default =
 		.draw             = true,
 		.draw_foreground  = true,
 		.draw_shadow      = false,
+		.smart_corners    = true,
 		.hit_outline      = false,
 	},
 

@@ -148,7 +148,7 @@ cgui_box_move(double x, double y)
 void
 cgui_box_pad_corner(struct cgui_box *box, struct cgui_box box_parent, double pad, int id)
 {
-	if (!CONFIG->smart_corners || box_parent.corner[id] == CGUI_CORNER_STRAIGHT)
+	if (!box->smart_corners || box_parent.corner[id] == CGUI_CORNER_STRAIGHT)
 	{
 		return;
 	}

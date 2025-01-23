@@ -61,7 +61,7 @@ static cgui_window *window   = CGUI_WINDOW_PLACEHOLDER;
  int
  main(int argc, char **argv)
  {
-	/* Setup */
+	/* Instantiation */
 
 	cgui_setup_app_name("shadow_test");
 	cgui_init(argc, argv);

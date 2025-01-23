@@ -57,6 +57,7 @@ struct cgui_box
 	bool draw;
 	bool draw_foreground;
 	bool draw_shadow;
+	bool smart_corners;
 	bool shape_outline;
 	bool shape_border;
 	bool hit_outline;
