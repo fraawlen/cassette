@@ -124,15 +124,6 @@ label corner-radius 4 4 4 4
 button corner-style radii radii radii radii
 ```
 
-There is also a special namespace _, which serves as a fallback namespace for any resource searched by the calling program. However, it is strictly a fallback. By default, if a resource with the appropriate namespace is found, it takes precedence over the fallback. Use this namespace judiciously, as its improper use can lead to unintended behaviors.
-
-```
-_ background_color #000000
-_ border_width 0
-_ corner-radius 4 4 4 4
-_ button corner-style straight straight straight straight
-```
-
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
 ## 2. Tokens Types <a name="tokens-types"></a>
