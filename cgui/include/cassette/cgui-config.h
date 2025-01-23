@@ -172,9 +172,15 @@ struct cgui_config
 	/* cell - stripes */
 
 	struct cgui_box stripes_frame;
-	struct ccolor stripes_color;
-	double stripes_width;
-	double stripes_spacing;
+	struct ccolor stripes_line_color;
+	double stripes_line_width;
+	double stripes_line_spacing;
+
+	/* cell - placeholder */
+
+	struct cgui_box placeholder_frame;
+	struct ccolor placeholder_line_color;
+	double placeholder_line_width;
 
 	/* cell - button */
 

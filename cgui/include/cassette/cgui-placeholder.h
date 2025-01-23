@@ -20,51 +20,20 @@
 
 #pragma once
 
-#include <cassette/cgui.h>
-#include <stdbool.h>
+#include "cgui-attributes.h"
+#include "cgui-cell.h"
 
-/************************************************************************************************************/
-/* TYPES ****************************************************************************************************/
-/************************************************************************************************************/
-
-enum cell_serial
-{
-	CELL_INVALID = 0,
-	CELL_BEACON,
-	CELL_BUTTON,
-	CELL_FILLER,
-	CELL_LABEL,
-	CELL_PLACEHOLDER,
-	CELL_STRIPES,
-};
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-struct cgui_cell
-{
-	/* data */
-
-	void *data;
-	int serial;
-
-	/* callbacks */
-
-	void (*fn_destroy) (cgui_cell *);
-	void (*fn_draw)    (cgui_cell *, struct cgui_cell_context);
-	void (*fn_event)   (cgui_cell *, struct cgui_cell_event *);
-	void (*fn_frame)   (cgui_cell *, struct cgui_box *);
-
-	/* states */
-
-	bool valid;
-	bool draw;
-};
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /************************************************************************************************************/
 /* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
 /************************************************************************************************************/
 
-void
-cell_destroy(cgui_cell *cell)
-CGUI_NONNULL(1)
-CGUI_HIDDEN;
+/**
+ *
+ */
+cgui_cell *
+cgui_placeholder_create(void)
+CGUI_NONNULL_RETURN;

@@ -46,17 +46,17 @@ static void on_state     (cgui_window *, enum cgui_window_state_mask);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static cstr        *text     = CSTR_PLACEHOLDER;
-static cgui_cell   *filler   = CGUI_CELL_PLACEHOLDER;
-static cgui_cell   *label  = CGUI_CELL_PLACEHOLDER;
-static cgui_cell   *beacon   = CGUI_CELL_PLACEHOLDER;
-static cgui_cell   *stripes  = CGUI_CELL_PLACEHOLDER;
-static cgui_cell   *button_1 = CGUI_CELL_PLACEHOLDER;
-static cgui_cell   *button_2 = CGUI_CELL_PLACEHOLDER;
-static cgui_cell   *button_3 = CGUI_CELL_PLACEHOLDER;
-static cgui_grid   *grid_1   = CGUI_GRID_PLACEHOLDER;
-static cgui_grid   *grid_2   = CGUI_GRID_PLACEHOLDER;
-static cgui_window *window   = CGUI_WINDOW_PLACEHOLDER;
+static cstr        *text        = CSTR_PLACEHOLDER;
+static cgui_cell   *placeholder = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *label       = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *beacon      = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *stripes     = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *button_1    = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *button_2    = CGUI_CELL_PLACEHOLDER;
+static cgui_cell   *button_3    = CGUI_CELL_PLACEHOLDER;
+static cgui_grid   *grid_1      = CGUI_GRID_PLACEHOLDER;
+static cgui_grid   *grid_2      = CGUI_GRID_PLACEHOLDER;
+static cgui_window *window      = CGUI_WINDOW_PLACEHOLDER;
 
 static const char *default_text =
 	"qwertyuiop\n"
@@ -85,17 +85,17 @@ static const char *default_text =
 
 	cgui_init(argc, argv);
 
-	text     = cstr_create();
-	window   = cgui_window_create();
-	grid_1   = cgui_grid_create(3, 2);
-	grid_2   = cgui_grid_create(3, 4);
-	filler   = cgui_filler_create();
-	label    = cgui_label_create();
-	beacon   = cgui_beacon_create();
-	stripes  = cgui_stripes_create();
-	button_1 = cgui_button_create();
-	button_2 = cgui_button_create();
-	button_3 = cgui_button_create();
+	text        = cstr_create();
+	window      = cgui_window_create();
+	grid_1      = cgui_grid_create(3, 2);
+	grid_2      = cgui_grid_create(3, 4);
+	placeholder = cgui_placeholder_create();
+	label       = cgui_label_create();
+	beacon      = cgui_beacon_create();
+	stripes     = cgui_stripes_create();
+	button_1    = cgui_button_create();
+	button_2    = cgui_button_create();
+	button_3    = cgui_button_create();
 
 	/* Default text */
 
@@ -150,13 +150,13 @@ static const char *default_text =
 	cgui_grid_set_row_flex(grid_2, 0, 1.0);
 	cgui_grid_set_col_flex(grid_2, 1, 1.0);
 
-	cgui_grid_assign_cell(grid_2, filler,   0, 0, 1, 1);
-	cgui_grid_assign_cell(grid_2, button_1, 0, 1, 1, 1);
-	cgui_grid_assign_cell(grid_2, button_2, 0, 2, 1, 1);
-	cgui_grid_assign_cell(grid_2, button_3, 0, 3, 1, 1);
-	cgui_grid_assign_cell(grid_2, label,    1, 0, 1, 3);
-	cgui_grid_assign_cell(grid_2, beacon,   2, 0, 1, 3);
-	cgui_grid_assign_cell(grid_2, stripes,  1, 3, 2, 1);
+	cgui_grid_assign_cell(grid_2, placeholder, 0, 0, 1, 1);
+	cgui_grid_assign_cell(grid_2, button_1,    0, 1, 1, 1);
+	cgui_grid_assign_cell(grid_2, button_2,    0, 2, 1, 1);
+	cgui_grid_assign_cell(grid_2, button_3,    0, 3, 1, 1);
+	cgui_grid_assign_cell(grid_2, label,       1, 0, 1, 3);
+	cgui_grid_assign_cell(grid_2, beacon,      2, 0, 1, 3);
+	cgui_grid_assign_cell(grid_2, stripes,     1, 3, 2, 1);
 	
 	/* Window setup */
 
@@ -185,7 +185,7 @@ static const char *default_text =
 	cgui_window_destroy(window);
 	cgui_grid_destroy(grid_1);
 	cgui_grid_destroy(grid_2);
-	cgui_cell_destroy(filler);
+	cgui_cell_destroy(placeholder);
 	cgui_cell_destroy(label);
 	cgui_cell_destroy(beacon);
 	cgui_cell_destroy(stripes);

@@ -36,7 +36,7 @@ static void frame (cgui_cell *, struct cgui_box *)        CGUI_NONNULL(1, 2);
 /************************************************************************************************************/
 
 cgui_cell *
-cgui_stripes_create(void)
+cgui_placeholder_create(void)
 {
 	cgui_cell *cell;
 
@@ -44,7 +44,7 @@ cgui_stripes_create(void)
 
 	cgui_cell_on_draw (cell, draw);
 	cgui_cell_on_frame(cell, frame);
-	cgui_cell_set_serial(cell, CELL_STRIPES);
+	cgui_cell_set_serial(cell, CELL_PLACEHOLDER);
 
 	return cell;
 }
@@ -56,9 +56,12 @@ cgui_stripes_create(void)
 static void
 draw(cgui_cell *cell, struct cgui_cell_context context)
 {
-	const struct ccolor cl = CONFIG->stripes_line_color;
-	const double w         = CONFIG->stripes_line_width;
-	const double s         = CONFIG->stripes_line_spacing * 1.414213562;
+	const struct ccolor cl = CONFIG->placeholder_line_color;
+	const double pad       = context.frame.padding + context.frame.margin + context.frame.size_border;
+	const double w         = context.width  - pad * 2;
+	const double h         = context.height - pad * 2;
+	const double x         = context.x      + pad;
+	const double y         = context.y      + pad;
 
 	(void)cell;
 
@@ -67,23 +70,16 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 	cgui_cell_draw_frame(context);
 	cgui_cell_clip_frame(context);
 
-	/* stripes */
+	/* cross */
 
-	for (double x = context.x; x < context.x + context.width + w; x += w + s)
-	{
-		cairo_move_to(context.drawable, x, context.y);
-		cairo_line_to(context.drawable, x + context.height, context.y + context.height);
-	}
+	cairo_move_to(context.drawable, x,     y);
+	cairo_line_to(context.drawable, x + w, y + h);
+	cairo_move_to(context.drawable, x + w, y);
+	cairo_line_to(context.drawable, x,     y + h);
 
-	for (double y = context.y; y < context.y + context.height + w; y += w + s)
-	{
-		cairo_move_to(context.drawable, context.x, y);
-		cairo_line_to(context.drawable, context.x + context.width, y + context.width);
-	}
-	
 	cairo_set_source_rgba(context.drawable, cl.r, cl.g, cl.b, cl.a);
 	cairo_set_line_cap(context.drawable, CAIRO_LINE_CAP_SQUARE);
-	cairo_set_line_width(context.drawable, w);
+	cairo_set_line_width(context.drawable, CONFIG->placeholder_line_width);
 	cairo_stroke(context.drawable);
 }
 
@@ -94,6 +90,6 @@ frame(cgui_cell *cell, struct cgui_box *box)
 {
 	(void)cell;
 
-	*box = CONFIG->stripes_frame;
+	*box = CONFIG->placeholder_frame;
 }
 
