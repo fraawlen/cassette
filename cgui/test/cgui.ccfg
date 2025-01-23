@@ -69,17 +69,21 @@
 	label padding 46
 	label text_color #ffffff
 
-	stripes color_border     (RGB 200 140   0)
-	stripes color_background (RGB 0   100 100)
-	stripes color_foreground (RGB 200 140   0)
-	stripes color_outline    #ffffff
-	stripes color            (RGB 0    50  50)
-	stripes corner_size 10
-	stripes border_thickness 14
-	stripes outline_thickness 14
-	stripes padding 0
-	stripes width 20
-	stripes spacing 20
+	LET lined_cells stripes placeholder
+
+	FOR_EACH lined_cells cell
+		% cell color_border     (RGB 200 140   0)
+		% cell color_background (RGB 0    50  50)
+		% cell line_color       (RGB 200 140   0)
+		% cell color_outline     #ffffff
+		% cell corner_size       10
+		% cell border_thickness  14
+		% cell outline_thickness 14
+		% cell padding           -1
+		% cell line_width        14
+		% cell line_spacing      20
+		% cell draw_foreground   FALSE
+	FOR_END
 
 	button_idle color_border     (RGB 0  50  50)
 	button_idle color_background #ffffff
