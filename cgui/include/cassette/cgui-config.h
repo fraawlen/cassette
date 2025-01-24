@@ -103,6 +103,7 @@ struct cgui_config
 	/* font */
 
 	char font_face[CGUI_CONFIG_STR_LEN];
+	char font_padding_pattern[CGUI_CONFIG_STR_LEN];
 
 	double font_size;
 	double font_width;
@@ -213,6 +214,16 @@ struct cgui_config
 
 	unsigned long beacon_blink_speed_on;
 	unsigned long beacon_blink_speed_off;
+
+	/* cell - gauge */
+
+	struct cgui_box gauge_frame;
+	struct cgui_box gauge_bar;
+	struct cgui_box gauge_label;
+
+	struct cgui_text gauge_text;
+
+	double gauge_min_size;
 };
 
 /************************************************************************************************************/

@@ -60,12 +60,10 @@
 	{ NAMESPACE, "color_outline",     COLOR,       &TARGET.color_outline    }, \
 	{ NAMESPACE, "color_border",      COLOR,       &TARGET.color_border     }, \
 	{ NAMESPACE, "color_background",  COLOR,       &TARGET.color_background }, \
-	{ NAMESPACE, "color_foreground",  COLOR,       &TARGET.color_foreground }, \
 	{ NAMESPACE, "color_shadow",      COLOR,       &TARGET.color_shadow     }, \
 	{ NAMESPACE, "shape_outline",     BOOL,        &TARGET.shape_outline    }, \
 	{ NAMESPACE, "shape_border",      BOOL,        &TARGET.shape_border     }, \
 	{ NAMESPACE, "draw",              BOOL,        &TARGET.draw             }, \
-	{ NAMESPACE, "draw_foreground",   BOOL,        &TARGET.draw_foreground  }, \
 	{ NAMESPACE, "draw_shadow",       BOOL,        &TARGET.draw_shadow      }, \
 	{ NAMESPACE, "smart_corners",     BOOL,        &TARGET.smart_corners    }, \
 	{ NAMESPACE, "hit_outline",       BOOL,        &TARGET.draw_shadow      },
@@ -225,6 +223,7 @@ static const struct resource resources[] =
 	{ "global",      "scale",                       SCALE,         &config.scale                          },
 	{ "global",      "modkey",                      MOD_KEY,       &config.modkey                         },
 
+	{ "font",        "number_padding_pattern",      STRING,         config.font_padding_pattern           },
 	{ "font",        "face",                        STRING,         config.font_face                      },
 	{ "font",        "size",                        LENGTH,        &config.font_size                      },
 	{ "font",        "horizontal_spacing",          LENGTH,        &config.font_spacing_horizontal        },
@@ -272,6 +271,8 @@ static const struct resource resources[] =
 	{ "beacon",      "blink_animation_speed_on",    ULONG,         &config.beacon_blink_speed_on          },
 	{ "beacon",      "blink_animation_speed_off",   ULONG,         &config.beacon_blink_speed_off         },
 
+	{ "gauge_label", "min_size",                    UDOUBLE,       &config.gauge_min_size                 },
+
 	KEY(  1) KEY(  2) KEY(  3) KEY(  4) KEY(  5) KEY(  6) KEY(  7) KEY(  8) KEY(  9) KEY( 10)
 	KEY( 11) KEY( 12) KEY( 13) KEY( 14) KEY( 15) KEY( 16) KEY( 17) KEY( 18) KEY( 19) KEY( 20)
 	KEY( 21) KEY( 22) KEY( 23) KEY( 24) KEY( 25) KEY( 26) KEY( 27) KEY( 28) KEY( 29) KEY( 30)
@@ -307,6 +308,9 @@ static const struct resource resources[] =
 	BOX( "beacon_critical_off", config.beacon_frame_crit_off )
 	BOX( "beacon_critical_on",  config.beacon_frame_crit_on  )
 	BOX( "label",               config.label_frame           )
+	BOX( "gauge",               config.gauge_frame           )
+	BOX( "gauge_bar",           config.gauge_bar             )
+	BOX( "gauge_label",         config.gauge_label           )
 
 	TEXT( "button_idle",         config.button_text_idle     )
 	TEXT( "button_focused",      config.button_text_focused  )
@@ -317,6 +321,7 @@ static const struct resource resources[] =
 	TEXT( "beacon_critical_off", config.beacon_text_crit_off )
 	TEXT( "beacon_critical_on",  config.beacon_text_crit_on  )
 	TEXT( "label",               config.label_text           )
+	TEXT( "gauge",               config.gauge_text           )
 };
 
 /************************************************************************************************************/

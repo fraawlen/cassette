@@ -106,19 +106,8 @@ cgui_box_draw(cairo_t *drawable)
 
 	/* background */
 
-	if (ctx_box.padding > 0.0 || !ctx_box.draw_foreground)
-	{
-		path(drawable, true, ctx_box.size_border);
-		paint(drawable, ctx_box.color_background);
-	}
-
-	/* foreground */
-
-	if (ctx_box.draw_foreground)
-	{
-		path(drawable, true, ctx_box.size_border + ctx_box.padding);
-		paint(drawable, ctx_box.color_foreground);
-	}
+	path(drawable, true, ctx_box.size_border);
+	paint(drawable, ctx_box.color_background);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

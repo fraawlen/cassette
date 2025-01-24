@@ -56,12 +56,12 @@ cgui_placeholder_create(void)
 static void
 draw(cgui_cell *cell, struct cgui_cell_context context)
 {
-	const struct ccolor cl = CONFIG->placeholder_line_color;
-	const double pad       = context.frame.padding + context.frame.margin + context.frame.size_border;
-	const double w         = context.width  - pad * 2;
-	const double h         = context.height - pad * 2;
-	const double x         = context.x      + pad;
-	const double y         = context.y      + pad;
+	struct ccolor cl = CONFIG->placeholder_line_color;
+	double pad       = context.frame.padding + context.frame.margin + context.frame.size_border;
+	double w         = context.width  - pad * 2;
+	double h         = context.height - pad * 2;
+	double x         = context.x      + pad;
+	double y         = context.y      + pad;
 
 	(void)cell;
 

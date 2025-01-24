@@ -56,9 +56,9 @@ cgui_stripes_create(void)
 static void
 draw(cgui_cell *cell, struct cgui_cell_context context)
 {
-	const struct ccolor cl = CONFIG->stripes_line_color;
-	const double w         = CONFIG->stripes_line_width;
-	const double s         = CONFIG->stripes_line_spacing * 1.414213562;
+	struct ccolor cl = CONFIG->stripes_line_color;
+	double w         = CONFIG->stripes_line_width;
+	double s         = CONFIG->stripes_line_spacing * 1.414213562;
 
 	(void)cell;
 

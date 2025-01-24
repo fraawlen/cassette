@@ -20,9 +20,8 @@
 
 #pragma once
 
-#include <cairo/cairo.h>
-
 #include "cgui-attributes.h"
+#include "cgui-cell.h"
 #include "cgui-types.h"
 
 #ifdef __cplusplus
@@ -30,36 +29,15 @@ extern "C" {
 #endif
 
 /************************************************************************************************************/
-/* TYPES ****************************************************************************************************/
+/* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
 /************************************************************************************************************/
 
 /**
  *
  */
-struct cgui_box
-{
-	enum cgui_corner corner[4];
-
-	double size_corner[4];
-	double size_outline;
-	double size_border;
-	double padding;
-	double margin;
-	double shadow_x_offset;
-	double shadow_y_offset;
-	
-	struct ccolor color_outline;
-	struct ccolor color_border;
-	struct ccolor color_background;
-	struct ccolor color_shadow;
-
-	bool draw;
-	bool draw_shadow;
-	bool smart_corners;
-	bool shape_outline;
-	bool shape_border;
-	bool hit_outline;
-};
+cgui_cell *
+cgui_gauge_create(void)
+CGUI_NONNULL_RETURN;
 
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
@@ -69,56 +47,56 @@ struct cgui_box
  *
  */
 void
-cgui_box_clip(cairo_t *drawable, double pad)
+cgui_gauge_align_label(cgui_cell *cell, enum cgui_align alignment)
 CGUI_NONNULL(1);
 
 /**
  *
  */
 void
-cgui_box_draw(cairo_t *drawable)
+cgui_gauge_resize_label(cgui_cell *cell, ssize_t size)
 CGUI_NONNULL(1);
 
 /**
  *
  */
 void
-cgui_box_move(double x, double y);
-
-/**
- *
- */
-void
-cgui_box_pad_corner(struct cgui_box *box, struct cgui_box box_parent, double pad, int id)
+cgui_gauge_rotate(cgui_cell *cell, enum cgui_rotation rotation)
 CGUI_NONNULL(1);
 
 /**
  *
  */
 void
-cgui_box_reset(void);
+cgui_gauge_rotate_label(cgui_cell *cell, enum cgui_rotation rotation)
+CGUI_NONNULL(1);
 
 /**
  *
  */
 void
-cgui_box_resize(double width, double height);
+cgui_gauge_set_value(cgui_cell *cell, double value)
+CGUI_NONNULL(1);
 
 /**
  *
  */
 void
-cgui_box_style(struct cgui_box box);
-
-/************************************************************************************************************/
-/* PURE METHODS *********************************************************************************************/
-/************************************************************************************************************/
+cgui_gauge_limit_value(cgui_cell *cell, double lim_1, double lim_2)
+CGUI_NONNULL(1);
 
 /**
  *
  */
-bool
-cgui_box_inside(cairo_t *drawable, double x, double y)
+void
+cgui_gauge_style_label(cgui_cell *cell, int precision, const char *units)
+CGUI_NONNULL(1, 3);
+
+/**
+ *
+ */
+void
+cgui_gauge_style_percent(cgui_cell *cell, int precision)
 CGUI_NONNULL(1);
 
 /************************************************************************************************************/
@@ -128,3 +106,4 @@ CGUI_NONNULL(1);
 #ifdef __cplusplus
 }
 #endif
+

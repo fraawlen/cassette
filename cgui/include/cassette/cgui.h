@@ -40,6 +40,7 @@
 #include "cgui-beacon.h"
 #include "cgui-button.h"
 #include "cgui-filler.h"
+#include "cgui-gauge.h"
 #include "cgui-label.h"
 #include "cgui-placeholder.h"
 #include "cgui-stripes.h"
