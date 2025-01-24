@@ -29,12 +29,6 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define MAX_DIST 200.0
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
 static void on_draw (cgui_window *, unsigned long, unsigned long);
 
 /************************************************************************************************************/
@@ -128,35 +122,7 @@ static cgui_window *window   = CGUI_WINDOW_PLACEHOLDER;
 static void
 on_draw(cgui_window *w, unsigned long delay_1, unsigned long delay_2)
 {
-	double x;
-	double y;
-	double d;
-	double a;
-	double m;
-	double r;
-
-	(void)delay_1;
-	(void)delay_2;
-
-	/* pointer position relative to window's center */
-
-	cgui_screen_pointer_position(&x, &y);
-
-	x -= cgui_window_x(w) + cgui_window_width(w)  / 2;
-	y -= cgui_window_y(w) + cgui_window_height(w) / 2;
-	
-	/* calculate shadow offset ratios */
-
-	m = cgui_window_width(w) / 2 + MAX_DIST;
-	a = atan(y / x) + (x > 0.0 ? 3.14159 : 0.0);
-	d = sqrt(pow(x, 2) + pow(y, 2));
-	r = d > m ? 1.0 : d / m;
-
-	/* apply offset ratios */
-
-	ccfg_push_param(cgui_config_get_parser(), "shadow_x", r * cos(a));
-	ccfg_push_param(cgui_config_get_parser(), "shadow_y", r * sin(a));
-	cgui_reconfig();
+	(void)w;
 
 	printf("%lu - %lu\n", delay_1, delay_2);
 }

@@ -21,6 +21,7 @@
 #include <cairo/cairo.h>
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
+#include <math.h>
 
 #include "config.h"
 
@@ -130,6 +131,36 @@ cgui_box_move(double x, double y)
 {
 	ctx_x = x;
 	ctx_y = y;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_box_move_shadow(double x_light, double y_light, double max_light_distance, double max_offset)
+{
+	double x;
+	double y;
+	double d;
+	double a;
+	double m;
+	double r;
+
+	/* light position relative to box's center */
+
+	x = x_light - ctx_width  / 2;
+	y = y_light - ctx_height / 2;
+	
+	/* calculate shadow offset ratios */
+
+	m = ctx_width / 2 + max_light_distance;
+	a = atan2(y, x) + PI;
+	d = sqrt(pow(x, 2) + pow(y, 2));
+	r = d > m ? 1.0 : d / m;
+
+	/* end */
+
+	ctx_box.shadow_x_offset = r * cos(a) * max_offset;
+	ctx_box.shadow_y_offset = r * sin(a) * max_offset;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

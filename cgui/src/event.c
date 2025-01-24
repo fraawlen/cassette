@@ -27,6 +27,8 @@
 #include "event.h"
 #include "cell.h"
 #include "config.h"
+#include "main.h"
+#include "screen.h"
 #include "window.h"
 #include "x11.h"
 
@@ -47,6 +49,7 @@ static void key_release          (struct cgui_event *) CGUI_NONNULL(1);
 static void leave                (struct cgui_event *) CGUI_NONNULL(1);
 static void map                  (struct cgui_event *) CGUI_NONNULL(1);
 static void pointer              (struct cgui_event *) CGUI_NONNULL(1);
+static void pointer_raw          (void);
 static void present              (struct cgui_event *) CGUI_NONNULL(1);
 static void reconfig             (void);
 static void redraw               (struct cgui_event *) CGUI_NONNULL(1);
@@ -163,6 +166,10 @@ event_process(struct cgui_event *event)
 
 		case CGUI_EVENT_POINTER_MOTION:
 			pointer(event);
+			break;
+
+		case CGUI_EVENT_POINTER_MOTION_RAW:
+			pointer_raw();
 			break;
 
 		case CGUI_EVENT_LEAVE:
@@ -606,6 +613,29 @@ pointer(struct cgui_event *event)
 			event->pointer_x - cinputs_x(event->window->buttons, i) + event->window->old_width,
 			event->pointer_y - cinputs_y(event->window->buttons, i) + event->window->old_height);
 	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+pointer_raw(void)
+{
+	/* update the stored pointer position only when the following option is enabled to avoid spamming  */
+	/* X pointer requests. This is the only option that requires constant pointer tracking inside CGUI */
+	/* If the user needs constant pointer tracking while that option is disabled, he can call          */
+	/* cgui_screen_pointer_position() manually from within a custom event callback.                    */
+
+	if (!CONFIG->shadows_follow_pointer)
+	{
+		return;
+	}
+
+	CREF_FOR_EACH(main_windows(), i)
+	{
+		cgui_window_redraw((cgui_window *)cref_ptr(main_windows(), i));
+	}
+
+	screen_pointer_update();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

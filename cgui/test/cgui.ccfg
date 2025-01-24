@@ -145,7 +145,10 @@ SECTION Shadow
 	window color_border #101010
 	button_pressed outline_thickness 0
 
-	LET max_offset 20
+	behavior enable_reactive_shadows TRUE
+	behavior shadows_max_light_distance 200
+	behavior shadows_max_offset 20
+
 	LET widget \
 		filler \
 		stripes \
@@ -155,8 +158,8 @@ SECTION Shadow
 		button_disabled
 
 	FOR_EACH widget
-		(% widget) draw_shadow = TRUE
-		(% widget) color_shadow #202020
-		(% widget) shadow_x_offset (* ($$ shadow_x) ($ max_offset))
-		(% widget) shadow_y_offset (* ($$ shadow_y) ($ max_offset))
+		% widget draw_shadow = TRUE
+		% widget color_shadow #202020
+		% widget shadow_x_offset 10
+		% widget shadow_y_offset 10
 	FOR_END

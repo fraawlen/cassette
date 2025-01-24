@@ -34,6 +34,7 @@
 #include "event.h"
 #include "grid.h"
 #include "main.h"
+#include "screen.h"
 #include "window.h"
 #include "util.h"
 #include "x11.h"
@@ -172,6 +173,7 @@ cgui_init(int argc, char **argv)
 	mutex_init();
 	main_lock();
 	x11_init(argc, argv, app_name, app_class, ext_connection);
+	screen_pointer_update();
 
 	if (err)
 	{
@@ -259,9 +261,8 @@ cgui_reconfig(void)
 		}
 
 		cgui_window_resize(window, window->width, window->height);
+		cgui_window_redraw_async(window);
 		window_update_size_hints(window);
-		window_set_draw_level(window, WINDOW_DRAW_FULL);
-		window_set_async_present(window);
 		window_update_shown_grid(window);
 		grid_update_geometry(
 			window->shown_grid,
@@ -346,6 +347,8 @@ cgui_reset(void)
 	app_name       = NULL;
 	usr_exit       = true;
 	running        = false;	
+	fn_run         = dummy_fn_run;
+	fn_exit        = dummy_fn_exit;
 	err            = CERR_INVALID;
 }
 

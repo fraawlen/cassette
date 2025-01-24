@@ -55,6 +55,7 @@ enum cgui_event_type
 	CGUI_EVENT_BUTTON_PRESS,
 	CGUI_EVENT_BUTTON_RELEASE,
 	CGUI_EVENT_POINTER_MOTION,
+	CGUI_EVENT_POINTER_MOTION_RAW,
 	CGUI_EVENT_LEAVE,
 	CGUI_EVENT_ENTER,
 	CGUI_EVENT_REDRAW,
@@ -113,18 +114,19 @@ struct cgui_event
 			double pointer_x;
 			double pointer_y;
 		};
-		/* CGUI_EVENT_RECONFIG */
-		/* CGUI_EVENT_CLOSE    */
-		/* CGUI_EVENT_RECONFIG */
-		/* CGUI_EVENT_MAP      */
-		/* CGUI_EVENT_UNMAP    */
-		/* CGUI_EVENT_FOCUS    */
-		/* CGUI_EVENT_UNFOCUS  */
-		/* CGUI_EVENT_REDRAW   */
-		/* CGUI_EVENT_PRESENT  */
-		/* CGUI_EVENT_ENTER    */
-		/* CGUI_EVENT_LEAVE    */
-		/* CGUI_EVENT_NONE     */
+		/* CGUI_EVENT_POINTER_MOTION_RAW */
+		/* CGUI_EVENT_RECONFIG           */
+		/* CGUI_EVENT_CLOSE              */
+		/* CGUI_EVENT_RECONFIG           */
+		/* CGUI_EVENT_MAP                */
+		/* CGUI_EVENT_UNMAP              */
+		/* CGUI_EVENT_FOCUS              */
+		/* CGUI_EVENT_UNFOCUS            */
+		/* CGUI_EVENT_REDRAW             */
+		/* CGUI_EVENT_PRESENT            */
+		/* CGUI_EVENT_ENTER              */
+		/* CGUI_EVENT_LEAVE              */
+		/* CGUI_EVENT_NONE               */
 		/* no extra fields for these events */
 	};
 };

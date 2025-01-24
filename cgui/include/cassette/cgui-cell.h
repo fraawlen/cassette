@@ -191,6 +191,8 @@ struct cgui_cell_context
 	cairo_t *drawable;
 	unsigned long delay;
 	struct cgui_box frame;
+	double x_root;
+	double y_root;
 	double x;
 	double y;
 	double width;

@@ -25,6 +25,7 @@
 
 #include "main.h"
 #include "cell.h"
+#include "config.h"
 #include "window.h"
 
 /************************************************************************************************************/
@@ -113,9 +114,27 @@ fail_main:
 void
 cgui_cell_draw_frame(struct cgui_cell_context context)
 {
+	double x;
+	double y;
+
 	cgui_box_move(context.x, context.y);
 	cgui_box_resize(context.width, context.height);
 	cgui_box_style(context.frame);
+
+	/* reactive shadows */
+
+	if (CONFIG->shadows_follow_pointer)
+	{
+		cgui_screen_pointer_position(&x, &y);
+		cgui_box_move_shadow(
+			x - context.x_root,
+			y - context.y_root,
+			CONFIG->shadows_max_light_distance,
+			CONFIG->shadows_max_offset);
+	}
+
+	/* draw */
+	
 	cgui_box_draw(context.drawable);
 }
 

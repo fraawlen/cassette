@@ -115,15 +115,19 @@ static const struct cgui_config config_default =
 
 	/* behavior */
 
-	.alt_present          = false,
-	.async_present        = true,
-	.cell_auto_lock       = true,
-	.persistent_pointer   = false,
-	.persistent_touch     = false,
-	.anim_divider         = 1,
-	.wm_button_move       = 0,
-	.wm_button_resize     = 0,
-	.wm_button_fullscreen = 0,
+	.alt_present            = false,
+	.async_present          = true,
+	.cell_auto_lock         = true,
+	.persistent_pointer     = false,
+	.persistent_touch       = false,
+	.anim_divider           = 1,
+	.wm_button_move         = 0,
+	.wm_button_resize       = 0,
+	.wm_button_fullscreen   = 0,
+	
+	.shadows_follow_pointer     = false,
+	.shadows_max_light_distance = 0.0,
+	.shadows_max_offset         = 0.0,
 
 	/* keys */
 

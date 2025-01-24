@@ -114,7 +114,9 @@ static void event_selection_clear   (xcb_selection_clear_event_t *)    CGUI_NONN
 static void event_selection_request (xcb_selection_request_event_t *)  CGUI_NONNULL(1);
 static void event_unknown           (xcb_generic_event_t *)            CGUI_NONNULL(1);
 static void event_unmap             (xcb_unmap_notify_event_t *)       CGUI_NONNULL(1);
-static void event_xinput_touch      (xcb_input_touch_begin_event_t *)  CGUI_NONNULL(1);
+static void event_xinput            (xcb_ge_generic_event_t*)          CGUI_NONNULL(1);
+static void event_xinput_raw_motion (xcb_input_raw_motion_event_t*)    CGUI_NONNULL(1);
+static void event_xinput_touch      (xcb_input_touch_begin_event_t*)   CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -228,6 +230,13 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 		XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY   |
 		XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT |
 		XCB_EVENT_MASK_PROPERTY_CHANGE,
+	};
+
+	struct xi_input_mask xinput_mask =
+	{
+		.mask          = XCB_INPUT_XI_EVENT_MASK_RAW_MOTION,
+		.head.deviceid = XCB_INPUT_DEVICE_ALL,
+		.head.mask_len = 1,
 	};
 
 	/* setup class and cmd args */
@@ -429,6 +438,11 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 
 	opcode_present = extension_opcode("Present");
 	opcode_xinput  = extension_opcode("XInputExtension");
+
+	/* subscribe to global XI raw pointer motion events */
+
+	xc = xcb_input_xi_select_events(connection, screen->root, 1, (xcb_input_event_mask_t*)(&xinput_mask));
+	test_cookie(xc);
 
 	/* end */
 	
@@ -940,7 +954,7 @@ x11_update(void)
 			}
 			else if (((xcb_ge_generic_event_t*)event)->extension == opcode_xinput)
 			{
-				event_xinput_touch((xcb_input_touch_begin_event_t*)event);
+				event_xinput((xcb_ge_generic_event_t*)event);
 			}
 			break;
 
@@ -1051,7 +1065,7 @@ x11_window_create(xcb_window_t *id, xcb_pixmap_t *buffer, double x, double y, do
 		goto fail_buffer;
 	}
 
-	/* indicate that the window should receive Present extension events */
+	/* subscribe the window to Present extension events */
 
 	xc = xcb_present_select_input_checked(
 		connection,
@@ -1064,7 +1078,7 @@ x11_window_create(xcb_window_t *id, xcb_pixmap_t *buffer, double x, double y, do
 		goto fail_present;
 	}
 
-	/* indicate that the window should receive XI touch extension events */
+	/* subscribe the window to XI touch extension events */
 
 	xc = xcb_input_xi_select_events(
 		connection,
@@ -1825,6 +1839,44 @@ event_unmap(xcb_unmap_notify_event_t *xcb_event)
 		.window = find_window(xcb_event->window),
 	};
 
+	main_update(&event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+event_xinput(xcb_ge_generic_event_t *xcb_event)
+{
+	switch (xcb_event->event_type)
+	{	
+		case XCB_INPUT_TOUCH_BEGIN:
+		case XCB_INPUT_TOUCH_UPDATE:
+		case XCB_INPUT_TOUCH_END:
+			event_xinput_touch((xcb_input_touch_begin_event_t *)xcb_event);
+			break;
+
+		case XCB_INPUT_RAW_MOTION:
+			event_xinput_raw_motion((xcb_input_raw_motion_event_t *)xcb_event);
+			break;
+
+		default:
+			break;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+event_xinput_raw_motion(xcb_input_raw_motion_event_t *xcb_event)
+{
+	struct cgui_event event = 
+	{
+		.window = CGUI_WINDOW_PLACEHOLDER,
+		.type   = CGUI_EVENT_POINTER_MOTION_RAW,
+	};
+
+	(void)xcb_event;
+	
 	main_update(&event);
 }
 

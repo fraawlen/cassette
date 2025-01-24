@@ -1717,6 +1717,8 @@ draw_area(cgui_window *window, struct grid_area area, enum window_draw_level lev
 	{
 		.delay    = delay,
 		.drawable = window->drawable,
+		.x_root   = area.x + PADDING(window) + window->x,
+		.y_root   = area.y + PADDING(window) + window->y,
 		.x        = area.x + PADDING(window),
 		.y        = area.y + PADDING(window),
 		.width    = area.width,

@@ -156,6 +156,9 @@ struct cgui_config
 	bool cell_auto_lock;
 	bool persistent_pointer;
 	bool persistent_touch;
+	bool shadows_follow_pointer;
+	double shadows_max_light_distance;
+	double shadows_max_offset;
 	unsigned long anim_divider;
 	uint8_t wm_button_move;
 	uint8_t wm_button_resize;
