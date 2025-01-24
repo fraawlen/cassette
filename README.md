@@ -41,7 +41,7 @@ COBJ and CCFG Thick bindings for Ada 2012 are provided. CGUI bindings coming soo
 
 ## Dependencies <a name="dependencies"></a>
 
-Tools :
+Tools:
 
 - C11 compiler with a stdlib + POSIX 200809L
 - Make
@@ -145,6 +145,7 @@ More elaborate demos:
 - Navigation-to-text output for screen-readers accessibility
 - Drag and drop
 - More cells (widgets)
+- More theming options
 - Auto-generated API reference pages
 - Step-by-step CGUI tutorial
 

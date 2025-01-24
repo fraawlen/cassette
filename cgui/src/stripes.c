@@ -69,6 +69,11 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 
 	/* stripes */
 
+	context.x      += context.frame.padding;
+	context.y      += context.frame.padding;
+	context.width  -= context.frame.padding * 2;
+	context.height -= context.frame.padding * 2;
+
 	for (double x = context.x; x < context.x + context.width + w; x += w + s)
 	{
 		cairo_move_to(context.drawable, x, context.y);

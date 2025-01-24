@@ -528,10 +528,20 @@ cgui_window_height(const cgui_window *window)
 {
 	if (cgui_error() || !window->valid)
 	{
-		return 0;
+		return 0.0;
 	}
 
-	return window->height;
+	if (window->wait_resize)
+	{
+		return window->tmp_height;
+	}
+	
+	if (window->state.active)
+	{	
+		return window->height;
+	}
+	
+	return min_height(window, (const cgui_grid *)cref_ptr(window->grids, 0));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -603,26 +613,8 @@ cgui_window_move_smart(cgui_window *window, double x_1, double y_1, double x_2, 
 		return;
 	}
 
-	/* get window's size */
-
-	if (window->wait_resize)
-	{
-		w = window->tmp_width;
-		h = window->tmp_height;
-	}
-	else if (window->state.active)
-	{	
-		w = window->width;
-		h = window->height;
-	}
-	else
-	{
-		w = min_width (window, (const cgui_grid *)cref_ptr(window->grids, 0));
-		h = min_height(window, (const cgui_grid *)cref_ptr(window->grids, 0));
-	}
-
-	/* move the window to fit within a screen */
-
+	w = cgui_window_width(window);
+	h = cgui_window_height(window);
 	s = x11_screen_at_coords(x_1, y_1);
 
 	cgui_window_move(
@@ -989,10 +981,20 @@ cgui_window_width(const cgui_window *window)
 {
 	if (cgui_error() || !window->valid)
 	{
-		return 0;
+		return 0.0;
 	}
 
-	return window->width;
+	if (window->wait_resize)
+	{
+		return window->tmp_width;
+	}
+	
+	if (window->state.active)
+	{	
+		return window->width;
+	}
+	
+	return min_width(window, (const cgui_grid *)cref_ptr(window->grids, 0));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

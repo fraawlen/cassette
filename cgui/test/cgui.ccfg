@@ -51,25 +51,16 @@
 	popup corner_size 50
 	popup color_border #ff5050
 
-	filler color_border     (RGB 200 140   0)
-	filler color_background (RGB 0   100 100)
-	filler corner_size 10
-	filler border_thickness 14
-	filler outline_thickness 14
-	filler color_outline #ffffff
-	filler padding 14
-
-	LET passives label gauge
+	LET passives label gauge filler
 
 	FOR_EACH passives cell
-		% cell color_border     (RGB 200 140   0)
-		% cell color_background (RGB 0    50  50)
-		% cell corner_size 10
-		% cell border_thickness 14
+		% cell color_border      (RGB 200 140   0)
+		% cell color_background  (RGB 0    50  50)
+		% cell border_thickness  14
 		% cell outline_thickness 14
-		% cell color_outline #ffffff
-		% cell text_color #ffffff
-		% cell padding - 60 14
+		% cell color_outline     #ffffff
+		% cell text_color        #ffffff
+		% cell padding           - 60 14
 	FOR_END
 
 	LET lined_cells stripes placeholder
@@ -91,7 +82,7 @@
 
 	FOR_EACH buttons cell
 		% cell color_border      (RGB 0  50  50)
-		% cell color_background  (RGB 0 100 100)
+		% cell color_background  (RGB 0 150 150)
 		% cell color_outline     #ffffff
 		% cell corner_size       24
 		% cell corner_type       straight straight chamfer straight
