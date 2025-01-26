@@ -403,10 +403,10 @@ dummy_callback_event(struct cgui_event *event)
 static void
 focus_cell(uint8_t type, cgui_window *window)
 {
-	size_t id;
+	size_t n;
 	enum cgui_focus focus;
 	struct grid_area area;
-	struct cgui_cell_event cell_event =
+	struct cgui_cell_event event =
 	{
 		.type     = CGUI_CELL_EVENT_SUBFOCUS,
 		.subfocus = type,
@@ -444,7 +444,7 @@ focus_cell(uint8_t type, cgui_window *window)
 	{
 		case CGUI_FOCUS_NEXT:
 		case CGUI_FOCUS_PREV:
-			if (window_process_cell_event(window, window->focus, &cell_event))
+			if (window_process_cell_event(window, window->focus, &event))
 			{
 				return;
 			}
@@ -461,19 +461,16 @@ focus_cell(uint8_t type, cgui_window *window)
 
 	area  = window->focus;
 	focus = type;
-	id    = area.id;
+	n     = 0;
 
 	do
 	{
 		grid_find_focus(window->shown_grid, &area, &focus);
-		if (!area.cell->valid)
-		{
-			return;
-		}
-		cell_event.type  = CGUI_CELL_EVENT_FOCUS_GAIN_BY_ACTION;
-		cell_event.focus = type;
+		event.type  = CGUI_CELL_EVENT_FOCUS_GAIN_BY_ACTION;
+		event.focus = type;
+		n++;
 	}
-	while (!window_process_cell_event(window, area, &cell_event) && area.id != id);
+	while (!window_process_cell_event(window, area, &event) && n < cref_length(window->shown_grid->areas));
 
 	window_focus(window, area);
 }

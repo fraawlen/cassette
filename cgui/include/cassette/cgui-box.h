@@ -95,6 +95,13 @@ cgui_box_move_shadow(double x_light, double y_light, double max_light_distance, 
  *
  */
 void
+cgui_box_pad_all_corners(struct cgui_box *box, struct cgui_box box_parent, double pad)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
 cgui_box_pad_corner(struct cgui_box *box, struct cgui_box box_parent, double pad, int id)
 CGUI_NONNULL(1);
 

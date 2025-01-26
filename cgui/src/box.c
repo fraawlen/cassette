@@ -24,6 +24,7 @@
 #include <math.h>
 
 #include "config.h"
+#include "main.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -166,8 +167,25 @@ cgui_box_move_shadow(double x_light, double y_light, double max_light_distance, 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cgui_box_pad_all_corners(struct cgui_box *box, struct cgui_box box_parent, double pad)
+{
+	cgui_box_pad_corner(box, box_parent, pad, 0);
+	cgui_box_pad_corner(box, box_parent, pad, 1);
+	cgui_box_pad_corner(box, box_parent, pad, 2);
+	cgui_box_pad_corner(box, box_parent, pad, 3);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cgui_box_pad_corner(struct cgui_box *box, struct cgui_box box_parent, double pad, int id)
 {
+	if (id > 3 || id < 0)
+	{
+		main_set_error(CERR_PARAM);
+		return;
+	}
+
 	if (!box->smart_corners || box_parent.corner[id] == CGUI_CORNER_STRAIGHT)
 	{
 		return;

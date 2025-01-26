@@ -654,11 +654,11 @@ grid_find_focus(cgui_grid *grid, struct grid_area *area, enum cgui_focus *focus)
 	switch (*focus)
 	{
 		case CGUI_FOCUS_NEXT:
-			*area = !v ? *AREA(grid, 0) : (i < n - 1 ? *AREA(grid, i + 1) : GRID_AREA_NONE);
+			*area = *AREA(grid, !v || i == n - 1 ? 0 : i + 1);
 			break;
 
 		case CGUI_FOCUS_PREV:
-			*area = !v ? *AREA(grid, n - 1) : (i > 0 ? *AREA(grid, i - 1) : GRID_AREA_NONE);
+			*area = *AREA(grid, !v || i == 0 ? n - 1 : i - 1);
 			break;
 
 		case CGUI_FOCUS_FIRST:

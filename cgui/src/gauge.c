@@ -20,6 +20,7 @@
 
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
+#include <float.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -264,33 +265,63 @@ destroy(cgui_cell *cell)
 static void
 draw(cgui_cell *cell, struct cgui_cell_context context)
 {
-	double l = context.frame.margin + context.frame.size_border + context.frame.padding;
-	double x = context.x + l + cgui_align_offset_x(DATA->label_align, context.width  - l * 2);
-	double y = context.y + l + cgui_align_offset_y(DATA->label_align, context.height - l * 2);
+	struct cgui_box box;
 
-	/*
-	double l1;
-	double l2;
+	double p1 = CONFIG->gauge_frame.padding + CONFIG->gauge_frame.size_border;
+	double p2 = CONFIG->gauge_bar.padding   + CONFIG->gauge_bar.size_border;
+	double p3 = CONFIG->gauge_label.padding + CONFIG->gauge_label.size_border;
 
-	* calculate label box length *
+	double l1 = 0;
+	double l2; 
+	double x;
+	double y;
 
-	l1 = cgui_config_str_width(DATA->label_size) + (CONFIG->gauge_label.padding + CONFIG->gauge_label.size_border) * 2;
-	l1 = l1 < CONFIG->gauge_min_size : CONFIG->gauge_min_size : l1;
+	/* calculate label box length */
 
-	* calculate bar box length *
+	l1 = DATA->label_size != 0 ? cgui_config_str_width(DATA->label_size) + p3 * 2 : 0;
+	l1 = l1 < CONFIG->gauge_min_size ? CONFIG->gauge_min_size : l1;
 
-	l2 = context.width
-	   - 2 * (context.style.size_border + context.style.padding)
-	   - 2 * (CONFIG->gauge_bar_padding + CONFIG->gauge_bar_size_border)
+	/* calculate bar length without label box */
 
-	* frame */
+	l2  = context.width - l1 - ((l1 > 0.0 ? p2 : 0) + p1) * 2;
+	l2 *= (util_limit(DATA->val, DATA->min, DATA->max) - DATA->min) / (DATA->max - DATA->min);
+
+	/* frame */
 
 	cgui_cell_draw_frame(context);
 	cgui_cell_clip_frame(context);
 
 	/* bar */
 
+	box = CONFIG->gauge_bar;
+
+	cgui_box_pad_all_corners(&box, context.frame, p1);
+	cgui_box_move(context.x + p1, context.y + p1);
+	cgui_box_resize(l2 + l1 + p2 * 2, context.height - p1 * 2);
+	cgui_box_style(box);
+	cgui_box_draw(context.drawable);
+	cgui_box_clip(context.drawable, p2);
+
+	/* label box */
+
+	box = CONFIG->gauge_label;
+
+	cgui_box_pad_all_corners(&box, context.frame, p1 + p2);
+	cgui_box_move(context.x + p1 + p2 + l2, context.y + p1 + p2);
+	cgui_box_resize(l1, context.height - (p1 + p2) * 2);
+	cgui_box_style(box);
+	cgui_box_draw(context.drawable);
+	cgui_box_clip(context.drawable, p3);
+
 	/* label */
+
+	if (DATA->label_size == 0)
+	{
+		return;
+	}
+
+	x = context.x + p1 + p2 + p3 + l2 + cgui_align_offset_x(DATA->label_align, l1 - p3 * 2);
+	y = context.y + p1 + p2 + p3 + cgui_align_offset_y(DATA->label_align, context.height - (p1 + p2 + p3) * 2);
 
 	cgui_text_move(x, y);
 	cgui_text_align(cgui_align_rotation(DATA->label_align, DATA->label_rot));

@@ -601,4 +601,6 @@ static const struct cgui_config config_default =
 		.draw_background  = false,
 		.bold             = false,
 	},
+
+	.gauge_min_size = 20,
 };

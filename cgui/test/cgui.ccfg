@@ -131,9 +131,22 @@
 	beacon blink_animation_speed_on  500
 	beacon blink_animation_speed_off 500
 
+	gauge       text_color       #000000
+	gauge       text_bold        TRUE
+	gauge       padding          14
+	gauge_bar   padding          0
+	gauge_bar   border_thickness 14
+	gauge_bar   color_background #51401b
+	gauge_label padding          20
+	gauge_label min_size         0
+	gauge_label smart_corners    FALSE
+	gauge_label color_background #c88c00
+	gauge_label border_thickness 0
+
 	// Shadow-example specifics
 
 	SECTION_ADD (STREQ ($$ app_name) "shadow_test") Shadow
+	SECTION_ADD Shadow
 
 SECTION Shadow
 
@@ -144,6 +157,7 @@ SECTION Shadow
 	window enable_focused_substyle FALSE
 	window color_border #101010
 	button_pressed outline_thickness 0
+	window allow_partial_redraws FALSE
 
 	behavior enable_reactive_shadows TRUE
 	behavior shadows_max_light_distance 200
@@ -155,7 +169,14 @@ SECTION Shadow
 		button_idle \
 		button_focused \
 		button_pressed \
-		button_disabled
+		button_disabled \
+		beacon_off \
+		beacon_on \
+		beacon_critical_on \
+		beacon_critical_off \
+		placeholder \
+		label \
+		gauge \
 
 	FOR_EACH widget
 		% widget draw_shadow = TRUE

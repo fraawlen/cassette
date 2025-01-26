@@ -1173,7 +1173,7 @@ window_draw(cgui_window *window)
 		cgui_box_draw(window->drawable);
 	}
 
-	/* draw cells unfocused cells first and the focused area last so that */
+	/* draw unfocused areas first and the focused area last so that       */
 	/* it's always drawn on top of other cells if they happen to overlap  */
 	/* (it is possible thanks to boxes margins)                           */
 	
