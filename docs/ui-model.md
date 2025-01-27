@@ -27,7 +27,7 @@ The overall look and feel of CGUI, as its name "Cassette" suggests, is inspired 
 
 |![Idea 1](assets/thirdp/wgc-alien.jpg)|![Idea 2](assets/thirdp/wgc-ccos.jpg)|![Idea 3](assets/thirdp/wgc-visioncalc.gif)|![Idea 4](assets/thirdp/wgc-sennaar.png)|
 |--|--|--|--|
-<p align=center><em>Some of the inspiration used in designing CGUI <a href="https://www.sega.com/alien-isolation/alien-isolation">[1]</a><a href="https://dons-deals.blogspot.com/2012/08/grid-compass-computer-pioneering-laptop.html">[2]</a><a href="http://toastytech.com/guis/vision3.html">[3]</a><a href="https://www.rundisc.io/chants-of-sennaar/">[4]</a></em></p>
+<p align=center><em>Some of the CGUI's inspiration <a href="https://www.sega.com/alien-isolation/alien-isolation">[1]</a><a href="https://dons-deals.blogspot.com/2012/08/grid-compass-computer-pioneering-laptop.html">[2]</a><a href="http://toastytech.com/guis/vision3.html">[3]</a><a href="https://www.rundisc.io/chants-of-sennaar/">[4]</a></em></p>
 
 ## WGC Paradigm <a name="paradigm"></a>
 
@@ -133,5 +133,5 @@ The final step is to assign the desktop grid and default mobile grid to the wind
 
 The final application demonstrates a fully responsive design, seamlessly transitioning between desktop and mobile layouts. The menu button allows mobile users to access additional functionality via the menu grid, while the desktop layout makes full use of the available screen space.
 
-![Webm showing the result](assets/webm/wgc-example.webm)
+![Final result](assets/webp/wgc-example.webp)
 
