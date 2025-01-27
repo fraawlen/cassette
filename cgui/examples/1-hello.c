@@ -19,6 +19,7 @@
 /************************************************************************************************************/
 
 #include <cassette/cgui.h>
+#include <cassette/ccfg.h>
 #include <cassette/cobj.h>
 #include <stdio.h>
 #include <string.h>
@@ -40,6 +41,7 @@ static void on_clip_copy (int);
 static void on_clip_lose (int);
 static void on_close     (cgui_window *);
 static void on_draw      (cgui_window *, unsigned long, unsigned long);
+static void on_load      (ccfg *);
 static void on_state     (cgui_window *, enum cgui_window_state_mask);
 
 /************************************************************************************************************/
@@ -84,6 +86,7 @@ static const char *default_text =
 	/* Instantiation */
 
 	cgui_init(argc, argv);
+	cgui_config_on_load(on_load);
 
 	text        = cstr_create();
 	window      = cgui_window_create();
@@ -271,6 +274,20 @@ on_draw(cgui_window *w, unsigned long delay_1, unsigned long delay_2)
 	(void)delay_2;
 
 //	printf("window redrawn (%lu / %f)\n", delay_1, 1000000.0 / delay_1);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+on_load(ccfg *cfg)
+{
+	struct cgui_box box = {0};
+
+	(void)cfg;
+
+	cgui_config_style_box("test", &box);
+
+	printf(">> %f\n", box.padding);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

@@ -41,6 +41,13 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#define LOAD(TARGET) \
+	for (size_t i = 0; i < sizeof(TARGET) / sizeof(struct resource); i++) \
+	{ \
+		fetch(TARGET[i]); \
+		scale(TARGET[i]); \
+	} \
+
 #define WINDOW(NAMESPACE, TARGET) \
 	{ NAMESPACE, "corner_type",      CORNER_TYPE,  TARGET.corner           }, \
 	{ NAMESPACE, "corner_size",      CORNER_SIZE,  TARGET.size_corner      }, \
@@ -217,6 +224,11 @@ static const struct word words[] =
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static const struct resource resources_once[] =
+{
+	{"global",       "alternative_present_mode",    BOOL,          &config.alt_present                    },
+};
 
 static const struct resource resources[] =
 {
@@ -410,6 +422,36 @@ cgui_config_str_width(size_t cols)
 	return config.font_width * cols + config.font_spacing_horizontal * (cols - 1);
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_config_style_box(const char *name, struct cgui_box *box)
+{
+	struct resource box_resources[] = {BOX(name, (*box))};
+	
+	if (cgui_error())
+	{
+		return;
+	}
+
+	LOAD(box_resources);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_config_style_text(const char *name, struct cgui_text *text)
+{
+	struct resource text_resources[] = {TEXT(name, (*text))};
+	
+	if (cgui_error())
+	{
+		return;
+	}
+
+	LOAD(text_resources);
+}
+
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
@@ -502,15 +544,11 @@ config_load(void)
 
 	if (first_load)
 	{
-		fetch((struct resource){"global", "alternative_present_mode", BOOL, &config.alt_present});
 		first_load = false;
+		LOAD(resources_once);
 	}
 
-	for (size_t i = 0; i < sizeof(resources) / sizeof(struct resource); i++)
-	{
-		fetch(resources[i]);
-		scale(resources[i]);
-	}
+	LOAD(resources);
 
 	/* fill in the blanks and check of errors */
 	
@@ -537,11 +575,12 @@ config_reset(void)
 	ccfg_destroy(parser);
 	cdict_destroy(dict);
 
-	fn_load   = dummy_fn_load;
-	config    = config_default;
-	parser    = CCFG_PLACEHOLDER;
-	dict      = CDICT_PLACEHOLDER;
-	font_opts = NULL;
+	fn_load    = dummy_fn_load;
+	config     = config_default;
+	parser     = CCFG_PLACEHOLDER;
+	dict       = CDICT_PLACEHOLDER;
+	font_opts  = NULL;
+	first_load = true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

@@ -239,6 +239,20 @@ struct cgui_config
 void
 cgui_config_on_load(void (*fn)(ccfg *cfg));
 
+/**
+ *
+ */
+void
+cgui_config_style_box(const char *name, struct cgui_box *box)
+CGUI_NONNULL(1, 2);
+
+/**
+ *
+ */
+void
+cgui_config_style_text(const char *name, struct cgui_text *text)
+CGUI_NONNULL(1, 2);
+
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
 /************************************************************************************************************/

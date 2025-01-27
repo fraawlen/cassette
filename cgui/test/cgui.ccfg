@@ -2,6 +2,8 @@
 
 	LET windows window window_focused window_disabled window_locked
 
+	test padding 32
+
 	global scale 1.0
 	global alternative_present_mode TRUE
 
