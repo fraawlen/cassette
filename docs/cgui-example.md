@@ -52,4 +52,4 @@ cc hello.c -lcgui
 
 Output :
 
-![hello world output](assets/hello-window.png)
+![hello world output](assets/png/cgui-hello.png)

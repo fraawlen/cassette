@@ -35,9 +35,9 @@ COBJ and CCFG Thick bindings for Ada 2012 are provided. CGUI bindings coming soo
 ## Documentation <a name="documentation"></a>
 
 - [UI model](docs/ui-model.md)
-- [UI inputs and focus](docs/ui-inputs-and-focus.md)
-- [CCFG language](docs/ccfg-language.md)
+- [CGUI unique features](docs/cgui-features.md)
 - [CGUI theming](docs/cgui-theming.md)
+- [CCFG language](docs/ccfg-language.md)
 
 ## Dependencies <a name="dependencies"></a>
 
