@@ -608,6 +608,14 @@ cgui_grid_width(const cgui_grid *grid)
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
+struct grid_area
+grid_area(cgui_grid *grid, size_t id)
+{
+	return !grid->valid || id >= cref_length(grid->areas) ? GRID_AREA_NONE : *AREA(grid, id);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 grid_destroy(cgui_grid *grid)
 {

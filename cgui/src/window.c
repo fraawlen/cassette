@@ -54,6 +54,7 @@ static void dummy_fn_focus     (cgui_window *, cgui_cell *)                     
 static void dummy_fn_grid      (cgui_window *, cgui_grid *)                                             CGUI_NONNULL(1, 2);
 static void dummy_fn_state     (cgui_window *, enum cgui_window_state_mask)                             CGUI_NONNULL(1);
 static void refocus            (cgui_window *)                                                          CGUI_NONNULL(1);
+static void update_geometry    (cgui_window *)                                                          CGUI_NONNULL(1);
 
 /* pure */
 
@@ -873,10 +874,7 @@ cgui_window_set_type(cgui_window *window, enum cgui_window_type type)
 	if (old != type && window->shown_grid->valid)
 	{
 		window_update_shown_grid(window);
-		grid_update_geometry(
-			window->shown_grid,
-			window->width  - PADDING(window) * 2,
-			window->height - PADDING(window) * 2);
+		update_geometry(window);
 	}
 }
 
@@ -933,6 +931,7 @@ cgui_window_swap_grid(cgui_window *window, cgui_grid *grid_1, cgui_grid *grid_2)
 	window->fn_grid(window, grid_2);
 	window_set_draw_level(window, WINDOW_DRAW_FULL);
 	refocus(window);
+	update_geometry(window);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1494,12 +1493,9 @@ window_update_size(cgui_window *window, double width, double height)
 		main_set_error(CERR_CAIRO);
 		return;
 	}
-	
+
 	window_update_shown_grid(window);
-	grid_update_geometry(
-		window->shown_grid,
-		window->width  - PADDING(window) * 2,
-		window->height - PADDING(window) * 2);
+	update_geometry(window);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1937,6 +1933,7 @@ refocus(cgui_window *window)
 		}
 	}
 
+	window_focus_lock(window, false);
 	window_focus(window, GRID_AREA_NONE);
 }
 
@@ -1952,4 +1949,19 @@ size_limits(const cgui_window *window, double *min_w, double *min_h, double *max
 	*min_h = min_height(window, grid);
 	*max_w = ((cgui_grid*)cref_ptr(window->grids, 0))->col_flex > 0.0 ? DBL_MAX : *min_w;
 	*max_h = ((cgui_grid*)cref_ptr(window->grids, 0))->row_flex > 0.0 ? DBL_MAX : *min_h;
-}	
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+update_geometry(cgui_window *window)
+{
+	grid_update_geometry(
+		window->shown_grid,
+		window->width  - PADDING(window) * 2,
+		window->height - PADDING(window) * 2);
+
+	/* update focus's copy to get updated focus geometry */
+
+	window->focus = grid_area(window->shown_grid, window->focus.id);
+}
