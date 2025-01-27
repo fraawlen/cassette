@@ -47,9 +47,9 @@ Within each window, the Grid serves as the primary layout mechanism. Grids are d
 
 Unlike most systems, the size of rows and columns in CGUI is not measured in pixels but in single-width monospace glyphs. For example, a column width of 11 corresponds to the ability to fit 11 monospace glyphs (e.g., "Hello World"), regardless of the font face, font size, or horizontal spacing. The total dimensions of the grid—including row and column sizes, inter-cell spacing, and cell padding—determine the minimum size of the window hosting the grid. If the font size changes, the grid adjusts its dimensions accordingly, as does the minimum size of the window.  This system ensures that end-users can freely customize font choices, column and row spacing, and padding values without interfering with the programmer-defined layout.
 
-Flexibility governs how rows and columns grow when the window is resized. Each row or column’s flex factor represents a unitless growth proportion, similar to CSS flexbox. For example, if all rows and columns have a flex factor of 1.0, the remaining space (after subtracting the grid’s minimum dimensions) is distributed equally. Conversely, if the combined flexibility across all rows or columns is 0.0, the window becomes rigid and non-resizable along that axis.
-
 ![Grid geometry](assets/png/wgc-grid-size.png)<p align=center><em>Grid properties: N_row, N_col, ROW_h, COL_w, G_spacing, G_pad, FT_h, and FT_w represent, respectively: the number of rows and columns, row and column sizes (in glyph count), grid inter-cell spacing, grid intra-cell padding, and the monospace font height and width (with vertical and horizontal inter-glyph spacing).</em></p>
+
+Flexibility governs how rows and columns grow when the window is resized. Each row or column’s flex factor represents a unitless growth proportion, similar to CSS flexbox. For example, if all rows and columns have a flex factor of 1.0, the remaining space (after subtracting the grid’s minimum dimensions) is distributed equally. Conversely, if the combined flexibility across all rows or columns is 0.0, the window becomes rigid and non-resizable along that axis.
 
 ### Cells
 
