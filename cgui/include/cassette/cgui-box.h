@@ -130,6 +130,13 @@ cgui_box_style(struct cgui_box box);
 /**
  *
  */
+double
+cgui_box_content_offset(struct cgui_box box)
+CGUI_CONST;
+
+/**
+ *
+ */
 bool
 cgui_box_inside(cairo_t *drawable, double x, double y)
 CGUI_NONNULL(1);

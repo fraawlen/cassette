@@ -75,14 +75,17 @@ main(int argc, char **argv)
 	/* Cell setup */
 
 	cgui_gauge_set_value(gauge_1, 100);
+	cgui_gauge_rotate_label(gauge_1, CGUI_ROTATION_RIGHT);
+	cgui_gauge_resize_label(gauge_1, -1);
 
 	cgui_gauge_style_percent(gauge_2, 1);
 	cgui_gauge_set_value(gauge_2, 15.23);
 
-	cgui_gauge_resize_label(gauge_3, 7);
-	cgui_gauge_style_label(gauge_3, 2, "GB");
+	cgui_gauge_resize_label(gauge_3, 5);
+	cgui_gauge_style_label(gauge_3, 2, "\nGB");
 	cgui_gauge_limit_value(gauge_3, 0.0, 32.0);
 	cgui_gauge_set_value(gauge_3, 21.28627);
+	cgui_gauge_align_label(gauge_3, CGUI_ALIGN_LEFT);
 
 	cgui_gauge_resize_label(gauge_4, 0);
 	cgui_gauge_set_value(gauge_4, val);
@@ -96,10 +99,12 @@ main(int argc, char **argv)
 
 	/* Grid setup */
 
-	cgui_grid_resize_col(grid, 0, 1);
-	cgui_grid_resize_col(grid, 1, 3);
-	cgui_grid_resize_col(grid, 2, 3);
-	cgui_grid_resize_col(grid, 3, 1);
+	cgui_grid_resize_col(grid, 0, -1);
+	cgui_grid_resize_col(grid, 1,  3);
+	cgui_grid_resize_col(grid, 2,  3);
+	cgui_grid_resize_col(grid, 3,  1);
+	cgui_grid_resize_row(grid, 0, -4);
+	cgui_grid_resize_row(grid, 2,  2);
 
 	cgui_grid_set_col_flex(grid, 0, 1.0);
 	cgui_grid_set_row_flex(grid, 0, 1.0);

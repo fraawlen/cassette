@@ -602,5 +602,6 @@ static const struct cgui_config config_default =
 		.bold             = false,
 	},
 
-	.gauge_min_size = 20,
+	.gauge_min_length    = 20,
+	.gauge_max_thickness = DBL_MAX,
 };

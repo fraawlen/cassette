@@ -226,7 +226,8 @@ struct cgui_config
 
 	struct cgui_text gauge_text;
 
-	double gauge_min_size;
+	double gauge_min_length;
+	double gauge_max_thickness;
 };
 
 /************************************************************************************************************/
@@ -291,14 +292,14 @@ CGUI_PURE;
  *
  */
 double
-cgui_config_str_height(size_t rows)
+cgui_config_str_height(ssize_t rows)
 CGUI_PURE;
 
 /**
  *
  */
 double
-cgui_config_str_width(size_t cols)
+cgui_config_str_width(ssize_t cols)
 CGUI_PURE;
 
 /************************************************************************************************************/

@@ -286,7 +286,8 @@ static const struct resource resources[] =
 	{ "beacon",      "blink_animation_speed_on",    ULONG,         &config.beacon_blink_speed_on          },
 	{ "beacon",      "blink_animation_speed_off",   ULONG,         &config.beacon_blink_speed_off         },
 
-	{ "gauge_label", "min_size",                    UDOUBLE,       &config.gauge_min_size                 },
+	{ "gauge_label", "min_length",                  UDOUBLE,       &config.gauge_min_length               },
+	{ "gauge_bar",   "max_thickness",               UDOUBLE,       &config.gauge_max_thickness            },
 
 	KEY(  1) KEY(  2) KEY(  3) KEY(  4) KEY(  5) KEY(  6) KEY(  7) KEY(  8) KEY(  9) KEY( 10)
 	KEY( 11) KEY( 12) KEY( 13) KEY( 14) KEY( 15) KEY( 16) KEY( 17) KEY( 18) KEY( 19) KEY( 20)
@@ -399,11 +400,16 @@ cgui_config_on_load(void (*fn)(ccfg *cfg))
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
-cgui_config_str_height(size_t rows)
+cgui_config_str_height(ssize_t rows)
 {
 	if (cgui_error() || rows == 0)
 	{
 		return 0;
+	}
+
+	if (rows < 0)
+	{
+		return cgui_config_str_width(-rows);
 	}
 
 	return config.font_height * rows + config.font_spacing_vertical * (rows - 1);
@@ -412,11 +418,16 @@ cgui_config_str_height(size_t rows)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
-cgui_config_str_width(size_t cols)
+cgui_config_str_width(ssize_t cols)
 {
 	if (cgui_error() || cols == 0)
 	{
 		return 0;
+	}
+
+	if (cols < 0)
+	{
+		return cgui_config_str_height(-cols);
 	}
 
 	return config.font_width * cols + config.font_spacing_horizontal * (cols - 1);

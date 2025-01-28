@@ -1,3 +1,6 @@
+	SECTION_ADD Shadow
+	SECTION_ADD Round_Gauges
+
 	// Configuration example
 
 	LET windows window window_focused window_disabled window_locked
@@ -135,26 +138,27 @@
 
 	gauge       text_color       #000000
 	gauge       text_bold        TRUE
-	gauge       padding          14
-	gauge_bar   padding          0
-	gauge_bar   border_thickness 14
+	gauge       padding          10
+	gauge       margin           0
+	gauge       border_thickness 10
+	gauge       outline_thickness 10
+	gauge_bar   margin           0
+	gauge_bar   padding          10
+	gauge_bar   border_thickness 10
 	gauge_bar   color_background #51401b
-	gauge_label padding          20
-	gauge_label min_size         0
-	gauge_label smart_corners    FALSE
+	gauge_label padding          10
+	gauge_label margin           0
+	gauge_label smart_corners    TRUE
 	gauge_label color_background #c88c00
-	gauge_label border_thickness 0
-
-	// Shadow-example specifics
-
-	SECTION_ADD (STREQ ($$ app_name) "shadow_test") Shadow
-	SECTION_ADD Shadow
+	gauge_label color_border     #ffffff
+	gauge_label border_thickness 10
+	gauge_label min_length       0
 
 SECTION Shadow
 
 	grid spacing 60
 	window padding 70
-	window corner_size 130
+	window corner_size 80
 	window color_background #505050
 	window enable_focused_substyle FALSE
 	window color_border #101010
@@ -186,3 +190,28 @@ SECTION Shadow
 		% widget shadow_x_offset 10
 		% widget shadow_y_offset 10
 	FOR_END
+
+SECTION Round_Gauges
+
+	gauge       corner_type      radii
+	gauge       corner_size      75
+	gauge       smart_corners    FALSE
+	gauge       text_color       #000000
+	gauge       text_bold        TRUE
+	gauge       padding          50
+	gauge       margin           0
+	gauge       border_thickness 10
+	gauge       outline_thickness 10
+	gauge_bar   margin           0
+	gauge_bar   padding          -50
+	gauge_bar   border_thickness 10
+	gauge_bar   color_background #51401b
+	gauge_label padding          40
+	gauge_label margin           0
+	gauge_label smart_corners    TRUE
+	gauge_label color_background #c88c00
+	gauge_label color_border     #ffffff
+	gauge_label border_thickness 10
+	gauge_label min_length       112
+	gauge_bar   max_thickness    33
+

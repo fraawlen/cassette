@@ -758,14 +758,7 @@ grid_update_geometry(cgui_grid *grid, double width, double height)
 static double
 col_width(struct grid_line col)
 {
-	if (col.units > 0)
-	{
-		return cgui_config_str_width(col.units) + CONFIG->grid_padding * 2;
-	}
-	else
-	{
-		return cgui_config_str_height(-col.units) + CONFIG->grid_padding * 2;
-	}
+	return cgui_config_str_width(col.units) + CONFIG->grid_padding * 2;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -773,14 +766,7 @@ col_width(struct grid_line col)
 static double
 row_height(struct grid_line row)
 {
-	if (row.units > 0)
-	{
-		return cgui_config_str_height(row.units) + CONFIG->grid_padding * 2;
-	}
-	else
-	{
-		return cgui_config_str_width(-row.units) + CONFIG->grid_padding * 2;
-	}
+	return cgui_config_str_height(row.units) + CONFIG->grid_padding * 2;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

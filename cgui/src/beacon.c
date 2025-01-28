@@ -237,9 +237,9 @@ destroy(cgui_cell *cell)
 static void
 draw(cgui_cell *cell, struct cgui_cell_context context)
 {
-	double l = context.frame.margin + context.frame.size_border + context.frame.padding;
-	double x = context.x + l + cgui_align_offset_x(DATA->align, context.width  - l * 2);
-	double y = context.y + l + cgui_align_offset_y(DATA->align, context.height - l * 2);
+	double o = cgui_box_content_offset(context.frame);
+	double x = context.x + o + cgui_align_offset_x(DATA->align, context.width  - o * 2);
+	double y = context.y + o + cgui_align_offset_y(DATA->align, context.height - o * 2);
 
 	/* update animation */
 

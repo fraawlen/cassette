@@ -57,8 +57,9 @@ static void
 draw(cgui_cell *cell, struct cgui_cell_context context)
 {
 	struct ccolor cl = CONFIG->stripes_line_color;
-	double w         = CONFIG->stripes_line_width;
-	double s         = CONFIG->stripes_line_spacing * 1.414213562;
+	double w = CONFIG->stripes_line_width;
+	double s = CONFIG->stripes_line_spacing * 1.414213562;
+	double o = context.frame.margin + context.frame.padding;
 
 	(void)cell;
 
@@ -69,10 +70,10 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 
 	/* stripes */
 
-	context.x      += context.frame.padding;
-	context.y      += context.frame.padding;
-	context.width  -= context.frame.padding * 2;
-	context.height -= context.frame.padding * 2;
+	context.x      += o;
+	context.y      += o;
+	context.width  -= o * 2;
+	context.height -= o * 2;
 
 	for (double x = context.x; x < context.x + context.width + w; x += w + s)
 	{

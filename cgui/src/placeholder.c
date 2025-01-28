@@ -57,11 +57,11 @@ static void
 draw(cgui_cell *cell, struct cgui_cell_context context)
 {
 	struct ccolor cl = CONFIG->placeholder_line_color;
-	double pad       = context.frame.padding + context.frame.margin + context.frame.size_border;
-	double w         = context.width  - pad * 2;
-	double h         = context.height - pad * 2;
-	double x         = context.x      + pad;
-	double y         = context.y      + pad;
+	double o = cgui_box_content_offset(context.frame);
+	double w = context.width  - o * 2;
+	double h = context.height - o * 2;
+	double x = context.x      + o;
+	double y = context.y      + o;
 
 	(void)cell;
 

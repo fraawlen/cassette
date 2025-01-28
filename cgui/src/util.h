@@ -49,6 +49,13 @@ CGUI_CONST;
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
+util_progress(double d, double min, double max)
+CGUI_HIDDEN
+CGUI_CONST;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+double
 util_str_to_double(const char *str, double min, double max)
 CGUI_NONNULL(1)
 CGUI_HIDDEN;

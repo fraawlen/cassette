@@ -31,11 +31,15 @@
 /************************************************************************************************************/
 
 #define PI 3.14159265358979323846
-#define  U 0.382683432 /* sin(PI/8) */
+#define U  0.382683432 /* sin(PI/8) */
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
+
+#define CORNER_PAD(BOX, ID, PAD) (PAD * (1 - (BOX.corner[ID] == CGUI_CORNER_CHAMFER ? U : 0))) 
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void paint     (cairo_t *, struct ccolor color)                    CGUI_NONNULL(1);
 static void path      (cairo_t *, bool, double)                           CGUI_NONNULL(1);
@@ -63,6 +67,14 @@ cgui_box_clip(cairo_t *drawable, double pad)
 {
 	path(drawable, true, pad);
 	cairo_clip(drawable);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+double
+cgui_box_content_offset(struct cgui_box box)
+{
+	return box.margin + box.size_border + box.padding;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -190,10 +202,9 @@ cgui_box_pad_corner(struct cgui_box *box, struct cgui_box box_parent, double pad
 	{
 		return;
 	}
-	
+
 	box->corner[id]      = box_parent.corner[id];
-	box->size_corner[id] = box_parent.size_corner[id]
-	                       - pad * (1 - (box_parent.corner[id] == CGUI_CORNER_CHAMFER ? U : 0));
+	box->size_corner[id] = box_parent.size_corner[id] - CORNER_PAD(box_parent, id, pad);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -267,7 +278,7 @@ path(cairo_t *drawable, bool shape, double pad)
 
 	for (size_t i = 0; i < 4; i++)
 	{
-		r[i] = ctx_box.size_corner[i] - pad * (1 - (ctx_box.corner[i] == CGUI_CORNER_CHAMFER ? U : 0));
+		r[i] = ctx_box.size_corner[i] - CORNER_PAD(ctx_box, i, pad);
 		if (r[i] < 0.0)
 		{
 			r[i] = 0.0;

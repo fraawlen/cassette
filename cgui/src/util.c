@@ -18,6 +18,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <float.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -51,6 +52,14 @@ bool
 util_point_inside(double x_check, double y_check, double x, double y, double width, double height)
 {
 	return !(x_check < x || x_check > x + width || y_check < y || y_check > y + height);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+double
+util_progress(double d, double min, double max)
+{
+	return max - min < DBL_EPSILON ? 1.0 : (util_limit(d, min, max) - min) / (max - min);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

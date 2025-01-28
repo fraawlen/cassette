@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #include "cgui-config.h"
 #include "cgui-types.h"
 #include "cgui-window.h"
