@@ -32,7 +32,11 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
+ * Creates a filler cell instance. 
+ * To destroy it, use the generic cell destructor cgui_cell_destroy().
  *
+ * @return     : Created gauge instance
+ * @return_err : CGUI_CELL_PLACEHOLDER
  */
 cgui_cell *
 cgui_filler_create(void)

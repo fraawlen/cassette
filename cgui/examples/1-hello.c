@@ -273,7 +273,7 @@ on_draw(cgui_window *w, unsigned long delay_1, unsigned long delay_2)
 	(void)delay_1;
 	(void)delay_2;
 
-//	printf("window redrawn (%lu / %f)\n", delay_1, 1000000.0 / delay_1);
+	printf("window redrawn (%lu / %f)\n", delay_1, 1000000.0 / delay_1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

@@ -207,7 +207,7 @@ animate(cgui_cell *cell, unsigned long delay)
 {
 	double speed;
 
-	if (DATA->state == CGUI_BEACON_OFF || DATA->state == CGUI_BEACON_OFF)
+	if (DATA->state == CGUI_BEACON_OFF || DATA->state == CGUI_BEACON_ON)
 	{
 		return;
 	}

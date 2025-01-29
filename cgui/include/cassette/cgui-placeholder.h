@@ -32,7 +32,11 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
+ * Creates a placeholder cell instance. 
+ * To destroy it, use the generic cell destructor cgui_cell_destroy().
  *
+ * @return     : Created gauge instance
+ * @return_err : CGUI_CELL_PLACEHOLDER
  */
 cgui_cell *
 cgui_placeholder_create(void)
