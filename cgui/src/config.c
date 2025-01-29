@@ -864,14 +864,6 @@ scale(const struct resource resource)
 			*(double*)resource.target *= config.scale;
 			break;
 
-		case LONG:
-			*(long*)resource.target *= config.scale;
-			break;
-
-		case ULONG:
-			*(unsigned long*)resource.target *= config.scale;
-			break;
-
 		case CORNER_SIZE:
 			for (size_t i = 0; i < 4; i++)
 			{

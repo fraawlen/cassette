@@ -100,8 +100,6 @@ event_process(struct cgui_event *event)
 {
 	popup_redirect(event);
 
-	fn_event(event);
-
 	switch (event->type)
 	{
 		case CGUI_EVENT_CLOSE:
@@ -190,6 +188,8 @@ event_process(struct cgui_event *event)
 		default:
 			break;
 	}
+
+	fn_event(event);
 }
 
 /************************************************************************************************************/
