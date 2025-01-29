@@ -227,67 +227,67 @@ static const struct word words[] =
 
 static const struct resource resources_once[] =
 {
-	{"global",       "alternative_present_mode",    BOOL,          &config.alt_present                    },
+	{"global",        "alternative_present_mode",    BOOL,          &config.alt_present                    },
 };
 
 static const struct resource resources[] =
 {
-	{ "global",      "scale",                       SCALE,         &config.scale                          },
-	{ "global",      "modkey",                      MOD_KEY,       &config.modkey                         },
+	{ "global",       "scale",                       SCALE,         &config.scale                          },
+	{ "global",       "modkey",                      MOD_KEY,       &config.modkey                         },
 
-	{ "font",        "number_padding_pattern",      STRING,         config.font_padding_pattern           },
-	{ "font",        "face",                        STRING,         config.font_face                      },
-	{ "font",        "size",                        LENGTH,        &config.font_size                      },
-	{ "font",        "horizontal_spacing",          LENGTH,        &config.font_spacing_horizontal        },
-	{ "font",        "vertical_spacing",            LENGTH,        &config.font_spacing_vertical          },
-	{ "font",        "width_override",              LENGTH,        &config.font_override_width            },
-	{ "font",        "ascent_override",             LENGTH,        &config.font_override_ascent           },
-	{ "font",        "descent_override",            LENGTH,        &config.font_override_descent          },
-	{ "font",        "x_offset",                    POSITION,      &config.font_offset_x                  },
-	{ "font",        "y_offset",                    POSITION,      &config.font_offset_y                  },
-	{ "font",        "enable_overrides",            BOOL,          &config.font_enable_overrides          },
-	{ "font",        "enable_hint_metrics",         BOOL,          &config.font_enable_hint_metrics       },
-	{ "font",        "antialias_mode",              ANTIALIAS,     &config.font_antialias                 },
-	{ "font",        "subpixel_mode",               SUBPIXEL,      &config.font_subpixel                  },
-	{ "font",        "background_vertical_pad",     LENGTH,        &config.font_background_vpad           },
-	{ "font",        "background_horizontal_pad",   LENGTH,        &config.font_background_hpad           },
+	{ "font",         "number_padding_pattern",      STRING,         config.font_padding_pattern           },
+	{ "font",         "face",                        STRING,         config.font_face                      },
+	{ "font",         "size",                        LENGTH,        &config.font_size                      },
+	{ "font",         "horizontal_spacing",          LENGTH,        &config.font_spacing_horizontal        },
+	{ "font",         "vertical_spacing",            LENGTH,        &config.font_spacing_vertical          },
+	{ "font",         "width_override",              LENGTH,        &config.font_override_width            },
+	{ "font",         "ascent_override",             LENGTH,        &config.font_override_ascent           },
+	{ "font",         "descent_override",            LENGTH,        &config.font_override_descent          },
+	{ "font",         "x_offset",                    POSITION,      &config.font_offset_x                  },
+	{ "font",         "y_offset",                    POSITION,      &config.font_offset_y                  },
+	{ "font",         "enable_overrides",            BOOL,          &config.font_enable_overrides          },
+	{ "font",         "enable_hint_metrics",         BOOL,          &config.font_enable_hint_metrics       },
+	{ "font",         "antialias_mode",              ANTIALIAS,     &config.font_antialias                 },
+	{ "font",         "subpixel_mode",               SUBPIXEL,      &config.font_subpixel                  },
+	{ "font",         "background_vertical_pad",     LENGTH,        &config.font_background_vpad           },
+	{ "font",         "background_horizontal_pad",   LENGTH,        &config.font_background_hpad           },
 
-	{ "grid",        "padding",                     LENGTH,        &config.grid_padding                   },
-	{ "grid",        "spacing",                     LENGTH,        &config.grid_spacing                   },
+	{ "grid",         "padding",                     LENGTH,        &config.grid_padding                   },
+	{ "grid",         "spacing",                     LENGTH,        &config.grid_spacing                   },
 
-	{ "window",      "padding",                     LENGTH,        &config.window_padding                 },
-	{ "window",      "enable_disabled_substyle",    BOOL,          &config.window_enable_disabled         },
-	{ "window",      "enable_focused_substyle",     BOOL,          &config.window_enable_focused          },
-	{ "window",      "enable_locked_substyle",      BOOL,          &config.window_enable_locked           },
-	{ "window",      "allow_partial_redraws",       BOOL,          &config.window_enable_partial_redraws  },
-	{ "window",      "focus_on_activation",         BOOL,          &config.window_focus_on_activation     },
+	{ "window",       "padding",                     LENGTH,        &config.window_padding                 },
+	{ "window",       "enable_disabled_substyle",    BOOL,          &config.window_enable_disabled         },
+	{ "window",       "enable_focused_substyle",     BOOL,          &config.window_enable_focused          },
+	{ "window",       "enable_locked_substyle",      BOOL,          &config.window_enable_locked           },
+	{ "window",       "allow_partial_redraws",       BOOL,          &config.window_enable_partial_redraws  },
+	{ "window",       "focus_on_activation",         BOOL,          &config.window_focus_on_activation     },
 
-	{ "popup",       "padding",                     LENGTH,        &config.popup_padding                  },
+	{ "popup",        "padding",                     LENGTH,        &config.popup_padding                  },
 
-	{ "behavior",    "async_present",               BOOL,          &config.async_present                  },
-	{ "behavior",    "enable_cell_auto_lock",       BOOL,          &config.cell_auto_lock                 },
-	{ "behavior",    "enable_persistent_pointer",   BOOL,          &config.persistent_pointer             },
-	{ "behavior",    "enable_persistent_touch",     BOOL,          &config.persistent_touch               },
-	{ "behavior",    "enable_reactive_shadows",     BOOL,          &config.shadows_follow_pointer         },
-	{ "behavior",    "shadows_max_light_distance",  LENGTH,        &config.shadows_max_light_distance     },
-	{ "behavior",    "shadows_max_offset",          LENGTH,        &config.shadows_max_offset             },
-	{ "behavior",    "animation_framerate_divider", ULONG,         &config.anim_divider                   },
-	{ "behavior",    "window_button_move",          BUTTON_ID,     &config.wm_button_move                 },
-	{ "behavior",    "window_button_resize",        BUTTON_ID,     &config.wm_button_resize               },
-	{ "behavior",    "window_button_fullscreen",    BUTTON_ID,     &config.wm_button_fullscreen           },
+	{ "behavior",     "async_present",               BOOL,          &config.async_present                  },
+	{ "behavior",     "enable_cell_auto_lock",       BOOL,          &config.cell_auto_lock                 },
+	{ "behavior",     "enable_persistent_pointer",   BOOL,          &config.persistent_pointer             },
+	{ "behavior",     "enable_persistent_touch",     BOOL,          &config.persistent_touch               },
+	{ "behavior",     "enable_reactive_shadows",     BOOL,          &config.shadows_follow_pointer         },
+	{ "behavior",     "shadows_max_light_distance",  LENGTH,        &config.shadows_max_light_distance     },
+	{ "behavior",     "shadows_max_offset",          LENGTH,        &config.shadows_max_offset             },
+	{ "behavior",     "animation_framerate_divider", ULONG,         &config.anim_divider                   },
+	{ "behavior",     "window_button_move",          BUTTON_ID,     &config.wm_button_move                 },
+	{ "behavior",     "window_button_resize",        BUTTON_ID,     &config.wm_button_resize               },
+	{ "behavior",     "window_button_fullscreen",    BUTTON_ID,     &config.wm_button_fullscreen           },
 
-	{ "stripes",     "line_color",                  COLOR,         &config.stripes_line_color             },
-	{ "stripes",     "line_width",                  LENGTH,        &config.stripes_line_width             },
-	{ "stripes",     "line_spacing",                LENGTH,        &config.stripes_line_spacing           },
+	{ "stripes",      "line_color",                  COLOR,         &config.stripes_line_color             },
+	{ "stripes",      "line_width",                  LENGTH,        &config.stripes_line_width             },
+	{ "stripes",      "line_spacing",                LENGTH,        &config.stripes_line_spacing           },
 
-	{ "placeholder", "line_color",                  COLOR,         &config.placeholder_line_color         },
-	{ "placeholder", "line_width",                  LENGTH,        &config.placeholder_line_width         },
+	{ "placeholder",  "line_color",                  COLOR,         &config.placeholder_line_color         },
+	{ "placeholder",  "line_width",                  LENGTH,        &config.placeholder_line_width         },
 
-	{ "beacon",      "blink_animation_speed_on",    ULONG,         &config.beacon_blink_speed_on          },
-	{ "beacon",      "blink_animation_speed_off",   ULONG,         &config.beacon_blink_speed_off         },
+	{ "beacon",       "blink_animation_speed_on",    ULONG,         &config.beacon_blink_speed_on          },
+	{ "beacon",       "blink_animation_speed_off",   ULONG,         &config.beacon_blink_speed_off         },
 
-	{ "gauge_label", "min_length",                  UDOUBLE,       &config.gauge_min_length               },
-	{ "gauge_bar",   "max_thickness",               UDOUBLE,       &config.gauge_max_thickness            },
+	{ "gauge_cursor", "min_length",                  UDOUBLE,       &config.gauge_min_length               },
+	{ "gauge_bar",    "max_thickness",               UDOUBLE,       &config.gauge_max_thickness            },
 
 	KEY(  1) KEY(  2) KEY(  3) KEY(  4) KEY(  5) KEY(  6) KEY(  7) KEY(  8) KEY(  9) KEY( 10)
 	KEY( 11) KEY( 12) KEY( 13) KEY( 14) KEY( 15) KEY( 16) KEY( 17) KEY( 18) KEY( 19) KEY( 20)
@@ -326,7 +326,7 @@ static const struct resource resources[] =
 	BOX( "label",               config.label_frame           )
 	BOX( "gauge",               config.gauge_frame           )
 	BOX( "gauge_bar",           config.gauge_bar             )
-	BOX( "gauge_label",         config.gauge_label           )
+	BOX( "gauge_cursor",        config.gauge_cursor          )
 
 	TEXT( "button_idle",         config.button_text_idle     )
 	TEXT( "button_focused",      config.button_text_focused  )

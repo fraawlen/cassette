@@ -41,7 +41,7 @@ util_env_exists(const char *name)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
-util_limit(double d, double min, double max)
+util_clamp(double d, double min, double max)
 {
 	return d > max ? max : (d < min ? min : d);
 }
@@ -59,7 +59,7 @@ util_point_inside(double x_check, double y_check, double x, double y, double wid
 double
 util_progress(double d, double min, double max)
 {
-	return max - min < DBL_EPSILON ? 1.0 : (util_limit(d, min, max) - min) / (max - min);
+	return max - min < DBL_EPSILON ? 1.0 : (util_clamp(d, min, max) - min) / (max - min);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -67,7 +67,7 @@ util_progress(double d, double min, double max)
 double
 util_str_to_double(const char *str, double min, double max)
 {
-	return util_limit(strtod(str, NULL), min, max);
+	return util_clamp(strtod(str, NULL), min, max);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

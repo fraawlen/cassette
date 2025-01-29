@@ -35,7 +35,7 @@ CGUI_HIDDEN;
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
-util_limit(double d, double min, double max)
+util_clamp(double d, double min, double max)
 CGUI_HIDDEN
 CGUI_CONST;
 

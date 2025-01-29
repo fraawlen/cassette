@@ -222,7 +222,7 @@ struct cgui_config
 
 	struct cgui_box gauge_frame;
 	struct cgui_box gauge_bar;
-	struct cgui_box gauge_label;
+	struct cgui_box gauge_cursor;
 
 	struct cgui_text gauge_text;
 

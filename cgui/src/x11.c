@@ -78,8 +78,8 @@ struct xi_input_mask
 
 /* conversion */
 
-#define TO_INT(D)  util_limit(D, INT16_MIN,  INT16_MAX)
-#define TO_UINT(D) util_limit(D,       0.0, UINT16_MAX)
+#define TO_INT(D)  util_clamp(D, INT16_MIN,  INT16_MAX)
+#define TO_UINT(D) util_clamp(D,       0.0, UINT16_MAX)
 
 /* helpers */
 

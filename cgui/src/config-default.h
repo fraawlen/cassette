@@ -572,7 +572,7 @@ static const struct cgui_config config_default =
 		.hit_outline      = false,
 	},
 
-	.gauge_label =
+	.gauge_cursor =
 	{
 		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
 		.size_corner      = {0, 0, 0, 0},

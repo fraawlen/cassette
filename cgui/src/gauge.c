@@ -21,6 +21,7 @@
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
 #include <float.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -37,14 +38,39 @@
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+struct zone
+{
+	struct cgui_box frame;
+	double x;
+	double y;
+	double width;
+	double height;
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct bar_context
+{
+	double l1; /* bar length without cursor length and padding     */
+	double l2; /* cursor length                                    */
+	double o1; /* frame content offset                             */
+	double o2; /* bar content offset                               */
+	double o3; /* cursor content offset                            */
+	double a;  /* bar extra length to account for cursor + padding */
+	double b;  /* frame remaining length                           */
+	double c;  /* bar thickness (without max taken in account)     */
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 struct data
 {
 	cstr *units;
 	cstr *label;
-	ssize_t label_size;
 	enum cgui_align label_align;
 	enum cgui_rotation label_rot;
 	enum cgui_rotation rot;
+	bool show_label;
 	double val;
 	double min;
 	double max;
@@ -54,11 +80,20 @@ struct data
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+/* impure */
+
 static void destroy      (cgui_cell *)                           CGUI_NONNULL(1);
 static void draw         (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
 static void frame        (cgui_cell *, struct cgui_box *)        CGUI_NONNULL(1, 2);
 static bool invalid      (const cgui_cell *)                     CGUI_NONNULL(1);
+static void setup_bar    (const cgui_cell *, struct zone)        CGUI_NONNULL(1);
+static void setup_cursor (const cgui_cell *, struct zone)        CGUI_NONNULL(1);
+static void setup_label  (const cgui_cell *, struct zone)        CGUI_NONNULL(1);
 static void update_label (cgui_cell *)                           CGUI_NONNULL(1);
+
+/* pure */
+
+static struct bar_context pre_setup (const cgui_cell *, struct zone) CGUI_NONNULL(1) CGUI_PURE;
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -74,6 +109,23 @@ cgui_gauge_align_label(cgui_cell *cell, enum cgui_align alignment)
 	
 	DATA->label_align = alignment;
 	
+	cgui_cell_redraw(cell);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_gauge_clamp_value(cgui_cell *cell, double lim_1, double lim_2)
+{
+	if (invalid(cell))
+	{
+		return;
+	}
+
+	DATA->min = lim_1 < lim_2 ? lim_1 : lim_2;
+	DATA->max = lim_1 < lim_2 ? lim_2 : lim_1;
+
+	update_label(cell);
 	cgui_cell_redraw(cell);
 }
 
@@ -110,21 +162,22 @@ cgui_gauge_create(void)
 		goto fail_cell;
 	}
 
-	data->label_size  = 0;
 	data->label_align = CGUI_ALIGN_CENTER;
 	data->label_rot   = CGUI_ROTATION_NORMAL;
 	data->rot         = CGUI_ROTATION_NORMAL;
+	data->show_label  = true;
+	data->max         = 100.0;
 	data->min         = 0.0;
-	data->max         = 0.0;
 	data->val         = 0.0;
+
+	cstr_append(data->units, "%");
+	cstr_set_precision(data->label, 0);
 
 	cgui_cell_on_destroy(cell, destroy);
 	cgui_cell_on_draw(cell, draw);
 	cgui_cell_on_frame(cell, frame);
 	cgui_cell_set_data(cell, data);
 	cgui_cell_set_serial(cell, CELL_GAUGE);
-
-	cgui_gauge_style_percent(cell, 0);
 
 	return cell;
 
@@ -145,14 +198,14 @@ fail_main:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_gauge_resize_label(cgui_cell *cell, ssize_t size)
+cgui_gauge_hide_label(cgui_cell *cell)
 {
 	if (invalid(cell))
 	{
 		return;
 	}
 	
-	DATA->label_size = size;
+	DATA->show_label = false;
 	
 	cgui_cell_redraw(cell);
 }
@@ -190,6 +243,39 @@ cgui_gauge_rotate_label(cgui_cell *cell, enum cgui_rotation rotation)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cgui_gauge_set_precision(cgui_cell *cell, int precision)
+{
+	if (invalid(cell))
+	{
+		return;
+	}
+
+	cstr_set_precision(DATA->label, precision);
+
+	update_label(cell);
+	cgui_cell_redraw(cell);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_gauge_set_units(cgui_cell *cell, const char *units)
+{
+	if (invalid(cell))
+	{
+		return;
+	}
+
+	cstr_clear(DATA->units);
+	cstr_append(DATA->units, units);
+
+	update_label(cell);
+	cgui_cell_redraw(cell);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cgui_gauge_set_value(cgui_cell *cell, double value)
 {
 	if (invalid(cell))
@@ -206,46 +292,16 @@ cgui_gauge_set_value(cgui_cell *cell, double value)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_gauge_limit_value(cgui_cell *cell, double lim_1, double lim_2)
+cgui_gauge_show_label(cgui_cell *cell)
 {
 	if (invalid(cell))
 	{
 		return;
 	}
-
-	DATA->min = lim_1 < lim_2 ? lim_1 : lim_2;
-	DATA->max = lim_1 < lim_2 ? lim_2 : lim_1;
-
-	update_label(cell);
+	
+	DATA->show_label = true;
+	
 	cgui_cell_redraw(cell);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_gauge_style_label(cgui_cell *cell, int precision, const char *units)
-{
-	if (invalid(cell))
-	{
-		return;
-	}
-
-	cstr_clear(DATA->units);
-	cstr_append(DATA->units, units);
-	cstr_set_precision(DATA->label, precision);
-
-	update_label(cell);
-	cgui_cell_redraw(cell);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgui_gauge_style_percent(cgui_cell *cell, int precision)
-{
-	cgui_gauge_limit_value(cell, 0.0, 100.0);
-	cgui_gauge_style_label(cell, precision, "%");
-	cgui_gauge_resize_label(cell, 4 + (precision > 0 ? precision + 1: 0));
 }
 
 /************************************************************************************************************/
@@ -265,77 +321,36 @@ destroy(cgui_cell *cell)
 static void
 draw(cgui_cell *cell, struct cgui_cell_context context)
 {
-	struct cgui_box b1;
-	struct cgui_box b2;
-	double o1;
-	double o2;
-	double o3;
-	double oa;
-	double l1;
-	double l2;
-	double r;
-	double t;
-	double x;
-	double y;
-	double h1;
-	double h2;
+	struct zone zone =
+	{
+		.frame  = context.frame,
+		.x      = context.x,
+		.y      = context.y,
+		.width  = context.width,
+		.height = context.height,
+	};
 
-	r  = util_progress(DATA->val, DATA->min, DATA->max);
-	b1 = CONFIG->gauge_bar;
-	b2 = CONFIG->gauge_label;
-	o1 = cgui_box_content_offset(context.frame);
-	o2 = cgui_box_content_offset(b1);
-	o3 = cgui_box_content_offset(b2);
-	oa = o1 + o2 + o3;
-
-	/* calculate cursor length */
-
-	l2 = DATA->label_size == 0 ? 0.0 : cgui_config_str_width(DATA->label_size) + o3 * 2;
-	l2 = l2 < CONFIG->gauge_min_length ? CONFIG->gauge_min_length : l2;
-
-	/* calculate bar length without cursor */
-
-	t  = b1.size_border * 2 + (l2 > 0.0 ? l2 + b1.padding * 2 : 0.0);
-	l1 = (context.width - t - o1 * 2) * r;
-
-	/* draw frame */
+	/* frame */
 
 	cgui_cell_draw_frame(context);
 
-	/* draw bar */
+	/* bar */
 
-	h1 = context.height - o1 * 2;
-	h2 = h1 > CONFIG->gauge_max_thickness ? CONFIG->gauge_max_thickness : h1;
-
-	cgui_box_pad_all_corners(&b1, context.frame, o1);
-	cgui_box_move(context.x + o1, context.y + o1 + (h1 - h2) / 2);
-	cgui_box_resize(l1 + t, h2);
-	cgui_box_style(b1);
+	setup_bar(cell, zone);
 	cgui_box_draw(context.drawable);
 
-	/* draw cursor */
+	/* cursor */
 
-	cgui_box_pad_all_corners(&b2, context.frame, o1 + o2);
-	cgui_box_move(context.x + o1 + o2 + l1, context.y + o1 + o2);
-	cgui_box_resize(l2, context.height - (o1 + o2) * 2);
-	cgui_box_style(b2);
+	setup_cursor(cell, zone);
 	cgui_box_draw(context.drawable);
 
 	/* label */
 
-	if (DATA->label_size == 0)
+	if (DATA->show_label)
 	{
-		return;
+		setup_label(cell, zone);
+		cgui_text_draw(context.drawable, DATA->label);	
 	}
-
-	x = context.x + oa + cgui_align_offset_x(DATA->label_align, l2 - o3 * 2) + l1;
-	y = context.y + oa + cgui_align_offset_y(DATA->label_align, context.height - oa * 2);
-
-	cgui_text_move(x, y);
-	cgui_text_align(cgui_align_rotation(DATA->label_align, DATA->label_rot));
-	cgui_text_rotate(DATA->label_rot);
-	cgui_text_style(CONFIG->gauge_text);
-	cgui_text_draw(context.drawable, DATA->label);	
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -363,6 +378,245 @@ invalid(const cgui_cell *cell)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+static struct bar_context
+pre_setup(const cgui_cell *cell, struct zone z)
+{
+	struct bar_context ctx;
+	struct cgui_box bar;
+	double ratio;
+	ssize_t lw;
+	ssize_t lh;
+
+	/* independent values */
+
+	ratio  = util_progress(DATA->val, DATA->min, DATA->max);
+	bar    = CONFIG->gauge_bar;
+	ctx.o1 = cgui_box_content_offset(z.frame);
+	ctx.o2 = cgui_box_content_offset(bar);
+	ctx.o3 = cgui_box_content_offset(CONFIG->gauge_cursor);
+
+	/* label length */
+
+	switch (DATA->label_rot)
+	{
+		case CGUI_ROTATION_LEFT:
+		case CGUI_ROTATION_RIGHT:
+			lw = -(ssize_t)cstr_height(DATA->label);
+			lh = -(ssize_t)cstr_width (DATA->label);
+			break;
+
+		default:
+		case CGUI_ROTATION_INVERTED:
+		case CGUI_ROTATION_NORMAL:
+			lw = cstr_width (DATA->label);
+			lh = cstr_height(DATA->label);
+			break;
+	}
+
+	/* other values */
+
+	switch (DATA->rot)
+	{
+		case CGUI_ROTATION_LEFT:
+		case CGUI_ROTATION_RIGHT:
+			ctx.l2 = DATA->show_label ? cgui_config_str_height(lh) + ctx.o3 * 2 : 0.0;
+			ctx.l2 = ctx.l2 < CONFIG->gauge_min_length ? CONFIG->gauge_min_length : ctx.l2;
+			ctx.a  = bar.size_border * 2 + (ctx.l2 > 0.0 ? ctx.l2 + bar.padding * 2 : 0.0);
+			ctx.b  = (z.height - ctx.o1 * 2 - ctx.a) * (1 - ratio);
+			ctx.c  =  z.width  - ctx.o1 * 2;
+			ctx.l1 =  z.height - ctx.o1 * 2 - ctx.a - ctx.b;
+			break;
+
+		default:
+		case CGUI_ROTATION_INVERTED:
+		case CGUI_ROTATION_NORMAL:
+			ctx.l2 = DATA->show_label ? cgui_config_str_width(lw) + ctx.o3 * 2 : 0.0;
+			ctx.l2 = ctx.l2 < CONFIG->gauge_min_length ? CONFIG->gauge_min_length : ctx.l2;
+			ctx.a  = bar.size_border * 2 + (ctx.l2 > 0.0 ? ctx.l2 + bar.padding * 2 : 0.0);
+			ctx.b  = (z.width  - ctx.o1 * 2 - ctx.a) * (1 - ratio);
+			ctx.c  =  z.height - ctx.o1 * 2;
+			ctx.l1 =  z.width  - ctx.o1 * 2 - ctx.a - ctx.b;
+			break;
+	}
+
+	return ctx;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+setup_bar(const cgui_cell *cell, struct zone z)
+{
+	struct bar_context ctx = pre_setup(cell, z);
+	struct cgui_box box = CONFIG->gauge_bar;
+	double x = 0.0;
+	double y = 0.0;
+	double w;
+	double h;
+	double o;
+	double c;
+	double l;
+
+	/* geometry */
+
+	c = util_clamp(ctx.c, 0.0, CONFIG->gauge_max_thickness);
+	l = ctx.l1 + ctx.a;
+	o = ctx.o1;
+
+	switch (DATA->rot)
+	{
+		case CGUI_ROTATION_RIGHT:
+			w = c;
+			h = l;
+			x = (ctx.c - w) / 2;
+			y = ctx.b;
+			break;
+
+		case CGUI_ROTATION_LEFT:
+			w = c;
+			h = l;
+			x = (ctx.c - w) / 2;
+			break;
+
+		case CGUI_ROTATION_INVERTED:
+			w = l;
+			h = c;
+			x = ctx.b;
+			y = (ctx.c - h) / 2;
+			break;
+
+		default:
+		case CGUI_ROTATION_NORMAL:
+			w = l;
+			h = c;
+			y = (ctx.c - h) / 2;
+			break;
+	}
+
+	x += z.x + o;
+	y += z.y + o;
+
+	/* box setup */
+
+	cgui_box_pad_all_corners(&box, z.frame, o);
+	cgui_box_style(box);
+	cgui_box_move(round(x), round(y));
+	cgui_box_resize(round(w), round(h));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+setup_cursor(const cgui_cell *cell, struct zone z)
+{
+	struct bar_context ctx = pre_setup(cell, z);
+	struct cgui_box box = CONFIG->gauge_cursor;
+	double x = 0.0;
+	double y = 0.0;
+	double w;
+	double h;
+	double o;
+
+	/* geometry */
+
+	o = ctx.o1 + ctx.o2;
+
+	switch (DATA->rot)
+	{
+		case CGUI_ROTATION_RIGHT:
+			w = z.width - o * 2;
+			h = ctx.l2;
+			y = ctx.b;
+			break;
+
+		case CGUI_ROTATION_LEFT:
+			w = z.width - o * 2;
+			h = ctx.l2;
+			y = ctx.l1;
+			break;
+
+		case CGUI_ROTATION_INVERTED:
+			w = ctx.l2;
+			h = z.height - o * 2;
+			x = ctx.b;
+			break;
+
+		default:
+		case CGUI_ROTATION_NORMAL:
+			w = ctx.l2;
+			h = z.height - o * 2;
+			x = ctx.l1;
+			break;
+	}
+
+	x += z.x + o;
+	y += z.y + o;
+
+	/* box setup */
+
+	cgui_box_pad_all_corners(&box, z.frame, o);
+	cgui_box_style(box);
+	cgui_box_move(round(x), round(y));
+	cgui_box_resize(round(w), round(h));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+setup_label(const cgui_cell *cell, struct zone z)
+{
+	struct bar_context ctx = pre_setup(cell, z);
+	double x = 0.0;
+	double y = 0.0;
+	double w;
+	double h;
+	double o;
+
+	/* geometry */
+
+	o = ctx.o1 + ctx.o2 + ctx.o3;
+
+	switch (DATA->rot)
+	{
+		case CGUI_ROTATION_RIGHT:
+			w = z.width - o * 2;
+			h = ctx.l2 - ctx.o3 * 2;
+			y = ctx.b;
+			break;
+
+		case CGUI_ROTATION_LEFT:
+			w = z.width - o * 2;
+			h = ctx.l2 - ctx.o3 * 2;
+			y = ctx.l1;
+			break;
+
+		case CGUI_ROTATION_INVERTED:
+			w = ctx.l2 - ctx.o3 * 2;
+			h = z.height - o * 2;
+			x = ctx.b;
+			break;
+
+		default:
+		case CGUI_ROTATION_NORMAL:
+			w = ctx.l2 - ctx.o3 * 2;
+			h = z.height - o * 2;
+			x = ctx.l1;
+			break;
+	}
+
+	x += z.x + o + cgui_align_offset_x(DATA->label_align, w);
+	y += z.y + o + cgui_align_offset_y(DATA->label_align, h);
+
+	/* text setup */
+
+	cgui_text_move(x, y);
+	cgui_text_align(cgui_align_rotation(DATA->label_align, DATA->label_rot));
+	cgui_text_rotate(DATA->label_rot);
+	cgui_text_style(CONFIG->gauge_text);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 static void
 update_label(cgui_cell *cell)
 {
@@ -384,7 +638,7 @@ update_label(cgui_cell *cell)
 	/* compose the label */
 
 	cstr_clear(DATA->label);
-	cstr_append(DATA->label, util_limit(DATA->val, DATA->min, DATA->max));
+	cstr_append(DATA->label, util_clamp(DATA->val, DATA->min, DATA->max));
 	cstr_pad(DATA->label, CONFIG->font_padding_pattern, 0, min > max ? min : max);
 	cstr_append(DATA->label, DATA->units);
 }

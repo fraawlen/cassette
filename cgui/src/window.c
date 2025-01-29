@@ -813,8 +813,8 @@ cgui_window_resize(cgui_window *window, double width, double height)
 
 	size_limits(window, &min_w, &min_h, &max_w, &max_h);
 
-	window->tmp_width   = util_limit(width,  min_w, max_w);
-	window->tmp_height  = util_limit(height, min_h, max_h);
+	window->tmp_width   = util_clamp(width,  min_w, max_w);
+	window->tmp_height  = util_clamp(height, min_h, max_h);
 	window->wait_resize = true;
 
 	x11_window_resize(window->x_id, window->tmp_width, window->tmp_height);
@@ -1653,8 +1653,8 @@ cairo_setup(cgui_window *window, double width, double height)
 		x11_connection(),
 		CONFIG->alt_present ? window->x_buffer : window->x_id,
 		x11_visual(),
-		util_limit(width,  0.0, INT_MAX - 1),
-		util_limit(height, 0.0, INT_MAX - 1));
+		util_clamp(width,  0.0, INT_MAX - 1),
+		util_clamp(height, 0.0, INT_MAX - 1));
 
 	window->drawable = cairo_create(window->surface);
 

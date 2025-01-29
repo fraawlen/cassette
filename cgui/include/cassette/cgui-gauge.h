@@ -54,7 +54,14 @@ CGUI_NONNULL(1);
  *
  */
 void
-cgui_gauge_resize_label(cgui_cell *cell, ssize_t size)
+cgui_gauge_clamp_value(cgui_cell *cell, double lim_1, double lim_2)
+CGUI_NONNULL(1);
+
+/** 
+*
+*/
+void
+cgui_gauge_hide_label(cgui_cell *cell)
 CGUI_NONNULL(1);
 
 /**
@@ -75,28 +82,28 @@ CGUI_NONNULL(1);
  *
  */
 void
+cgui_gauge_set_precision(cgui_cell *cell, int precision)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_gauge_set_units(cgui_cell *cell, const char *units)
+CGUI_NONNULL(1, 2);
+
+/**
+ *
+ */
+void
 cgui_gauge_set_value(cgui_cell *cell, double value)
 CGUI_NONNULL(1);
 
-/**
- *
- */
+/** 
+*
+*/
 void
-cgui_gauge_limit_value(cgui_cell *cell, double lim_1, double lim_2)
-CGUI_NONNULL(1);
-
-/**
- *
- */
-void
-cgui_gauge_style_label(cgui_cell *cell, int precision, const char *units)
-CGUI_NONNULL(1, 3);
-
-/**
- *
- */
-void
-cgui_gauge_style_percent(cgui_cell *cell, int precision)
+cgui_gauge_show_label(cgui_cell *cell)
 CGUI_NONNULL(1);
 
 /************************************************************************************************************/
