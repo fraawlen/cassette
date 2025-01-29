@@ -28,48 +28,19 @@ package Cassette.Rand is
 	-- TYPES ---------------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Container type that keeps track of the LCG (rand48-based) state.
-	--
 	type T is tagged record
 		State : aliased C.unsigned_long;
 	end record;
 
-	-- Numerics.
-	--
 	type Seed_Value is new C.unsigned_long;
 
 	-------------------------------------------------------------------------------------------------
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Gets the next random value bound between lim_1 and lim_2 for the given container.
-	--
-	-- [Params]
-	--
-	-- 	Rand  : Container to interact with
-	-- 	Lim_1 : First bound 
-	-- 	Lim_2 : Second bound
-	--
-	-- [Return]
-	--
-	-- 	Generated random value
-	--
-	function Next (
-		Rand  : in out T;
-		Lim_1 : in Float;
-		Lim_2 : in Float)
-			return Float;
+	function Next (Rand : in out T; Lim_1 : in Float; Lim_2 : in Float) return Float;
 
-	-- Sets the initial value of the container.
-	--
-	-- [Params]
-	--
-	-- 	Rand  : Container to interact with
-	-- 	Value : Initial value to apply
-	--
-	procedure Seed (
-		Rand  : in out T;
-		Value : in Seed_Value);
+	procedure Seed (Rand : in out T; Value : in Seed_Value);
 
 	-------------------------------------------------------------------------------------------------
 	-- IMPORTS -------------------------------------------------------------------------------------- 

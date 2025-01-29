@@ -30,291 +30,63 @@ package Cassette.Ref is
 	-- EXCEPTIONS -----------------------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	-- Exception that gets raised when an impure method or a constructor fails.
-	--
 	E : exception;
 
 	-------------------------------------------------------------------------------------------------
 	-- TYPES ---------------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Opaque reference counter object. It stores arbitrary addresses in an automatically extensible
-	-- array. When an address gets pushed to this object, its reference count gets incremented. A
-	-- saved address only gets removed when its counts reaches 0.
-	--
-	-- Some methods, upon failure, will set an error and raise an exception E. The exact error code
-	-- can be checked with Error(). If any error is set all methods will exit early with default
-	-- return values and no side-effects. It's possible to clear errors with Repair().
-	--
 	type T is tagged limited private;
 
-	-- Numerics.
-	--
 	type Counter is new C.unsigned;
 
 	-------------------------------------------------------------------------------------------------
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	-- Creates a reference counter and deep copy the contents of another reference counter into it.
-	--
-	-- [Params]
-	--
-	-- 	Ref    : Reference counter to copy contents from
-	-- 	Parent : Reference counter to clone
-	--
-	-- [Errors]
-	--
-	--	Error_Invalid : Initialisation failed
-	--
-	procedure Clone (
-		Ref    : out T;
-		Parent : in  T);
+	procedure Clone (Ref : out T; Parent : in  T);
 
-	-- Creates an empty reference counter.
-	--
-	-- [Errors]
-	--
-	--	Error_Invalid : Initialisation failed
-	--
-	procedure Create (
-		Ref : out T);
+	procedure Create (Ref : out T);
 		
-	-- Destroys the reference counter and frees memory.
-	--
-	-- [Params]
-	--
-	-- 	Ref : Reference counter to interact with
-	--
-	procedure Destroy (
-		Ref : in out T);
+	procedure Destroy (Ref : in out T);
 
 	-------------------------------------------------------------------------------------------------
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Clears the contents of a given reference counter. Allocated memory is not freed, use Destroy()
-	-- for that.
-	--
-	-- [Params]
-	--
-	-- 	Ref : Reference counter to interact with
-	--
-	procedure Clear (
-		Ref : in out T);
+	procedure Clear (Ref : in out T);
 
-	-- Preallocates slots for the reference array to avoid triggering multiple automatic reallocs
-	-- when pushing new references. This function has no effect if the requested number of slots is
-	-- smaller than the previously allocated amounts.
-	--
-	-- [Params]
-	--
-	-- 	Ref   : Reference counter to interact with
-	--	Slots : Number of slots
-	--
-	-- [Errors]
-	--
-	-- 	Error_Overflow : The size of the resulting reference array will be > Index'Last
-	-- 	Error_Memory   : Failed memory allocation
-	--
-	procedure Prealloc (
-		Ref   : in out T;
-		Slots : in SIze);
+	procedure Prealloc (Ref : in out T; Slots : in SIze);
 
-	-- Decrements the counter of a reference at the given index. If the counter reaches 0, the
-	-- reference gets removed from the reference array. This function has no effects if I is out of
-	-- bounds.
-	--
-	-- [Params]
-	--
-	-- 	Ref : Reference counter to interact with
-	-- 	I   : Index within the array
-	--
-	procedure Pull (
-		Ref : in out T;
-		I   : in Index);
+	procedure Pull (Ref : in out T; I : in Index);
 
-	-- Searches for a reference with the matching address. If found, it's counter gets decremented.
-	-- If the counter then reached 0, the reference gets removed from the reference array.
-	--
-	-- [Params]
-	--
-	-- 	Ref  : Reference counter to interact with
-	-- 	Addr : Address
-	--
-	procedure Pull (
-		Ref  : in out T;
-		Addr : in System.Address);
+	procedure Pull (Ref : in out T; Addr : in System.Address);
 
-	-- Removes a reference at the given index regardless of its count. This function has no effects
-	-- if I is out of bounds.
-	--
-	-- [Params]
-	--
-	-- 	Ref : Reference counter to interact with
-	-- 	I   : Index within the array
-	--
-	procedure Purge (
-		Ref : in out T;
-		I   : in Index);
+	procedure Purge (Ref : in out T; I : in Index);
 
-	-- Searches for a reference with the matching address. If found, the reference gets removed
-	-- regardless of its count.
-	--
-	-- [Params]
-	--
-	-- 	Ref  : Reference counter to interact with
-	-- 	Addr : Address
-	--
-	procedure Purge (
-		Ref  : in out T;
-		Addr : in System.Address);
+	procedure Purge (Ref : in out T; Addr : in System.Address);
 
-	-- Searches for a reference with the matching address. If found, its counter gets incremented. If
-	-- not, the reference gets added at the end of the reference array with its count = 1. The array
-	-- get automatically extended as needed.
-	--
-	-- [Params]
-	--
-	-- 	Ref  : Reference counter to interact with
-	-- 	Addr : Address
-	--
-	-- [Errors]
-	--
-	-- 	Error_Overflow : The size of the resulting reference array will be > Index'Last
-	-- 	Error_Memory   : Failed memory allocation
-	--
-	procedure Push (
-		Ref  : in out T;
-		Addr : in System.Address);
+	procedure Push (Ref : in out T; Addr : in System.Address);
 
-	-- Clears errors and puts the reference counter back into an usable state. The only unrecoverable
-	-- error is Error_Invalid.
-	--
-	-- [Params]
-	--
-	-- 	Ref : Reference counter to interact with
-	--
-	procedure Repair (
-		Ref : in out T);
+	procedure Repair (Ref : in out T);
 
-	-- Sets a new default address value to return when Address() cannot return a proper value.
-	--
-	-- [Params]
-	--
-	-- 	Ref  : Reference counter to interact with
-	-- 	Addr : Address
-	--
-	procedure Set_Default_Address (
-		Ref  : in out T;
-		Addr : in System.Address);
+	procedure Set_Default_Address (Ref : in out T; Addr : in System.Address);
 
 	-------------------------------------------------------------------------------------------------
 	-- PURE METHODS --------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Gets the reference's address at the given index. 
-	--
-	-- [Params]
-	--
-	-- 	Ref : Reference counter to interact with
-	-- 	I   : Index within the array
-	--
-	-- [Return]
-	--
-	-- 	Arbitrary address. If the object has errored, or I is out of bounds, then the
-	-- 	default Address value set with Set_Default_Address or System.Null_Address (if it was
-	-- 	not set) is always returned.
-	--
-	function Address (
-		Ref : in T;
-		I   : in Index)
-			return System.Address;
+	function Address (Ref : in T; I : in Index) return System.Address;
 
-	-- Gets the reference's count at the given index.
-	--
-	-- [Params]
-	--
-	-- 	Ref : Reference counter to interact with
-	-- 	I   : Index within the array
-	--
-	-- [Return]
-	--
-	-- 	Reference count. If the reference counter has errored, or if I is out of bounds, then
-	--	0 is always returned.
-	--
-	function Count (
-		Ref : in T;
-		I   : in Index)
-			return Counter;
+	function Count (Ref : in T; I : in Index) return Counter;
 
-	-- Gets the error state.
-	--
-	-- [Params]
-	--
-	-- 	Ref : Reference counter to interact with
-	--
-	-- [Return]
-	--
-	-- 	Error value.
-	--
-	function Error (
-		Ref : in T)
-			return Error_Code;
+	function Error (Ref : in T) return Error_Code;
 
-	-- Tries to find a reference with the matching address. If found, the reference's count is
-	-- returned (>0).
-	--
-	-- [Params]
-	--
-	-- 	Ref  : Reference counter to interact with
-	-- 	Addr : Address to search
-	--
-	-- [Return]
-	--
-	--	Reference count of a matching address. If the object has errored, or the address was
-	-- 	not found, then always return 0.
-	--
-	function Find (
-		Ref  : in T;
-		Addr : in System.Address)
-			return Boolean;
+	function Find (Ref : in T; Addr : in System.Address) return Boolean;
 
-	-- Tries to find a reference with the matching address. If found, the reference's count is
-	-- returned (>0), and the array index  of the found input will be written into the
-	-- parameter I.
-	--
-	-- [Params]
-	--
-	-- 	Ref  : Reference counter to interact with
-	-- 	Addr : Address to search
-	-- 	I    : Index of the found reference
-	--
-	-- [Return]
-	--
-	--	Reference count of a matching address. If the object has errored, or the address was
-	-- 	not found, then always return 0.
-	--
-	function Find (
-		Ref  : in T;
-		Addr : in System.Address;
-		I    : out Index)
-			return Boolean;
+	function Find (Ref : in T; Addr : in System.Address; I : out Index) return Boolean;
 
-	-- Gets the total number of different tracked references.
-	--
-	-- [Params]
-	--
-	-- 	Ref : Reference counter to interact with
-	--
-	-- [Return]
-	--
-	-- 	Number of different references. If the reference counter has errored, then 0 is
-	--	always returned.
-	--
-	function Length (
-		Ref : in T)
-			return Size;
+	function Length (Ref : in T) return Size;
 
 	-------------------------------------------------------------------------------------------------
 	-- PRIVATE -------------------------------------------------------------------------------------- 

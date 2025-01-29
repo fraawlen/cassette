@@ -31,358 +31,69 @@ package Cassette.Config is
 	-- EXCEPTIONS -----------------------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	-- Exception that gets raised when an impure method or a constructor fails.
-	--
 	E : exception;
 
 	-------------------------------------------------------------------------------------------------
 	-- TYPES ----------------------------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	-- Opaque config object that holds all settings like sources and parameters as well as resolved
-	-- parsed resources. A decision was made to use a parser that saves all resources instead of
-	-- setting target values as the resources get read and resolved so that on a source file is read,
-	-- a configuration object can be shared and re-used in software plugins.
-	--
-	-- Some methods, upon failure, will set an error and raise an exception E. The exact error code
-	-- can be checked with Error(). If any error is set all methods will exit early with default
-	-- return values and no side-effects. It's possible to clear errors with Repair().
-	--
 	type T is tagged limited private;
 
 	-------------------------------------------------------------------------------------------------
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	-- Creates a config and deep copy the contents of another input tracker into it.
-	--
-	-- [Params]
-	--
-	-- 	Cfg    : Config to interact with
-	-- 	Parent : Config to clone
-	--
-	-- [Errors]
-	--
-	--	Error_Invalid : Initialisation failed
-	--
-	procedure Clone (
-		Cfg    : out T;
-		Parent : in  T);
+	procedure Clone (Cfg : out T; Parent : in  T);
 
-	-- Create an empty input config.
-	--
-	-- [Params]
-	--
-	-- 	Cfg : Config to interact with
-	--
-	-- [Errors]
-	--
-	--	Error_Invalid : Initialisation failed
-	--
-	procedure Create (
-		Cfg : out T);
+	procedure Create (Cfg : out T);
 
-	-- Destroys the config and frees memory.
-	--
-	-- [Params]
-	--
-	-- 	Cfg : Input tracker to interact with
-	--
-	procedure Destroy (
-		Cfg : in out T);
+	procedure Destroy (Cfg : in out T);
 
 	-------------------------------------------------------------------------------------------------
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Removes all added parameters.
-	--
-	-- [Params]
-	--
-	-- 	Cfg : Config to interact with
-	--
-	procedure Clear_Params (
-		Cfg : in out T);
+	procedure Clear_Params (Cfg : in out T);
 
-	-- Removes all parsed resources.
-	--
-	-- [Params]
-	--
-	-- 	Cfg : Config to interact with
-	--
-	procedure Clear_Resources (
-		Cfg : in out T);
+	procedure Clear_Resources (Cfg : in out T);
 
-	-- Removes all added sources.
-	--
-	-- [Params]
-	--
-	-- 	Cfg : Config to interact with
-	--
-	procedure Clear_Sources (
-		Cfg : in out T);
+	procedure Clear_Sources (Cfg : in out T);
 
-	-- Looks-up a resource by its namespace and property name. If found, its reference is kept around
-	-- and the resource values will become accessible through Iterate() and Resource(). To get the
-	-- nunmber of values a resource has, use Resouce_Length().
-	--
-	-- [Example]
-	--
-	--	Conf.Fetch ("something", "something");
-	--	while Conf.Iterate
-	--	loop
-	--		Put_Line (Conf.Resource);
-	--	end loop;
-	--
-	-- [Params]
-	--
-	-- 	Cfg       : Config instance to interact with
-	-- 	Namespace : Resource namespace
-	-- 	Property  : Resource property name
-	--
-	procedure Fetch (
-		Cfg       : in out T;
-		Namespace : in String;
-		Property  : in String);
+	procedure Fetch (Cfg : in out T; Namespace : in String; Property : in String);
 
-	-- Increments an internal iterator offset and makes available the next value associated to a
-	-- resource fetched with Fetch(). Said value can be accessed with Resource(). This function exits
-	-- early and returns False if the iterator cannot be incremented because it has already reached
-	-- the last resource value.
-	--
-	-- [Params]
-	--
-	-- 	Cfg : Config instance to interact with
-	--
-	-- [Return]
-	--
-	-- 	True is the next value could be picked. If the config has errored, then False will always
-	-- 	be returned.
-	--
-	function Iterate (
-		Cfg : in out T)
-			return Boolean;
+	function  Iterate (Cfg : in out T) return Boolean;
 
-	-- Reads the first source file that can be opened, parses it, and stores the resolved resources.
-	-- Every time this function is called the previously parsed resources will be cleared first
-	-- before reading the source. This function has no effects if no source file can be read. It
-	-- should be noted that not being able to open any source files is not considered to be an error
-	-- by default. If such a check is needed, use Can_Open_Sources().
-	--
-	-- [Params]
-	--
-	-- 	Cfg : Config instance to interact with
-	--
-	-- [Errors]
-	--
-	-- 	Error_Overflow : The size of an internal components was about to overflow
-	-- 	Error_Memory   : Failed memory allocation
-	--
-	procedure Load (
-		Cfg : in out T);
+	procedure Load (Cfg : in out T);
 
-	-- Similar to Load() except that no source file is opened. Instead, the resources will be parsed
-	-- from the given buffer. The only different behavior from standard parsing is the interpretation
-	-- of relative paths when an INCLUDE sequence is processed as these will be ignored if they get
-	-- declared in the given buffer.
-	--
-	-- [Params]
-	--
-	-- 	Cfg    : Config instance to interact with
-	--	Buffer : String to use as source
-	--
-	-- [Errors]
-	--
-	-- 	Error_Overflow : The size of an internal components was about to overflow
-	-- 	Error_Memory   : Failed memory allocation
-	--
-	procedure Load_Internal (
-		Cfg    : in out T;
-		Buffer : in String);
+	procedure Load_Internal (Cfg : in out T; Buffer : in String);
 
-	-- Adds an floating value as a config parameter. This parameter's value can then be accessed from
-	-- a config source file. Unlike user-defined variables, only one value per parameter can be
-	-- defined.
-	--
-	-- [Params]
-	--
-	-- 	Cfg   : Config instance to interact with
-	-- 	Name  : Name of the parameter to reference in the source file
-	--	Value : Floating value
-	--
-	-- [Errors]
-	--
-	-- 	Error_Overflow : The size of an internal components was about to overflow
-	-- 	Error_Memory   : Failed memory allocation
-	--
-	procedure Push_Param (
-		Cfg   : in out T;
-		Name  : in String;
-		Value : in Float);
+	procedure Push_Param (Cfg : in out T; Name : in String; Value : in Float);
 
-	-- Adds an integer as a config parameter. This parameter's value can then be accessed from a
-	-- config source file. Unlike user-defined variables, only one value per parameter can be
-	-- defined.
-	--
-	-- [Params]
-	--
-	-- 	Cfg   : Config instance to interact with
-	-- 	Name  : Name of the parameter to reference in the source file
-	--	Value : Integer value
-	--
-	-- [Errors]
-	--
-	-- 	Error_Overflow : The size of an internal components was about to overflow
-	-- 	Error_Memory   : Failed memory allocation
-	--
-	procedure Push_Param (
-		Cfg   : in out T;
-		Name  : in String;
-		Value : in Integer);
+	procedure Push_Param (Cfg : in out T; Name : in String; Value : in Integer);
 
-	-- Adds a string as a config parameter. This parameter's value can then be accessed from a config
-	-- source file. Unlike user-defined variables, only one value per parameter can be defined.
-	--
-	-- [Params]
-	--
-	-- 	Cfg   : Config instance to interact with
-	-- 	Name  : Name of the parameter to reference in the source file
-	--	Value : String value
-	--
-	-- [Errors]
-	--
-	-- 	Error_Overflow : The size of an internal components was about to overflow
-	-- 	Error_Memory   : Failed memory allocation
-	--
-	procedure Push_Param (
-		Cfg   : in out T;
-		Name  : in String;
-		Value : in String);
+	procedure Push_Param (Cfg : in out T; Name : in String; Value : in String);
 
-	-- Adds a file as a config source. Only the first source that can be opened will be parsed. The
-	-- remaining sources act as fallback.
-	--
-	-- [Params]
-	--
-	-- 	Cfg      : Config instance to interact with
-	-- 	Filename : Full path to the source file
-	--
-	-- [Errors]
-	--
-	-- 	Error_Overflow : The size of an internal components was about to overflow
-	-- 	Error_Memory   : Failed memory allocation
-	--
-	procedure Push_Source (
-		Cfg      : in out T;
-		Filename : in String);
+	procedure Push_Source (Cfg : in out T; Filename : in String);
 
-	-- Clears errors and puts the config back into an usable state. The only unrecoverable error is
-	-- Error_Invalid.
-	--
-	-- [Params]
-	--
-	-- 	Cfg : Config to interact with
-	--
-	procedure Repair (
-		Cfg : in out T);
+	procedure Repair (Cfg : in out T);
 
-	-- Enables the restricted parsing mode.
-	--
-	-- [Params]
-	--
-	-- 	Cfg : Config to interact with
-	--
-	procedure Restrict (
-		Cfg : in out T);
+	procedure Restrict (Cfg : in out T);
 
-	-- Disables the restricted parsing mode.
-	--
-	-- [Params]
-	--
-	-- 	Cfg : Config to interact with
-	--
-	procedure Unrestrict (
-		Cfg : in out T);
+	procedure Unrestrict (Cfg : in out T);
 
 	-------------------------------------------------------------------------------------------------
 	-- PURE METHODS --------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Checks if any added source file can be opened up and read. 
-	--
-	-- [Params]
-	--
-	-- 	Cfg : Config to interact with
-	--
-	-- [Return]
-	--
-	-- 	Source availability. If the config has errored, False will alway be returned.
-	--
-	function Can_Open_Sources (
-		Cfg : in T)
-			return Boolean;
+	function Can_Open_Sources (Cfg : in T) return Boolean;
 
-	-- Checks if any added source file can be opened up and read. This variant will write into the
-	-- Index the rank of the opened source.
-	--
-	-- [Params]
-	--
-	-- 	Cfg  : Config to interact with
-	-- 	Rank : Source rank
-	--
-	-- [Return]
-	--
-	-- 	Source availability. If the config has errored, False will alway be returned.
-	--
-	function Can_Open_Sources (
-		Cfg  : in T;
-		Rank : out Index)
-			return Boolean;
+	function Can_Open_Sources (Cfg : in T; Rank : out Index) return Boolean;
 
-	-- Gets the error state.
-	--
-	-- [Params]
-	--
-	-- 	Cfg : Config to interact with
-	--
-	-- [Return]
-	--
-	-- 	Error code.
-	--
-	function Error (
-		Cfg : in T)
-			return Error_Code;
+	function Error (Cfg : in T) return Error_Code;
 
-	-- Gets the resource value an internal iterator is pointing at. It's the responsibility of the
-	-- caller to convert it into the required type.
-	--
-	-- [Params]
-	--
-	--	Cfg : Config instance to interact with
-	--
-	-- [Return]
-	--
-	-- 	Resource value as a String. If no resource was pre-fetched, the iterator hasn't been
-	--	incremented once before this function gets called, or if the config has errored, an
-	-- 	empty string will then be returned.
-	--
-	function Resource (
-		Cfg : in T)
-			Return String;
+	function Resource (Cfg : in T) Return String;
 
-	-- Gets the number of values a pre-fetched resource has.
-	--
-	-- [Params]
-	--
-	-- 	Cfg : Config to interact with
-	--
-	-- [Return]
-	--
-	-- 	Number of values. If the config has errored, 0 will always be returned.
-	--
-	function Resource_Length (
-		Cfg : in T)
-			return Size;
+	function Resource_Length (Cfg : in T) return Size;
 
 	-------------------------------------------------------------------------------------------------
 	-- PRIVATE -------------------------------------------------------------------------------------- 

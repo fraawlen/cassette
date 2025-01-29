@@ -31,324 +31,67 @@ package Cassette.Book is
 	-- EXCEPTIONS -----------------------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	-- Exception that gets raised when an impure method or a constructor fails.
-	--
 	E : exception;
 
 	-------------------------------------------------------------------------------------------------
 	-- TYPES ---------------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Opaque book object. It stores an automatically extensible array of chars. Chars are grouped
-	-- into NUL terminated words, and words can also be grouped. The book behaves like a stack, words
-	-- can only be added or erased from the end of the book.
-	--
-	-- Some methods, upon failure, will set an error and raise an exception E. The exact error code
-	-- can be checked with Error(). If any error is set all methods will exit early with default
-	-- return values and no side-effects. It's possible to clear errors with Repair().
-	--
 	type T is tagged limited private;
 
 	-------------------------------------------------------------------------------------------------
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	-- Creates a book and deep copy the contents of another book into it.
-	--
-	-- [Params]
-	--
-	-- 	Book   : Book to interact with
-	-- 	Parent : Book to clone
-	--
-	-- [Errors]
-	--
-	--	Error_Invalid : Initialisation failed
-	--
-	procedure Clone (
-		Book   : out T;
-		Parent : in  T);
+	procedure Clone (Book : out T; Parent : in  T);
 
-	-- Create an empty book.
-	--
-	-- [Params]
-	--
-	-- 	Book : Book to interact with
-	--
-	-- [Errors]
-	--
-	--	Error_Invalid : Initialisation failed
-	--
-	procedure Create (
-		Book : out T);
+	procedure Create (Book : out T);
 
-	-- Destroys the book and frees memory.
-	--
-	-- [Params]
-	--
-	-- 	Book : Book to interact with
-	--
-	procedure Destroy (
-		Book : in out T);
+	procedure Destroy (Book : in out T);
 
 	-------------------------------------------------------------------------------------------------
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Clears the contents of a given book. Allocated memory is not freed, use Destroy() for that.
-	--
-	-- [Params]
-	--
-	-- 	Book : Book to interact with
-	--
-	procedure Clear (
-		Book : in out T);
+	procedure Clear (Book : in out T);
 
-	-- Deletes the last group of words. Allocated memory is not freed, use Destroy() for that.
-	-- 
-	-- [Params]
-	--
-	-- 	Book : Book to interact with
-	--
-	procedure Pop_Group (	
-		Book : in out T);
+	procedure Pop_Group (Book : in out T);
 
-	-- Deletes the last word. Allocated memory is not freed, use Destroy() for that.
-	-- 
-	-- [Params]
-	--
-	-- 	Book : Book to interact with
-	--
-	procedure Pop_Word (
-		Book : in out T);
+	procedure Pop_Word (Book : in out T);
 
-	-- Preallocates a set number of characters, words, references, and groups to avoid triggering
-	-- multiple automatic reallocs when adding data to the book. This procedure has no effect if the
-	-- requested numbers are smaller than the previously allocated amounts.
-	--
-	-- [Params]
-	--
-	-- 	Book          : Book to interact with
-	-- 	Bytes_Number  : Total number of bytes across all words
-	-- 	Words_Number  : Total number of words across all groups
-	-- 	Groups_Number : Total number of groups
-	--
-	-- [Errors]
-	--
-	-- 	Error_Overflow : The size of the resulting book will be > Size'Last
-	-- 	Error_Memory   : Failed memory allocation
-	--
-	procedure Prealloc (
-		Book   : in out T;
-		Bytes  : in Size;
-		Words  : in Size;
-		Groups : in Size);
+	procedure Prealloc (Book : in out T; Bytes : in Size; Words : in Size; Groups : in Size);
 
-	-- After this function is called, the next word that is added with Write() will be part of a new
-	-- group.
-	--
-	-- [Params]
-	--
-	-- 	Book : Book to interact with
-	--
-	procedure Prepare_New_Group (
-		Book : in out T);
+	procedure Prepare_New_Group (Book : in out T);
 
-	-- Clears errors and puts the book back into an usable state. The only unrecoverable error is
-	-- Error_Invalid.
-	--
-	-- [Params]
-	--
-	-- 	Book : Book to interact with
-	--
-	procedure Repair (
-		Book : in out T);
+	procedure Repair (Book : in out T);
 
-	-- Tries to rewrite a word at the given index. If the new word is longer than the original word,
-	-- this function exits without modifying anything.
-	--
-	-- [Params]
-	-- 
-	--	Book       : Book to interact with
-	-- 	Word_Index : Word index in book across all groups
-	-- 	Str        : String
-	--
-	-- [Return]
-	-- 
-	-- 	True if the word was rewriten, False otherwhise. If the book has errored, or if the
-	--    given Word index is out of bounds, then False is always returned.
-	--
-	function Rewrite (
-		Book : in out T;
-		Word : in Index;
-		Str  : in String)
-			return Boolean;
+	function  Rewrite (Book : in out T; Word : in Index; Str : in String) return Boolean;
 
-	-- Reverts the effects of Prepare_New_Group().
-	--
-	-- [Params]
-	--
-	-- 	Book : Book to interact with
-	--
-	procedure Undo_New_Group (
-		Book : in out T);
+	procedure Undo_New_Group (Book : in out T);
 
-	-- Appends a new word to the book and increments the book word count (and possibly group count)
-	-- by 1 as well as the character count by the string's length (NUL terminator included). The book
-	-- will automatically extend its allocated memory to accommodate the new word.
-	-- 
-	-- [Params]
-	--
-	-- 	Book : Book to interact with
-	-- 	Str  : String
-	--
-	-- [Errors]
-	--
-	-- 	Error_Overflow : The size of the resulting book will be > Size'Last
-	-- 	Error_Memory   : Failed memory allocation
-	--
-	procedure Write (
-		Book : in out T;
-		Str  : in String);
+	procedure Write (Book : in out T; Str : in String);
 
-	-- Similar to Clear() but all of the allocated memory is also zeroed.
-	--
-	-- 	Book : Book to interact with
-	--
-	procedure Zero (
-		Book : in out T);
+	procedure Zero (Book : in out T);
 
 	-------------------------------------------------------------------------------------------------
 	-- PURE METHODS --------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Gets the error state.
-	--
-	-- [Params]
-	--
-	-- 	Book : Book to interact with
-	-- 
-	-- [Return]
-	--
-	-- 	Error code.
-	--  
-	function Error (
-		Book : in T)
-			return Error_Code;
+	function Error (Book : in T) return Error_Code;
 	
-	-- Gets a group's word count.
-	-- 
-	-- [Params]
-	-- 
-	-- 	Book  : Book to interact with
-	-- 	Group : Group index within book
-	--
-	-- [Return]
-	-- 
-	-- 	Number of words. If the book has errored, or if the given Group index is out of
-	--	bounds, then 0 is always returned.
-	--
-	function Group_Length (
-		Book  : in T;
-		Group : in Index)
-			return Size;
+	function Group_Length (Book : in T; Group : in Index) return Size;
 
-	-- Gets the total number of groups.
-	-- 
-	-- [Params]
-	-- 
-	-- 	Book : Book to interact with
-	--
-	-- [Return]
-	-- 
-	-- 	Number of groups. If the book has errored, then 0 is always returned.
-	-- 
-	function Groups_Number (
-		Book : in T)
-			return Size;
+	function Groups_Number (Book : in T) return Size;
 
-	-- Gets the total length of the book (all NUL terminators included).
-	--
-	-- [Params]
-	-- 
-	-- 	Book : Book to interact with
-	--
-	-- [Return]
-	-- 
-	-- Number of bytes. If the book has errored, then 0 is always returned.
-	-- 
-	function Length (
-		Book : in T)
-			return Size;
+	function Length (Book : in T) return Size;
 
-	-- Gets a word.
-	-- 
-	-- [Params]
-	-- 
-	--	Book       : Book to interact with
-	-- 	Word_Index : Word index in book across all groups
-	--
-	-- [Return]
-	-- 
-	-- 	String. If the book has errored, or if the given Word index is out of bounds, then an
-	--	empty string is always returned.
-	-- 
-	function Word (
-		Book : in T;
-		Word : in Index)
-			return String;
+	function Word (Book : in T; Word : in Index) return String;
 
-	-- Gets a word from a specific group.
-	-- 
-	-- [Params]
-	-- 
-	-- 	Book  : Book to interact with
-	-- 	Group : Group index within book
-	-- 	Word  : Word index within group
-	--
-	-- [Return]
-	-- 
-	-- 	String. If the book has errored, or if the given Group or Word indexes are out of
-	--	bounds, then an empty string is always returned.
-	-- 
-	function Word_In_Group (
-		Book  : in T;
-		Group : in Index;
-		Word  : in Index)
-			return String;
+	function Word_In_Group (Book : in T; Group : in Index; Word : in Index) return String;
 
-	-- Converts a group + local word indexes to a book-wide word index. 
-	--
-	-- [Params]
-	-- 
-	-- 	Book  : Book to interact with
-	-- 	Group : Group index within book
-	-- 	Word  : Word index within group
-	-- 
-	-- [Return]
-	-- 
-	-- 	Word index. If the book has errored, or if the given Group or Word indexes are out of
-	--	bounds, then 0 is always returned.
-	-- 
-	function Word_Index (
-		Book  : in T;
-		Group : in Index;
-		Word  : in Index)
-			return Index;
+	function Word_Index (Book : in T; Group : in Index; Word : in Index) return Index;
 
-	-- Gets the total number of words.
-	-- 
-	-- [Params]
-	-- 
-	-- 	Book : Book to interact with
-	--
-	-- [Return]
-	-- 
-	-- 	Total number of words across all groups. If the book has errored, then 0 is always
-	-- 	returned.
-	-- 
-	function Words_Number (
-		Book : in T)
-			return Size;
+	function Words_Number (Book : in T) return Size;
 
 	-------------------------------------------------------------------------------------------------
 	-- PRIVATE -------------------------------------------------------------------------------------- 

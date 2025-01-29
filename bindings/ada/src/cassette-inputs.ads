@@ -34,26 +34,14 @@ package Cassette.Inputs is
 	-- EXCEPTIONS -----------------------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	-- Exception that gets raised when an impure method or a constructor fails.
-	--
 	E : exception;
 
 	-------------------------------------------------------------------------------------------------
 	-- TYPES ---------------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Opaque input tracker object. An input tracker stores inputs such as screen touches, key or
-	-- button presses in the order they get added. The array that holds them is fixed size. If that
-	-- array is full, new inputs get ignored.
-	--
-	-- Some methods, upon failure, will set an error and raise an exception E. The exact error code
-	-- can be checked with Error(). If any error is set all methods will exit early with default
-	-- return values and no side-effects. It's possible to clear errors with Repair().
-	--
 	type T is tagged limited private;
 
-	-- Numerics.
-	--
 	type Identifier is new C.unsigned;
 	type Position   is new Integer_16;
 
@@ -61,273 +49,49 @@ package Cassette.Inputs is
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	-- Creates an input tracker and deep copy the contents of another input tracker into it.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	-- 	Parent : Input tracker to clone
-	--
-	-- [Errors]
-	--
-	--	Error_Invalid : Initialisation failed
-	--
-	procedure Clone (
-		Inputs : out T;
-		Parent : in  T);
+	procedure Clone (Inputs : out T; Parent : in  T);
 
-	-- Create an empty input tracker.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	-- 	Length : Maximum number of inputs to track at a time. 0 is an illegal value.
-	--
-	-- [Errors]
-	--
-	--	Error_Invalid : Initialisation failed
-	--
-	procedure Create (
-		Inputs : out T;
-		Length : in  Size)
-			with Pre => Length > 0;
+	procedure Create (Inputs : out T; Length : in  Size) with Pre => Length > 0;
 
-	-- Destroys the input tracker and frees memory.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	--
-	procedure Destroy (
-		Inputs : in out T);
+	procedure Destroy (Inputs : in out T);
 
 	-------------------------------------------------------------------------------------------------
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Clears the contents of a given input tracker. Allocated memory is not freed, use Destroy() for
-	-- that.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	--
-	procedure Clear (
-		Inputs : in out T);
+	procedure Clear (Inputs : in out T);
 
-	-- If present, untracks an input with the matching id.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	-- 	ID   : Identifier to match
-	--  
-	procedure Pull_ID (
-		Inputs : in out T;
-		ID     : in Identifier);
+	procedure Pull_ID (Inputs : in out T; ID : in Identifier);
 
-	-- Untracks an input at the given index. This procedure has no effects if index is out of bounds.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	-- 	I    : Index within the array
-	--  
-	procedure Pull_Index (
-		Inputs : in out T;
-		I      : in Index);
+	procedure Pull_Index (Inputs : in out T; I : in Index);
 
-	-- Adds in input at the end of the input tracking array. If an input with a matching id already
-	-- exists within the array, it is pushed to the end of the array and its Addr, X and Y details
-	-- are updated. This procedure has no effect if the array is full.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	-- 	ID     : Identifier
-	-- 	X      : Optional, X coordinate
-	-- 	Y      : Optional, Y coordinate
-	-- 	Addr   : Optional, Arbitrary address to something related to the input
-	--
-	procedure Push (
-		Inputs : in out T;
-		ID     : in Identifier;
-		X      : in Position       := 0;
-		Y      : in Position       := 0;
-		Addr   : in System.Address := System.Null_Address);
+	procedure Push (Inputs : in out T; ID : in Identifier; X : in Position := 0; Y : in Position := 0; Addr : in System.Address := System.Null_Address);
 
-	-- Clears errors and puts the input tracker back into an usable state. The only unrecoverable
-	-- error is Error_Invalid.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	--
-	procedure Repair (
-		Inputs : in out T);
+	procedure Repair (Inputs : in out T);
 
-	-- Updates the size of input tracker. If the requested size is smaller than the current load,
-	-- tailing inputs will be pulled.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	-- 	Length : Maximum number of inputs to track at a time
-	--
-	-- [Errors]
-	--
-	-- 	Error_Overflow : The size of the resulting input tracking array will be > Size'Last
-	-- 	Error_Memory   : Failed memory allocation
-	--	Error_Param    : Illegal length = 0 has been given
-	--
-	procedure Resize (
-		Inputs : in out T;
-		Length : in Size)
-			with Pre => Length > 0;
+	procedure Resize (Inputs : in out T; Length : in Size) with Pre => Length > 0;
 
-	-- Sets a new default address value to return when Address() cannot return a proper value.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	-- 	Addr   : Address
-	--
-	procedure Set_Default_Address (
-		Inputs : in out T;
-		Addr   : in System.Address);
+	procedure Set_Default_Address ( Inputs : in out T; Addr : in System.Address);
 
 	-------------------------------------------------------------------------------------------------
 	-- PURE METHODS --------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Gets the input's associated address at the given index.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	-- 	I      : Index within the array
-	--
-	-- [Return]
-	--
-	-- 	Arbitrary address. If the object has errored, or I is out of bounds, then the
-	-- 	default Address value set with Set_Default_Address or System.Null_Address (if it was
-	-- 	not set) is always returned.
-	--  
-	function Address (
-		Inputs : in T;
-		I      : in Index)
-			return System.Address;
+	function Address (Inputs : in T; I : in Index) return System.Address;
 
-	-- Gets the error state.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	-- 
-	-- [Return]
-	--
-	-- 	Error code.
-	--  
-	function Error (
-		Inputs : in T)
-			return Error_Code;
+	function Error (Inputs : in T) return Error_Code;
 
-	-- Tries to find an input with the matching id. If found, True is returned.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	-- 	ID     : Identifier to match
-	--
-	-- [Return]
-	--
-	--	ID match. If the object has errored, then always return False.
-	--
-	function Find (
-		Inputs : in T;
-		ID     : in Identifier)
-			return Boolean;
+	function Find (Inputs : in T; ID : in Identifier) return Boolean;
 	
-	-- Tries to find an input with the matching id. If found, True is returned, and the array index 
-	-- of the found input will be written into the parameter I.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	-- 	ID     : Identifier to match
-	-- 	I      : Index of the found input
-	--
-	-- [Return]
-	--
-	--	ID match. If the object has errored, then always return False.
-	--  
-	function Find (
-		Inputs : in  T;
-		ID     : in  Identifier;
-		I      : out Index)
-			return Boolean;
+	function Find (Inputs : in  T; ID : in  Identifier; I : out Index) return Boolean;
 
-	-- Gets the input's ID at the given index.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	-- 	I      : Index within the array
-	--
-	-- [Return]
-	--
-	--	Identifier. If the object has errored, or I is out of bounds, then always return 0.
-	--  
-	function ID (
-		Inputs : in T;
-		I      : in Index)
-			return Identifier;
+	function ID (Inputs : in T; I : in Index) return Identifier;
 
-	-- Gets the total number of different tracked inputs.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	--
-	-- [Return]
-	--
-	--	Number of tracked inputs. If the object has errored, then always return 0.
-	--
-	function Load (
-		Inputs : in T)
-			return Size;
+	function Load (Inputs : in T) return Size;
 
-	-- Gets the input's X coordinate at the given index.
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	-- 	I      : Index within the array
-	--
-	-- [Return]
-	--
-	--	X Coordinate. If the object has errored, or I is out of bounds, then always return 0.
-	--  
-	function X (
-		Inputs : in T;
-		I      : in Index)
-			return Position;
+	function X (Inputs : in T; I : in Index) return Position;
 
-	-- Gets the input's Y coordinate at the given index. 
-	--
-	-- [Params]
-	--
-	-- 	Inputs : Input tracker to interact with
-	-- 	I      : Index within the array
-	--
-	-- [Return]
-	--
-	--	Y Coordinate. If the object has errored, or I is out of bounds, then always return 0.
-	--  
-	function Y (
-		Inputs : in T;
-		I      : in Index)
-			return Position;
+	function Y (Inputs : in T; I : in Index) return Position;
 
 	-------------------------------------------------------------------------------------------------
 	-- PRIVATE -------------------------------------------------------------------------------------- 

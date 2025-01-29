@@ -31,209 +31,61 @@ package Cassette.Seg is
 	-- TYPES ---------------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Representation of a 1-dimension segment defined by a length and an origin. No overflow or
-	-- underflow can occur and the following equation is guaranteed to be true:
-	-- Min <= Origin + Length <= Max.
-	--
 	type T is tagged private;
 
 	-------------------------------------------------------------------------------------------------
 	-- PRESETS --------------------------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	-- Creates a segment with limits set between -(2 ** 63/31/15/7) and (2 ** 63/31/15/7 - 1).
-	--
-	-- [Return]
-	--
-	--	Segment.
-	--
 	function I_64 return T;
+
 	function I_32 return T;
+
 	function I_16 return T;
+
 	function I_8  return T;
 
-	-- Creates a segment with limits set between 0 and (2 ** 63/31/15/7 - 1).
-	--
-	-- [Return]
-	--
-	--	Segment.
-	--
 	function U_64 return T;
+
 	function U_32 return T;
+
 	function U_16 return T;
+
 	function U_8  return T;
 
 	-------------------------------------------------------------------------------------------------
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Rechecks and corrects a segment so that its parameters respect this equation :
-	-- Min <= Origin + Length <= Max.
-	--
-	-- [Params]
-	--
-	-- 	Seg : Segment to interact with
-	--
-	procedure Bind (
-		Seg : in out T);
+	procedure Bind (Seg : in out T);
 
-	-- Adds a value to the segment's length.
-	--
-	-- [Params]
-	--
-	-- 	Seg    : Segment to interact with
-	--	Length : Distance value
-	--  
-	procedure Grow (
-		Seg    : in out T;
-		Length : in Integer_64);
+	procedure Grow (Seg : in out T; Length : in Integer_64);
 
-	-- Sets new limits. The order of Lim_1 or Lim_2 does not matter. If necessary, origin and length
-	-- values will also be updated to respect the new limits.
-	--
-	-- [Params]
-	--
-	-- 	Seg   : Segment to interact with
-	-- 	Lim_1 : First bound
-	-- 	Lim_2 : Second bound
-	--
-	procedure Limit (
-		Seg   : in out T;
-		Lim_1 : Integer_64;
-		Lim_2 : Integer_64);
+	procedure Limit (Seg : in out T; Lim_1 : Integer_64; Lim_2 : Integer_64);
 
-	-- Sets a new origin. If necessary, the length will also be udpated to respect the limits.
-	--
-	-- [Params]
-	--
-	-- 	Seg    : Segment to interact with
-	-- 	Origin : Position value
-	--
-	procedure Move (
-		Seg    : in out T;
-		Origin : in Integer_64);
+	procedure Move (Seg : in out T; Origin : in Integer_64);
 
-	-- Add a value to the segment's origin. If necessary, the length will also be udpated to respect
-	-- the limits.
-	--
-	-- [Params]
-	--
-	-- 	Seg    : Segment to interact with
-	-- 	Length : Distance value
-	--
-	procedure Offset (
-		Seg    : in out T;
-		Length : in Integer_64);
+	procedure Offset (Seg : in out T; Length : in Integer_64);
 
-	-- Offsets the segment by a length value, then decreases its length (stored by the segment) by
-	-- 2 * length (the funtion parameter).
-	--
-	-- [Params]
-	--
-	-- 	Seg    : Segment to interact with
-	-- 	Lenght : Distance value
-	--
-	procedure Pad (
-		Seg    : in out T;
-		Length : in Integer_64);
+	procedure Pad (Seg : in out T; Length : in Integer_64);
 
-	-- Sets a new length value.
-	--
-	-- [Params]
-	--
-	-- 	Seg    : Segment to interact with
-	-- 	Length : Distance value
-	--
-	procedure Resize (
-		Seg    : in out T;
-		Length : in Integer_64);
+	procedure Resize (Seg  : in out T; Length : in Integer_64);
 
-	-- Mutilplies the origin and length.
-	--
-	-- [Params]
-	--
-	--	Seg   : Segment to interact with
-	-- 	Scale : Multiplier value
-	--
-	procedure Scale (
-		Seg   : in out T;
-		Scale : in Float);
+	procedure Scale (Seg : in out T; Scale : in Float);
 
 	-------------------------------------------------------------------------------------------------
 	-- PURE METHODS --------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Checks whether a point coordinate is on the segment.
-	--
-	-- [Params]
-	--
-	-- 	Seg   : Segment to interact with
-	-- 	Point : Position value
-	--
-	-- [Return]
-	--
-	--	True if it is, false otherwise.
-	--
-	function Is_In (
-		Seg   : in T;
-		Point : in Integer_64)
-			return Boolean;
+	function Is_In (Seg : in T; Point : in Integer_64) return Boolean;
 
-	-- Gets the length.
-	--
-	-- [Params]
-	--
-	-- 	Seg : Segment to interact with
-	--
-	-- [Return]
-	--
-	--	Segment's Length value.
-	--
-	function Length (
-		Seg : in T)
-			return Integer_64;
+	function Length (Seg : in T) return Integer_64;
 
-	-- Gets the max limit.
-	--
-	-- [Params]
-	--
-	-- 	Seg : Segment to interact with
-	--
-	-- [Return]
-	--
-	--	Segment's Max value.
-	--
-	function Max (
-		Seg : in T)
-			return Integer_64;
+	function Max (Seg : in T) return Integer_64;
 
-	-- Gets the min limit.
-	--
-	-- [Params]
-	--
-	-- 	Seg : Segment to interact with
-	--
-	-- [Return]
-	--
-	--	Segment's Min value.
-	--
-	function Min (
-		Seg : in T)
-			return Integer_64;
+	function Min (Seg : in T) return Integer_64;
 
-	-- Gets the origin.
-	--
-	-- [Params]
-	--
-	-- 	Seg : Segment to interact with
-	--
-	-- [Return]
-	--
-	--	Segment's Origin value.
-	--
-	function Origin (
-		Seg : in T)
-			return Integer_64;
+	function Origin (Seg : in T) return Integer_64;
 
 	-------------------------------------------------------------------------------------------------
 	-- PRIVATE -------------------------------------------------------------------------------------- 

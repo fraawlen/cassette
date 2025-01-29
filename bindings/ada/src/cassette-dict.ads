@@ -33,262 +33,55 @@ package Cassette.Dict is
 	-- EXCEPTIONS -----------------------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	-- Exception that gets raised when an impure method or a constructor fails.
-	--
 	E : exception;
 
 	-------------------------------------------------------------------------------------------------
 	-- TYPES ---------------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Opaque dictionary object. It's implemented using the FNV1-A hash function and collisions are
-	-- resolved using linear probing. A dictionary can automatically grow to maintain a maximum load
-	-- factor (set by default to 0.6). Values are retrieved using both a NUL terminated string key
-	-- and a group value. The Index type is used for values, because this dictionary object is
-	-- intended to store various index values of other Cassette objects.
-	--
-	-- Some methods, upon failure, will set an error and raise an exception E. The exact error code
-	-- can be checked with Error(). If any error is set all methods will exit early with default
-	-- return values and no side-effects. It's possible to clear errors with Repair().
-	--
 	type T is tagged limited private;
 
 	-------------------------------------------------------------------------------------------------
 	-- CONSTRUCTORS / DESTRUCTORS -------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	-- Creates a string and deep copy the contents of another input tracker into it.
-	--
-	-- [Params]
-	--
-	-- 	Dict   : Dictionary to interact with
-	-- 	Parent : Dictionary to clone
-	--
-	-- [Errors]
-	--
-	--	INVALID : Initialisation failed
-	--
-	procedure Clone (
-		Dict   : out T;
-		Parent : in  T);
+	procedure Clone (Dict : out T; Parent : in  T);
 
-	-- Create an empty input string.
-	--
-	-- [Params]
-	--
-	-- 	Dict : Dictionary to interact with
-	--
-	-- [Errors]
-	--
-	--	INVALID : Initialisation failed
-	--
-	procedure Create (
-		Dict : out T);
+	procedure Create (Dict : out T);
 
-	-- Destroys the dictionary and frees memory.
-	--
-	-- [Params]
-	--
-	-- 	Dict : Dictionary to interact with
-	--
-	procedure Destroy (
-		Dict : in out T);
+	procedure Destroy (Dict : in out T);
 
 	-------------------------------------------------------------------------------------------------
 	-- IMPURE METHODS ------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Clears all active slots. Allocated memory is not freed, use cdict_destroy() for that.
-	--
-	-- [Params]
-	--
-	-- 	Dict : Dictionary to interact with
-	--
-	procedure Clear (
-		Dict : in out T);
+	procedure Clear (Dict : in out T);
 
-	-- Clears all active slots of a specific group. Allocated memory is not freed, use Destroy() for
-	-- that.
-	--
-	-- [Params]
-	--
-	-- 	Dict  : Dictionary to interact with
-	-- 	Group : Group to match
-	--
-	procedure Clear_Group (
-		Dict  : in out T;
-		Group : in Index);
+	procedure Clear_Group (Dict : in out T; Group : in Index);
 
-	-- Deletes the slot that matches the given key and group. This procedure has no effect if there
-	-- are no matching slots. Allocated memory is not freed, use Destroy() for that.
-	--
-	-- [Params]
-	--
-	-- 	Dict  : Dictionary to interact with
-	-- 	Key   : Key to match
-	-- 	Group : Group to match
-	--
-	procedure Erase (
-		Dict  : in out T;
-		Key   : in String;
-		Group : in Index);
+	procedure Erase (Dict : in out T; Key : in String; Group : in Index);
 
-	-- Preallocates a set amount of slots to avoid triggering multiple automatic reallocs and
-	-- rehashes when adding data to the dictionary. To stay under the set maximum load factor
-	-- (default = 0.6), the actual amount of allocated hashtable slots is
-	-- Slot_Number / max_load_factor. This procedure has no effect if the requested number of slots
-	-- is smaller than the previously allocated amount.
-	--
-	-- [Params]
-	--
-	-- 	Dict  : Dictionary to interact with
-	-- 	Slots : Number of slots
-	--
-	-- [Errors]
-	--
-	-- 	OVERFLOW : The size of the resulting dictionary will be > Size'Last
-	-- 	MEMORY   : Failed memory allocation
-	--
-	procedure Prealloc (
-		Dict  : in out T;
-		Slots : in Size);
+	procedure Prealloc (Dict : in out T; Slots : in Size);
 
-	-- Sets the maximum load factor. To stay under it, the dictionary may automatically extend its
-	-- number of allocated slots. Default value = 0.6.
-	--
-	-- [Params]
-	--
-	-- 	Dict        : Dictionary to interact with
-	-- 	Load_Factor : Maximum load factor to set
-	--
-	-- [Errors]
-	--
-	-- 	OVERFLOW : The size of the resulting dictionary will be > Size'Last
-	-- 	MEMORY   : Failed memory allocation
-	--
-	procedure Set_Max_Load (
-		Dict        : in out T;
-		Load_Factor : in Ratio)
-			with Pre => Load_Factor > 0.0;
+	procedure Set_Max_Load (Dict : in out T; Load_Factor : in Ratio) with Pre => Load_Factor > 0.0;
 
-	-- Clears errors and puts the dictionary back into an usable state. The only unrecoverable error
-	-- is Error_Invalid.
-	--
-	-- [Params]
-	--
-	-- 	Dict : Dictionary to interact with
-	--
-	procedure Repair (
-		Dict : in out T);
+	procedure Repair (Dict : in out T);
 
-	-- Activates a slot in the dictionary's hashtable. The given key, group, and values will be
-	-- associated with that slot. If a slot with a matching key and group already exists, this
-	-- procedure will only overwrite its associated value. The dictionary can automatically extend
-	-- the total number of allocated slots to stay under its maximum load factor (default = 0.6).
-	--
-	-- [Params]
-	--
-	-- 	Dict  : Dictionary to interact with
-	-- 	Key   : Key to match
-	-- 	Group : Group to match
-	-- 	Value : Value to associate with the slot
-	--
-	-- [Errors]
-	--
-	-- 	OVERFLOW : The size of the resulting dictionary will be > Size'Last
-	-- 	MEMORY   : Failed memory allocation
-	--
-	procedure Write (
-		Dict  : in out T;
-		Key   : in String;
-		Group : in Index;
-		Value : in Index);
+	procedure Write (Dict : in out T; Key : in String; Group : in Index; Value : in Index);
 
 	-------------------------------------------------------------------------------------------------
 	-- PURE METHODS --------------------------------------------------------------------------------- 
 	-------------------------------------------------------------------------------------------------
 
-	-- Gets the error state.
-	--
-	-- [Params]
-	--
-	-- 	Dict : Dictionary to interact with
-	-- 
-	-- [Return]
-	--
-	-- 	Error code
-	--  
-	function Error (
-		Dict : in T)
-			return Error_Code;
+	function Error (Dict : in T) return Error_Code;
 
-	-- Tries to find a slot that matches the given key and group. If found, True is returned.
-	--
-	-- [Params]
-	--
-	-- 	Dict  : Dictionary to interact with
-	-- 	Key   : Key to match
-	-- 	Group : Group to match
-	--
-	-- [Return]
-	--
-	--	Key + Group match. If the dictionary has errored, then False is always returned.
-	--
-	function Find (
-		Dict  : in T;
-		Key   : in String;
-		Group : in Index)
-			return Boolean;
+	function Find (Dict : in T; Key : in String; Group : in Index) return Boolean;
 
-	-- Tries to find a slot that matches the given key and group. If found, True is returned, and the
-	-- value associated to that slot is written into the Value parameter.
-	--
-	-- [Params]
-	--
-	-- 	Dict  : Dictionary to interact with
-	-- 	Key   : Key to match
-	-- 	Group : Group to match
-	-- 	Value : Value associated to the found slot
-	--
-	-- [Return]
-	--
-	--	Key + Group match. If the dictionary has errored, then False is always returned.
-	--
-	function Find (
-		Dict  : in  T;
-		Key   : in  String;
-		Group : in  Index;
-		Value : out Index)
-			return Boolean;
+	function Find (Dict : in T; Key : in  String; Group : in  Index; Value : out Index) return Boolean;
 
-	-- Gets the number of active slots.
-	--
-	-- [Params]
-	--
-	-- 	Dict : Dictionary to interact with
-	--
-	-- [Return]
-	--
-	--	Number of slots. If the dictionary has errored, then 0 is always returned.
-	--
-	function Load (
-		Dict : in T)
-			return Size;
+	function Load (Dict : in T) return Size;
 
-	-- Gets a ratio of the number of active slots by the number of allocated slots.
-	--
-	-- [Params]
-	--
-	-- 	Dict : Dictionary to interact with
-	--
-	-- [Return]
-	--
-	--	Load factor between 0.0 and 1.0. If the dictionary has errored, then 0.0 is always
-	--	returned.
-	--
-	function Load_Factor (
-		Dict : in T)
-			return Ratio;
+	function Load_Factor (Dict : in T) return Ratio;
 
 	-------------------------------------------------------------------------------------------------
 	-- PRIVATE -------------------------------------------------------------------------------------- 

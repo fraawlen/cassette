@@ -30,14 +30,10 @@ package Cassette is
 	-- TYPES ----------------------------------------------------------------------------------------
 	-------------------------------------------------------------------------------------------------
 
-	-- Common numeric types.
-	--
 	subtype Index is C.size_t;
 	subtype Size  is C.size_t;
 	subtype Ratio is Float range 0.0 .. 1.0;
 
-	-- Cassette errors.
-	--
 	type Error_Code is (
 		Error_None,
 		Error_Invalid,
