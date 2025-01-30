@@ -32,10 +32,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void dummy_fn_destroy (cgui_cell *)                           CGUI_NONNULL(1);
-static void dummy_fn_draw    (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
-static void dummy_fn_event   (cgui_cell *, struct cgui_cell_event *) CGUI_NONNULL(1, 2);
-static void dummy_fn_frame   (cgui_cell *, struct cgui_box *)        CGUI_NONNULL(1, 2);
+static void dummy_fn_destroy  (cgui_cell *)                           CGUI_NONNULL(1);
+static void dummy_fn_draw     (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
+static void dummy_fn_event    (cgui_cell *, struct cgui_cell_event *) CGUI_NONNULL(1, 2);
+static void dummy_fn_frame    (cgui_cell *, struct cgui_box *)        CGUI_NONNULL(1, 2);
+static void dummy_fn_pre_draw (cgui_cell *, unsigned long)            CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -43,14 +44,15 @@ static void dummy_fn_frame   (cgui_cell *, struct cgui_box *)        CGUI_NONNUL
 
 cgui_cell cgui_cell_placeholder_instance =
 {
-	.data       = NULL,
-	.fn_destroy = dummy_fn_destroy,
-	.fn_draw    = dummy_fn_draw,
-	.fn_event   = dummy_fn_event,
-	.fn_frame   = dummy_fn_frame,
-	.valid      = false,
-	.draw       = false,
-	.serial     = CELL_INVALID,
+	.data        = NULL,
+	.fn_destroy  = dummy_fn_destroy,
+	.fn_draw     = dummy_fn_draw,
+	.fn_event    = dummy_fn_event,
+	.fn_frame    = dummy_fn_frame,
+	.fn_pre_draw = dummy_fn_pre_draw,
+	.valid       = false,
+	.draw        = false,
+	.serial      = CELL_INVALID,
 };
 
 /************************************************************************************************************/
@@ -88,14 +90,15 @@ cgui_cell_create(void)
 		goto fail_push;
 	}
 
-	cell->data       = NULL;
-	cell->fn_destroy = dummy_fn_destroy;
-	cell->fn_draw    = dummy_fn_draw;
-	cell->fn_event   = dummy_fn_event;
-	cell->fn_frame   = dummy_fn_frame;
-	cell->valid      = true;
-	cell->draw       = false;
-	cell->serial     = CELL_INVALID;
+	cell->data        = NULL;
+	cell->fn_destroy  = dummy_fn_destroy;
+	cell->fn_draw     = dummy_fn_draw;
+	cell->fn_event    = dummy_fn_event;
+	cell->fn_frame    = dummy_fn_frame;
+	cell->fn_pre_draw = dummy_fn_pre_draw;
+	cell->valid       = true;
+	cell->draw        = false;
+	cell->serial      = CELL_INVALID;
 
 	return cell;
 
@@ -212,6 +215,19 @@ void
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void
+(*cgui_cell_fn_pre_draw(cgui_cell *cell))(cgui_cell *cell, unsigned long time)
+{
+	if (cgui_error() || !cell->valid)
+	{
+		return dummy_fn_pre_draw;
+	}
+
+	return cell->fn_pre_draw;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 bool
 cgui_cell_event_inside(const struct cgui_cell_event *event)
 {
@@ -270,6 +286,20 @@ cgui_cell_is_valid(const cgui_cell *cell)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+bool
+cgui_cell_need_draw(const cgui_cell *cell)
+{
+	if (cgui_error())
+	{
+		return false;
+	}
+
+	return cell->draw;
+
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 cgui_cell_on_destroy(cgui_cell *cell, void (*fn)(cgui_cell *cell))
 {
@@ -318,6 +348,19 @@ cgui_cell_on_frame(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_box 
 	}
 
 	cell->fn_frame = fn ? fn : dummy_fn_frame;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_cell_on_pre_draw(cgui_cell *cell, void (*fn)(cgui_cell *cell, unsigned long time))
+{
+	if (cgui_error() || !cell->valid)
+	{
+		return;
+	}
+
+	cell->fn_pre_draw = fn ? fn : dummy_fn_pre_draw;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -440,3 +483,11 @@ dummy_fn_frame(cgui_cell *cell, struct cgui_box *box)
 	(void)box;
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+dummy_fn_pre_draw(cgui_cell *cell, unsigned long time)
+{
+	(void)cell;
+	(void)time;
+}

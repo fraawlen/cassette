@@ -75,7 +75,7 @@ enum cgui_cell_event_type
 	CGUI_CELL_EVENT_FOCUS_LOCK,
 	CGUI_CELL_EVENT_FOCUS_UNLOCK,
 	CGUI_CELL_EVENT_FOCUS_INFO,
-	CGUI_CELL_EVENT_FOCUS_SEEK,
+	CGUI_CELL_EVENT_CELL_SEEK,
 	CGUI_CELL_EVENT_SUBFOCUS,
 	CGUI_CELL_EVENT_SELECT_LESS,
 	CGUI_CELL_EVENT_SELECT_MORE,
@@ -84,6 +84,7 @@ enum cgui_cell_event_type
 	CGUI_CELL_EVENT_CLIPBOARD_CUT,
 	CGUI_CELL_EVENT_CLIPBOARD_COPY,
 	CGUI_CELL_EVENT_CLIPBOARD_PASTE,
+	CGUI_CELL_EVENT_QUERY_DRAW,
 	CGUI_CELL_EVENT_CANCEL,
 };
 
@@ -162,7 +163,7 @@ struct cgui_cell_event
 			double focus_info_width;
 			double focus_info_height;
 		};
-		/* CGUI_CELL_EVENT_FOCUS_SEEK */
+		/* CGUI_CELL_EVENT_CELL_SEEK */
 		cgui_cell *seek_cell;
 		/* CGUI_CELL_EVENT_SUBFOCUS */
 		enum cgui_focus subfocus;
@@ -178,6 +179,7 @@ struct cgui_cell_event
 		/* CGUI_CELL_EVENT_SELECT_MORE  */
 		/* CGUI_CELL_EVENT_SELECT_NONE  */
 		/* CGUI_CELL_EVENT_SELECT_ALL   */
+		/* CGUI_CELL_EVENT_QUERY_DRAW   */
 		/* CGUI_CELL_EVENT_NONE         */
 		/* no extra fields for these events */
 	};
@@ -189,7 +191,6 @@ struct cgui_cell_event
 struct cgui_cell_context
 {
 	cairo_t *drawable;
-	unsigned long delay;
 	struct cgui_box frame;
 	double x_root;
 	double y_root;
@@ -197,6 +198,7 @@ struct cgui_cell_context
 	double y;
 	double width;
 	double height;
+	bool full_draw;
 };
 
 /************************************************************************************************************/
@@ -264,6 +266,13 @@ CGUI_NONNULL(1);
  */
 void
 cgui_cell_on_frame(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_box *box))
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_cell_on_pre_draw(cgui_cell *cell, void (*fn)(cgui_cell *cell, unsigned long time))
 CGUI_NONNULL(1);
 
 /**
@@ -339,6 +348,23 @@ CGUI_PURE;
 void
 (*cgui_cell_fn_frame(cgui_cell *cell))(cgui_cell *cell, struct cgui_box *box)
 CGUI_NONNULL_RETURN
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+void
+(*cgui_cell_fn_pre_draw(cgui_cell *cell))(cgui_cell *cell, unsigned long)
+CGUI_NONNULL_RETURN
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+bool
+cgui_cell_need_draw(const cgui_cell *cell)
 CGUI_NONNULL(1)
 CGUI_PURE;
 

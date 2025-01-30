@@ -1153,12 +1153,12 @@ void
 window_draw(cgui_window *window)
 {
 	enum window_draw_level level;
-	unsigned long timestamp;
+	unsigned long time;
 	unsigned long delay;
 
-	timestamp = util_time();
-	delay = timestamp - window->draw_time;
-	level = window->draw_level;
+	time  = util_time();
+	delay = time - window->draw_time;
+	level = CONFIG->render_partial ? window->draw_level : WINDOW_DRAW_FULL;
 
 	if (!window->state.mapped
 	  || window->draw_level == WINDOW_DRAW_NONE
@@ -1167,14 +1167,9 @@ window_draw(cgui_window *window)
 		return;
 	}
 
-	if (!CONFIG->render_partial)
-	{
-		window->draw_level = WINDOW_DRAW_FULL;
-	}
-
 	window->draw_level = WINDOW_DRAW_NONE;
-	window->draw_time  = timestamp;
 	window->draw_delay = ULONG_MAX;
+	window->draw_time  = time;
 
 	/* draw border and background */
 
@@ -1194,11 +1189,11 @@ window_draw(cgui_window *window)
 	{
 		if (i != window->focus.id)
 		{
-			draw_area(window, *(struct grid_area*)cref_ptr(window->shown_grid->areas, i), level, delay);
+			draw_area(window, grid_area(window->shown_grid, i), level, time);
 		}
 	}
 
-	draw_area(window, window->focus, level, delay);
+	draw_area(window, window->focus, level, time);
 
 	/* end */
 
@@ -1725,29 +1720,47 @@ cell_frame(const cgui_window *window, struct grid_area area)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-draw_area(cgui_window *window, struct grid_area area, enum window_draw_level level, unsigned long delay)
+draw_area(cgui_window *window, struct grid_area area, enum window_draw_level level, unsigned long time)
 {
-	struct cgui_cell_context context =
+	struct cgui_cell_event event =
 	{
-		.delay    = delay,
-		.drawable = window->drawable,
-		.x_root   = area.x + PADDING(window) + window->x,
-		.y_root   = area.y + PADDING(window) + window->y,
-		.x        = area.x + PADDING(window),
-		.y        = area.y + PADDING(window),
-		.width    = area.width,
-		.height   = area.height,
+		.type = CGUI_CELL_EVENT_QUERY_DRAW,
 	};
 
-	if ((level < WINDOW_DRAW_FULL && !area.cell->draw) || area.id == SIZE_MAX)
+	struct cgui_cell_context context =
+	{
+		.drawable  = window->drawable,
+		.x_root    = area.x + PADDING(window) + window->x,
+		.y_root    = area.y + PADDING(window) + window->y,
+		.x         = area.x + PADDING(window),
+		.y         = area.y + PADDING(window),
+		.width     = area.width,
+		.height    = area.height,
+		.full_draw = level >= WINDOW_DRAW_FULL || area.cell->draw,
+	};
+
+	if (area.id == SIZE_MAX)
 	{
 		return;
 	}
 
+	/* this check is here in case the area hosts a meta-cell that doesn't need to be     */
+	/* drawn but its child cells do. Normal cells can just ignore and reject this event. */
+
+	if (!context.full_draw && !window_process_cell_event(window, area, &event))
+	{
+		return;
+	}
+
+	/* pre-draw callback in case the cell needs to update its state before any rendering */
+	/* related task (like animation progress)                                            */
+
+	area.cell->draw = false;
+	area.cell->fn_pre_draw(area.cell, time);
+
 	/* draw */
 
-	context.frame   = cell_frame(window, area);
-	area.cell->draw = false;
+	context.frame = cell_frame(window, area);
 
 	cairo_new_path(window->drawable);
 	cairo_save(window->drawable);
@@ -1935,9 +1948,9 @@ refocus(cgui_window *window)
 
 	CREF_FOR_EACH(window->shown_grid->areas, i)
 	{
-		area                 = *(struct grid_area*)cref_ptr(window->shown_grid->areas, i);
+		area                 = grid_area(window->shown_grid, i);
 		event_foc.type       = CGUI_CELL_EVENT_FOCUS_GAIN_BY_REFERENCE;
-		event_seek.type      = CGUI_CELL_EVENT_FOCUS_SEEK;
+		event_seek.type      = CGUI_CELL_EVENT_CELL_SEEK;
 		event_foc.focus_cell = event_info.focus_info_cell;
 		event_seek.seek_cell = event_info.focus_info_cell;
 

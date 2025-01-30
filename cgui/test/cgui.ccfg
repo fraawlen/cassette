@@ -1,5 +1,5 @@
-	SECTION_ADD Shadow
-	SECTION_ADD Round_Gauges
+//	SECTION_ADD Shadow
+//	SECTION_ADD Round_Gauges
 
 	// Configuration example
 
@@ -10,10 +10,10 @@
 	render scale            1.0
 	render mode             forward
 	render sync_vblank      TRUE
-	render sync_bypass      FALSE
-	render partial          TRUE
+	render sync_bypass      TRUE
+	render partial          FALSE
 	render fps_async_cap    30
-	render fps_sync_divider 1
+	render fps_sync_divider 2
 
 	font pad_pattern       "_"
 	font face              "Terminus"
@@ -109,8 +109,8 @@
 	button_pressed outline_color (RGB 20 20 20)
 	button_pressed outline_size   16
 
-	LET bon  beacon_on  beacon_critical_on
-	LET boff beacon_off beacon_critical_off
+	LET bon  beacon_on  beacon_crit_on
+	LET boff beacon_off beacon_crit_off
 
 	FOR_EACH boff
 		% boff border_color  #001010
@@ -187,7 +187,7 @@ SECTION Shadow
 		beacon_critical_off \
 		placeholder \
 		label \
-		gauge \
+		gauge
 
 	FOR_EACH widget
 		% widget shadow_draw     TRUE

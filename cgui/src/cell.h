@@ -50,10 +50,11 @@ struct cgui_cell
 
 	/* callbacks */
 
-	void (*fn_destroy) (cgui_cell *);
-	void (*fn_draw)    (cgui_cell *, struct cgui_cell_context);
-	void (*fn_event)   (cgui_cell *, struct cgui_cell_event *);
-	void (*fn_frame)   (cgui_cell *, struct cgui_box *);
+	void (*fn_destroy)  (cgui_cell *);
+	void (*fn_draw)     (cgui_cell *, struct cgui_cell_context);
+	void (*fn_event)    (cgui_cell *, struct cgui_cell_event *);
+	void (*fn_frame)    (cgui_cell *, struct cgui_box *);
+	void (*fn_pre_draw) (cgui_cell *, unsigned long);
 
 	/* states */
 

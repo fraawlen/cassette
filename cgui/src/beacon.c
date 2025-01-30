@@ -37,8 +37,8 @@
 
 struct data
 {
-	unsigned long anim_count;
-	unsigned int  anim_factor;
+	unsigned long blink_last;
+	unsigned int  blink_factor;
 	enum cgui_beacon_state state;
 	enum cgui_align align;
 	enum cgui_rotation rot;
@@ -102,16 +102,17 @@ cgui_beacon_create(void)
 		goto fail_cell;
 	}
 
-	data->state       = CGUI_BEACON_OFF;
-	data->align       = CGUI_ALIGN_CENTER;
-	data->rot         = CGUI_ROTATION_NORMAL;
-	data->blink_on    = false;
-	data->anim_count  = 0;
-	data->anim_factor = 1;
+	data->state        = CGUI_BEACON_OFF;
+	data->align        = CGUI_ALIGN_CENTER;
+	data->rot          = CGUI_ROTATION_NORMAL;
+	data->blink_on     = true;
+	data->blink_last   = 0;
+	data->blink_factor = 1;
 
 	cgui_cell_on_destroy(cell, destroy);
 	cgui_cell_on_draw(cell, draw);
 	cgui_cell_on_frame(cell, frame);
+	cgui_cell_on_pre_draw(cell, blink);
 	cgui_cell_set_data(cell, data);
 	cgui_cell_set_serial(cell, CELL_BEACON);
 
@@ -160,7 +161,7 @@ cgui_beacon_set_blink_speed(cgui_cell *cell, unsigned int factor)
 		return;
 	}
 
-	DATA->anim_factor = factor;
+	DATA->blink_factor = factor;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -191,7 +192,7 @@ cgui_beacon_set_state(cgui_cell *cell, enum cgui_beacon_state state)
 
 	if ((DATA->state = state) != CGUI_BEACON_CRITICAL)
 	{
-		DATA->anim_count = 0;
+		DATA->blink_last = 0;
 		DATA->blink_on   = false;
 	}
 
@@ -203,24 +204,28 @@ cgui_beacon_set_state(cgui_cell *cell, enum cgui_beacon_state state)
 /************************************************************************************************************/
 
 static void
-blink(cgui_cell *cell, unsigned long delay)
+blink(cgui_cell *cell, unsigned long time)
 {
-	double speed = 1000 / DATA->anim_factor;
+	unsigned long limit = 1000;
+	unsigned long spent;
 
-	if (DATA->state == CGUI_BEACON_OFF || DATA->state == CGUI_BEACON_ON)
+	if (DATA->state != CGUI_BEACON_CRITICAL)
 	{
 		return;
 	}
 
-	DATA->anim_count += delay;
-	speed *= DATA->blink_on ? CONFIG->beacon_blink_on : CONFIG->beacon_blink_off;
-	if (DATA->anim_count >= speed)
-	{
-		DATA->anim_count = 0;
-		DATA->blink_on   = !DATA->blink_on;
-	}
+	spent  = time - DATA->blink_last;
+	limit *= DATA->blink_on ? CONFIG->beacon_blink_on : CONFIG->beacon_blink_off;
+	limit /= DATA->blink_factor;
 
-	cgui_cell_redraw_delayed(cell, speed - DATA->anim_count);
+	if (spent >= limit)
+	{
+		DATA->blink_on   = !DATA->blink_on;
+		DATA->blink_last = time;
+		spent = 0;
+	}
+	
+	cgui_cell_redraw_delayed(cell, limit - spent);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -253,10 +258,6 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 	cgui_text_rotate(DATA->rot);
 	cgui_text_style(text_style(cell));
 	cgui_text_draw(context.drawable, DATA->label);
-
-	/* update state */
-	
-	blink(cell, context.delay);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
