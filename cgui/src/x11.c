@@ -270,7 +270,7 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 
 	/* get depth */
 
-	depth_target = CONFIG->alt_present ? screen->root_depth : 32;
+	depth_target = CONFIG->render_mode == CGUI_RENDER_FORWARD ? screen->root_depth : 32;
 	depth_it     = xcb_screen_allowed_depths_iterator(screen);
 	for (; depth_it.rem; xcb_depth_next(&depth_it))
 	{
@@ -290,7 +290,7 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 	visual_it = xcb_depth_visuals_iterator(depth);
 	for (; visual_it.rem; xcb_visualtype_next(&visual_it))
 	{
-		if (CONFIG->alt_present)
+		if (CONFIG->render_mode == CGUI_RENDER_FORWARD)
 		{
 			match = visual_it.data->visual_id == screen->root_visual;
 		}
@@ -1177,9 +1177,9 @@ void
 x11_window_present(xcb_window_t id, xcb_pixmap_t buffer, uint32_t serial, bool async)
 {
 	async |= !CONFIG->render_sync_vblank;
-	async |=  CONFIG->anim_divider == 0;
+	async |=  CONFIG->render_fps_sync_div == 0;
 
-	if (CONFIG->alt_present)
+	if (CONFIG->render_mode == CGUI_RENDER_FORWARD)
 	{
 		xcb_present_pixmap(
 			connection,
@@ -1193,13 +1193,13 @@ x11_window_present(xcb_window_t id, xcb_pixmap_t buffer, uint32_t serial, bool a
 			0,
 			0,
 			async ? XCB_PRESENT_OPTION_ASYNC : XCB_PRESENT_OPTION_NONE,
-			0, async ? 0 : CONFIG->anim_divider, 0,
+			0, async ? 0 : CONFIG->render_fps_sync_div, 0,
 			0,
 			NULL);
 	}
 	else
 	{
-		xcb_present_notify_msc(connection, id, serial, 0, async ? 0 : CONFIG->anim_divider, 0);
+		xcb_present_notify_msc(connection, id, serial, 0, async ? 0 : CONFIG->render_fps_sync_div, 0);
 	}
 
 	xcb_flush(connection);
@@ -1702,7 +1702,7 @@ static void
 event_present(xcb_present_generic_event_t *xcb_event)
 {
 	xcb_present_complete_notify_event_t *present = (xcb_present_complete_notify_event_t*)xcb_event;
-	xcb_present_complete_kind_t type = CONFIG->alt_present ?
+	xcb_present_complete_kind_t type = CONFIG->render_mode == CGUI_RENDER_FORWARD ?
 		XCB_PRESENT_COMPLETE_KIND_PIXMAP : XCB_PRESENT_COMPLETE_KIND_NOTIFY_MSC;
 
 	struct cgui_event event =

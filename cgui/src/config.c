@@ -82,14 +82,14 @@
 	{ NAMESPACE, "text_bold",             BOOL,  &TARGET.bold             },
 
 #define KEY(VALUE) \
-	{ "key",     #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_CONFIG_SWAP_DIRECT] }, \
-	{ "key", "M" #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_CONFIG_SWAP_MOD]    }, \
-	{ "key", "S" #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_CONFIG_SWAP_SHIFT]  },
+	{ "key",     #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_SWAP_DIRECT] }, \
+	{ "key", "M" #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_SWAP_MOD]    }, \
+	{ "key", "S" #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_SWAP_SHIFT]  },
 
 #define BUTTON(VALUE) \
-	{ "button",     #VALUE, MAP_BUTTON, &config.buttons[VALUE][CGUI_CONFIG_SWAP_DIRECT] }, \
-	{ "button", "M" #VALUE, MAP_BUTTON, &config.buttons[VALUE][CGUI_CONFIG_SWAP_MOD]    }, \
-	{ "button", "S" #VALUE, MAP_BUTTON, &config.buttons[VALUE][CGUI_CONFIG_SWAP_SHIFT]  },
+	{ "button",     #VALUE, MAP_BUTTON, &config.buttons[VALUE][CGUI_SWAP_DIRECT] }, \
+	{ "button", "M" #VALUE, MAP_BUTTON, &config.buttons[VALUE][CGUI_SWAP_MOD]    }, \
+	{ "button", "S" #VALUE, MAP_BUTTON, &config.buttons[VALUE][CGUI_SWAP_SHIFT]  },
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -119,6 +119,7 @@ enum value
 	FOCUS,
 	SWAP_KIND,
 	SWAP_ACTION,
+	RENDER,
 
 	/* composite */
 
@@ -174,123 +175,127 @@ static cairo_font_options_t *font_opts = NULL;
 
 static const struct word words[] =
 {
-	{ "mod1",       MOD_KEY,     CGUI_CONFIG_MOD_1              },
-	{ "mod4",       MOD_KEY,     CGUI_CONFIG_MOD_4              },
-	{ "ctrl",       MOD_KEY,     CGUI_CONFIG_MOD_CTRL           },
+	{ "mod1",       MOD_KEY,     CGUI_MOD_1                   },
+	{ "mod4",       MOD_KEY,     CGUI_MOD_4                   },
+	{ "ctrl",       MOD_KEY,     CGUI_MOD_CTRL                },
 
-	{ "none",       ANTIALIAS,   CGUI_CONFIG_ANTIALIAS_NONE     },
-	{ "gray",       ANTIALIAS,   CGUI_CONFIG_ANTIALIAS_GRAY     },
-	{ "subpixel",   ANTIALIAS,   CGUI_CONFIG_ANTIALIAS_SUBPIXEL },
+	{ "none",       ANTIALIAS,   CGUI_ANTIALIAS_NONE          },
+	{ "gray",       ANTIALIAS,   CGUI_ANTIALIAS_GRAY          },
+	{ "subpixel",   ANTIALIAS,   CGUI_ANTIALIAS_SUBPIXEL      },
 
-	{ "rgb",        SUBPIXEL,    CGUI_CONFIG_SUBPIXEL_RGB       },
-	{ "bgr",        SUBPIXEL,    CGUI_CONFIG_SUBPIXEL_BGR       },
-	{ "vrgb",       SUBPIXEL,    CGUI_CONFIG_SUBPIXEL_VRGB      },
-	{ "vbgr",       SUBPIXEL,    CGUI_CONFIG_SUBPIXEL_VBGR      },
+	{ "rgb",        SUBPIXEL,    CGUI_SUBPIXEL_RGB            },
+	{ "bgr",        SUBPIXEL,    CGUI_SUBPIXEL_BGR            },
+	{ "vrgb",       SUBPIXEL,    CGUI_SUBPIXEL_VRGB           },
+	{ "vbgr",       SUBPIXEL,    CGUI_SUBPIXEL_VBGR           },
 
-	{ "default",    SWAP_KIND,   CGUI_SWAP_TO_DEFAULT           },
-	{ "none",       SWAP_KIND,   CGUI_SWAP_TO_NONE              },
-	{ "value",      SWAP_KIND,   CGUI_SWAP_TO_VALUE             },
-	{ "focus",      SWAP_KIND,   CGUI_SWAP_TO_FOCUS             },
-	{ "accel",      SWAP_KIND,   CGUI_SWAP_TO_ACCELERATOR       },
-	{ "cut",        SWAP_KIND,   CGUI_SWAP_TO_CLIPBOARD_CUT     },
-	{ "copy",       SWAP_KIND,   CGUI_SWAP_TO_CLIPBOARD_COPY    },
-	{ "paste",      SWAP_KIND,   CGUI_SWAP_TO_CLIPBOARD_PASTE   },
-	{ "cell",       SWAP_KIND,   CGUI_SWAP_TO_ACTION_CELL       },
-	{ "window",     SWAP_KIND,   CGUI_SWAP_TO_ACTION_WINDOW     },
-	{ "misc",       SWAP_KIND,   CGUI_SWAP_TO_ACTION_MISC       },
+	{ "forward",    RENDER,      CGUI_RENDER_FORWARD          },
+	{ "deferred",   RENDER,      CGUI_RENDER_DEFERRED         },
 
-	{ "select-",    SWAP_ACTION, CGUI_SWAP_CELL_SELECT_LESS     },
-	{ "select+",    SWAP_ACTION, CGUI_SWAP_CELL_SELECT_MORE     },
-	{ "unselect",   SWAP_ACTION, CGUI_SWAP_CELL_SELECT_NONE     },
-	{ "select_all", SWAP_ACTION, CGUI_SWAP_CELL_SELECT_ALL      },
-	{ "redraw",     SWAP_ACTION, CGUI_SWAP_CELL_SELECT_ALL      },
+	{ "default",    SWAP_KIND,   CGUI_SWAP_TO_DEFAULT         },
+	{ "none",       SWAP_KIND,   CGUI_SWAP_TO_NONE            },
+	{ "value",      SWAP_KIND,   CGUI_SWAP_TO_VALUE           },
+	{ "focus",      SWAP_KIND,   CGUI_SWAP_TO_FOCUS           },
+	{ "accel",      SWAP_KIND,   CGUI_SWAP_TO_ACCELERATOR     },
+	{ "cut",        SWAP_KIND,   CGUI_SWAP_TO_CLIPBOARD_CUT   },
+	{ "copy",       SWAP_KIND,   CGUI_SWAP_TO_CLIPBOARD_COPY  },
+	{ "paste",      SWAP_KIND,   CGUI_SWAP_TO_CLIPBOARD_PASTE },
+	{ "cell",       SWAP_KIND,   CGUI_SWAP_TO_ACTION_CELL     },
+	{ "window",     SWAP_KIND,   CGUI_SWAP_TO_ACTION_WINDOW   },
+	{ "misc",       SWAP_KIND,   CGUI_SWAP_TO_ACTION_MISC     },
 
-	{ "lock_grid",  SWAP_ACTION, CGUI_SWAP_WINDOW_LOCK_GRID     },
-	{ "lock_focus", SWAP_ACTION, CGUI_SWAP_WINDOW_LOCK_FOCUS    },
-	{ "redraw",     SWAP_ACTION, CGUI_SWAP_WINDOW_LOCK_FOCUS    },
+	{ "select-",    SWAP_ACTION, CGUI_SWAP_CELL_SELECT_LESS   },
+	{ "select+",    SWAP_ACTION, CGUI_SWAP_CELL_SELECT_MORE   },
+	{ "unselect",   SWAP_ACTION, CGUI_SWAP_CELL_SELECT_NONE   },
+	{ "select_all", SWAP_ACTION, CGUI_SWAP_CELL_SELECT_ALL    },
+	{ "redraw",     SWAP_ACTION, CGUI_SWAP_CELL_SELECT_ALL    },
+
+	{ "lock_grid",  SWAP_ACTION, CGUI_SWAP_WINDOW_LOCK_GRID   },
+	{ "lock_focus", SWAP_ACTION, CGUI_SWAP_WINDOW_LOCK_FOCUS  },
+	{ "redraw",     SWAP_ACTION, CGUI_SWAP_WINDOW_LOCK_FOCUS  },
 	
-	{ "reconfig",   SWAP_ACTION, CGUI_SWAP_RECONFIG             },
-	{ "exit",       SWAP_ACTION, CGUI_SWAP_EXIT                 },
+	{ "reconfig",   SWAP_ACTION, CGUI_SWAP_RECONFIG           },
+	{ "exit",       SWAP_ACTION, CGUI_SWAP_EXIT               },
 
-	{ "straight",   CORNER_TYPE, CGUI_CORNER_STRAIGHT           },
-	{ "chamfer",    CORNER_TYPE, CGUI_CORNER_CHAMFER            },
-	{ "radii",      CORNER_TYPE, CGUI_CORNER_RADII              },
+	{ "straight",   CORNER_TYPE, CGUI_CORNER_STRAIGHT         },
+	{ "chamfer",    CORNER_TYPE, CGUI_CORNER_CHAMFER          },
+	{ "radii",      CORNER_TYPE, CGUI_CORNER_RADII            },
 
-	{ "next",       FOCUS,       CGUI_FOCUS_NEXT                },
-	{ "previous",   FOCUS,       CGUI_FOCUS_PREV                },
-	{ "first",      FOCUS,       CGUI_FOCUS_FIRST               },
-	{ "last",       FOCUS,       CGUI_FOCUS_LAST                },
-	{ "none",       FOCUS,       CGUI_FOCUS_NONE                },
+	{ "next",       FOCUS,       CGUI_FOCUS_NEXT              },
+	{ "previous",   FOCUS,       CGUI_FOCUS_PREV              },
+	{ "first",      FOCUS,       CGUI_FOCUS_FIRST             },
+	{ "last",       FOCUS,       CGUI_FOCUS_LAST              },
+	{ "none",       FOCUS,       CGUI_FOCUS_NONE              },
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static const struct resource resources_once[] =
 {
-	{"global",        "alternative_present_mode",    BOOL,          &config.alt_present                    },
+	{ "render",       "mode",                      RENDER,    &config.render_mode                },
 };
 
 static const struct resource resources[] =
 {
-	{ "global",       "scale",                       SCALE,         &config.scale                          },
-	{ "global",       "modkey",                      MOD_KEY,       &config.modkey                         },
+	{ "render",       "scale",                     SCALE,     &config.render_scale               },
+	{ "render",       "sync_vblank",               BOOL,      &config.render_sync_vblank         },
+	{ "render",       "sync_bypass",               BOOL,      &config.render_sync_bypass         },
+	{ "render",       "partial",                   BOOL,      &config.render_partial             },
+	{ "render",       "fps_async_cap",             UDOUBLE,   &config.render_fps_async_cap       },
+	{ "render",       "fps_sync_divider",          ULONG,     &config.render_fps_sync_div        },
 
-	{ "font",         "number_padding_pattern",      STRING,         config.font_padding_pattern           },
-	{ "font",         "face",                        STRING,         config.font_face                      },
-	{ "font",         "size",                        LENGTH,        &config.font_size                      },
-	{ "font",         "horizontal_spacing",          LENGTH,        &config.font_spacing_horizontal        },
-	{ "font",         "vertical_spacing",            LENGTH,        &config.font_spacing_vertical          },
-	{ "font",         "width_override",              LENGTH,        &config.font_override_width            },
-	{ "font",         "ascent_override",             LENGTH,        &config.font_override_ascent           },
-	{ "font",         "descent_override",            LENGTH,        &config.font_override_descent          },
-	{ "font",         "x_offset",                    POSITION,      &config.font_offset_x                  },
-	{ "font",         "y_offset",                    POSITION,      &config.font_offset_y                  },
-	{ "font",         "enable_overrides",            BOOL,          &config.font_enable_overrides          },
-	{ "font",         "enable_hint_metrics",         BOOL,          &config.font_enable_hint_metrics       },
-	{ "font",         "antialias_mode",              ANTIALIAS,     &config.font_antialias                 },
-	{ "font",         "subpixel_mode",               SUBPIXEL,      &config.font_subpixel                  },
-	{ "font",         "background_vertical_pad",     LENGTH,        &config.font_background_vpad           },
-	{ "font",         "background_horizontal_pad",   LENGTH,        &config.font_background_hpad           },
+	{ "input",        "modkey",                    MOD_KEY,   &config.modkey                     },
 
-	{ "render",       "sync_vblank",                 BOOL,          &config.render_sync_vblank             },
-	{ "render",       "async_fps_cap",               UDOUBLE,       &config.render_fps_async_cap           },
+	{ "font",         "number_padding_pattern",    STRING,     config.font_padding_pattern       },
+	{ "font",         "face",                      STRING,     config.font_face                  },
+	{ "font",         "size",                      LENGTH,    &config.font_size                  },
+	{ "font",         "horizontal_spacing",        LENGTH,    &config.font_spacing_horizontal    },
+	{ "font",         "vertical_spacing",          LENGTH,    &config.font_spacing_vertical      },
+	{ "font",         "width_override",            LENGTH,    &config.font_override_width        },
+	{ "font",         "ascent_override",           LENGTH,    &config.font_override_ascent       },
+	{ "font",         "descent_override",          LENGTH,    &config.font_override_descent      },
+	{ "font",         "x_offset",                  POSITION,  &config.font_offset_x              },
+	{ "font",         "y_offset",                  POSITION,  &config.font_offset_y              },
+	{ "font",         "enable_overrides",          BOOL,      &config.font_enable_overrides      },
+	{ "font",         "enable_hint_metrics",       BOOL,      &config.font_enable_hint_metrics   },
+	{ "font",         "antialias_mode",            ANTIALIAS, &config.font_antialias             },
+	{ "font",         "subpixel_mode",             SUBPIXEL,  &config.font_subpixel              },
+	{ "font",         "background_vertical_pad",   LENGTH,    &config.font_background_vpad       },
+	{ "font",         "background_horizontal_pad", LENGTH,    &config.font_background_hpad       },
 
-	{ "grid",         "padding",                     LENGTH,        &config.grid_padding                   },
-	{ "grid",         "spacing",                     LENGTH,        &config.grid_spacing                   },
+	{ "grid",         "padding",                   LENGTH,    &config.grid_padding               },
+	{ "grid",         "spacing",                   LENGTH,    &config.grid_spacing               },
 
-	{ "window",       "padding",                     LENGTH,        &config.window_padding                 },
-	{ "window",       "enable_disabled_substyle",    BOOL,          &config.window_enable_disabled         },
-	{ "window",       "enable_focused_substyle",     BOOL,          &config.window_enable_focused          },
-	{ "window",       "enable_locked_substyle",      BOOL,          &config.window_enable_locked           },
-	{ "window",       "allow_partial_redraws",       BOOL,          &config.window_enable_partial_redraws  },
-	{ "window",       "focus_on_activation",         BOOL,          &config.window_focus_on_activation     },
+	{ "window",       "padding",                   LENGTH,    &config.window_padding             },
+	{ "window",       "enable_disabled_substyle",  BOOL,      &config.window_enable_disabled     },
+	{ "window",       "enable_focused_substyle",   BOOL,      &config.window_enable_focused      },
+	{ "window",       "enable_locked_substyle",    BOOL,      &config.window_enable_locked       },
+	{ "window",       "focus_on_activation",       BOOL,      &config.window_focus_on_activation },
 
-	{ "popup",        "padding",                     LENGTH,        &config.popup_padding                  },
+	{ "popup",        "padding",                   LENGTH,    &config.popup_padding              },
 
-	{ "behavior",     "async_present",               BOOL,          &config.async_present                  },
-	{ "behavior",     "enable_cell_auto_lock",       BOOL,          &config.cell_auto_lock                 },
-	{ "behavior",     "enable_persistent_pointer",   BOOL,          &config.persistent_pointer             },
-	{ "behavior",     "enable_persistent_touch",     BOOL,          &config.persistent_touch               },
-	{ "behavior",     "enable_reactive_shadows",     BOOL,          &config.shadows_follow_pointer         },
-	{ "behavior",     "shadows_max_light_distance",  LENGTH,        &config.shadows_max_light_distance     },
-	{ "behavior",     "shadows_max_offset",          LENGTH,        &config.shadows_max_offset             },
-	{ "behavior",     "animation_framerate_divider", ULONG,         &config.anim_divider                   },
-	{ "behavior",     "window_button_move",          BUTTON_ID,     &config.wm_button_move                 },
-	{ "behavior",     "window_button_resize",        BUTTON_ID,     &config.wm_button_resize               },
-	{ "behavior",     "window_button_fullscreen",    BUTTON_ID,     &config.wm_button_fullscreen           },
+	{ "behavior",     "enable_cell_auto_lock",     BOOL,      &config.cell_auto_lock             },
+	{ "behavior",     "enable_persistent_pointer", BOOL,      &config.persistent_pointer         },
+	{ "behavior",     "enable_persistent_touch",   BOOL,      &config.persistent_touch           },
+	{ "behavior",     "window_button_move",        BUTTON_ID, &config.wm_button_move             },
+	{ "behavior",     "window_button_resize",      BUTTON_ID, &config.wm_button_resize           },
+	{ "behavior",     "window_button_fullscreen",  BUTTON_ID, &config.wm_button_fullscreen       },
 
-	{ "stripes",      "line_color",                  COLOR,         &config.stripes_line_color             },
-	{ "stripes",      "line_width",                  LENGTH,        &config.stripes_line_width             },
-	{ "stripes",      "line_spacing",                LENGTH,        &config.stripes_line_spacing           },
+	{ "shadows",      "realtime",                  BOOL,      &config.shadows_follow_pointer     },
+	{ "shadows",      "max_light_distance",        LENGTH,    &config.shadows_max_light_distance },
+	{ "shadows",      "max_offset",                LENGTH,    &config.shadows_max_offset         },
 
-	{ "placeholder",  "line_color",                  COLOR,         &config.placeholder_line_color         },
-	{ "placeholder",  "line_width",                  LENGTH,        &config.placeholder_line_width         },
+	{ "stripes",      "line_color",                COLOR,     &config.stripes_line_color         },
+	{ "stripes",      "line_width",                LENGTH,    &config.stripes_line_width         },
+	{ "stripes",      "line_spacing",              LENGTH,    &config.stripes_line_spacing       },
 
-	{ "beacon",       "blink_animation_speed_on",    ULONG,         &config.beacon_blink_speed_on          },
-	{ "beacon",       "blink_animation_speed_off",   ULONG,         &config.beacon_blink_speed_off         },
+	{ "placeholder",  "line_color",                COLOR,     &config.placeholder_line_color     },
+	{ "placeholder",  "line_width",                LENGTH,    &config.placeholder_line_width     },
 
-	{ "gauge_cursor", "min_length",                  UDOUBLE,       &config.gauge_min_length               },
-	{ "gauge_bar",    "max_thickness",               UDOUBLE,       &config.gauge_max_thickness            },
+	{ "beacon",       "blink_animation_speed_on",  ULONG,     &config.beacon_blink_speed_on      },
+	{ "beacon",       "blink_animation_speed_off", ULONG,     &config.beacon_blink_speed_off     },
+
+	{ "gauge_cursor", "min_length",                LENGTH,    &config.gauge_min_length           },
+	{ "gauge_bar",    "max_thickness",             LENGTH,    &config.gauge_max_thickness        },
 
 	KEY(  1) KEY(  2) KEY(  3) KEY(  4) KEY(  5) KEY(  6) KEY(  7) KEY(  8) KEY(  9) KEY( 10)
 	KEY( 11) KEY( 12) KEY( 13) KEY( 14) KEY( 15) KEY( 16) KEY( 17) KEY( 18) KEY( 19) KEY( 20)
@@ -538,14 +543,14 @@ config_init(const char *app_name, const char *app_class)
 void
 config_load(void)
 {
-	bool tmp;
+	int tmp;
 
 	/* apply defaults */
 
-	tmp                = config.alt_present;
+	tmp                = config.render_mode;
 	config             = config_default;
 	config.init        = true;
-	config.alt_present = tmp;
+	config.render_mode = tmp;
 
 	if (cgui_error() || util_env_exists(ENV_NO_PARSING))
 	{
@@ -616,15 +621,15 @@ config_swap_input(uint8_t id, struct cgui_mods mods, enum config_swap type)
 
 	switch (config.modkey)
 	{
-		case CGUI_CONFIG_MOD_CTRL:
+		case CGUI_MOD_CTRL:
 			modkey = mods.ctrl;
 			break;
 
-		case CGUI_CONFIG_MOD_1:
+		case CGUI_MOD_1:
 			modkey = mods.mod_1;
 			break;
 
-		case CGUI_CONFIG_MOD_4:
+		case CGUI_MOD_4:
 			modkey = mods.mod_4;
 			break;
 
@@ -727,6 +732,7 @@ fetch(const struct resource resource)
 		case MOD_KEY:
 		case ANTIALIAS:
 		case SUBPIXEL:
+		case RENDER:
 			cdict_find(dict, str, resource.type, &tmp);
 			*(int*)resource.target = tmp;
 			break;
@@ -771,34 +777,34 @@ font_setup(void)
 
 	switch (config.font_antialias)
 	{
-		case CGUI_CONFIG_ANTIALIAS_NONE:
+		case CGUI_ANTIALIAS_NONE:
 			antialias = CAIRO_ANTIALIAS_NONE;
 			break;
 
-		case CGUI_CONFIG_ANTIALIAS_GRAY:
+		case CGUI_ANTIALIAS_GRAY:
 			antialias = CAIRO_ANTIALIAS_GRAY;
 			break;
 
-		case CGUI_CONFIG_ANTIALIAS_SUBPIXEL:
+		case CGUI_ANTIALIAS_SUBPIXEL:
 			antialias = CAIRO_ANTIALIAS_SUBPIXEL;
 			break;
 	}
 
 	switch (config.font_subpixel)
 	{
-		case CGUI_CONFIG_SUBPIXEL_RGB:
+		case CGUI_SUBPIXEL_RGB:
 			subpixel = CAIRO_SUBPIXEL_ORDER_RGB;
 			break;
 
-		case CGUI_CONFIG_SUBPIXEL_BGR:
+		case CGUI_SUBPIXEL_BGR:
 			subpixel = CAIRO_SUBPIXEL_ORDER_BGR;
 			break;
 
-		case CGUI_CONFIG_SUBPIXEL_VRGB:
+		case CGUI_SUBPIXEL_VRGB:
 			subpixel = CAIRO_SUBPIXEL_ORDER_VRGB;
 			break;
 
-		case CGUI_CONFIG_SUBPIXEL_VBGR:
+		case CGUI_SUBPIXEL_VBGR:
 			subpixel = CAIRO_SUBPIXEL_ORDER_VBGR;
 			break;
 	}
@@ -864,16 +870,15 @@ scale(const struct resource resource)
 	{
 		case POSITION:
 		case LENGTH:
-		case DOUBLE:
-		case UDOUBLE:
-			*(double*)resource.target *= config.scale;
+			*(double*)resource.target *= config.render_scale;
 			break;
 
 		case CORNER_SIZE:
 			for (size_t i = 0; i < 4; i++)
 			{
-				((double*)resource.target)[i] *= config.scale;
+				((double*)resource.target)[i] *= config.render_scale;
 			}
+			break;
 
 		default:
 			break;

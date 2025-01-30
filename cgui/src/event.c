@@ -730,7 +730,7 @@ present(struct cgui_event *event)
 		return;
 	}
 
-	if (!CONFIG->alt_present)
+	if (CONFIG->render_mode == CGUI_RENDER_DEFERRED)
 	{
 		window_draw(event->window);
 	}

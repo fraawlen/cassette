@@ -1167,7 +1167,7 @@ window_draw(cgui_window *window)
 		return;
 	}
 
-	if (!CONFIG->window_enable_partial_redraws)
+	if (!CONFIG->render_partial)
 	{
 		window->draw_level = WINDOW_DRAW_FULL;
 	}
@@ -1347,7 +1347,7 @@ window_present(cgui_window *window)
 		return;
 	}
 
-	if (CONFIG->alt_present)
+	if (CONFIG->render_mode == CGUI_RENDER_FORWARD)
 	{
 		window_draw(window);
 	}
@@ -1458,7 +1458,7 @@ window_schedule_draw(cgui_window *window, enum window_draw_level level, unsigned
 		min_delay = 1000000 / CONFIG->render_fps_async_cap;
 	}
 
-	if (level == WINDOW_DRAW_FULL_ASYNC && CONFIG->async_present)
+	if (level == WINDOW_DRAW_FULL_ASYNC && CONFIG->render_sync_bypass)
 	{
 		window->async_present = true;
 		window->wait_present  = false;
@@ -1496,7 +1496,7 @@ window_update_size(cgui_window *window, double width, double height)
 	window->height = height;
 
 	cairo_surface_flush(window->surface);
-	if (CONFIG->alt_present)
+	if (CONFIG->render_mode == CGUI_RENDER_FORWARD)
 	{
 		x11_window_update_buffer(window->x_id, &window->x_buffer, width, height);
 		cairo_xcb_surface_set_drawable(window->surface, window->x_buffer, width, height);
@@ -1669,7 +1669,7 @@ cairo_setup(cgui_window *window, double width, double height)
 {
 	window->surface = cairo_xcb_surface_create(
 		x11_connection(),
-		CONFIG->alt_present ? window->x_buffer : window->x_id,
+		CONFIG->render_mode == CGUI_RENDER_FORWARD ? window->x_buffer : window->x_id,
 		x11_visual(),
 		util_clamp(width,  0.0, INT_MAX - 1),
 		util_clamp(height, 0.0, INT_MAX - 1));

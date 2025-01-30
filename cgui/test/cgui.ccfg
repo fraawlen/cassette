@@ -5,10 +5,13 @@
 
 	LET windows window window_focused window_disabled window_locked
 
-	test padding 32
-
-	global scale 1.0
-	global alternative_present_mode FALSE
+	render scale            1.0
+	render mode             forward
+	render sync_vblank      TRUE
+	render sync_bypass      TRUE
+	render partial          TRUE
+	render fps_async_cap    30
+	render fps_sync_divider 1
 
 	font face               "Terminus"
 	font size               32
@@ -26,17 +29,12 @@
 	grid padding 60
 	grid spacing 45
 
-	behavior async_present               FALSE
 	behavior enable_cell_auto_lock       TRUE
 	behavior enable_persistent_pointer   FALSE
 	behavior enable_persistent_touch     FALSE
-	behavior animation_framerate_divider 1
 	behavior window_button_move          1
 	behavior window_button_resize        3
 	behavior window_button_fullscreen    2
-
-	render sync_vblank TRUE
-	render async_fps_cap 30
 
 	button M3 misc:exit
 	button M2 misc:reconfig
@@ -44,7 +42,6 @@
 	window padding 50
 	window color_border #505050
 	window enable_focused_substyle TRUE
-	window allow_partial_redraws   TRUE
 
 	FOR_EACH windows
 		(% windows) border_thickness 20

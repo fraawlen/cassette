@@ -29,8 +29,20 @@
 static const struct cgui_config config_default =
 {
 	.init   = false,
-	.scale  = 1.0,
-	.modkey = CGUI_CONFIG_MOD_CTRL,
+
+	/* rendering */
+
+	.render_mode          = CGUI_RENDER_DEFERRED,
+	.render_sync_vblank   = true,
+	.render_sync_bypass   = true,
+	.render_partial       = true,
+	.render_scale         = 1.0,
+	.render_fps_async_cap = DBL_MAX,
+	.render_fps_sync_div  = 1,
+
+	/* inputs */
+
+	.modkey = CGUI_MOD_CTRL,
 
 	/* font */
 
@@ -45,16 +57,11 @@ static const struct cgui_config config_default =
 	.font_override_descent    = 0,
 	.font_enable_overrides    = false,
 	.font_enable_hint_metrics = true,
-	.font_antialias           = CGUI_CONFIG_ANTIALIAS_SUBPIXEL,
-	.font_subpixel            = CGUI_CONFIG_SUBPIXEL_RGB,
+	.font_antialias           = CGUI_ANTIALIAS_SUBPIXEL,
+	.font_subpixel            = CGUI_SUBPIXEL_RGB,
 	.font_background_hpad     = 0,
 	.font_background_vpad     = 0,
 	.font_padding_pattern     = "_",
-
-	/* rendering */
-
-	.render_sync_vblank   = true,
-	.render_fps_async_cap = DBL_MAX,
 
 	/* grid */
 
@@ -99,12 +106,11 @@ static const struct cgui_config config_default =
 		.size_border      = 10,
 	},
 
-	.window_padding                = 20,
-	.window_enable_disabled        = true,
-	.window_enable_focused         = true,
-	.window_enable_locked          = true,
-	.window_enable_partial_redraws = true,
-	.window_focus_on_activation    = true,
+	.window_padding             = 20,
+	.window_enable_disabled     = true,
+	.window_enable_focused      = true,
+	.window_enable_locked       = true,
+	.window_focus_on_activation = true,
 
 	/* popup */
 
@@ -120,15 +126,14 @@ static const struct cgui_config config_default =
 
 	/* behavior */
 
-	.alt_present            = false,
-	.async_present          = true,
 	.cell_auto_lock         = true,
 	.persistent_pointer     = false,
 	.persistent_touch       = false,
-	.anim_divider           = 1,
 	.wm_button_move         = 0,
 	.wm_button_resize       = 0,
 	.wm_button_fullscreen   = 0,
+
+	/* reactive shadows */
 	
 	.shadows_follow_pointer     = false,
 	.shadows_max_light_distance = 0.0,
@@ -138,40 +143,40 @@ static const struct cgui_config config_default =
 
 	.keys = {{{0}}},
 
-	.keys[ 67][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   1                           }, /* F1   */
-	.keys[ 68][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   2                           }, /* F2   */
-	.keys[ 69][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   3                           }, /* F3   */
-	.keys[ 70][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   4                           }, /* F4   */
-	.keys[ 71][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   5                           }, /* F5   */
-	.keys[ 72][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   6                           }, /* F6   */
-	.keys[ 73][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   7                           }, /* F7   */
-	.keys[ 74][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   8                           }, /* F8   */
-	.keys[ 75][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   9                           }, /* F9   */
-	.keys[ 76][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   10                          }, /* F10  */
-	.keys[ 95][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   11                          }, /* F11  */
-	.keys[ 96][CGUI_CONFIG_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   12                          }, /* F12  */
+	.keys[ 67][CGUI_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   1                           }, /* F1   */
+	.keys[ 68][CGUI_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   2                           }, /* F2   */
+	.keys[ 69][CGUI_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   3                           }, /* F3   */
+	.keys[ 70][CGUI_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   4                           }, /* F4   */
+	.keys[ 71][CGUI_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   5                           }, /* F5   */
+	.keys[ 72][CGUI_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   6                           }, /* F6   */
+	.keys[ 73][CGUI_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   7                           }, /* F7   */
+	.keys[ 74][CGUI_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   8                           }, /* F8   */
+	.keys[ 75][CGUI_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   9                           }, /* F9   */
+	.keys[ 76][CGUI_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   10                          }, /* F10  */
+	.keys[ 95][CGUI_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   11                          }, /* F11  */
+	.keys[ 96][CGUI_SWAP_DIRECT] = { CGUI_SWAP_TO_ACCELERATOR,   12                          }, /* F12  */
 
-	.keys[  9][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_SWAP_TO_FOCUS,         CGUI_FOCUS_NONE             }, /* Esc  */
-	.keys[ 23][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_SWAP_TO_FOCUS,         CGUI_FOCUS_NEXT             }, /* Tab  */
-	.keys[110][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_SWAP_TO_FOCUS,         CGUI_FOCUS_FIRST            }, /* Home */
-	.keys[115][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_SWAP_TO_FOCUS,         CGUI_FOCUS_LAST             }, /* End  */
-	.keys[ 23][CGUI_CONFIG_SWAP_SHIFT ] = { CGUI_SWAP_TO_FOCUS,         CGUI_FOCUS_PREV             }, /* Tab  */
+	.keys[  9][CGUI_SWAP_MOD   ] = { CGUI_SWAP_TO_FOCUS,         CGUI_FOCUS_NONE             }, /* Esc  */
+	.keys[ 23][CGUI_SWAP_MOD   ] = { CGUI_SWAP_TO_FOCUS,         CGUI_FOCUS_NEXT             }, /* Tab  */
+	.keys[110][CGUI_SWAP_MOD   ] = { CGUI_SWAP_TO_FOCUS,         CGUI_FOCUS_FIRST            }, /* Home */
+	.keys[115][CGUI_SWAP_MOD   ] = { CGUI_SWAP_TO_FOCUS,         CGUI_FOCUS_LAST             }, /* End  */
+	.keys[ 23][CGUI_SWAP_SHIFT ] = { CGUI_SWAP_TO_FOCUS,         CGUI_FOCUS_PREV             }, /* Tab  */
 
-	.keys[ 22][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_CELL,   CGUI_SWAP_CELL_REDRAW       }, /* Bspc */
-	.keys[ 22][CGUI_CONFIG_SWAP_SHIFT ] = { CGUI_SWAP_TO_ACTION_WINDOW, CGUI_SWAP_WINDOW_REDRAW     }, /* Bspc */
-	.keys[ 46][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_WINDOW, CGUI_SWAP_WINDOW_LOCK_FOCUS }, /* L    */
-	.keys[ 46][CGUI_CONFIG_SWAP_SHIFT ] = { CGUI_SWAP_TO_ACTION_WINDOW, CGUI_SWAP_WINDOW_LOCK_GRID  }, /* L    */
+	.keys[ 22][CGUI_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_CELL,   CGUI_SWAP_CELL_REDRAW       }, /* Bspc */
+	.keys[ 22][CGUI_SWAP_SHIFT ] = { CGUI_SWAP_TO_ACTION_WINDOW, CGUI_SWAP_WINDOW_REDRAW     }, /* Bspc */
+	.keys[ 46][CGUI_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_WINDOW, CGUI_SWAP_WINDOW_LOCK_FOCUS }, /* L    */
+	.keys[ 46][CGUI_SWAP_SHIFT ] = { CGUI_SWAP_TO_ACTION_WINDOW, CGUI_SWAP_WINDOW_LOCK_GRID  }, /* L    */
 
-	.keys[ 27][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_MISC,   CGUI_SWAP_RECONFIG          }, /* R    */
-	.keys[ 54][CGUI_CONFIG_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_MISC,   CGUI_SWAP_EXIT              }, /* C    */
+	.keys[ 27][CGUI_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_MISC,   CGUI_SWAP_RECONFIG          }, /* R    */
+	.keys[ 54][CGUI_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_MISC,   CGUI_SWAP_EXIT              }, /* C    */
 
 	/* mouse buttons */
 	
 	.buttons = {{{0}}},
 
-	.buttons[2][CGUI_CONFIG_SWAP_MOD] = { CGUI_SWAP_TO_ACCELERATOR, 1 },
-	.buttons[4][CGUI_CONFIG_SWAP_MOD] = { CGUI_SWAP_TO_VALUE,       6 },
-	.buttons[5][CGUI_CONFIG_SWAP_MOD] = { CGUI_SWAP_TO_VALUE,       7 },
+	.buttons[2][CGUI_SWAP_MOD] = { CGUI_SWAP_TO_ACCELERATOR, 1 },
+	.buttons[4][CGUI_SWAP_MOD] = { CGUI_SWAP_TO_VALUE,       6 },
+	.buttons[5][CGUI_SWAP_MOD] = { CGUI_SWAP_TO_VALUE,       7 },
 
 	/* cell - filler */
 

@@ -33,6 +33,16 @@ extern "C" {
 /**
  *
  */
+enum cgui_swap_level
+{
+	CGUI_SWAP_DIRECT = 0,
+	CGUI_SWAP_MOD    = 1,
+	CGUI_SWAP_SHIFT  = 2,
+};
+
+/**
+ *
+ */
 enum cgui_swap_type
 {
 	CGUI_SWAP_TO_DEFAULT = 0,

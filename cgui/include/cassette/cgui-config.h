@@ -53,51 +53,22 @@ extern "C" {
 /**
  *
  */
-enum cgui_config_modkey
-{
-	CGUI_CONFIG_MOD_CTRL,
-	CGUI_CONFIG_MOD_1, 
-	CGUI_CONFIG_MOD_4,
-};
-
-/**
- *
- */
-enum cgui_config_antialias
-{
-	CGUI_CONFIG_ANTIALIAS_NONE,
-	CGUI_CONFIG_ANTIALIAS_GRAY,
-	CGUI_CONFIG_ANTIALIAS_SUBPIXEL,
-};
-
-/**
- *
- */
-enum cgui_config_subpixel
-{
-	CGUI_CONFIG_SUBPIXEL_RGB,
-	CGUI_CONFIG_SUBPIXEL_BGR,
-	CGUI_CONFIG_SUBPIXEL_VRGB,
-	CGUI_CONFIG_SUBPIXEL_VBGR,
-};
-
-/**
- *
- */
-enum cgui_config_swap_level
-{
-	CGUI_CONFIG_SWAP_DIRECT = 0,
-	CGUI_CONFIG_SWAP_MOD    = 1,
-	CGUI_CONFIG_SWAP_SHIFT  = 2,
-};
-
-/**
- *
- */
 struct cgui_config
 {
 	bool init;
-	double scale;
+
+	/* rendering */
+
+	int render_mode;
+	bool render_sync_vblank;
+	bool render_sync_bypass;
+	bool render_partial;
+	double render_scale;
+	double render_fps_async_cap;
+	unsigned long render_fps_sync_div;
+
+	/* inputs */
+
 	int modkey;
 
 	/* font */
@@ -125,11 +96,6 @@ struct cgui_config
 	int font_antialias;
 	int font_subpixel;
 
-	/* rendering */
-
-	bool render_sync_vblank;
-	double render_fps_async_cap;
-
 	/* grid */
 
 	double grid_padding;
@@ -147,7 +113,6 @@ struct cgui_config
 	bool window_enable_disabled;
 	bool window_enable_focused;
 	bool window_enable_locked;
-	bool window_enable_partial_redraws;
 	
 	/* popup */
 
@@ -156,18 +121,18 @@ struct cgui_config
 
 	/* behavior */
 
-	bool alt_present;
-	bool async_present;
 	bool cell_auto_lock;
 	bool persistent_pointer;
 	bool persistent_touch;
-	bool shadows_follow_pointer;
-	double shadows_max_light_distance;
-	double shadows_max_offset;
-	unsigned long anim_divider;
 	uint8_t wm_button_move;
 	uint8_t wm_button_resize;
 	uint8_t wm_button_fullscreen;
+
+	/* reactive shadows */
+
+	bool shadows_follow_pointer;
+	double shadows_max_light_distance;
+	double shadows_max_offset;
 
 	/* input swaps */
 

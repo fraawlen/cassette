@@ -27,21 +27,6 @@
 /**
  *
  */
-struct cgui_mods
-{
-	bool capslock;
-	bool shift;
-	bool ctrl;
-	bool mod_1;
-	bool mod_2;
-	bool mod_3;
-	bool mod_4;
-	bool mod_5;
-};
-
-/**
- *
- */
 enum cgui_align
 {
 	CGUI_ALIGN_TOP_LEFT,
@@ -58,12 +43,11 @@ enum cgui_align
 /**
  *
  */
-enum cgui_rotation
+enum cgui_antialias
 {
-	CGUI_ROTATION_NORMAL,
-	CGUI_ROTATION_INVERTED,
-	CGUI_ROTATION_LEFT,
-	CGUI_ROTATION_RIGHT,
+	CGUI_ANTIALIAS_NONE,
+	CGUI_ANTIALIAS_GRAY,
+	CGUI_ANTIALIAS_SUBPIXEL,
 };
 
 /**
@@ -79,6 +63,17 @@ enum cgui_corner
 /**
  *
  */
+enum cgui_modkey
+{
+	CGUI_MOD_CTRL,
+	CGUI_MOD_1, 
+	CGUI_MOD_4,
+};
+
+
+/**
+ *
+ */
 enum cgui_focus
 {
 	CGUI_FOCUS_NONE,
@@ -86,6 +81,52 @@ enum cgui_focus
 	CGUI_FOCUS_PREV,
 	CGUI_FOCUS_FIRST,
 	CGUI_FOCUS_LAST,
+};
+
+/**
+ *
+ */
+enum cgui_render_mode
+{
+	CGUI_RENDER_FORWARD,
+	CGUI_RENDER_DEFERRED,
+};
+
+/**
+ *
+ */
+enum cgui_rotation
+{
+	CGUI_ROTATION_NORMAL,
+	CGUI_ROTATION_INVERTED,
+	CGUI_ROTATION_LEFT,
+	CGUI_ROTATION_RIGHT,
+};
+
+/**
+ *
+ */
+enum cgui_subpixel
+{
+	CGUI_SUBPIXEL_RGB,
+	CGUI_SUBPIXEL_BGR,
+	CGUI_SUBPIXEL_VRGB,
+	CGUI_SUBPIXEL_VBGR,
+};
+
+/**
+ *
+ */
+struct cgui_mods
+{
+	bool capslock;
+	bool shift;
+	bool ctrl;
+	bool mod_1;
+	bool mod_2;
+	bool mod_3;
+	bool mod_4;
+	bool mod_5;
 };
 
 /************************************************************************************************************/
