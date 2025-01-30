@@ -26,6 +26,52 @@
 /* GLOBALS **************************************************************************************************/
 /************************************************************************************************************/
 
+static const struct cgui_window_style blank_window =
+{
+	.cn_type = {CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE},
+	.bd_cl   = { .r = 0.671, .g = 0.671, .b = 0.671, .a = 1.000 },
+	.bg_cl   = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
+	.cn_size = { 0.0, 0.0, 0.0, 0.0 },
+	.bd_size =  10.0,
+	.ena     = false,
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static const struct cgui_box blank_box =
+{
+	.cn_type     = {CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE},
+	.cn_size     = {0.0, 0.0, 0.0, 0.0},
+	.ol_size     =  0.0,
+	.bd_size     = 10.0,
+	.pad         =  0.0,
+	.margin      =  0.0,
+	.sd_offset_x =  0.0,
+	.sd_offset_y =  0.0,
+	.ol_cl       = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.bd_cl       = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.bg_cl       = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.sd_cl       = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.ol_shape    = true,
+	.bd_shape    = true,
+	.draw        = true,
+	.sd_draw     = false,
+	.cn_smart    = true,
+	.ol_hit      = false,
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static const struct cgui_text blank_text =
+{
+	.cl      = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.bg_cl   = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
+	.bg_draw = false,
+	.bold    = false,
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 static const struct cgui_config config_default =
 {
 	.loads = 0,
@@ -82,60 +128,17 @@ static const struct cgui_config config_default =
 
 	/* window */
 
-	.window =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
-		.size_corner      = { 0.0, 0.0, 0.0, 0.0 },
-		.size_border      = 10,
-		.ena              = false,
-	},
-
-	.window_focused =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.color_border     = { .r = 0.671, .g = 0.671, .b = 0.671, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
-		.size_corner      = { 0.0, 0.0, 0.0, 0.0 },
-		.size_border      = 10,
-		.ena              = false,
-	},
-
-	.window_locked =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.color_border     = { .r = 0.500, .g = 0.100, .b = 0.100, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
-		.size_corner      = { 0.0, 0.0, 0.0, 0.0 },
-		.size_border      = 10,
-		.ena              = false,
-	},
-
-	.window_disabled =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.color_border     = { .r = 0.400, .g = 0.400, .b = 0.400, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
-		.size_corner      = { 0.0, 0.0, 0.0, 0.0 },
-		.size_border      = 10,
-		.ena              = false,
-	},
-
+	.window           = blank_window,
+	.window_focused   = blank_window,
+	.window_locked    = blank_window,
+	.window_disabled  = blank_window,
 	.window_pad       = 20.0,
 	.window_pre_focus = true,
 
 	/* popup */
 
+	.popup     = blank_window,
 	.popup_pad = 10.0,
-	.popup =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
-		.size_corner      = { 0.0, 0.0, 0.0, 0.0 },
-		.size_border      = 10,
-	},
 
 	/* keys */
 
@@ -178,438 +181,56 @@ static const struct cgui_config config_default =
 
 	/* cell - filler */
 
-	.filler_frame =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.size_corner      = {0, 0, 0, 0},
-		.size_outline     =  0,
-		.size_border      = 10,
-		.padding          = 10,
-		.margin           =  0,
-		.shadow_x_offset  =  0,
-		.shadow_y_offset  =  0,
-		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.shape_outline    = true,
-		.shape_border     = true,
-		.draw             = true,
-		.draw_shadow      = false,
-		.smart_corners    = true,
-		.hit_outline      = false,
-	},
+	.filler_frame = blank_box,
 
 	/* cell - stripes */
 
-	.stripes_frame =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.size_corner      = {0, 0, 0, 0},
-		.size_outline     =  0,
-		.size_border      = 10,
-		.padding          = 10,
-		.margin           =  0,
-		.shadow_x_offset  =  0,
-		.shadow_y_offset  =  0,
-		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.shape_outline    = true,
-		.shape_border     = true,
-		.draw             = true,
-		.draw_shadow      = false,
-		.smart_corners    = true,
-		.hit_outline      = false,
-	},
-
+	.stripes_frame      = blank_box,
 	.stripes_line_cl    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
 	.stripes_line_width = 20.0,
 	.stripes_line_gap   = 20.0,
 
 	/* cell - placeholder */
 
-	.placeholder_frame =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.size_corner      = {0, 0, 0, 0},
-		.size_outline     =  0,
-		.size_border      = 10,
-		.padding          = 10,
-		.margin           =  0,
-		.shadow_x_offset  =  0,
-		.shadow_y_offset  =  0,
-		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.shape_outline    = true,
-		.shape_border     = true,
-		.draw             = true,
-		.draw_shadow      = false,
-		.smart_corners    = true,
-		.hit_outline      = false,
-	},
-
+	.placeholder_frame      = blank_box,
 	.placeholder_line_cl    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
 	.placeholder_line_width = 20.0,
 
 	/* cell - button */
 
-	.button_frame_idle =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.size_corner      = {0, 0, 0, 0},
-		.size_outline     =  0,
-		.size_border      = 10,
-		.padding          = 10,
-		.margin           =  0,
-		.shadow_x_offset  =  0,
-		.shadow_y_offset  =  0,
-		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.shape_outline    = true,
-		.shape_border     = true,
-		.draw             = true,
-		.draw_shadow      = false,
-		.smart_corners    = true,
-		.hit_outline      = false,
-	},
-
-	.button_frame_focused =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.size_corner      = {0, 0, 0, 0},
-		.size_outline     =  0,
-		.size_border      = 10,
-		.padding          = 10,
-		.margin           =  0,
-		.shadow_x_offset  =  0,
-		.shadow_y_offset  =  0,
-		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.shape_outline    = true,
-		.shape_border     = true,
-		.draw             = true,
-		.draw_shadow      = false,
-		.smart_corners    = true,
-		.hit_outline      = false,
-	},
-
-	.button_frame_pressed =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.size_corner      = {0, 0, 0, 0},
-		.size_outline     =  0,
-		.size_border      = 10,
-		.padding          = 10,
-		.margin           =  0,
-		.shadow_x_offset  =  0,
-		.shadow_y_offset  =  0,
-		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.shape_outline    = true,
-		.shape_border     = true,
-		.draw             = true,
-		.draw_shadow      = false,
-		.smart_corners    = true,
-		.hit_outline      = false,
-	},
-
-	.button_frame_disabled =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.size_corner      = {0, 0, 0, 0},
-		.size_outline     =  0,
-		.size_border      = 10,
-		.padding          = 10,
-		.margin           =  0,
-		.shadow_x_offset  =  0,
-		.shadow_y_offset  =  0,
-		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.shape_outline    = true,
-		.shape_border     = true,
-		.draw             = true,
-		.draw_shadow      = false,
-		.smart_corners    = true,
-		.hit_outline      = false,
-	},
-
-	.button_text_idle =
-	{
-		.color            = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
-		.draw_background  = false,
-		.bold             = false,
-	},
-
-	.button_text_focused =
-	{
-		.color            = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
-		.draw_background  = false,
-		.bold             = false,
-	},
-
-	.button_text_pressed =
-	{
-		.color            = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
-		.draw_background  = false,
-		.bold             = false,
-	},
-
-	.button_text_disabled =
-	{
-		.color            = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
-		.draw_background  = false,
-		.bold             = false,
-	},
+	.button_frame_idle     = blank_box,
+	.button_frame_focused  = blank_box,
+	.button_frame_pressed  = blank_box,
+	.button_frame_disabled = blank_box,
+	.button_text_idle      = blank_text,
+	.button_text_focused   = blank_text,
+	.button_text_pressed   = blank_text,
+	.button_text_disabled  = blank_text,
 
 	/* cell - label */
 
-	.label_frame =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.size_corner      = {0, 0, 0, 0},
-		.size_outline     =  0,
-		.size_border      = 10,
-		.padding          = 10,
-		.margin           =  0,
-		.shadow_x_offset  =  0,
-		.shadow_y_offset  =  0,
-		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.shape_outline    = true,
-		.shape_border     = true,
-		.draw             = true,
-		.draw_shadow      = false,
-		.smart_corners    = true,
-		.hit_outline      = false,
-	},
-
-	.label_text =
-	{
-		.color            = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
-		.draw_background  = false,
-		.bold             = false,
-	},
+	.label_frame = blank_box,
+	.label_text  = blank_text,
 
 	/* cell - beacon */
 
-	.beacon_frame_off =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.size_corner      = {0, 0, 0, 0},
-		.size_outline     =  0,
-		.size_border      = 10,
-		.padding          = 10,
-		.margin           =  0,
-		.shadow_x_offset  =  0,
-		.shadow_y_offset  =  0,
-		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.shape_outline    = true,
-		.shape_border     = true,
-		.draw             = true,
-		.draw_shadow      = false,
-		.smart_corners    = true,
-		.hit_outline      = false,
-	},
-
-	.beacon_frame_on =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.size_corner      = {0, 0, 0, 0},
-		.size_outline     =  0,
-		.size_border      = 10,
-		.padding          = 10,
-		.margin           =  0,
-		.shadow_x_offset  =  0,
-		.shadow_y_offset  =  0,
-		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.shape_outline    = true,
-		.shape_border     = true,
-		.draw             = true,
-		.draw_shadow      = false,
-		.smart_corners    = true,
-		.hit_outline      = false,
-	},
-
-	.beacon_frame_crit_off =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.size_corner      = {0, 0, 0, 0},
-		.size_outline     =  0,
-		.size_border      = 10,
-		.padding          = 10,
-		.margin           =  0,
-		.shadow_x_offset  =  0,
-		.shadow_y_offset  =  0,
-		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.shape_outline    = true,
-		.shape_border     = true,
-		.draw             = true,
-		.draw_shadow      = false,
-		.smart_corners    = true,
-		.hit_outline      = false,
-	},
-
-	.beacon_frame_crit_on =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.size_corner      = {0, 0, 0, 0},
-		.size_outline     =  0,
-		.size_border      = 10,
-		.padding          = 10,
-		.margin           =  0,
-		.shadow_x_offset  =  0,
-		.shadow_y_offset  =  0,
-		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.shape_outline    = true,
-		.shape_border     = true,
-		.draw             = true,
-		.draw_shadow      = false,
-		.smart_corners    = true,
-		.hit_outline      = false,
-	},
-
-	.beacon_text_off =
-	{
-		.color            = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
-		.color_background = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
-		.draw_background  = false,
-		.bold             = false,
-	},
-
-	.beacon_text_on =
-	{
-		.color            = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
-		.draw_background  = false,
-		.bold             = true,
-	},
-
-	.beacon_text_crit_off =
-	{
-		.color            = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
-		.draw_background  = false,
-		.bold             = false,
-	},
-
-	.beacon_text_crit_on =
-	{
-		.color            = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
-		.color_background = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
-		.draw_background  = false,
-		.bold             = true,
-	},
-
-	.beacon_blink_on  = 500,
-	.beacon_blink_off = 500,
+	.beacon_frame_off      = blank_box,
+	.beacon_frame_on       = blank_box,
+	.beacon_frame_crit_off = blank_box,
+	.beacon_frame_crit_on  = blank_box,
+	.beacon_text_off       = blank_text,
+	.beacon_text_on        = blank_text,
+	.beacon_text_crit_off  = blank_text,
+	.beacon_text_crit_on   = blank_text,
+	.beacon_blink_on       = 500,
+	.beacon_blink_off      = 500,
 
 	/* cell - gauge */
 
-	.gauge_frame =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.size_corner      = {0, 0, 0, 0},
-		.size_outline     =  0,
-		.size_border      = 10,
-		.padding          = 10,
-		.margin           =  0,
-		.shadow_x_offset  =  0,
-		.shadow_y_offset  =  0,
-		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.shape_outline    = true,
-		.shape_border     = true,
-		.draw             = true,
-		.draw_shadow      = false,
-		.smart_corners    = true,
-		.hit_outline      = false,
-	},
-
-	.gauge_bar =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.size_corner      = {0, 0, 0, 0},
-		.size_outline     =  0,
-		.size_border      = 10,
-		.padding          =  0,
-		.margin           =  0,
-		.shadow_x_offset  =  0,
-		.shadow_y_offset  =  0,
-		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.shape_outline    = true,
-		.shape_border     = true,
-		.draw             = true,
-		.draw_shadow      = false,
-		.smart_corners    = true,
-		.hit_outline      = false,
-	},
-
-	.gauge_cursor =
-	{
-		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
-		.size_corner      = {0, 0, 0, 0},
-		.size_outline     =  0,
-		.size_border      = 10,
-		.padding          =  0,
-		.margin           =  0,
-		.shadow_x_offset  =  0,
-		.shadow_y_offset  =  0,
-		.color_outline    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_border     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_shadow     = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.shape_outline    = true,
-		.shape_border     = true,
-		.draw             = true,
-		.draw_shadow      = false,
-		.smart_corners    = true,
-		.hit_outline      = false,
-	},
-
-	.gauge_text =
-	{
-		.color            = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-		.color_background = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
-		.draw_background  = false,
-		.bold             = false,
-	},
-
+	.gauge_frame      = blank_box,
+	.gauge_bar        = blank_box,
+	.gauge_cursor     = blank_box,
+	.gauge_text       = blank_text,
 	.gauge_min_length = 20.0,
 	.gauge_max_thick  = DBL_MAX,
 };

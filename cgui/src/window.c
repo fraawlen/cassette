@@ -1849,14 +1849,14 @@ frame(const cgui_window *window)
 
 	for (int i = 0; i < 4; i++)
 	{
-		box.corner[i]      = style.corner[i];
-		box.size_corner[i] = style.size_corner[i];
+		box.cn_type[i] = style.cn_type[i];
+		box.cn_size[i] = style.cn_size[i];
 	}
 
-	box.size_border      = style.size_border;
-	box.color_border     = style.color_border;
-	box.color_background = style.color_background;
-	box.draw             = true;
+	box.bd_size = style.bd_size;
+	box.bd_cl   = style.bd_cl;
+	box.bg_cl   = style.bg_cl;
+	box.draw    = true;
 
 	return box;
 }

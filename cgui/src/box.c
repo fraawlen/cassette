@@ -37,7 +37,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define CORNER_PAD(BOX, ID, PAD) (PAD * (1 - (BOX.corner[ID] == CGUI_CORNER_CHAMFER ? U : 0))) 
+#define CORNER_PAD(BOX, ID, PAD) (PAD * (1 - (BOX.cn_type[ID] == CGUI_CORNER_CUT ? U : 0))) 
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -74,7 +74,7 @@ cgui_box_clip(cairo_t *drawable, double pad)
 double
 cgui_box_content_offset(struct cgui_box box)
 {
-	return box.margin + box.size_border + box.padding;
+	return box.margin + box.bd_size + box.pad;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -92,36 +92,36 @@ cgui_box_draw(cairo_t *drawable)
 
 	/* shadow */
 
-	if (ctx_box.draw_shadow)
+	if (ctx_box.sd_draw)
 	{
-		ctx_x += ctx_box.shadow_x_offset;
-		ctx_y += ctx_box.shadow_y_offset;
-		path(drawable, ctx_box.shape_outline && ctx_box.shape_border, -ctx_box.size_outline);
-		paint(drawable, ctx_box.color_shadow);
-		ctx_x -= ctx_box.shadow_x_offset;
-		ctx_y -= ctx_box.shadow_y_offset;
+		ctx_x += ctx_box.sd_offset_x;
+		ctx_y += ctx_box.sd_offset_y;
+		path(drawable, ctx_box.ol_shape && ctx_box.bd_shape, -ctx_box.ol_size);
+		paint(drawable, ctx_box.sd_cl);
+		ctx_x -= ctx_box.sd_offset_x;
+		ctx_y -= ctx_box.sd_offset_y;
 	}
 
 	/* outline */
 
-	if (ctx_box.size_outline > 0.0)
+	if (ctx_box.ol_size > 0.0)
 	{
-		path(drawable, ctx_box.shape_outline && ctx_box.shape_border, -ctx_box.size_outline);
-		paint(drawable, ctx_box.color_outline);
+		path(drawable, ctx_box.ol_shape && ctx_box.bd_shape, -ctx_box.ol_size);
+		paint(drawable, ctx_box.ol_cl);
 	}
 
 	/* border */
 
-	if (ctx_box.size_border > 0.0)
+	if (ctx_box.bd_size > 0.0)
 	{
-		path(drawable, ctx_box.shape_border, 0.0);
-		paint(drawable, ctx_box.color_border);
+		path(drawable, ctx_box.bd_shape, 0.0);
+		paint(drawable, ctx_box.bd_cl);
 	}
 
 	/* background */
 
-	path(drawable, true, ctx_box.size_border);
-	paint(drawable, ctx_box.color_background);
+	path(drawable, true, ctx_box.bd_size);
+	paint(drawable, ctx_box.bg_cl);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -130,7 +130,7 @@ bool
 cgui_box_inside(cairo_t *drawable, double x, double y)
 {
 	cairo_new_path(drawable);
-	path(drawable, ctx_box.shape_border, ctx_box.hit_outline ? -ctx_box.size_outline : 0);
+	path(drawable, ctx_box.bd_shape, ctx_box.ol_hit ? -ctx_box.ol_size : 0);
 
 	return cairo_in_fill(drawable, x, y);
 
@@ -163,7 +163,7 @@ cgui_box_move_shadow(double x_light, double y_light, double max_light_distance, 
 	x = x_light - ctx_width  / 2;
 	y = y_light - ctx_height / 2;
 	
-	/* calculate shadow offset ratios */
+	/* shadow offset ratios */
 
 	m = ctx_width / 2 + max_light_distance;
 	a = atan2(y, x) + PI;
@@ -172,8 +172,8 @@ cgui_box_move_shadow(double x_light, double y_light, double max_light_distance, 
 
 	/* end */
 
-	ctx_box.shadow_x_offset = r * cos(a) * max_offset;
-	ctx_box.shadow_y_offset = r * sin(a) * max_offset;
+	ctx_box.sd_offset_x = r * cos(a) * max_offset;
+	ctx_box.sd_offset_y = r * sin(a) * max_offset;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -198,13 +198,13 @@ cgui_box_pad_corner(struct cgui_box *box, struct cgui_box box_parent, double pad
 		return;
 	}
 
-	if (!box->smart_corners || box_parent.corner[id] == CGUI_CORNER_STRAIGHT)
+	if (!box->cn_smart || box_parent.cn_type[id] == CGUI_CORNER_SQUARE)
 	{
 		return;
 	}
 
-	box->corner[id]      = box_parent.corner[id];
-	box->size_corner[id] = box_parent.size_corner[id] - CORNER_PAD(box_parent, id, pad);
+	box->cn_type[id] = box_parent.cn_type[id];
+	box->cn_size[id] = box_parent.cn_size[id] - CORNER_PAD(box_parent, id, pad);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -241,9 +241,9 @@ cgui_box_style(struct cgui_box box)
 /************************************************************************************************************/
 
 static void
-paint(cairo_t *drawable, struct ccolor color)
+paint(cairo_t *drawable, struct ccolor cl)
 {
-	cairo_set_source_rgba(drawable, color.r, color.g, color.b, color.a);
+	cairo_set_source_rgba(drawable, cl.r, cl.g, cl.b, cl.a);
 	cairo_fill(drawable);
 }
 
@@ -278,7 +278,7 @@ path(cairo_t *drawable, bool shape, double pad)
 
 	for (size_t i = 0; i < 4; i++)
 	{
-		r[i] = ctx_box.size_corner[i] - CORNER_PAD(ctx_box, i, pad);
+		r[i] = ctx_box.cn_size[i] - CORNER_PAD(ctx_box, i, pad);
 		if (r[i] < 0.0)
 		{
 			r[i] = 0.0;
@@ -299,18 +299,18 @@ subpath_1(cairo_t *d, double x, double y, double w, double h, double r)
 	(void)w;
 	(void)h;
 
-	switch (ctx_box.corner[0])
+	switch (ctx_box.cn_type[0])
 	{
-		case CGUI_CORNER_STRAIGHT:
+		case CGUI_CORNER_SQUARE:
 			cairo_move_to(d, x, y);
 			break;
 
-		case CGUI_CORNER_RADII:
+		case CGUI_CORNER_ROUND:
 			cairo_new_sub_path(d);
 			cairo_arc(d, x + r, y + r, r, PI, -PI / 2);
 			break;
 
-		case CGUI_CORNER_CHAMFER:
+		case CGUI_CORNER_CUT:
 			cairo_move_to(d, x,     y + r);
 			cairo_line_to(d, x + r, y);
 			break;
@@ -324,17 +324,17 @@ subpath_2(cairo_t *d, double x, double y, double w, double h, double r)
 {
 	(void)h;
 
-	switch (ctx_box.corner[1])
+	switch (ctx_box.cn_type[1])
 	{
-		case CGUI_CORNER_STRAIGHT:
+		case CGUI_CORNER_SQUARE:
 			cairo_line_to(d, x + w, y);
 			break;
 
-		case CGUI_CORNER_RADII:
+		case CGUI_CORNER_ROUND:
 			cairo_arc(d, x + w - r, y + r, r, -PI / 2, 0);
 			break;
 
-		case CGUI_CORNER_CHAMFER:
+		case CGUI_CORNER_CUT:
 			cairo_line_to(d, x + w - r, y);
 			cairo_line_to(d, x + w,     y + r);
 			break;
@@ -346,17 +346,17 @@ subpath_2(cairo_t *d, double x, double y, double w, double h, double r)
 static void
 subpath_3(cairo_t *d, double x, double y, double w, double h, double r)
 {
-	switch (ctx_box.corner[2])
+	switch (ctx_box.cn_type[2])
 	{
-		case CGUI_CORNER_STRAIGHT:
+		case CGUI_CORNER_SQUARE:
 			cairo_line_to(d, x + w, y + h);
 			break;
 
-		case CGUI_CORNER_RADII:
+		case CGUI_CORNER_ROUND:
 			cairo_arc(d, x + w - r, y + h - r, r, 0, PI / 2);
 			break;
 
-		case CGUI_CORNER_CHAMFER:
+		case CGUI_CORNER_CUT:
 			cairo_line_to(d, x + w,     y + h - r);
 			cairo_line_to(d, x + w - r, y + h);
 			break;
@@ -370,17 +370,17 @@ subpath_4(cairo_t *d, double x, double y, double w, double h, double r)
 {
 	(void)w;
 
-	switch (ctx_box.corner[3])
+	switch (ctx_box.cn_type[3])
 	{
-		case CGUI_CORNER_STRAIGHT:
+		case CGUI_CORNER_SQUARE:
 			cairo_line_to(d, x, y + h);
 			break;
 
-		case CGUI_CORNER_RADII:
+		case CGUI_CORNER_ROUND:
 			cairo_arc(d, x + r, y + h - r, r, PI / 2, PI);
 			break;
 
-		case CGUI_CORNER_CHAMFER:
+		case CGUI_CORNER_CUT:
 			cairo_line_to(d, x + r, y + h);
 			cairo_line_to(d, x,     y + h - r);
 			break;

@@ -268,9 +268,9 @@ draw_row(cairo_t *drawable, const char *s1, const char *s2, size_t o, size_t w, 
 
 	/* draw background */
 
-	if (ctx_style.draw_background)
+	if (ctx_style.bg_draw)
 	{
-		cl = ctx_style.color_background;
+		cl = ctx_style.bg_cl;
 		
 		cairo_set_source_rgba(drawable, cl.r, cl.g, cl.b, cl.a);
 		cairo_rectangle(drawable,
@@ -290,7 +290,7 @@ draw_row(cairo_t *drawable, const char *s1, const char *s2, size_t o, size_t w, 
 		x          += CONFIG->font_width + l;
 	}
 
-	cl = ctx_style.color;
+	cl = ctx_style.cl;
 
 	cairo_set_source_rgba(drawable, cl.r, cl.g, cl.b, cl.a);
 	cairo_show_glyphs(drawable, glyphs, n);

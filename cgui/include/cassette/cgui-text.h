@@ -40,9 +40,9 @@ extern "C" {
  */
 struct cgui_text
 {
-	struct ccolor color;
-	struct ccolor color_background;
-	bool draw_background;
+	struct ccolor cl;
+	struct ccolor bg_cl;
+	bool bg_draw;
 	bool bold;
 };
 

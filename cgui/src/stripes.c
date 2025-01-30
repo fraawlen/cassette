@@ -59,7 +59,7 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 	struct ccolor cl = CONFIG->stripes_line_cl;
 	double w = CONFIG->stripes_line_width;
 	double g = CONFIG->stripes_line_gap * 1.414213562;
-	double o = context.frame.margin + context.frame.padding;
+	double o = context.frame.margin + context.frame.pad;
 
 	(void)cell;
 

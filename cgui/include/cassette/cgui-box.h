@@ -38,27 +38,27 @@ extern "C" {
  */
 struct cgui_box
 {
-	enum cgui_corner corner[4];
+	enum cgui_corner cn_type[4];
 
-	double size_corner[4];
-	double size_outline;
-	double size_border;
-	double padding;
+	double pad;
 	double margin;
-	double shadow_x_offset;
-	double shadow_y_offset;
+	double cn_size[4];
+	double ol_size;
+	double bd_size;
+	double sd_offset_x;
+	double sd_offset_y;
 	
-	struct ccolor color_outline;
-	struct ccolor color_border;
-	struct ccolor color_background;
-	struct ccolor color_shadow;
+	struct ccolor ol_cl;
+	struct ccolor bd_cl;
+	struct ccolor bg_cl;
+	struct ccolor sd_cl;
 
 	bool draw;
-	bool draw_shadow;
-	bool smart_corners;
-	bool shape_outline;
-	bool shape_border;
-	bool hit_outline;
+	bool sd_draw;
+	bool cn_smart;
+	bool ol_shape;
+	bool bd_shape;
+	bool ol_hit;
 };
 
 /************************************************************************************************************/

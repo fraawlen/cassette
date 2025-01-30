@@ -171,7 +171,6 @@ static const char *default_text =
 	cgui_window_on_draw(window, on_draw);
 	cgui_window_on_close(window, on_close);
 	cgui_window_on_state(window, on_state);
-	cgui_window_resize(window, 1000, 1000);
 	cgui_window_activate(window);
 
 	/* Run */
@@ -285,7 +284,7 @@ on_load(ccfg *cfg)
 
 	cgui_config_style_box("test", &box);
 
-	printf(">> %f\n", box.padding);
+	printf(">> %f\n", box.pad);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

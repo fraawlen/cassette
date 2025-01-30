@@ -432,7 +432,7 @@ pre_setup(const cgui_cell *cell, struct zone z)
 		case CGUI_ROTATION_RIGHT:
 			ctx.l2 = DATA->show_label ? cgui_config_str_height(lh) + ctx.o3 * 2 : 0.0;
 			ctx.l2 = ctx.l2 < CONFIG->gauge_min_length ? CONFIG->gauge_min_length : ctx.l2;
-			ctx.a  = bar.size_border * 2 + (ctx.l2 > 0.0 ? ctx.l2 + bar.padding * 2 : 0.0);
+			ctx.a  = bar.bd_size * 2 + (ctx.l2 > 0.0 ? ctx.l2 + bar.pad * 2 : 0.0);
 			ctx.b  = (z.height - ctx.o1 * 2 - ctx.a) * (1 - ratio);
 			ctx.c  =  z.width  - ctx.o1 * 2;
 			ctx.l1 =  z.height - ctx.o1 * 2 - ctx.a - ctx.b;
@@ -443,7 +443,7 @@ pre_setup(const cgui_cell *cell, struct zone z)
 		case CGUI_ROTATION_NORMAL:
 			ctx.l2 = DATA->show_label ? cgui_config_str_width(lw) + ctx.o3 * 2 : 0.0;
 			ctx.l2 = ctx.l2 < CONFIG->gauge_min_length ? CONFIG->gauge_min_length : ctx.l2;
-			ctx.a  = bar.size_border * 2 + (ctx.l2 > 0.0 ? ctx.l2 + bar.padding * 2 : 0.0);
+			ctx.a  = bar.bd_size * 2 + (ctx.l2 > 0.0 ? ctx.l2 + bar.pad * 2 : 0.0);
 			ctx.b  = (z.width  - ctx.o1 * 2 - ctx.a) * (1 - ratio);
 			ctx.c  =  z.height - ctx.o1 * 2;
 			ctx.l1 =  z.width  - ctx.o1 * 2 - ctx.a - ctx.b;

@@ -63,7 +63,7 @@ cgui_cell_clip_frame(struct cgui_cell_context context)
 	cgui_box_move(context.x, context.y);
 	cgui_box_resize(context.width, context.height);
 	cgui_box_style(context.frame);
-	cgui_box_clip(context.drawable, context.frame.size_border + context.frame.padding);
+	cgui_box_clip(context.drawable, context.frame.bd_size + context.frame.pad);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

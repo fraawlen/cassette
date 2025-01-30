@@ -84,11 +84,11 @@ struct cgui_window_state_flags
  */
 struct cgui_window_style
 {
-	enum cgui_corner corner[4];
-	double size_corner[4];
-	double size_border;
-	struct ccolor color_border;
-	struct ccolor color_background;
+	enum cgui_corner cn_type[4];
+	double cn_size[4];
+	double bd_size;
+	struct ccolor bd_cl;
+	struct ccolor bg_cl;
 	bool ena;
 };
 

@@ -49,38 +49,38 @@
 	} \
 
 #define WINDOW(NAMESPACE, TARGET) \
-	{ NAMESPACE, "corner_type",      CORNER_TYPE,  TARGET.corner           }, \
-	{ NAMESPACE, "corner_size",      CORNER_SIZE,  TARGET.size_corner      }, \
-	{ NAMESPACE, "border_thickness", LENGTH,      &TARGET.size_border      }, \
-	{ NAMESPACE, "color_border",     COLOR,       &TARGET.color_border     }, \
-	{ NAMESPACE, "color_background", COLOR,       &TARGET.color_background }, \
-	{ NAMESPACE, "enabled",          BOOL,        &TARGET.ena              },
+	{ NAMESPACE, "corner_type",  CORNER_TYPE,  TARGET.cn_type }, \
+	{ NAMESPACE, "corner_size",  CORNER_SIZE,  TARGET.cn_size }, \
+	{ NAMESPACE, "border_size",  LENGTH,      &TARGET.bd_size }, \
+	{ NAMESPACE, "border_color", COLOR,       &TARGET.bd_cl   }, \
+	{ NAMESPACE, "back_color",   COLOR,       &TARGET.bg_cl   }, \
+	{ NAMESPACE, "enabled",      BOOL,        &TARGET.ena     },
 
 #define BOX(NAMESPACE, TARGET) \
-	{ NAMESPACE, "corner_type",       CORNER_TYPE,  TARGET.corner           }, \
-	{ NAMESPACE, "corner_size",       CORNER_SIZE,  TARGET.size_corner      }, \
-	{ NAMESPACE, "outline_thickness", LENGTH,      &TARGET.size_outline     }, \
-	{ NAMESPACE, "border_thickness",  LENGTH,      &TARGET.size_border      }, \
-	{ NAMESPACE, "padding",           POSITION,    &TARGET.padding          }, \
-	{ NAMESPACE, "margin",            POSITION,    &TARGET.margin           }, \
-	{ NAMESPACE, "shadow_x_offset",   POSITION,    &TARGET.shadow_x_offset  }, \
-	{ NAMESPACE, "shadow_y_offset",   POSITION,    &TARGET.shadow_y_offset  }, \
-	{ NAMESPACE, "color_outline",     COLOR,       &TARGET.color_outline    }, \
-	{ NAMESPACE, "color_border",      COLOR,       &TARGET.color_border     }, \
-	{ NAMESPACE, "color_background",  COLOR,       &TARGET.color_background }, \
-	{ NAMESPACE, "color_shadow",      COLOR,       &TARGET.color_shadow     }, \
-	{ NAMESPACE, "shape_outline",     BOOL,        &TARGET.shape_outline    }, \
-	{ NAMESPACE, "shape_border",      BOOL,        &TARGET.shape_border     }, \
-	{ NAMESPACE, "draw",              BOOL,        &TARGET.draw             }, \
-	{ NAMESPACE, "draw_shadow",       BOOL,        &TARGET.draw_shadow      }, \
-	{ NAMESPACE, "smart_corners",     BOOL,        &TARGET.smart_corners    }, \
-	{ NAMESPACE, "hit_outline",       BOOL,        &TARGET.draw_shadow      },
+	{ NAMESPACE, "corner_type",     CORNER_TYPE,  TARGET.cn_type     }, \
+	{ NAMESPACE, "corner_size",     CORNER_SIZE,  TARGET.cn_size     }, \
+	{ NAMESPACE, "outline_size",    LENGTH,      &TARGET.ol_size     }, \
+	{ NAMESPACE, "border_size",     LENGTH,      &TARGET.bd_size     }, \
+	{ NAMESPACE, "pad",             POSITION,    &TARGET.pad         }, \
+	{ NAMESPACE, "margin",          POSITION,    &TARGET.margin      }, \
+	{ NAMESPACE, "shadow_x_offset", POSITION,    &TARGET.sd_offset_x }, \
+	{ NAMESPACE, "shadow_y_offset", POSITION,    &TARGET.sd_offset_y }, \
+	{ NAMESPACE, "outline_color",   COLOR,       &TARGET.ol_cl       }, \
+	{ NAMESPACE, "border_color",    COLOR,       &TARGET.bd_cl       }, \
+	{ NAMESPACE, "back_color",      COLOR,       &TARGET.bg_cl       }, \
+	{ NAMESPACE, "shadow_color",    COLOR,       &TARGET.sd_cl       }, \
+	{ NAMESPACE, "outline_shape",   BOOL,        &TARGET.ol_shape    }, \
+	{ NAMESPACE, "border_shape",    BOOL,        &TARGET.bd_shape    }, \
+	{ NAMESPACE, "draw",            BOOL,        &TARGET.draw        }, \
+	{ NAMESPACE, "shadow_draw",     BOOL,        &TARGET.sd_draw     }, \
+	{ NAMESPACE, "corner_smart",    BOOL,        &TARGET.cn_smart    }, \
+	{ NAMESPACE, "outline_hitbox",  BOOL,        &TARGET.ol_hit      },
 
 #define TEXT(NAMESPACE, TARGET) \
-	{ NAMESPACE, "text_color",            COLOR, &TARGET.color            }, \
-	{ NAMESPACE, "text_color_background", COLOR, &TARGET.color_background }, \
-	{ NAMESPACE, "text_draw_background",  BOOL,  &TARGET.draw_background  }, \
-	{ NAMESPACE, "text_bold",             BOOL,  &TARGET.bold             },
+	{ NAMESPACE, "text_color",      COLOR, &TARGET.cl      }, \
+	{ NAMESPACE, "text_back_color", COLOR, &TARGET.bg_cl   }, \
+	{ NAMESPACE, "text_back_draw",  BOOL,  &TARGET.bg_draw }, \
+	{ NAMESPACE, "text_bold",       BOOL,  &TARGET.bold    },
 
 #define KEY(VALUE) \
 	{ "key",     #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_SWAP_DIRECT] }, \
@@ -217,9 +217,9 @@ static const struct word words[] =
 	{ "reconfig",   SWAP_ACTION, CGUI_SWAP_RECONFIG           },
 	{ "exit",       SWAP_ACTION, CGUI_SWAP_EXIT               },
 
-	{ "straight",   CORNER_TYPE, CGUI_CORNER_STRAIGHT         },
-	{ "chamfer",    CORNER_TYPE, CGUI_CORNER_CHAMFER          },
-	{ "radii",      CORNER_TYPE, CGUI_CORNER_RADII            },
+	{ "square",     CORNER_TYPE, CGUI_CORNER_SQUARE           },
+	{ "round",      CORNER_TYPE, CGUI_CORNER_ROUND            },
+	{ "cut",        CORNER_TYPE, CGUI_CORNER_CUT              },
 
 	{ "next",       FOCUS,       CGUI_FOCUS_NEXT              },
 	{ "previous",   FOCUS,       CGUI_FOCUS_PREV              },
@@ -281,18 +281,18 @@ static const struct resource resources[] =
 	{ "shadows",      "max_light_distance", LENGTH,    &config.shadows_max_light_dist },
 	{ "shadows",      "max_offset",         LENGTH,    &config.shadows_max_offset     },
 
-	{ "stripes",      "line_cl",            COLOR,     &config.stripes_line_cl        },
+	{ "stripes",      "line_color",         COLOR,     &config.stripes_line_cl        },
 	{ "stripes",      "line_width",         LENGTH,    &config.stripes_line_width     },
 	{ "stripes",      "line_gap",           LENGTH,    &config.stripes_line_gap       },
 
-	{ "placeholder",  "line_cl",            COLOR,     &config.placeholder_line_cl    },
+	{ "placeholder",  "line_color",         COLOR,     &config.placeholder_line_cl    },
 	{ "placeholder",  "line_width",         LENGTH,    &config.placeholder_line_width },
 
 	{ "beacon",       "blink_on",           ULONG,     &config.beacon_blink_on        },
 	{ "beacon",       "blink_off",          ULONG,     &config.beacon_blink_off       },
 
-	{ "gauge_cursor", "min_length",         LENGTH,    &config.gauge_min_length       },
-	{ "gauge_bar",    "max_thickness",      LENGTH,    &config.gauge_max_thick        },
+	{ "gauge_cursor", "min_size",           LENGTH,    &config.gauge_min_length       },
+	{ "gauge_bar",    "max_size",           LENGTH,    &config.gauge_max_thick        },
 
 	KEY(  1) KEY(  2) KEY(  3) KEY(  4) KEY(  5) KEY(  6) KEY(  7) KEY(  8) KEY(  9) KEY( 10)
 	KEY( 11) KEY( 12) KEY( 13) KEY( 14) KEY( 15) KEY( 16) KEY( 17) KEY( 18) KEY( 19) KEY( 20)

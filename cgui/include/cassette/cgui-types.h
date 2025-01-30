@@ -55,9 +55,9 @@ enum cgui_antialias
  */
 enum cgui_corner
 {
-	CGUI_CORNER_STRAIGHT,
-	CGUI_CORNER_CHAMFER,
-	CGUI_CORNER_RADII,
+	CGUI_CORNER_SQUARE,
+	CGUI_CORNER_ROUND,
+	CGUI_CORNER_CUT,
 };
 
 /**
