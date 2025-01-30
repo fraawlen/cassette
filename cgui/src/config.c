@@ -252,6 +252,9 @@ static const struct resource resources[] =
 	{ "font",         "background_vertical_pad",     LENGTH,        &config.font_background_vpad           },
 	{ "font",         "background_horizontal_pad",   LENGTH,        &config.font_background_hpad           },
 
+	{ "render",       "sync_vblank",                 BOOL,          &config.render_sync_vblank             },
+	{ "render",       "async_fps_cap",               UDOUBLE,       &config.render_fps_async_cap           },
+
 	{ "grid",         "padding",                     LENGTH,        &config.grid_padding                   },
 	{ "grid",         "spacing",                     LENGTH,        &config.grid_spacing                   },
 
@@ -561,7 +564,7 @@ config_load(void)
 
 	LOAD(resources);
 
-	/* fill in the blanks and check of errors */
+	/* fill in the blanks and check for errors */
 	
 	font_setup();
 	fn_load(parser);
@@ -658,6 +661,7 @@ static void
 fetch(const struct resource resource)
 {
 	const char *str;
+	size_t tmp;
 
 	ccfg_fetch(parser, resource.namespace, resource.name);
 	if (ccfg_iterate(parser))
@@ -723,7 +727,8 @@ fetch(const struct resource resource)
 		case MOD_KEY:
 		case ANTIALIAS:
 		case SUBPIXEL:
-			cdict_find(dict, str, resource.type, (size_t*)resource.target);
+			cdict_find(dict, str, resource.type, &tmp);
+			*(int*)resource.target = tmp;
 			break;
 
 		case MAP_KEY:

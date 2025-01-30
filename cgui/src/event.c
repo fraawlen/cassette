@@ -274,7 +274,6 @@ action_window(uint8_t type, cgui_window *window)
 	{
 		case CGUI_SWAP_WINDOW_LOCK_GRID:
 			window_update_state(window, CGUI_WINDOW_LOCKED_GRID, !window->state.locked_grid);
-			window_set_draw_level(window, WINDOW_DRAW_FULL);
 			window_update_size_hints(window);
 			break;
 
@@ -283,7 +282,7 @@ action_window(uint8_t type, cgui_window *window)
 			break;
 
 		case CGUI_SWAP_WINDOW_REDRAW:
-			window_set_draw_level(window, WINDOW_DRAW_FULL);
+			window_schedule_draw(window, WINDOW_DRAW_FULL, 0);
 			break;
 
 		default:
@@ -757,8 +756,7 @@ redraw(struct cgui_event *event)
 		return;
 	}
 
-	window_set_draw_level(event->window, WINDOW_DRAW_FULL);
-	window_set_async_present(event->window);
+	window_schedule_draw(event->window, WINDOW_DRAW_FULL_ASYNC, 0);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1014,8 +1012,7 @@ transform(struct cgui_event *event)
 	if (event->transform_width  < window->width
 	 || event->transform_height < window->height)
 	{
-		window_set_draw_level(window, WINDOW_DRAW_FULL);
-		window_set_async_present(window);
+		window_schedule_draw(window, WINDOW_DRAW_FULL_ASYNC, 0);
 	}
 
 	window_update_size(window, event->transform_width, event->transform_height);

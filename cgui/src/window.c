@@ -107,7 +107,6 @@ cgui_window cgui_window_placeholder_instance =
 	.fn_state      = dummy_fn_state,
 	.state         = default_states,
 	.shown_grid    = CGUI_GRID_PLACEHOLDER,
-	.draw          = WINDOW_DRAW_NONE,
 	.wait_present  = false,
 	.async_present = false,
 	.valid         = false,
@@ -118,6 +117,8 @@ cgui_window cgui_window_placeholder_instance =
 	.old_width     = 0.0,
 	.old_height    = 0.0,
 	.draw_time     = 0,
+	.draw_delay    = 0,
+	.draw_level    = WINDOW_DRAW_NONE,
 	.focus         =
 	{
 		.cell   = CGUI_CELL_PLACEHOLDER,
@@ -195,7 +196,8 @@ cgui_window_activate(cgui_window *window)
 
 	/* activate the window */
 
-	window->draw_time = 0;
+	window->draw_time  = util_time();
+	window->draw_delay = ULONG_MAX;
 
 	x11_window_activate(window->x_id);
 	window_update_size_hints(window);
@@ -367,7 +369,6 @@ cgui_window_create(void)
 	window->state         = default_states;
 	window->shown_grid    = CGUI_GRID_PLACEHOLDER;
 	window->focus         = GRID_AREA_NONE;
-	window->draw          = WINDOW_DRAW_NONE;
 	window->wait_present  = false;
 	window->async_present = false;
 	window->valid         = true;
@@ -377,7 +378,9 @@ cgui_window_create(void)
 	window->wm_resize     = false;
 	window->old_width     = width;
 	window->old_height    = height;
+	window->draw_level    = WINDOW_DRAW_NONE;
 	window->draw_time     = 0;
+	window->draw_delay    = 0;
 
 	return window;
 
@@ -735,12 +738,7 @@ cgui_window_push_grid(cgui_window *window, cgui_grid *grid)
 void
 cgui_window_redraw(cgui_window *window)
 {
-	if (cgui_error() || !window->valid)
-	{
-		return;
-	}
-
-	window_set_draw_level(window, WINDOW_DRAW_FULL);
+	cgui_window_redraw_delayed(window, 0);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -753,8 +751,20 @@ cgui_window_redraw_async(cgui_window *window)
 		return;
 	}
 
-	window_set_draw_level(window, WINDOW_DRAW_FULL);
-	window_set_async_present(window);
+	window_schedule_draw(window, WINDOW_DRAW_FULL_ASYNC, 0);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_redraw_delayed(cgui_window *window, unsigned long delay)
+{
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+
+	window_schedule_draw(window, WINDOW_DRAW_FULL, delay);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -929,7 +939,7 @@ cgui_window_swap_grid(cgui_window *window, cgui_grid *grid_1, cgui_grid *grid_2)
 
 	window->shown_grid = grid_2;
 	window->fn_grid(window, grid_2);
-	window_set_draw_level(window, WINDOW_DRAW_FULL);
+	window_schedule_draw(window, WINDOW_DRAW_FULL, 0);
 	refocus(window);
 	update_geometry(window);
 }
@@ -1146,25 +1156,29 @@ window_draw(cgui_window *window)
 	unsigned long timestamp;
 	unsigned long delay;
 
-	if (!window->state.mapped || window->draw == WINDOW_DRAW_NONE)
+	timestamp = util_time();
+	delay = timestamp - window->draw_time;
+	level = window->draw_level;
+
+	if (!window->state.mapped
+	  || window->draw_level == WINDOW_DRAW_NONE
+	  || window->draw_delay > delay)
 	{
 		return;
 	}
 
 	if (!CONFIG->window_enable_partial_redraws)
 	{
-		window->draw = WINDOW_DRAW_FULL;
+		window->draw_level = WINDOW_DRAW_FULL;
 	}
 
-	timestamp         = util_time();
-	delay             = window->draw_time == 0 ? 0 : timestamp - window->draw_time;
-	level             = window->draw;
-	window->draw      = WINDOW_DRAW_NONE;
-	window->draw_time = timestamp;
+	window->draw_level = WINDOW_DRAW_NONE;
+	window->draw_time  = timestamp;
+	window->draw_delay = ULONG_MAX;
 
 	/* draw border and background */
 
-	if (level == WINDOW_DRAW_FULL)
+	if (level >= WINDOW_DRAW_FULL)
 	{
 		cgui_box_move(0.0, 0.0);
 		cgui_box_resize(window->width, window->height);
@@ -1190,6 +1204,7 @@ window_draw(cgui_window *window)
 
 	cairo_new_path(window->drawable);
 	window->fn_draw(window, delay, util_time() - timestamp);
+	cairo_surface_flush(window->surface);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1327,7 +1342,7 @@ window_present(cgui_window *window)
 	if (!window->state.mapped
 	 || !window->state.active
 	 ||  window->wait_present
-	 ||  window->draw == WINDOW_DRAW_NONE)
+	 ||  window->draw_level == WINDOW_DRAW_NONE)
 	{
 		return;
 	}
@@ -1419,7 +1434,7 @@ window_repair(cgui_window *window)
 	cref_repair(window->grids);
 	cinputs_repair(window->buttons);
 	cinputs_repair(window->touches);
-	window_set_draw_level(window, WINDOW_DRAW_FULL);
+	window_schedule_draw(window, WINDOW_DRAW_FULL, 0);
 	window_update_size(window, window->width, window->height);
 	window_update_size_hints(window);
 	x11_window_update_state_hints(window->x_id, window->state);
@@ -1434,24 +1449,27 @@ window_repair(cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-window_set_async_present(cgui_window *window)
+window_schedule_draw(cgui_window *window, enum window_draw_level level, unsigned long delay)
 {
-	if (CONFIG->async_present)
+	double min_delay = ULONG_MAX;
+
+	if (CONFIG->render_fps_async_cap > 0.0)
+	{
+		min_delay = 1000000 / CONFIG->render_fps_async_cap;
+	}
+
+	if (level == WINDOW_DRAW_FULL_ASYNC && CONFIG->async_present)
 	{
 		window->async_present = true;
 		window->wait_present  = false;
 	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-window_set_draw_level(cgui_window *window, enum window_draw_level draw)
-{
-	if (window->draw < draw)
+	else if (!CONFIG->render_sync_vblank)
 	{
-		window->draw = draw;
+		delay = delay < min_delay ? min_delay : min_delay;
 	}
+
+	window->draw_level = level > window->draw_level ? level : window->draw_level;
+	window->draw_delay = delay < window->draw_delay ? delay : window->draw_delay;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1556,7 +1574,7 @@ window_update_shown_grid(cgui_window *window)
 
 	cgui_window_swap_grid(window, grid_old, grid_old->ref);
 	window->fn_grid(window, window->shown_grid);
-	window_set_draw_level(window, WINDOW_DRAW_FULL);
+	window_schedule_draw(window, WINDOW_DRAW_FULL, 0);
 	refocus(window);
 }
 
@@ -1617,7 +1635,7 @@ window_update_state(cgui_window *window, enum cgui_window_state_mask mask, bool 
 	 || (CONFIG->window_enable_disabled && mask == CGUI_WINDOW_DISABLED)
 	 || (CONFIG->window_enable_focused  && mask == CGUI_WINDOW_FOCUSED))
 	{
-		window_set_draw_level(window, WINDOW_DRAW_FULL);	
+		window_schedule_draw(window, WINDOW_DRAW_FULL, 0);	
 	}
 
 	x11_window_update_state_hints(window->x_id, window->state);
@@ -1721,7 +1739,7 @@ draw_area(cgui_window *window, struct grid_area area, enum window_draw_level lev
 		.height   = area.height,
 	};
 
-	if ((level != WINDOW_DRAW_FULL && !area.cell->draw) || area.id == SIZE_MAX)
+	if ((level < WINDOW_DRAW_FULL && !area.cell->draw) || area.id == SIZE_MAX)
 	{
 		return;
 	}

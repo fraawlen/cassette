@@ -205,7 +205,7 @@ cgui_beacon_set_state(cgui_cell *cell, enum cgui_beacon_state state)
 static void
 animate(cgui_cell *cell, unsigned long delay)
 {
-	double speed;
+	double speed = 1000 / DATA->anim_factor;
 
 	if (DATA->state == CGUI_BEACON_OFF || DATA->state == CGUI_BEACON_ON)
 	{
@@ -213,14 +213,14 @@ animate(cgui_cell *cell, unsigned long delay)
 	}
 
 	DATA->anim_count += delay;
-	speed = DATA->blink_on ? CONFIG->beacon_blink_speed_on : CONFIG->beacon_blink_speed_off;
-	if (DATA->anim_count >= speed * 1000 / DATA->anim_factor)
+	speed *= DATA->blink_on ? CONFIG->beacon_blink_speed_on : CONFIG->beacon_blink_speed_off;
+	if (DATA->anim_count >= speed)
 	{
 		DATA->anim_count = 0;
 		DATA->blink_on   = !DATA->blink_on;
 	}
 
-	cgui_cell_redraw(cell);
+	cgui_cell_redraw_delayed(cell, speed - DATA->anim_count);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

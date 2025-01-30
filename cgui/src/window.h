@@ -32,9 +32,10 @@
 
 enum window_draw_level
 {
-	WINDOW_DRAW_NONE    = 0,
-	WINDOW_DRAW_PARTIAL = 1, /* cells              */
-	WINDOW_DRAW_FULL    = 2, /* cells + background */
+	WINDOW_DRAW_NONE       = 0,
+	WINDOW_DRAW_PARTIAL    = 1, /* cells                      */
+	WINDOW_DRAW_FULL       = 2, /* cells + background         */
+	WINDOW_DRAW_FULL_ASYNC = 3, /* cells + background + async */
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -96,13 +97,14 @@ struct cgui_window
 	cgui_grid *shown_grid;
 	struct grid_area focus;
 	struct cgui_window_state_flags state;
-	enum window_draw_level draw;
 	bool wait_present;
 	bool async_present;
 	bool valid;
 	bool wait_resize;
 	bool wait_move;
+	enum window_draw_level draw_level;
 	unsigned long draw_time;
+	unsigned long draw_delay;
 
 	/* wm data */
 
@@ -182,14 +184,7 @@ CGUI_HIDDEN;
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-window_set_async_present(cgui_window *window)
-CGUI_NONNULL(1)
-CGUI_HIDDEN;
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-window_set_draw_level(cgui_window *window, enum window_draw_level draw)
+window_schedule_draw(cgui_window *window, enum window_draw_level level, unsigned long delay)
 CGUI_NONNULL(1)
 CGUI_HIDDEN;
 

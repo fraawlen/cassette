@@ -277,6 +277,13 @@ CGUI_NONNULL(1);
  *
  */
 void
+cgui_cell_redraw_delayed(cgui_cell *cell, unsigned long delay)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
 cgui_cell_set_data(cgui_cell *cell, void *data)
 CGUI_NONNULL(1);
 

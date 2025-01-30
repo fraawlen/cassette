@@ -1,4 +1,4 @@
-	SECTION_ADD Shadow
+//	SECTION_ADD Shadow
 //	SECTION_ADD Round_Gauges
 
 	// Configuration example
@@ -8,7 +8,7 @@
 	test padding 32
 
 	global scale 1.0
-	global alternative_present_mode TRUE
+	global alternative_present_mode FALSE
 
 	font face               "Terminus"
 	font size               32
@@ -34,6 +34,9 @@
 	behavior window_button_move          1
 	behavior window_button_resize        3
 	behavior window_button_fullscreen    2
+
+	render sync_vblank TRUE
+	render async_fps_cap 30
 
 	button M3 misc:exit
 	button M2 misc:reconfig

@@ -325,6 +325,14 @@ cgui_cell_on_frame(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_box 
 void
 cgui_cell_redraw(cgui_cell *cell)
 {
+	cgui_cell_redraw_delayed(cell, 0);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_cell_redraw_delayed(cgui_cell *cell, unsigned long delay)
+{
 	if (cgui_error() || !cell->valid)
 	{
 		return;
@@ -332,7 +340,7 @@ cgui_cell_redraw(cgui_cell *cell)
 
 	CREF_FOR_EACH(main_windows(), i)
 	{
-		window_set_draw_level((cgui_window*)cref_ptr(main_windows(), i), WINDOW_DRAW_PARTIAL);
+		window_schedule_draw((cgui_window*)cref_ptr(main_windows(), i), WINDOW_DRAW_PARTIAL, delay);
 	}
 
 	cell->draw = true;

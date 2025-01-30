@@ -51,6 +51,11 @@ static const struct cgui_config config_default =
 	.font_background_vpad     = 0,
 	.font_padding_pattern     = "_",
 
+	/* rendering */
+
+	.render_sync_vblank   = true,
+	.render_fps_async_cap = DBL_MAX,
+
 	/* grid */
 
 	.grid_padding = 10,

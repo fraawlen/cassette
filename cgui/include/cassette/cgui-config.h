@@ -98,7 +98,7 @@ struct cgui_config
 {
 	bool init;
 	double scale;
-	enum cgui_config_modkey modkey;
+	int modkey;
 
 	/* font */
 
@@ -122,8 +122,13 @@ struct cgui_config
 
 	bool font_enable_overrides;
 	bool font_enable_hint_metrics;
-	enum cgui_config_antialias font_antialias;
-	enum cgui_config_subpixel font_subpixel;
+	int font_antialias;
+	int font_subpixel;
+
+	/* rendering */
+
+	bool render_sync_vblank;
+	double render_fps_async_cap;
 
 	/* grid */
 
