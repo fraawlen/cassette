@@ -123,13 +123,13 @@ cgui_cell_draw_frame(struct cgui_cell_context context)
 
 	/* reactive shadows */
 
-	if (CONFIG->shadows_follow_pointer)
+	if (CONFIG->shadows_reactive)
 	{
 		cgui_screen_pointer_position(&x, &y);
 		cgui_box_move_shadow(
 			x - context.x_root,
 			y - context.y_root,
-			CONFIG->shadows_max_light_distance,
+			CONFIG->shadows_max_light_dist,
 			CONFIG->shadows_max_offset);
 	}
 

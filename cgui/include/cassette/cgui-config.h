@@ -55,7 +55,7 @@ extern "C" {
  */
 struct cgui_config
 {
-	bool init;
+	unsigned long loads;
 
 	/* rendering */
 
@@ -69,75 +69,63 @@ struct cgui_config
 
 	/* inputs */
 
-	int modkey;
-
-	/* font */
-
-	char font_face[CGUI_CONFIG_STR_LEN];
-	char font_padding_pattern[CGUI_CONFIG_STR_LEN];
-
-	double font_size;
-	double font_width;
-	double font_height;
-	double font_ascent;
-	double font_descent;
-	double font_spacing_horizontal;
-	double font_spacing_vertical;
-	double font_override_width;
-	double font_override_ascent;
-	double font_override_descent;
-	double font_offset_x;
- 	double font_offset_y;
-	double font_background_vpad;
-	double font_background_hpad;
-
-	bool font_enable_overrides;
-	bool font_enable_hint_metrics;
-	int font_antialias;
-	int font_subpixel;
-
-	/* grid */
-
-	double grid_padding;
-	double grid_spacing;
-
-	/* window */
-
-	double window_padding;
-	struct cgui_window_style window;
-	struct cgui_window_style window_focused;
-	struct cgui_window_style window_disabled;
-	struct cgui_window_style window_locked;
-
-	bool window_focus_on_activation;
-	bool window_enable_disabled;
-	bool window_enable_focused;
-	bool window_enable_locked;
-	
-	/* popup */
-
-	struct cgui_window_style popup;
-	double popup_padding;
-
-	/* behavior */
-
-	bool cell_auto_lock;
-	bool persistent_pointer;
-	bool persistent_touch;
-	uint8_t wm_button_move;
-	uint8_t wm_button_resize;
-	uint8_t wm_button_fullscreen;
-
-	/* reactive shadows */
-
-	bool shadows_follow_pointer;
-	double shadows_max_light_distance;
-	double shadows_max_offset;
+	int input_modkey;
+	bool input_auto_lock;
+	bool input_sticky_pointer;
+	bool input_sticky_touch;
+	uint8_t input_wm_move;
+	uint8_t input_wm_resize;
+	uint8_t input_wm_fullscreen;
 
 	/* input swaps */
 
 	struct cgui_swap    keys[CGUI_CONFIG_KEYS    + 1][3];
 	struct cgui_swap buttons[CGUI_CONFIG_BUTTONS + 1][3];
+
+	/* font */
+
+	char font_face[CGUI_CONFIG_STR_LEN];
+	char font_pad_pattern[CGUI_CONFIG_STR_LEN];
+	double font_size;
+	double font_width;
+	double font_height;
+	double font_ascent;
+	double font_descent;
+	double font_hgap;
+	double font_vgap;
+	double font_offset_x;
+ 	double font_offset_y;
+	double font_bg_vpad;
+	double font_bg_hpad;
+	bool font_override;
+	bool font_hints;
+	int font_antialias;
+	int font_subpixel;
+
+	/* shadows */
+
+	bool shadows_reactive;
+	double shadows_max_light_dist;
+	double shadows_max_offset;
+
+	/* grid */
+
+	double grid_pad;
+	double grid_gap;
+
+	/* window */
+
+	bool window_pre_focus;
+	double window_pad;
+	struct cgui_window_style window;
+	struct cgui_window_style window_focused;
+	struct cgui_window_style window_disabled;
+	struct cgui_window_style window_locked;
+
+	/* popup */
+	
+	struct cgui_window_style popup;
+	double popup_pad;
 
 	/* cell - placeholder */
 
@@ -146,14 +134,14 @@ struct cgui_config
 	/* cell - stripes */
 
 	struct cgui_box stripes_frame;
-	struct ccolor stripes_line_color;
+	struct ccolor stripes_line_cl;
 	double stripes_line_width;
-	double stripes_line_spacing;
+	double stripes_line_gap;
 
 	/* cell - placeholder */
 
 	struct cgui_box placeholder_frame;
-	struct ccolor placeholder_line_color;
+	struct ccolor placeholder_line_cl;
 	double placeholder_line_width;
 
 	/* cell - button */
@@ -162,7 +150,6 @@ struct cgui_config
 	struct cgui_box button_frame_focused;
 	struct cgui_box button_frame_pressed;
 	struct cgui_box button_frame_disabled;
-
 	struct cgui_text button_text_idle;
 	struct cgui_text button_text_focused;
 	struct cgui_text button_text_pressed;
@@ -179,25 +166,21 @@ struct cgui_config
 	struct cgui_box beacon_frame_on;
 	struct cgui_box beacon_frame_crit_off;
 	struct cgui_box beacon_frame_crit_on;
-
 	struct cgui_text beacon_text_off;
 	struct cgui_text beacon_text_on;
 	struct cgui_text beacon_text_crit_off;
 	struct cgui_text beacon_text_crit_on;
-
-	unsigned long beacon_blink_speed_on;
-	unsigned long beacon_blink_speed_off;
+	unsigned long beacon_blink_on;
+	unsigned long beacon_blink_off;
 
 	/* cell - gauge */
 
 	struct cgui_box gauge_frame;
 	struct cgui_box gauge_bar;
 	struct cgui_box gauge_cursor;
-
 	struct cgui_text gauge_text;
-
 	double gauge_min_length;
-	double gauge_max_thickness;
+	double gauge_max_thick;
 };
 
 /************************************************************************************************************/

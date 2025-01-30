@@ -40,7 +40,7 @@ static void on_click     (cgui_cell *);
 static void on_clip_copy (int);
 static void on_clip_lose (int);
 static void on_close     (cgui_window *);
-static void on_draw      (cgui_window *, unsigned long, unsigned long);
+static void on_draw      (cgui_window *, unsigned long);
 static void on_load      (ccfg *);
 static void on_state     (cgui_window *, enum cgui_window_state_mask);
 
@@ -267,13 +267,11 @@ on_close(cgui_window *w)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-on_draw(cgui_window *w, unsigned long delay_1, unsigned long delay_2)
+on_draw(cgui_window *w, unsigned long delay)
 {
 	(void)w;
-	(void)delay_1;
-	(void)delay_2;
 
-	printf("window redrawn (%lu / %f)\n", delay_1, 1000000.0 / delay_1);
+	printf("window redrawn (%lu / %f)\n", delay, 1000000.0 / delay);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

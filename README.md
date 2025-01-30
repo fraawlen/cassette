@@ -142,6 +142,7 @@ More elaborate demos:
 ## Planned Features <a name="future"></a>
 
 - Proper Unicode Plane-0 EGC handling
+- Improved font rendering
 - Native Wayland backend
 - Navigation-to-text output for screen-readers accessibility
 - Drag and drop

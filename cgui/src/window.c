@@ -40,7 +40,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define PADDING(WIN) (WIN->type == CGUI_WINDOW_POPUP ? CONFIG->popup_padding : CONFIG->window_padding)
+#define PADDING(WIN) (WIN->type == CGUI_WINDOW_POPUP ? CONFIG->popup_pad : CONFIG->window_pad)
 
 /* impure */
 
@@ -49,7 +49,7 @@ static bool cairo_setup        (cgui_window *, double, double)                  
 static void draw_area          (cgui_window *, struct grid_area, enum window_draw_level, unsigned long) CGUI_NONNULL(1);
 static void dummy_fn_accel     (cgui_window *, int)                                                     CGUI_NONNULL(1);
 static void dummy_fn_close     (cgui_window *)                                                          CGUI_NONNULL(1);
-static void dummy_fn_draw      (cgui_window *, unsigned long, unsigned long)                            CGUI_NONNULL(1);
+static void dummy_fn_draw      (cgui_window *, unsigned long)                                           CGUI_NONNULL(1);
 static void dummy_fn_focus     (cgui_window *, cgui_cell *)                                             CGUI_NONNULL(1, 2);
 static void dummy_fn_grid      (cgui_window *, cgui_grid *)                                             CGUI_NONNULL(1, 2);
 static void dummy_fn_state     (cgui_window *, enum cgui_window_state_mask)                             CGUI_NONNULL(1);
@@ -202,7 +202,7 @@ cgui_window_activate(cgui_window *window)
 	x11_window_activate(window->x_id);
 	window_update_size_hints(window);
 	window_update_state(window, CGUI_WINDOW_ACTIVE, true);
-	if (CONFIG->window_focus_on_activation)
+	if (CONFIG->window_pre_focus)
 	{
 		window_update_state(window, CGUI_WINDOW_FOCUSED, true);
 	}
@@ -656,7 +656,7 @@ cgui_window_on_close(cgui_window *window, void (*fn)(cgui_window *window))
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_window_on_draw(cgui_window *window, void (*fn)(cgui_window *window, unsigned long delay_1, unsigned long delay_2))
+cgui_window_on_draw(cgui_window *window, void (*fn)(cgui_window *window, unsigned long delay))
 {
 	if (cgui_error() || !window->valid)
 	{
@@ -1203,7 +1203,7 @@ window_draw(cgui_window *window)
 	/* end */
 
 	cairo_new_path(window->drawable);
-	window->fn_draw(window, delay, util_time() - timestamp);
+	window->fn_draw(window, delay);
 	cairo_surface_flush(window->surface);
 }
 
@@ -1304,7 +1304,7 @@ window_focus_pointer(cgui_window *window, double x, double y)
 	{
 		window_focus(window, area);
 	}
-	else if (!CONFIG->persistent_pointer)
+	else if (!CONFIG->input_sticky_pointer)
 	{
 		window_focus(window, GRID_AREA_NONE);
 	}
@@ -1394,14 +1394,14 @@ window_process_cell_event(cgui_window *window, struct grid_area area, struct cgu
 			return false;
 
 		case CGUI_CELL_MSG_LOCK:
-			if (area.cell == window->focus.cell && CONFIG->cell_auto_lock)
+			if (area.cell == window->focus.cell && CONFIG->input_auto_lock)
 			{
 				window_focus_lock(window, true);
 			}
 			break;
 
 		case CGUI_CELL_MSG_UNLOCK:
-			if (area.cell == window->focus.cell && CONFIG->cell_auto_lock)
+			if (area.cell == window->focus.cell && CONFIG->input_auto_lock)
 			{
 				window_focus_lock(window, false);
 			}
@@ -1631,9 +1631,9 @@ window_update_state(cgui_window *window, enum cgui_window_state_mask mask, bool 
 		return;
 	}
 
-	if ((CONFIG->window_enable_locked   && mask == CGUI_WINDOW_LOCKED_GRID)
-	 || (CONFIG->window_enable_disabled && mask == CGUI_WINDOW_DISABLED)
-	 || (CONFIG->window_enable_focused  && mask == CGUI_WINDOW_FOCUSED))
+	if ((CONFIG->window_locked.ena   && mask == CGUI_WINDOW_LOCKED_GRID)
+	 || (CONFIG->window_disabled.ena && mask == CGUI_WINDOW_DISABLED)
+	 || (CONFIG->window_focused.ena  && mask == CGUI_WINDOW_FOCUSED))
 	{
 		window_schedule_draw(window, WINDOW_DRAW_FULL, 0);	
 	}
@@ -1777,11 +1777,10 @@ dummy_fn_close(cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-dummy_fn_draw(cgui_window *window, unsigned long delay_1, unsigned long delay_2)
+dummy_fn_draw(cgui_window *window, unsigned long delay)
 {
 	(void)window;
-	(void)delay_1;
-	(void)delay_2;
+	(void)delay;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1829,15 +1828,15 @@ frame(const cgui_window *window)
 	{
 		style = CONFIG->window;
 	}
-	else if (CONFIG->window_enable_disabled && window->state.disabled)
+	else if (CONFIG->window_disabled.ena && window->state.disabled)
 	{
 		style = CONFIG->window_disabled;
 	}
-	else if (CONFIG->window_enable_locked && window->state.locked_grid)
+	else if (CONFIG->window_locked.ena && window->state.locked_grid)
 	{
 		style = CONFIG->window_locked;
 	}
-	else if (CONFIG->window_enable_focused && window->state.focused)
+	else if (CONFIG->window_focused.ena && window->state.focused)
 	{
 		style = CONFIG->window_focused;
 	}

@@ -451,7 +451,7 @@ cgui_grid_height(const cgui_grid *grid)
 		h += row_height(grid->rows[i]);
 	}
 
-	return h + CONFIG->grid_spacing * (grid->n_rows - 1);
+	return h + CONFIG->grid_gap * (grid->n_rows - 1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -601,7 +601,7 @@ cgui_grid_width(const cgui_grid *grid)
 		w += col_width(grid->cols[i]);
 	}
 
-	return w + CONFIG->grid_spacing * (grid->n_cols - 1);
+	return w + CONFIG->grid_gap * (grid->n_cols - 1);
 }
 
 /************************************************************************************************************/
@@ -720,7 +720,7 @@ grid_update_geometry(cgui_grid *grid, double width, double height)
 		grid->cols[i].offset = o;
 		grid->cols[i].size   = col_width(grid->cols[i]) + l;
 
-		o += grid->cols[i].size + CONFIG->grid_spacing;
+		o += grid->cols[i].size + CONFIG->grid_gap;
 		f -= grid->cols[i].flex;
 		n -= l;
 	}
@@ -738,7 +738,7 @@ grid_update_geometry(cgui_grid *grid, double width, double height)
 		grid->rows[i].offset = o;
 		grid->rows[i].size   = row_height(grid->rows[i]) + l;
 
-		o += grid->rows[i].size + CONFIG->grid_spacing;
+		o += grid->rows[i].size + CONFIG->grid_gap;
 		f -= grid->rows[i].flex;
 		n -= l;
 	}
@@ -758,7 +758,7 @@ grid_update_geometry(cgui_grid *grid, double width, double height)
 static double
 col_width(struct grid_line col)
 {
-	return cgui_config_str_width(col.units) + CONFIG->grid_padding * 2;
+	return cgui_config_str_width(col.units) + CONFIG->grid_pad * 2;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -766,7 +766,7 @@ col_width(struct grid_line col)
 static double
 row_height(struct grid_line row)
 {
-	return cgui_config_str_height(row.units) + CONFIG->grid_padding * 2;
+	return cgui_config_str_height(row.units) + CONFIG->grid_pad * 2;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -776,8 +776,8 @@ update_area_geometry(const cgui_grid *grid, struct grid_area *area)
 {
 	area->x      = grid->cols[area->col].offset;
 	area->y      = grid->rows[area->row].offset;
-	area->width  = CONFIG->grid_spacing * (area->n_cols - 1);
-	area->height = CONFIG->grid_spacing * (area->n_rows - 1);
+	area->width  = CONFIG->grid_gap * (area->n_cols - 1);
+	area->height = CONFIG->grid_gap * (area->n_rows - 1);
 
 	for (size_t i = area->col; i < area->col + area->n_cols; i++)
 	{

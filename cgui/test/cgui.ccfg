@@ -1,4 +1,4 @@
-//	SECTION_ADD Shadow
+	SECTION_ADD Shadow
 //	SECTION_ADD Round_Gauges
 
 	// Configuration example
@@ -13,35 +13,36 @@
 	render fps_async_cap    30
 	render fps_sync_divider 1
 
-	font face               "Terminus"
-	font size               32
-	font horizontal_spacing 0
-	font vertical_spacing   2
-	font x_offset           0
-	font y_offset           0
-	font width_override     7
-	font ascent_override    14
-	font descent_override   0
-	font enable_overrides   FALSE
-	font antialias_mode     subpixel
-	font subpixel_mode      rgb
+	font pad_pattern       "_"
+	font face              "Terminus"
+	font size              32
+	font spacing_horz      0
+	font spacing_vert      2
+	font offset_x          0
+	font offset_y          0
+	font width             7
+	font ascent            14
+	font descent           0
+	font override_geometry FALSE
+	font antialias         subpixel
+	font subpixel          rgb
 
-	grid padding 60
-	grid spacing 45
+	grid pad 60
+	grid gap 45
 
-	behavior enable_cell_auto_lock       TRUE
-	behavior enable_persistent_pointer   FALSE
-	behavior enable_persistent_touch     FALSE
-	behavior window_button_move          1
-	behavior window_button_resize        3
-	behavior window_button_fullscreen    2
+	input auto_lock         TRUE
+	input sticky_pointer    FALSE
+	input sticky_touch      FALSE
+	input window_move       1
+	input window_resize     3
+	input window_fullscreen 2
 
 	button M3 misc:exit
 	button M2 misc:reconfig
 
-	window padding 50
+	window pad 50
 	window color_border #505050
-	window enable_focused_substyle TRUE
+	window_focused enabled TRUE
 
 	FOR_EACH windows
 		(% windows) border_thickness 20
@@ -50,7 +51,7 @@
 		(% windows) color_background (RGB 20 20 20)
 	FOR_END
 
-	popup padding 35
+	popup pad 35
 	popup border_thickess 10
 	popup corner_type chamfer
 	popup corner_size 50
@@ -73,14 +74,14 @@
 	FOR_EACH lined_cells cell
 		% cell color_border     (RGB 200 140   0)
 		% cell color_background (RGB 0    50  50)
-		% cell line_color       (RGB 200 140   0)
+		% cell line_cl          (RGB 200 140   0)
 		% cell color_outline     #ffffff
 		% cell corner_size       10
 		% cell border_thickness  14
 		% cell outline_thickness 14
 		% cell padding           -1
 		% cell line_width        14
-		% cell line_spacing      20
+		% cell line_gap          20
 	FOR_END
 
 	LET buttons button_idle button_focused button_disabled button_pressed
@@ -133,8 +134,8 @@
 		% bon text_bold TRUE
 	FOR_END
 
-	beacon blink_animation_speed_on  500
-	beacon blink_animation_speed_off 500
+	beacon blink_on  500
+	beacon blink_off 500
 
 	gauge text_color        #000000
 	gauge text_bold         TRUE
@@ -158,19 +159,20 @@
 
 SECTION Shadow
 
-	grid spacing 60
-	grid padding 70
-	window padding 70
+	grid gap 60
+	grid pad 70
+	window pad 70
 	window corner_size 110
 	window color_background #505050
-	window enable_focused_substyle FALSE
 	window color_border #101010
 	button_pressed outline_thickness 0
-	window allow_partial_redraws FALSE
+	render partial FALSE
 
-	behavior enable_reactive_shadows TRUE
-	behavior shadows_max_light_distance 200
-	behavior shadows_max_offset 20
+	shadows reactive TRUE
+	shadows max_light_distance 200
+	shadows max_offset 20
+
+	window_focused enabled FALSE
 
 	LET widget \
 		filler \
@@ -196,7 +198,7 @@ SECTION Shadow
 
 SECTION Round_Gauges
 
-	grid padding 60
+	grid pad 60
 
 	gauge corner_type       radii
 	gauge corner_size       75

@@ -122,7 +122,7 @@ cgui_text_draw(cairo_t *drawable, const cstr *str)
 			{
 				break;
 			}
-			y += CONFIG->font_height + CONFIG->font_spacing_vertical;
+			y += CONFIG->font_height + CONFIG->font_vgap;
 			s1 = c + 1;
 			o  = 0;
 			n  = 0;
@@ -237,7 +237,7 @@ draw_row(cairo_t *drawable, const char *s1, const char *s2, size_t o, size_t w, 
 	cairo_status_t status;
 	struct ccolor cl;
 	double x;
-	double l = CONFIG->font_spacing_horizontal;
+	double l = CONFIG->font_hgap;
 	int    n = GLYPH_ARR;
 
 	/* horizontal alignment */
@@ -274,10 +274,10 @@ draw_row(cairo_t *drawable, const char *s1, const char *s2, size_t o, size_t w, 
 		
 		cairo_set_source_rgba(drawable, cl.r, cl.g, cl.b, cl.a);
 		cairo_rectangle(drawable,
-			x - CONFIG->font_background_hpad,
-			y - CONFIG->font_background_vpad - CONFIG->font_ascent,
-			2 * CONFIG->font_background_hpad + cgui_config_str_width(n),
-			2 * CONFIG->font_background_vpad + CONFIG->font_height);
+			x - CONFIG->font_bg_hpad,
+			y - CONFIG->font_bg_vpad - CONFIG->font_ascent,
+			2 * CONFIG->font_bg_hpad + cgui_config_str_width(n),
+			2 * CONFIG->font_bg_vpad + CONFIG->font_height);
 		cairo_fill(drawable);
 	}
 

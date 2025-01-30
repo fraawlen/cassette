@@ -67,6 +67,7 @@ struct data
 {
 	cstr *units;
 	cstr *label;
+	unsigned long last_load;
 	enum cgui_align label_align;
 	enum cgui_rotation label_rot;
 	enum cgui_rotation rot;
@@ -162,6 +163,7 @@ cgui_gauge_create(void)
 		goto fail_cell;
 	}
 
+	data->last_load   = CONFIG->loads;
 	data->label_align = CGUI_ALIGN_CENTER;
 	data->label_rot   = CGUI_ROTATION_NORMAL;
 	data->rot         = CGUI_ROTATION_NORMAL;
@@ -330,6 +332,15 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 		.height = context.height,
 	};
 
+	/* check if config reload happened                  */
+	/* and update the label if it did (padding pattern) */
+
+	if (CONFIG->loads != DATA->last_load)
+	{
+		DATA->last_load = CONFIG->loads;
+		update_label(cell);
+	}
+
 	/* frame */
 
 	cgui_cell_draw_frame(context);
@@ -459,7 +470,7 @@ setup_bar(const cgui_cell *cell, struct zone z)
 
 	/* geometry */
 
-	c = util_clamp(ctx.c, 0.0, CONFIG->gauge_max_thickness);
+	c = util_clamp(ctx.c, 0.0, CONFIG->gauge_max_thick);
 	l = ctx.l1 + ctx.a;
 	o = ctx.o1;
 
@@ -639,6 +650,6 @@ update_label(cgui_cell *cell)
 
 	cstr_clear(DATA->label);
 	cstr_append(DATA->label, util_clamp(DATA->val, DATA->min, DATA->max));
-	cstr_pad(DATA->label, CONFIG->font_padding_pattern, 0, min > max ? min : max);
+	cstr_pad(DATA->label, CONFIG->font_pad_pattern, 0, min > max ? min : max);
 	cstr_append(DATA->label, DATA->units);
 }

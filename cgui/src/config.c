@@ -53,7 +53,8 @@
 	{ NAMESPACE, "corner_size",      CORNER_SIZE,  TARGET.size_corner      }, \
 	{ NAMESPACE, "border_thickness", LENGTH,      &TARGET.size_border      }, \
 	{ NAMESPACE, "color_border",     COLOR,       &TARGET.color_border     }, \
-	{ NAMESPACE, "color_background", COLOR,       &TARGET.color_background },
+	{ NAMESPACE, "color_background", COLOR,       &TARGET.color_background }, \
+	{ NAMESPACE, "enabled",          BOOL,        &TARGET.ena              },
 
 #define BOX(NAMESPACE, TARGET) \
 	{ NAMESPACE, "corner_type",       CORNER_TYPE,  TARGET.corner           }, \
@@ -231,71 +232,67 @@ static const struct word words[] =
 
 static const struct resource resources_once[] =
 {
-	{ "render",       "mode",                      RENDER,    &config.render_mode                },
+	{ "render",       "mode",               RENDER,    &config.render_mode            },
 };
 
 static const struct resource resources[] =
 {
-	{ "render",       "scale",                     SCALE,     &config.render_scale               },
-	{ "render",       "sync_vblank",               BOOL,      &config.render_sync_vblank         },
-	{ "render",       "sync_bypass",               BOOL,      &config.render_sync_bypass         },
-	{ "render",       "partial",                   BOOL,      &config.render_partial             },
-	{ "render",       "fps_async_cap",             UDOUBLE,   &config.render_fps_async_cap       },
-	{ "render",       "fps_sync_divider",          ULONG,     &config.render_fps_sync_div        },
+	{ "render",       "scale",              SCALE,     &config.render_scale           },
+	{ "render",       "sync_vblank",        BOOL,      &config.render_sync_vblank     },
+	{ "render",       "sync_bypass",        BOOL,      &config.render_sync_bypass     },
+	{ "render",       "partial",            BOOL,      &config.render_partial         },
+	{ "render",       "fps_async_cap",      UDOUBLE,   &config.render_fps_async_cap   },
+	{ "render",       "fps_sync_divider",   ULONG,     &config.render_fps_sync_div    },
 
-	{ "input",        "modkey",                    MOD_KEY,   &config.modkey                     },
+	{ "input",        "modkey",             MOD_KEY,   &config.input_modkey           },
+	{ "input",        "auto_lock",          BOOL,      &config.input_auto_lock        },
+	{ "input",        "sticky_pointer",     BOOL,      &config.input_sticky_pointer   },
+	{ "input",        "sticky_touch",       BOOL,      &config.input_sticky_touch     },
+	{ "input",        "window_move",        BUTTON_ID, &config.input_wm_move          },
+	{ "input",        "window_resize",      BUTTON_ID, &config.input_wm_resize        },
+	{ "input",        "window_fullscreen",  BUTTON_ID, &config.input_wm_fullscreen    },
 
-	{ "font",         "number_padding_pattern",    STRING,     config.font_padding_pattern       },
-	{ "font",         "face",                      STRING,     config.font_face                  },
-	{ "font",         "size",                      LENGTH,    &config.font_size                  },
-	{ "font",         "horizontal_spacing",        LENGTH,    &config.font_spacing_horizontal    },
-	{ "font",         "vertical_spacing",          LENGTH,    &config.font_spacing_vertical      },
-	{ "font",         "width_override",            LENGTH,    &config.font_override_width        },
-	{ "font",         "ascent_override",           LENGTH,    &config.font_override_ascent       },
-	{ "font",         "descent_override",          LENGTH,    &config.font_override_descent      },
-	{ "font",         "x_offset",                  POSITION,  &config.font_offset_x              },
-	{ "font",         "y_offset",                  POSITION,  &config.font_offset_y              },
-	{ "font",         "enable_overrides",          BOOL,      &config.font_enable_overrides      },
-	{ "font",         "enable_hint_metrics",       BOOL,      &config.font_enable_hint_metrics   },
-	{ "font",         "antialias_mode",            ANTIALIAS, &config.font_antialias             },
-	{ "font",         "subpixel_mode",             SUBPIXEL,  &config.font_subpixel              },
-	{ "font",         "background_vertical_pad",   LENGTH,    &config.font_background_vpad       },
-	{ "font",         "background_horizontal_pad", LENGTH,    &config.font_background_hpad       },
+	{ "font",         "pad_pattern",        STRING,     config.font_pad_pattern       },
+	{ "font",         "face",               STRING,     config.font_face              },
+	{ "font",         "size",               LENGTH,    &config.font_size              },
+	{ "font",         "spacing_horz",       LENGTH,    &config.font_hgap              },
+	{ "font",         "spacing_vert",       LENGTH,    &config.font_vgap              },
+	{ "font",         "width",              LENGTH,    &config.font_width             },
+	{ "font",         "height",             LENGTH,    &config.font_ascent            },
+	{ "font",         "descent",            LENGTH,    &config.font_descent           },
+	{ "font",         "offset_x",           POSITION,  &config.font_offset_x          },
+	{ "font",         "offset_y",           POSITION,  &config.font_offset_y          },
+	{ "font",         "override_geometry",  BOOL,      &config.font_override          },
+	{ "font",         "hint_metrics",       BOOL,      &config.font_hints             },
+	{ "font",         "antialias",          ANTIALIAS, &config.font_antialias         },
+	{ "font",         "subpixel",           SUBPIXEL,  &config.font_subpixel          },
+	{ "font",         "bg_vert_pad",        LENGTH,    &config.font_bg_vpad           },
+	{ "font",         "bg_horz_pad",        LENGTH,    &config.font_bg_hpad           },
 
-	{ "grid",         "padding",                   LENGTH,    &config.grid_padding               },
-	{ "grid",         "spacing",                   LENGTH,    &config.grid_spacing               },
+	{ "grid",         "pad",                LENGTH,    &config.grid_pad               },
+	{ "grid",         "gap",                LENGTH,    &config.grid_gap               },
 
-	{ "window",       "padding",                   LENGTH,    &config.window_padding             },
-	{ "window",       "enable_disabled_substyle",  BOOL,      &config.window_enable_disabled     },
-	{ "window",       "enable_focused_substyle",   BOOL,      &config.window_enable_focused      },
-	{ "window",       "enable_locked_substyle",    BOOL,      &config.window_enable_locked       },
-	{ "window",       "focus_on_activation",       BOOL,      &config.window_focus_on_activation },
+	{ "window",       "pad",                LENGTH,    &config.window_pad             },
+	{ "window",       "pre_focus",          BOOL,      &config.window_pre_focus       },
 
-	{ "popup",        "padding",                   LENGTH,    &config.popup_padding              },
+	{ "popup",        "pad",                LENGTH,    &config.popup_pad              },
 
-	{ "behavior",     "enable_cell_auto_lock",     BOOL,      &config.cell_auto_lock             },
-	{ "behavior",     "enable_persistent_pointer", BOOL,      &config.persistent_pointer         },
-	{ "behavior",     "enable_persistent_touch",   BOOL,      &config.persistent_touch           },
-	{ "behavior",     "window_button_move",        BUTTON_ID, &config.wm_button_move             },
-	{ "behavior",     "window_button_resize",      BUTTON_ID, &config.wm_button_resize           },
-	{ "behavior",     "window_button_fullscreen",  BUTTON_ID, &config.wm_button_fullscreen       },
+	{ "shadows",      "reactive",           BOOL,      &config.shadows_reactive       },
+	{ "shadows",      "max_light_distance", LENGTH,    &config.shadows_max_light_dist },
+	{ "shadows",      "max_offset",         LENGTH,    &config.shadows_max_offset     },
 
-	{ "shadows",      "realtime",                  BOOL,      &config.shadows_follow_pointer     },
-	{ "shadows",      "max_light_distance",        LENGTH,    &config.shadows_max_light_distance },
-	{ "shadows",      "max_offset",                LENGTH,    &config.shadows_max_offset         },
+	{ "stripes",      "line_cl",            COLOR,     &config.stripes_line_cl        },
+	{ "stripes",      "line_width",         LENGTH,    &config.stripes_line_width     },
+	{ "stripes",      "line_gap",           LENGTH,    &config.stripes_line_gap       },
 
-	{ "stripes",      "line_color",                COLOR,     &config.stripes_line_color         },
-	{ "stripes",      "line_width",                LENGTH,    &config.stripes_line_width         },
-	{ "stripes",      "line_spacing",              LENGTH,    &config.stripes_line_spacing       },
+	{ "placeholder",  "line_cl",            COLOR,     &config.placeholder_line_cl    },
+	{ "placeholder",  "line_width",         LENGTH,    &config.placeholder_line_width },
 
-	{ "placeholder",  "line_color",                COLOR,     &config.placeholder_line_color     },
-	{ "placeholder",  "line_width",                LENGTH,    &config.placeholder_line_width     },
+	{ "beacon",       "blink_on",           ULONG,     &config.beacon_blink_on        },
+	{ "beacon",       "blink_off",          ULONG,     &config.beacon_blink_off       },
 
-	{ "beacon",       "blink_animation_speed_on",  ULONG,     &config.beacon_blink_speed_on      },
-	{ "beacon",       "blink_animation_speed_off", ULONG,     &config.beacon_blink_speed_off     },
-
-	{ "gauge_cursor", "min_length",                LENGTH,    &config.gauge_min_length           },
-	{ "gauge_bar",    "max_thickness",             LENGTH,    &config.gauge_max_thickness        },
+	{ "gauge_cursor", "min_length",         LENGTH,    &config.gauge_min_length       },
+	{ "gauge_bar",    "max_thickness",      LENGTH,    &config.gauge_max_thick        },
 
 	KEY(  1) KEY(  2) KEY(  3) KEY(  4) KEY(  5) KEY(  6) KEY(  7) KEY(  8) KEY(  9) KEY( 10)
 	KEY( 11) KEY( 12) KEY( 13) KEY( 14) KEY( 15) KEY( 16) KEY( 17) KEY( 18) KEY( 19) KEY( 20)
@@ -336,16 +333,16 @@ static const struct resource resources[] =
 	BOX( "gauge_bar",           config.gauge_bar             )
 	BOX( "gauge_cursor",        config.gauge_cursor          )
 
-	TEXT( "button_idle",         config.button_text_idle     )
-	TEXT( "button_focused",      config.button_text_focused  )
-	TEXT( "button_pressed",      config.button_text_pressed  )
-	TEXT( "button_disabled",     config.button_text_disabled )
-	TEXT( "beacon_off",          config.beacon_text_off      )
-	TEXT( "beacon_on",           config.beacon_text_on       )
-	TEXT( "beacon_critical_off", config.beacon_text_crit_off )
-	TEXT( "beacon_critical_on",  config.beacon_text_crit_on  )
-	TEXT( "label",               config.label_text           )
-	TEXT( "gauge",               config.gauge_text           )
+	TEXT( "button_idle",     config.button_text_idle     )
+	TEXT( "button_focused",  config.button_text_focused  )
+	TEXT( "button_pressed",  config.button_text_pressed  )
+	TEXT( "button_disabled", config.button_text_disabled )
+	TEXT( "beacon_off",      config.beacon_text_off      )
+	TEXT( "beacon_on",       config.beacon_text_on       )
+	TEXT( "beacon_crit_off", config.beacon_text_crit_off )
+	TEXT( "beacon_crit_on",  config.beacon_text_crit_on  )
+	TEXT( "label",           config.label_text           )
+	TEXT( "gauge",           config.gauge_text           )
 };
 
 /************************************************************************************************************/
@@ -360,7 +357,7 @@ cgui_config_fit_cols(double width)
 		return 0;
 	}
 
-	return (width + config.font_spacing_horizontal) / (config.font_width + config.font_spacing_horizontal);
+	return (width + config.font_hgap) / (config.font_width + config.font_hgap);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -373,7 +370,7 @@ cgui_config_fit_rows(double height)
 		return 0;
 	}
 
-	return (height + config.font_spacing_vertical) / (config.font_height + config.font_spacing_vertical);
+	return (height + config.font_vgap) / (config.font_height + config.font_vgap);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -420,7 +417,7 @@ cgui_config_str_height(ssize_t rows)
 		return cgui_config_str_width(-rows);
 	}
 
-	return config.font_height * rows + config.font_spacing_vertical * (rows - 1);
+	return config.font_height * rows + config.font_vgap * (rows - 1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -438,7 +435,7 @@ cgui_config_str_width(ssize_t cols)
 		return cgui_config_str_height(-cols);
 	}
 
-	return config.font_width * cols + config.font_spacing_horizontal * (cols - 1);
+	return config.font_width * cols + config.font_hgap * (cols - 1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -543,14 +540,16 @@ config_init(const char *app_name, const char *app_class)
 void
 config_load(void)
 {
-	int tmp;
+	int render;
+	unsigned long loads;
 
 	/* apply defaults */
 
-	tmp                = config.render_mode;
+	loads              = config.loads + 1;
+	render             = config.render_mode;
 	config             = config_default;
-	config.init        = true;
-	config.render_mode = tmp;
+	config.loads       = loads;
+	config.render_mode = render;
 
 	if (cgui_error() || util_env_exists(ENV_NO_PARSING))
 	{
@@ -561,9 +560,8 @@ config_load(void)
 
 	ccfg_load(parser);
 
-	if (first_load)
+	if (loads == 1)
 	{
-		first_load = false;
 		LOAD(resources_once);
 	}
 
@@ -619,7 +617,7 @@ config_swap_input(uint8_t id, struct cgui_mods mods, enum config_swap type)
 		return none;
 	}
 
-	switch (config.modkey)
+	switch (config.input_modkey)
 	{
 		case CGUI_MOD_CTRL:
 			modkey = mods.ctrl;
@@ -809,8 +807,7 @@ font_setup(void)
 			break;
 	}
 
-	hint_metrics = config.font_enable_hint_metrics
-		? CAIRO_HINT_METRICS_ON : CAIRO_HINT_METRICS_OFF;
+	hint_metrics = config.font_hints ? CAIRO_HINT_METRICS_ON : CAIRO_HINT_METRICS_OFF;
 
 	cairo_font_options_set_antialias(font_opts, antialias);
 	cairo_font_options_set_subpixel_order(font_opts, subpixel);
@@ -819,12 +816,10 @@ font_setup(void)
 
 	/* font geometry */
 
-	if (config.font_enable_overrides)
+	if (config.font_override)
 	{
-		config.font_descent = config.font_override_descent;
-		config.font_ascent  = config.font_override_ascent;
-		config.font_width   = config.font_override_width;
-		goto skip_auto_font;
+		config.font_height = config.font_ascent + config.font_descent;
+		return;
 	}
 
 	surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 0, 0);
@@ -855,9 +850,7 @@ skip_font_setup:
 
 	cairo_destroy(context);
 	cairo_surface_destroy(surface);
-
-skip_auto_font:
-
+	
 	config.font_height = config.font_ascent + config.font_descent;
 }
 

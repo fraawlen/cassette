@@ -254,7 +254,7 @@ cgui_reconfig(void)
 	CREF_FOR_EACH(windows, i)
 	{
 		window  = (cgui_window*)cref_ptr(windows, i);
-		padding = window->type == CGUI_WINDOW_POPUP ? CONFIG->popup_padding : CONFIG->window_padding;
+		padding = window->type == CGUI_WINDOW_POPUP ? CONFIG->popup_pad : CONFIG->window_pad;
 		if (!window->valid || !window->state.active)
 		{
 			continue;

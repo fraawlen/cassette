@@ -28,7 +28,7 @@
 
 static const struct cgui_config config_default =
 {
-	.init   = false,
+	.loads = 0,
 
 	/* rendering */
 
@@ -42,31 +42,43 @@ static const struct cgui_config config_default =
 
 	/* inputs */
 
-	.modkey = CGUI_MOD_CTRL,
+	.input_modkey         = CGUI_MOD_CTRL,
+	.input_auto_lock      = true,
+	.input_sticky_pointer = false,
+	.input_sticky_touch   = false,
+	.input_wm_move        = 0,
+	.input_wm_resize      = 0,
+	.input_wm_fullscreen  = 0,
 
 	/* font */
 
-	.font_face                = "Monospace",
-	.font_size                = 14,
-	.font_spacing_horizontal  = 0,
-	.font_spacing_vertical    = 2,
-	.font_offset_x            = 0,
-	.font_offset_y            = 0,
-	.font_override_width      = 7,
-	.font_override_ascent     = 14,
-	.font_override_descent    = 0,
-	.font_enable_overrides    = false,
-	.font_enable_hint_metrics = true,
-	.font_antialias           = CGUI_ANTIALIAS_SUBPIXEL,
-	.font_subpixel            = CGUI_SUBPIXEL_RGB,
-	.font_background_hpad     = 0,
-	.font_background_vpad     = 0,
-	.font_padding_pattern     = "_",
+	.font_pad_pattern = "_",
+	.font_face        = "Monospace",
+	.font_size        = 14.0,
+	.font_hgap        = 0.0,
+	.font_vgap        = 2.0,
+	.font_offset_x    = 0.0,
+	.font_offset_y    = 0.0,
+	.font_width       = 7.0,
+	.font_ascent      = 14.0,
+	.font_descent     = 0.0,
+	.font_bg_hpad     = 0.0,
+	.font_bg_vpad     = 0.0,
+	.font_override    = false,
+	.font_hints       = true,
+	.font_antialias   = CGUI_ANTIALIAS_SUBPIXEL,
+	.font_subpixel    = CGUI_SUBPIXEL_RGB,
+
+	/* shadows */
+	
+	.shadows_reactive       = false,
+	.shadows_max_light_dist = 0.0,
+	.shadows_max_offset     = 0.0,
 
 	/* grid */
 
-	.grid_padding = 10,
-	.grid_spacing = 10,
+	.grid_pad = 10.0,
+	.grid_gap = 10.0,
 
 	/* window */
 
@@ -77,6 +89,7 @@ static const struct cgui_config config_default =
 		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
 		.size_corner      = { 0.0, 0.0, 0.0, 0.0 },
 		.size_border      = 10,
+		.ena              = false,
 	},
 
 	.window_focused =
@@ -86,6 +99,7 @@ static const struct cgui_config config_default =
 		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
 		.size_corner      = { 0.0, 0.0, 0.0, 0.0 },
 		.size_border      = 10,
+		.ena              = false,
 	},
 
 	.window_locked =
@@ -95,6 +109,7 @@ static const struct cgui_config config_default =
 		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
 		.size_corner      = { 0.0, 0.0, 0.0, 0.0 },
 		.size_border      = 10,
+		.ena              = false,
 	},
 
 	.window_disabled =
@@ -104,17 +119,15 @@ static const struct cgui_config config_default =
 		.color_background = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
 		.size_corner      = { 0.0, 0.0, 0.0, 0.0 },
 		.size_border      = 10,
+		.ena              = false,
 	},
 
-	.window_padding             = 20,
-	.window_enable_disabled     = true,
-	.window_enable_focused      = true,
-	.window_enable_locked       = true,
-	.window_focus_on_activation = true,
+	.window_pad       = 20.0,
+	.window_pre_focus = true,
 
 	/* popup */
 
-	.popup_padding = 10,
+	.popup_pad = 10.0,
 	.popup =
 	{
 		.corner           = {CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT, CGUI_CORNER_STRAIGHT},
@@ -123,21 +136,6 @@ static const struct cgui_config config_default =
 		.size_corner      = { 0.0, 0.0, 0.0, 0.0 },
 		.size_border      = 10,
 	},
-
-	/* behavior */
-
-	.cell_auto_lock         = true,
-	.persistent_pointer     = false,
-	.persistent_touch       = false,
-	.wm_button_move         = 0,
-	.wm_button_resize       = 0,
-	.wm_button_fullscreen   = 0,
-
-	/* reactive shadows */
-	
-	.shadows_follow_pointer     = false,
-	.shadows_max_light_distance = 0.0,
-	.shadows_max_offset         = 0.0,
 
 	/* keys */
 
@@ -170,7 +168,7 @@ static const struct cgui_config config_default =
 	.keys[ 27][CGUI_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_MISC,   CGUI_SWAP_RECONFIG          }, /* R    */
 	.keys[ 54][CGUI_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_MISC,   CGUI_SWAP_EXIT              }, /* C    */
 
-	/* mouse buttons */
+	/* buttons */
 	
 	.buttons = {{{0}}},
 
@@ -226,9 +224,9 @@ static const struct cgui_config config_default =
 		.hit_outline      = false,
 	},
 
-	.stripes_line_color   = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.stripes_line_width   = 20,
-	.stripes_line_spacing = 20,
+	.stripes_line_cl    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.stripes_line_width = 20.0,
+	.stripes_line_gap   = 20.0,
 
 	/* cell - placeholder */
 
@@ -254,8 +252,8 @@ static const struct cgui_config config_default =
 		.hit_outline      = false,
 	},
 
-	.placeholder_line_color  = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.placeholder_line_width  = 20,
+	.placeholder_line_cl    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
+	.placeholder_line_width = 20.0,
 
 	/* cell - button */
 
@@ -533,8 +531,8 @@ static const struct cgui_config config_default =
 		.bold             = true,
 	},
 
-	.beacon_blink_speed_on  = 500,
-	.beacon_blink_speed_off = 500,
+	.beacon_blink_on  = 500,
+	.beacon_blink_off = 500,
 
 	/* cell - gauge */
 
@@ -612,6 +610,6 @@ static const struct cgui_config config_default =
 		.bold             = false,
 	},
 
-	.gauge_min_length    = 20,
-	.gauge_max_thickness = DBL_MAX,
+	.gauge_min_length = 20.0,
+	.gauge_max_thick  = DBL_MAX,
 };

@@ -56,9 +56,9 @@ cgui_stripes_create(void)
 static void
 draw(cgui_cell *cell, struct cgui_cell_context context)
 {
-	struct ccolor cl = CONFIG->stripes_line_color;
+	struct ccolor cl = CONFIG->stripes_line_cl;
 	double w = CONFIG->stripes_line_width;
-	double s = CONFIG->stripes_line_spacing * 1.414213562;
+	double g = CONFIG->stripes_line_gap * 1.414213562;
 	double o = context.frame.margin + context.frame.padding;
 
 	(void)cell;
@@ -75,13 +75,13 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 	context.width  -= o * 2;
 	context.height -= o * 2;
 
-	for (double x = context.x; x < context.x + context.width + w; x += w + s)
+	for (double x = context.x; x < context.x + context.width + w; x += w + g)
 	{
 		cairo_move_to(context.drawable, x, context.y);
 		cairo_line_to(context.drawable, x + context.height, context.y + context.height);
 	}
 
-	for (double y = context.y; y < context.y + context.height + w; y += w + s)
+	for (double y = context.y; y < context.y + context.height + w; y += w + g)
 	{
 		cairo_move_to(context.drawable, context.x, y);
 		cairo_line_to(context.drawable, context.x + context.width, y + context.width);

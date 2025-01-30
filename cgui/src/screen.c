@@ -75,7 +75,7 @@ cgui_screen_pointer_position(double *x, double *y)
 		pointer_x = 0.0;
 		pointer_y = 0.0;
 	}
-	else if (!cgui_is_running() || !CONFIG->shadows_follow_pointer) /* see event.c -> pointer_raw() */
+	else if (!cgui_is_running() || !CONFIG->shadows_reactive) /* see event.c -> pointer_raw() */
 	{
 		screen_pointer_update();
 	}

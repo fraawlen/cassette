@@ -89,6 +89,7 @@ struct cgui_window_style
 	double size_border;
 	struct ccolor color_border;
 	struct ccolor color_background;
+	bool ena;
 };
 
 /************************************************************************************************************/
@@ -203,7 +204,7 @@ CGUI_NONNULL(1);
  *
  */
 void
-cgui_window_on_draw(cgui_window *window, void (*fn)(cgui_window *window, unsigned long delay_1, unsigned long delay_2))
+cgui_window_on_draw(cgui_window *window, void (*fn)(cgui_window *window, unsigned long delay))
 CGUI_NONNULL(1);
 
 /**

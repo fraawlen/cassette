@@ -321,17 +321,17 @@ button_press(struct cgui_event *event)
 
 	/* allow wm functions if the event is rejected with a matching button id */
 
-	if (event->button_id == CONFIG->wm_button_move)
+	if (event->button_id == CONFIG->input_wm_move)
 	{
 		event->window->wm_move = !accepted;
 	}
-	else if (event->button_id == CONFIG->wm_button_resize)
+	else if (event->button_id == CONFIG->input_wm_resize)
 	{
 		event->window->wm_resize  = !accepted;
 		event->window->old_width  = event->window->width;
 		event->window->old_height = event->window->height;
 	}
-	else if (!accepted && event->button_id == CONFIG->wm_button_fullscreen)
+	else if (!accepted && event->button_id == CONFIG->input_wm_fullscreen)
 	{
 		x11_window_toggle_fullscreen(event->window->x_id);
 	}
@@ -592,7 +592,7 @@ pointer(struct cgui_event *event)
 	if (
 	   !event->window->wait_move
 	 && event->window->wm_move
-	 && cinputs_find(event->window->buttons, CONFIG->wm_button_move, &i))
+	 && cinputs_find(event->window->buttons, CONFIG->input_wm_move, &i))
 	{
 		cgui_window_move(
 			event->window,
@@ -602,7 +602,7 @@ pointer(struct cgui_event *event)
 	else if (
 	   !event->window->wait_resize
 	 && event->window->wm_resize
-	 && cinputs_find(event->window->buttons, CONFIG->wm_button_resize, &i))
+	 && cinputs_find(event->window->buttons, CONFIG->input_wm_resize, &i))
 	{
 		cgui_window_resize(
 			event->window,
@@ -621,7 +621,7 @@ pointer_raw(void)
 	/* If the user needs constant pointer tracking while that option is disabled, he can call          */
 	/* cgui_screen_pointer_position() manually from within a custom event callback.                    */
 
-	if (!CONFIG->shadows_follow_pointer)
+	if (!CONFIG->shadows_reactive)
 	{
 		return;
 	}
@@ -952,7 +952,7 @@ touch_end(struct cgui_event *event)
 	/* if it's the last touch on the focused cell, unfocus */
 
 	if (n == 0 
-	 && !CONFIG->persistent_touch
+	 && !CONFIG->input_sticky_touch
 	 && !event->window->state.locked_focus
 	 &&  event->window->focus.cell == area.cell)
 	{
@@ -1028,8 +1028,8 @@ unfocus(struct cgui_event *event)
 		return;
 	}
 
-	if ((!CONFIG->persistent_pointer && cinputs_load(event->window->buttons) > 0)
-	 || (!CONFIG->persistent_touch   && cinputs_load(event->window->touches) > 0))
+	if ((!CONFIG->input_sticky_pointer && cinputs_load(event->window->buttons) > 0)
+	 || (!CONFIG->input_sticky_touch   && cinputs_load(event->window->touches) > 0))
 	{
 		window_focus(event->window, GRID_AREA_NONE);
 	}

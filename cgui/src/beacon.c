@@ -213,7 +213,7 @@ blink(cgui_cell *cell, unsigned long delay)
 	}
 
 	DATA->anim_count += delay;
-	speed *= DATA->blink_on ? CONFIG->beacon_blink_speed_on : CONFIG->beacon_blink_speed_off;
+	speed *= DATA->blink_on ? CONFIG->beacon_blink_on : CONFIG->beacon_blink_off;
 	if (DATA->anim_count >= speed)
 	{
 		DATA->anim_count = 0;
