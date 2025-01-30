@@ -50,7 +50,7 @@ struct data
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void animate                (cgui_cell *, unsigned long)            CGUI_NONNULL(1);
+static void blink                  (cgui_cell *, unsigned long)            CGUI_NONNULL(1);
 static void destroy                (cgui_cell *)                           CGUI_NONNULL(1);
 static void draw                   (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
 static void frame                  (cgui_cell *, struct cgui_box *)        CGUI_NONNULL(1, 2);
@@ -203,7 +203,7 @@ cgui_beacon_set_state(cgui_cell *cell, enum cgui_beacon_state state)
 /************************************************************************************************************/
 
 static void
-animate(cgui_cell *cell, unsigned long delay)
+blink(cgui_cell *cell, unsigned long delay)
 {
 	double speed = 1000 / DATA->anim_factor;
 
@@ -241,10 +241,6 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 	double x = context.x + o + cgui_align_offset_x(DATA->align, context.width  - o * 2);
 	double y = context.y + o + cgui_align_offset_y(DATA->align, context.height - o * 2);
 
-	/* update animation */
-
-	animate(cell, context.delay);
-
 	/* frame */
 
 	cgui_cell_draw_frame(context);
@@ -257,6 +253,10 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 	cgui_text_rotate(DATA->rot);
 	cgui_text_style(text_style(cell));
 	cgui_text_draw(context.drawable, DATA->label);
+
+	/* update state */
+	
+	blink(cell, context.delay);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
