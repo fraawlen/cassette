@@ -168,8 +168,8 @@ static const struct cgui_config config_default =
 	.keys[ 46][CGUI_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_WINDOW, CGUI_SWAP_WINDOW_LOCK_FOCUS }, /* L    */
 	.keys[ 46][CGUI_SWAP_SHIFT ] = { CGUI_SWAP_TO_ACTION_WINDOW, CGUI_SWAP_WINDOW_LOCK_GRID  }, /* L    */
 
-	.keys[ 27][CGUI_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_MISC,   CGUI_SWAP_RECONFIG          }, /* R    */
-	.keys[ 54][CGUI_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_MISC,   CGUI_SWAP_EXIT              }, /* C    */
+	.keys[ 27][CGUI_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_APP,    CGUI_SWAP_RECONFIG          }, /* R    */
+	.keys[ 54][CGUI_SWAP_MOD   ] = { CGUI_SWAP_TO_ACTION_APP,    CGUI_SWAP_EXIT              }, /* C    */
 
 	/* buttons */
 	

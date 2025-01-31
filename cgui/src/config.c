@@ -41,11 +41,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define LOAD(TARGET) \
-	for (size_t i = 0; i < sizeof(TARGET) / sizeof(struct resource); i++) \
+#define LOAD_RESOURCES(TARGET) \
+	for (size_t I = 0; I < sizeof(TARGET) / sizeof(struct resource); I++) \
 	{ \
-		fetch(TARGET[i]); \
-		scale(TARGET[i]); \
+		fetch(TARGET[I]); \
+		scale(TARGET[I]); \
 	} \
 
 #define WINDOW(NAMESPACE, TARGET) \
@@ -61,10 +61,10 @@
 	{ NAMESPACE, "corner_size",     CORNER_SIZE,  TARGET.cn_size     }, \
 	{ NAMESPACE, "outline_size",    LENGTH,      &TARGET.ol_size     }, \
 	{ NAMESPACE, "border_size",     LENGTH,      &TARGET.bd_size     }, \
-	{ NAMESPACE, "pad",             POSITION,    &TARGET.pad         }, \
-	{ NAMESPACE, "margin",          POSITION,    &TARGET.margin      }, \
-	{ NAMESPACE, "shadow_x_offset", POSITION,    &TARGET.sd_offset_x }, \
-	{ NAMESPACE, "shadow_y_offset", POSITION,    &TARGET.sd_offset_y }, \
+	{ NAMESPACE, "pad",             OFFSET,    &TARGET.pad         }, \
+	{ NAMESPACE, "margin",          OFFSET,    &TARGET.margin      }, \
+	{ NAMESPACE, "shadow_x_offset", OFFSET,    &TARGET.sd_offset_x }, \
+	{ NAMESPACE, "shadow_y_offset", OFFSET,    &TARGET.sd_offset_y }, \
 	{ NAMESPACE, "outline_color",   COLOR,       &TARGET.ol_cl       }, \
 	{ NAMESPACE, "border_color",    COLOR,       &TARGET.bd_cl       }, \
 	{ NAMESPACE, "back_color",      COLOR,       &TARGET.bg_cl       }, \
@@ -82,16 +82,6 @@
 	{ NAMESPACE, "text_back_draw",  BOOL,  &TARGET.bg_draw }, \
 	{ NAMESPACE, "text_bold",       BOOL,  &TARGET.bold    },
 
-#define KEY(VALUE) \
-	{ "key",     #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_SWAP_DIRECT] }, \
-	{ "key", "M" #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_SWAP_MOD]    }, \
-	{ "key", "S" #VALUE, MAP_KEY, &config.keys[VALUE][CGUI_SWAP_SHIFT]  },
-
-#define BUTTON(VALUE) \
-	{ "button",     #VALUE, MAP_BUTTON, &config.buttons[VALUE][CGUI_SWAP_DIRECT] }, \
-	{ "button", "M" #VALUE, MAP_BUTTON, &config.buttons[VALUE][CGUI_SWAP_MOD]    }, \
-	{ "button", "S" #VALUE, MAP_BUTTON, &config.buttons[VALUE][CGUI_SWAP_SHIFT]  },
-
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 enum value
@@ -101,14 +91,12 @@ enum value
 	STRING,
 	COLOR,
 	BOOL,
-	POSITION,
+	OFFSET,
 	LENGTH,
 	LONG,
 	ULONG,
 	DOUBLE,
 	UDOUBLE,
-	RATIO,
-	SCALE,
 	BUTTON_ID,
 	KEY_ID,
 
@@ -156,6 +144,8 @@ struct resource
 static void dummy_fn_load (ccfg *)                                    CGUI_NONNULL(1);
 static void fetch         (const struct resource);
 static void font_setup    (void);
+static void load_buttons  (void);
+static void load_keys     (void);
 static void scale         (const struct resource);
 static void set_corners   (enum value, void *)                        CGUI_NONNULL(2);
 static void swap          (const char *, uint8_t, struct cgui_swap *) CGUI_NONNULL(1, 3);
@@ -202,7 +192,7 @@ static const struct word words[] =
 	{ "paste",      SWAP_KIND,   CGUI_SWAP_TO_CLIPBOARD_PASTE },
 	{ "cell",       SWAP_KIND,   CGUI_SWAP_TO_ACTION_CELL     },
 	{ "window",     SWAP_KIND,   CGUI_SWAP_TO_ACTION_WINDOW   },
-	{ "misc",       SWAP_KIND,   CGUI_SWAP_TO_ACTION_MISC     },
+	{ "app",        SWAP_KIND,   CGUI_SWAP_TO_ACTION_APP      },
 
 	{ "select-",    SWAP_ACTION, CGUI_SWAP_CELL_SELECT_LESS   },
 	{ "select+",    SWAP_ACTION, CGUI_SWAP_CELL_SELECT_MORE   },
@@ -237,10 +227,10 @@ static const struct resource resources_once[] =
 
 static const struct resource resources[] =
 {
-	{ "render",       "scale",              SCALE,     &config.render_scale           },
+	{ "render",       "scale",              UDOUBLE,   &config.render_scale           },
 	{ "render",       "sync_vblank",        BOOL,      &config.render_sync_vblank     },
 	{ "render",       "sync_bypass",        BOOL,      &config.render_sync_bypass     },
-	{ "render",       "partial",            BOOL,      &config.render_partial         },
+	{ "render",       "partial_redraw",     BOOL,      &config.render_partial         },
 	{ "render",       "fps_async_cap",      UDOUBLE,   &config.render_fps_async_cap   },
 	{ "render",       "fps_sync_divider",   ULONG,     &config.render_fps_sync_div    },
 
@@ -260,9 +250,9 @@ static const struct resource resources[] =
 	{ "font",         "width",              LENGTH,    &config.font_width             },
 	{ "font",         "height",             LENGTH,    &config.font_ascent            },
 	{ "font",         "descent",            LENGTH,    &config.font_descent           },
-	{ "font",         "offset_x",           POSITION,  &config.font_offset_x          },
-	{ "font",         "offset_y",           POSITION,  &config.font_offset_y          },
-	{ "font",         "override_geometry",  BOOL,      &config.font_override          },
+	{ "font",         "x_offset",           OFFSET,  &config.font_offset_x          },
+	{ "font",         "y_offset",           OFFSET,  &config.font_offset_y          },
+	{ "font",         "override_metrics",   BOOL,      &config.font_override          },
 	{ "font",         "hint_metrics",       BOOL,      &config.font_hints             },
 	{ "font",         "antialias",          ANTIALIAS, &config.font_antialias         },
 	{ "font",         "subpixel",           SUBPIXEL,  &config.font_subpixel          },
@@ -293,23 +283,6 @@ static const struct resource resources[] =
 
 	{ "gauge_cursor", "min_size",           LENGTH,    &config.gauge_min_length       },
 	{ "gauge_bar",    "max_size",           LENGTH,    &config.gauge_max_thick        },
-
-	KEY(  1) KEY(  2) KEY(  3) KEY(  4) KEY(  5) KEY(  6) KEY(  7) KEY(  8) KEY(  9) KEY( 10)
-	KEY( 11) KEY( 12) KEY( 13) KEY( 14) KEY( 15) KEY( 16) KEY( 17) KEY( 18) KEY( 19) KEY( 20)
-	KEY( 21) KEY( 22) KEY( 23) KEY( 24) KEY( 25) KEY( 26) KEY( 27) KEY( 28) KEY( 29) KEY( 30)
-	KEY( 31) KEY( 32) KEY( 33) KEY( 34) KEY( 35) KEY( 36) KEY( 37) KEY( 38) KEY( 39) KEY( 40)
-	KEY( 41) KEY( 42) KEY( 43) KEY( 44) KEY( 45) KEY( 46) KEY( 47) KEY( 48) KEY( 49) KEY( 50) 
-	KEY( 51) KEY( 52) KEY( 53) KEY( 54) KEY( 55) KEY( 56) KEY( 57) KEY( 58) KEY( 59) KEY( 60)
-	KEY( 61) KEY( 62) KEY( 63) KEY( 64) KEY( 65) KEY( 66) KEY( 67) KEY( 68) KEY( 69) KEY( 70)
-	KEY( 71) KEY( 72) KEY( 73) KEY( 74) KEY( 75) KEY( 76) KEY( 77) KEY( 78) KEY( 79) KEY( 80)
-	KEY( 81) KEY( 82) KEY( 83) KEY( 84) KEY( 85) KEY( 86) KEY( 87) KEY( 88) KEY( 89) KEY( 90)
-	KEY( 91) KEY( 92) KEY( 93) KEY( 94) KEY( 95) KEY( 96) KEY( 97) KEY( 98) KEY( 99) KEY(100)
-	KEY(101) KEY(102) KEY(103) KEY(104) KEY(105) KEY(106) KEY(107) KEY(108) KEY(109) KEY(110)
-	KEY(111) KEY(112) KEY(113) KEY(114) KEY(115) KEY(116) KEY(117) KEY(118) KEY(119) KEY(120)
-	KEY(121) KEY(122) KEY(123) KEY(124) KEY(125) KEY(126) KEY(127)
-
-	BUTTON( 1) BUTTON( 2) BUTTON( 3) BUTTON( 4) BUTTON( 5) BUTTON( 6) BUTTON( 7) BUTTON( 8)
-	BUTTON( 9) BUTTON(10) BUTTON(11) BUTTON(12)
 
 	WINDOW( "window",          config.window          )
 	WINDOW( "window_focused",  config.window_focused  )
@@ -443,14 +416,14 @@ cgui_config_str_width(ssize_t cols)
 void
 cgui_config_style_box(const char *name, struct cgui_box *box)
 {
-	struct resource box_resources[] = {BOX(name, (*box))};
+	struct resource r[] = {BOX(name, (*box))};
 	
 	if (cgui_error())
 	{
 		return;
 	}
 
-	LOAD(box_resources);
+	LOAD_RESOURCES(r);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -458,14 +431,14 @@ cgui_config_style_box(const char *name, struct cgui_box *box)
 void
 cgui_config_style_text(const char *name, struct cgui_text *text)
 {
-	struct resource text_resources[] = {TEXT(name, (*text))};
+	struct resource r[] = {TEXT(name, (*text))};
 	
 	if (cgui_error())
 	{
 		return;
 	}
 
-	LOAD(text_resources);
+	LOAD_RESOURCES(r);
 }
 
 /************************************************************************************************************/
@@ -562,10 +535,12 @@ config_load(void)
 
 	if (loads == 1)
 	{
-		LOAD(resources_once);
+		LOAD_RESOURCES(resources_once);
 	}
 
-	LOAD(resources);
+	LOAD_RESOURCES(resources);
+	load_buttons();
+	load_keys();
 
 	/* fill in the blanks and check for errors */
 	
@@ -663,13 +638,14 @@ dummy_fn_load (ccfg *cfg)
 static void
 fetch(const struct resource resource)
 {
-	const char *str;
+	const char *token;
 	size_t tmp;
+	double d;
 
 	ccfg_fetch(parser, resource.namespace, resource.name);
 	if (ccfg_iterate(parser))
 	{
-		str = ccfg_resource(parser);
+		token = ccfg_resource(parser);
 	}
 	else
 	{
@@ -679,68 +655,66 @@ fetch(const struct resource resource)
 	switch (resource.type)
 	{
 		case STRING:
-			snprintf((char*)resource.target, CGUI_CONFIG_STR_LEN, "%s", str);
+			snprintf((char*)resource.target, CGUI_CONFIG_STR_LEN, "%s", token);
 			break;
 
 		case COLOR:
-			*(struct ccolor*)resource.target = ccolor_from_str(str, NULL);
+			*(struct ccolor*)resource.target = ccolor_from_str(token, NULL);
 			break;
 
 		case BOOL:
-			*(bool*)resource.target = !(fabs(strtod(str, NULL)) < DBL_EPSILON);
+			*(bool*)resource.target = !(fabs(strtod(token, NULL)) < DBL_EPSILON);
 			break;
 
-		case POSITION:
-			*(double*)resource.target = ceil(util_str_to_double(str, -DBL_MAX, DBL_MAX));
+		case OFFSET:
+			*(double*)resource.target = ceil(util_str_to_double(token, -DBL_MAX, DBL_MAX));
 			break;
 
 		case LENGTH:
-			*(double*)resource.target = ceil(util_str_to_double(str, 0.0, DBL_MAX));
+			*(double*)resource.target = ceil(util_str_to_double(token, 0.0, DBL_MAX));
 			break;
 
 		case LONG:
-			*(long*)resource.target = util_str_to_long(str, LONG_MIN, LONG_MAX);
+			*(long*)resource.target = util_str_to_long(token, LONG_MIN, LONG_MAX);
 			break;
 
 		case ULONG:
-			*(unsigned long*)resource.target = util_str_to_long(str, 0, LONG_MAX);
+			*(unsigned long*)resource.target = util_str_to_long(token, 0, LONG_MAX);
 			break;
 
 		case DOUBLE:
-			*(double*)resource.target = util_str_to_double(str, -DBL_MAX, DBL_MAX);
+			*(double*)resource.target = util_str_to_double(token, -DBL_MAX, DBL_MAX);
 			break;
 
-		case SCALE:
 		case UDOUBLE:
-			*(double*)resource.target = util_str_to_double(str, 0.0, DBL_MAX);
-			break;
-
-		case RATIO:
-			*(double*)resource.target = util_str_to_double(str, 0.0, 1.0);
+			*(double*)resource.target = util_str_to_double(token, 0.0, DBL_MAX);
 			break;
 
 		case BUTTON_ID:
-			*(uint8_t*)resource.target = util_str_to_long(str, 0, CGUI_CONFIG_BUTTONS);
+			*(uint8_t*)resource.target = util_str_to_long(token, 0, CGUI_CONFIG_BUTTONS);
 			break;
 		
 		case KEY_ID:
-			*(uint8_t*)resource.target = util_str_to_long(str, 0, CGUI_CONFIG_KEYS);
+			if ((d = util_str_to_long(token, 0, CGUI_CONFIG_KEYS)) > 0.0)
+			{
+				*(uint8_t*)resource.target = d;
+			}
 			break;
 			
 		case MOD_KEY:
 		case ANTIALIAS:
 		case SUBPIXEL:
 		case RENDER:
-			cdict_find(dict, str, resource.type, &tmp);
+			cdict_find(dict, token, resource.type, &tmp);
 			*(int*)resource.target = tmp;
 			break;
 
 		case MAP_KEY:
-			swap(str, CGUI_CONFIG_KEYS, (struct cgui_swap*)resource.target);
+			swap(token, CGUI_CONFIG_KEYS, (struct cgui_swap*)resource.target);
 			break;
 
 		case MAP_BUTTON:
-			swap(str, CGUI_CONFIG_BUTTONS, (struct cgui_swap*)resource.target);
+			swap(token, CGUI_CONFIG_BUTTONS, (struct cgui_swap*)resource.target);
 			break;
 
 		case CORNER_TYPE:
@@ -857,11 +831,59 @@ skip_font_setup:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
+load_buttons(void)
+{
+	struct resource r[3];
+	char s1[16];
+	char s2[16];
+	char s3[16];
+
+	for (int i = 0; i < CGUI_CONFIG_BUTTONS; i++)
+	{
+		snprintf(s1, sizeof(s1),  "%i", i);
+		snprintf(s2, sizeof(s2), "M%i", i);
+		snprintf(s3, sizeof(s3), "S%i", i);
+
+		r[0] = (struct resource){ "button", s1, MAP_BUTTON, &config.buttons[i][CGUI_SWAP_DIRECT] };
+		r[1] = (struct resource){ "button", s2, MAP_BUTTON, &config.buttons[i][CGUI_SWAP_MOD]    }; 
+		r[2] = (struct resource){ "button", s3, MAP_BUTTON, &config.buttons[i][CGUI_SWAP_SHIFT]  };
+
+		LOAD_RESOURCES(r);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+load_keys(void)
+{
+	struct resource r[3];
+	char s1[16];
+	char s2[16];
+	char s3[16];
+
+	for (int i = 0; i < CGUI_CONFIG_KEYS; i++)
+	{
+		snprintf(s1, sizeof(s1),  "%i", i);
+		snprintf(s2, sizeof(s2), "M%i", i);
+		snprintf(s3, sizeof(s3), "S%i", i);
+
+		r[0] = (struct resource){ "key", s1, MAP_KEY, &config.keys[i][CGUI_SWAP_DIRECT] };
+		r[1] = (struct resource){ "key", s2, MAP_KEY, &config.keys[i][CGUI_SWAP_MOD]    }; 
+		r[2] = (struct resource){ "key", s3, MAP_KEY, &config.keys[i][CGUI_SWAP_SHIFT]  };
+
+		LOAD_RESOURCES(r);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 scale(const struct resource resource)
 {
 	switch (resource.type)
 	{
-		case POSITION:
+		case OFFSET:
 		case LENGTH:
 			*(double*)resource.target *= config.render_scale;
 			break;
@@ -937,25 +959,20 @@ set_corners(enum value variant, void *target)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-swap(const char *str, uint8_t limit, struct cgui_swap *target)
+swap(const char *token, uint8_t limit, struct cgui_swap *target)
 {
-	char *str_copy;
+	char tk[CCFG_TOKEN_LENGTH];
 	char *ctx;
 	char *l;
 	char *r;
 	size_t tmp = 0;
 
-	if (!(str_copy = strdup(str)))
-	{
-		main_set_error(CERR_CONFIG);
-		return;
-	}
+	snprintf(tk, CCFG_TOKEN_LENGTH, "%s", token);
 
-	l = strtok_r(str_copy, ":", &ctx);
-	r = strtok_r(NULL,     ":", &ctx);
+	l = strtok_r(tk,   ":", &ctx);
+	r = strtok_r(NULL, ":", &ctx);
 	if (!l || !r)
 	{
-		free(str_copy);
 		return;
 	}
 
@@ -984,9 +1001,9 @@ swap(const char *str, uint8_t limit, struct cgui_swap *target)
 			target->value = tmp;
 			break;
 
+		case CGUI_SWAP_TO_ACTION_APP:
 		case CGUI_SWAP_TO_ACTION_CELL:
 		case CGUI_SWAP_TO_ACTION_WINDOW:
-		case CGUI_SWAP_TO_ACTION_MISC:
 			tmp = 0;
 			cdict_find(dict, r, SWAP_ACTION, &tmp);
 			target->value = tmp;
@@ -997,8 +1014,6 @@ swap(const char *str, uint8_t limit, struct cgui_swap *target)
 		default:
 			break;
 	}
-
-	free(str_copy);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

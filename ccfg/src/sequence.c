@@ -60,7 +60,7 @@ void
 sequence_parse(struct context *ctx)
 {
 	enum token type;
-	char token[TOKEN_MAX_LEN];
+	char token[CCFG_TOKEN_LENGTH];
 
 	if (ctx->depth >= CONTEXT_MAX_DEPTH)
 	{
@@ -145,9 +145,9 @@ static void
 combine_var(struct context *ctx, enum token type)
 {
 	cstr *val;
-	char name[TOKEN_MAX_LEN];
-	char token_1[TOKEN_MAX_LEN];
-	char token_2[TOKEN_MAX_LEN];
+	char name[CCFG_TOKEN_LENGTH];
+	char token_1[CCFG_TOKEN_LENGTH];
+	char token_2[CCFG_TOKEN_LENGTH];
 	size_t i;
 	size_t j;
 
@@ -209,8 +209,8 @@ combine_var(struct context *ctx, enum token type)
 static void
 declare_enum(struct context *ctx)
 {
-	char name[TOKEN_MAX_LEN];
-	char token[TOKEN_MAX_LEN];
+	char name[CCFG_TOKEN_LENGTH];
+	char token[CCFG_TOKEN_LENGTH];
 	double min;
 	double max;
 	double steps;
@@ -270,7 +270,7 @@ declare_enum(struct context *ctx)
 	for (size_t i = 0; i <= steps; i++)
 	{
 		ratio = util_interpolate(min, max, i / steps);
-		snprintf(token, TOKEN_MAX_LEN, "%.*f", (int)precision, ratio);
+		snprintf(token, CCFG_TOKEN_LENGTH, "%.*f", (int)precision, ratio);
 		cbook_write(ctx->vars, token);
 	}
 
@@ -284,8 +284,8 @@ declare_enum(struct context *ctx)
 static void
 declare_resource(struct context *ctx, const char *namespace)
 {
-	char name[TOKEN_MAX_LEN];
-	char value[TOKEN_MAX_LEN];
+	char name[CCFG_TOKEN_LENGTH];
+	char value[CCFG_TOKEN_LENGTH];
 	size_t i;
 	size_t n = 0;
 
@@ -330,8 +330,8 @@ declare_resource(struct context *ctx, const char *namespace)
 static void
 declare_variable(struct context *ctx)
 {
-	char name[TOKEN_MAX_LEN];
-	char value[TOKEN_MAX_LEN];
+	char name[CCFG_TOKEN_LENGTH];
+	char value[CCFG_TOKEN_LENGTH];
 	size_t n = 0;
 
 	if (ctx->restricted)
@@ -371,7 +371,7 @@ declare_variable(struct context *ctx)
 static void
 include(struct context *ctx)
 {
-	char token[TOKEN_MAX_LEN];
+	char token[CCFG_TOKEN_LENGTH];
 	cstr *filename;
 
 	if (ctx->restricted || ctx->file_inode == 0)
@@ -408,8 +408,8 @@ include(struct context *ctx)
 static void
 iterate(struct context *ctx)
 {
-	char name[TOKEN_MAX_LEN];
-	char token[TOKEN_MAX_LEN];
+	char name[CCFG_TOKEN_LENGTH];
+	char token[CCFG_TOKEN_LENGTH];
 	size_t group_start;
 	size_t group_end;
 	size_t i;
@@ -432,7 +432,7 @@ iterate(struct context *ctx)
 
 	if (context_get_token(ctx, name, NULL) == TOKEN_INVALID)
 	{
-		snprintf(name, TOKEN_MAX_LEN, "%s", token);
+		snprintf(name, CCFG_TOKEN_LENGTH, "%s", token);
 	}
 	
 	if (cdict_find(ctx->keys_vars, name, CONTEXT_DICT_ITERATION, &j))
@@ -492,7 +492,7 @@ skip:
 static size_t
 preproc_iter_nest(struct context *ctx, size_t start_group, bool *fail)
 {
-	char token[TOKEN_MAX_LEN];
+	char token[CCFG_TOKEN_LENGTH];
 	size_t n = 0;
 	size_t i;
 
@@ -533,7 +533,7 @@ preproc_iter_nest(struct context *ctx, size_t start_group, bool *fail)
 static void
 preproc_iter_new(struct context *ctx, bool *fail)
 {
-	char token[TOKEN_MAX_LEN];
+	char token[CCFG_TOKEN_LENGTH];
 	size_t n = 0;
 
 	context_goto_eol(ctx);
@@ -586,7 +586,7 @@ preproc_iter_new(struct context *ctx, bool *fail)
 static void
 print(struct context *ctx)
 {
-	char token[TOKEN_MAX_LEN];
+	char token[CCFG_TOKEN_LENGTH];
 	
 	if (ctx->restricted)
 	{
@@ -614,7 +614,7 @@ restrict_mode(struct context *ctx)
 static void
 section_add(struct context *ctx)
 {
-	char token[TOKEN_MAX_LEN];
+	char token[CCFG_TOKEN_LENGTH];
 
 	if (ctx->restricted)
 	{
@@ -632,7 +632,7 @@ section_add(struct context *ctx)
 static void
 section_begin(struct context *ctx)
 {
-	char token[TOKEN_MAX_LEN];
+	char token[CCFG_TOKEN_LENGTH];
 
 	if (ctx->restricted)
 	{
@@ -656,7 +656,7 @@ section_begin(struct context *ctx)
 static void
 section_del(struct context *ctx)
 {
-	char token[TOKEN_MAX_LEN];
+	char token[CCFG_TOKEN_LENGTH];
 
 	if (ctx->restricted)
 	{
@@ -674,7 +674,7 @@ section_del(struct context *ctx)
 static void
 seed(struct context *ctx)
 {
-	char token[TOKEN_MAX_LEN];
+	char token[CCFG_TOKEN_LENGTH];
 	double d;
 	
 	if (ctx->restricted)

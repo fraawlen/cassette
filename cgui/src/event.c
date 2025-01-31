@@ -62,8 +62,8 @@ static void unmap                (struct cgui_event *) CGUI_NONNULL(1);
 
 /* other functions */
 
+static void   action_app     (uint8_t);
 static void   action_cell    (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
-static void   action_misc    (uint8_t);
 static void   action_window  (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
 static void   clipboard      (enum cgui_cell_event_type, uint8_t, cgui_window *) CGUI_NONNULL(3);
 static void   focus_cell     (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
@@ -210,6 +210,26 @@ accelerate(struct cgui_event *event)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
+action_app(uint8_t type)
+{
+	switch (type)
+	{
+		case CGUI_SWAP_RECONFIG:
+			cgui_reconfig();
+			break;
+
+		case CGUI_SWAP_EXIT:
+			cgui_exit();
+			break;
+
+		default:
+			break;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 action_cell(uint8_t type, cgui_window *window)
 {
 	struct cgui_cell_event event;
@@ -241,26 +261,6 @@ action_cell(uint8_t type, cgui_window *window)
 	}
 
 	window_process_cell_event(window, window->focus, &event);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-action_misc(uint8_t type)
-{
-	switch (type)
-	{
-		case CGUI_SWAP_RECONFIG:
-			cgui_reconfig();
-			break;
-
-		case CGUI_SWAP_EXIT:
-			cgui_exit();
-			break;
-
-		default:
-			break;
-	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -858,16 +858,16 @@ swap_input(struct cgui_event *event)
 			focus_cell(swap.value, event->window);
 			break;
 
+		case CGUI_SWAP_TO_ACTION_APP:
+			action_app(swap.value);
+			break;
+
 		case CGUI_SWAP_TO_ACTION_CELL:
 			action_cell(swap.value, event->window);
 			break;
 
 		case CGUI_SWAP_TO_ACTION_WINDOW:
 			action_window(swap.value, event->window);
-			break;
-
-		case CGUI_SWAP_TO_ACTION_MISC:
-			action_misc(swap.value);
 			break;
 
 		default:

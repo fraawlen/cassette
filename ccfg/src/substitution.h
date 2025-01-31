@@ -29,5 +29,5 @@
 /************************************************************************************************************/
 
 enum token
-substitution_apply(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
+substitution_apply(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_result)
 CCFG_HIDDEN;

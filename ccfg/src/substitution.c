@@ -37,23 +37,23 @@
 /************************************************************************************************************/
 
 static enum token comment       (void);
-static enum token condition     (struct context *, char [static TOKEN_MAX_LEN], double *, enum token)         CCFG_NONNULL(1);
-static enum token eof           (struct context *)                                                            CCFG_NONNULL(1);
-static enum token escape        (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
-static enum token filler        (struct context *, char [static TOKEN_MAX_LEN], double *)                     CCFG_NONNULL(1);
-static enum token join          (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
-static enum token math          (struct context *, char [static TOKEN_MAX_LEN], double *, enum token, size_t) CCFG_NONNULL(1);
-static enum token math_cl       (struct context *, char [static TOKEN_MAX_LEN], double *, enum token, size_t) CCFG_NONNULL(1);
-static enum token param         (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
-static enum token variable      (struct context *, char [static TOKEN_MAX_LEN], double *)                     CCFG_NONNULL(1);
-static enum token variable_iter (struct context *, char [static TOKEN_MAX_LEN])                               CCFG_NONNULL(1);
+static enum token condition     (struct context *, char [static CCFG_TOKEN_LENGTH], double *, enum token)         CCFG_NONNULL(1);
+static enum token eof           (struct context *)                                                                CCFG_NONNULL(1);
+static enum token escape        (struct context *, char [static CCFG_TOKEN_LENGTH])                               CCFG_NONNULL(1);
+static enum token filler        (struct context *, char [static CCFG_TOKEN_LENGTH], double *)                     CCFG_NONNULL(1);
+static enum token join          (struct context *, char [static CCFG_TOKEN_LENGTH])                               CCFG_NONNULL(1);
+static enum token math          (struct context *, char [static CCFG_TOKEN_LENGTH], double *, enum token, size_t) CCFG_NONNULL(1);
+static enum token math_cl       (struct context *, char [static CCFG_TOKEN_LENGTH], double *, enum token, size_t) CCFG_NONNULL(1);
+static enum token param         (struct context *, char [static CCFG_TOKEN_LENGTH])                               CCFG_NONNULL(1);
+static enum token variable      (struct context *, char [static CCFG_TOKEN_LENGTH], double *)                     CCFG_NONNULL(1);
+static enum token variable_iter (struct context *, char [static CCFG_TOKEN_LENGTH])                               CCFG_NONNULL(1);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
 enum token
-substitution_apply(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
+substitution_apply(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_result)
 {
 	enum token type;
 
@@ -188,9 +188,9 @@ comment(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-condition(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type)
+condition(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_result, enum token type)
 {
-	char token_2[TOKEN_MAX_LEN];
+	char token_2[CCFG_TOKEN_LENGTH];
 	bool result;
 	double a;
 	double b;
@@ -268,7 +268,7 @@ eof(struct context *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-escape(struct context *ctx, char token[TOKEN_MAX_LEN])
+escape(struct context *ctx, char token[CCFG_TOKEN_LENGTH])
 {
 	ctx->eol_reached = false;
 
@@ -278,7 +278,7 @@ escape(struct context *ctx, char token[TOKEN_MAX_LEN])
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-filler(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
+filler(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_result)
 {
 	return context_get_token(ctx, token, math_result);
 }
@@ -286,14 +286,14 @@ filler(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_resul
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-join(struct context *ctx, char token[static TOKEN_MAX_LEN])
+join(struct context *ctx, char token[static CCFG_TOKEN_LENGTH])
 {
-	char token_a[TOKEN_MAX_LEN];
-	char token_b[TOKEN_MAX_LEN];
+	char token_a[CCFG_TOKEN_LENGTH];
+	char token_b[CCFG_TOKEN_LENGTH];
 
 	if (context_get_token(ctx, token_a, NULL) == TOKEN_INVALID
 	 || context_get_token(ctx, token_b, NULL) == TOKEN_INVALID
-	 || snprintf(token, TOKEN_MAX_LEN, "%s%s", token_a, token_b) < 0)
+	 || snprintf(token, CCFG_TOKEN_LENGTH, "%s%s", token_a, token_b) < 0)
 	{
 		return TOKEN_INVALID;
 	}
@@ -304,7 +304,7 @@ join(struct context *ctx, char token[static TOKEN_MAX_LEN])
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-math(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type, size_t n)
+math(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_result, enum token type, size_t n)
 {
 	double result;
 	double d[3] = {0};
@@ -473,7 +473,7 @@ math(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result,
 	}
 	else
 	{
-		snprintf(token, TOKEN_MAX_LEN, "%.8f", result);
+		snprintf(token, CCFG_TOKEN_LENGTH, "%.8f", result);
 	}
 
 	return TOKEN_NUMBER;
@@ -482,7 +482,7 @@ math(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result,
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-math_cl(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result, enum token type, size_t n)
+math_cl(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_result, enum token type, size_t n)
 {
 	struct ccolor result;
 	struct ccolor cl[4] = {0};
@@ -534,7 +534,7 @@ math_cl(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_resu
 	}
 	else
 	{
-		snprintf(token, TOKEN_MAX_LEN, "%u", ccolor_to_argb_uint(result));
+		snprintf(token, CCFG_TOKEN_LENGTH, "%u", ccolor_to_argb_uint(result));
 	}
 
 	return TOKEN_NUMBER;
@@ -543,7 +543,7 @@ math_cl(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_resu
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-param(struct context *ctx, char token[static TOKEN_MAX_LEN])
+param(struct context *ctx, char token[static CCFG_TOKEN_LENGTH])
 {
 	size_t i; 
 
@@ -553,7 +553,7 @@ param(struct context *ctx, char token[static TOKEN_MAX_LEN])
 		return TOKEN_INVALID;
 	}
 
-	snprintf(token, TOKEN_MAX_LEN, "%s", cbook_word(ctx->params, i));
+	snprintf(token, CCFG_TOKEN_LENGTH, "%s", cbook_word(ctx->params, i));
 	
 	return TOKEN_STRING;
 }
@@ -561,7 +561,7 @@ param(struct context *ctx, char token[static TOKEN_MAX_LEN])
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-variable(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
+variable(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_result)
 {
 	if (context_get_token(ctx, token, NULL) == TOKEN_INVALID
 	 || !cdict_find(ctx->keys_vars, token, CONTEXT_DICT_VARIABLE, &ctx->var_group))
@@ -577,7 +577,7 @@ variable(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_res
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static enum token
-variable_iter(struct context *ctx, char token[static TOKEN_MAX_LEN])
+variable_iter(struct context *ctx, char token[static CCFG_TOKEN_LENGTH])
 {
 	size_t i;
 
@@ -587,7 +587,7 @@ variable_iter(struct context *ctx, char token[static TOKEN_MAX_LEN])
 		return TOKEN_INVALID;
 	}
 
-	snprintf(token, TOKEN_MAX_LEN, "%s", cbook_word(ctx->vars, i));
+	snprintf(token, CCFG_TOKEN_LENGTH, "%s", cbook_word(ctx->vars, i));
 
 	return TOKEN_STRING;
 }

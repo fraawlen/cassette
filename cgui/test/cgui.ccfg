@@ -11,7 +11,7 @@
 	render mode             forward
 	render sync_vblank      TRUE
 	render sync_bypass      TRUE
-	render partial          FALSE
+	render partial_redraw   FALSE
 	render fps_async_cap    30
 	render fps_sync_divider 2
 
@@ -20,8 +20,8 @@
 	font size              32
 	font spacing_horz      0
 	font spacing_vert      2
-	font offset_x          0
-	font offset_y          0
+	font x_offset          0
+	font y_offset          0
 	font width             7
 	font ascent            14
 	font descent           0
@@ -39,8 +39,10 @@
 	input window_resize     3
 	input window_fullscreen 2
 
-	button M3 misc:exit
-	button M2 misc:reconfig
+	button M3 app:exit
+	button M2 app:reconfig
+
+	key 30 app:exit
 
 	window pad             50
 	window border_color    #505050

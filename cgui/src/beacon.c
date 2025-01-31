@@ -206,7 +206,7 @@ cgui_beacon_set_state(cgui_cell *cell, enum cgui_beacon_state state)
 static void
 blink(cgui_cell *cell, unsigned long time)
 {
-	unsigned long limit = 1000;
+	unsigned long limit;
 	unsigned long spent;
 
 	if (DATA->state != CGUI_BEACON_CRITICAL)
@@ -214,9 +214,10 @@ blink(cgui_cell *cell, unsigned long time)
 		return;
 	}
 
-	spent  = time - DATA->blink_last;
-	limit *= DATA->blink_on ? CONFIG->beacon_blink_on : CONFIG->beacon_blink_off;
-	limit /= DATA->blink_factor;
+	spent = time - DATA->blink_last;
+	limit = 1000
+	      * (DATA->blink_on ? CONFIG->beacon_blink_on : CONFIG->beacon_blink_off)
+	      /  DATA->blink_factor;
 
 	if (spent >= limit)
 	{

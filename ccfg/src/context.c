@@ -35,7 +35,7 @@
 /************************************************************************************************************/
 
 static char read_char    (struct context *)                              CCFG_NONNULL(1);
-static bool read_word    (struct context *, char [static TOKEN_MAX_LEN]) CCFG_NONNULL(1);
+static bool read_word    (struct context *, char [static CCFG_TOKEN_LENGTH]) CCFG_NONNULL(1);
 static void update_state (struct context *, char)                        CCFG_NONNULL(1);
 
 /************************************************************************************************************/
@@ -43,7 +43,7 @@ static void update_state (struct context *, char)                        CCFG_NO
 /************************************************************************************************************/
 
 enum token
-context_get_token(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
+context_get_token(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_result)
 {
 	if (context_get_token_raw(ctx, token) == TOKEN_INVALID)
 	{
@@ -56,7 +56,7 @@ context_get_token(struct context *ctx, char token[static TOKEN_MAX_LEN], double 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 enum token
-context_get_token_numeral(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
+context_get_token_numeral(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_result)
 {
 	bool err = false;
 
@@ -88,15 +88,15 @@ context_get_token_numeral(struct context *ctx, char token[static TOKEN_MAX_LEN],
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 enum token
-context_get_token_raw(struct context *ctx, char token[static TOKEN_MAX_LEN])
+context_get_token_raw(struct context *ctx, char token[static CCFG_TOKEN_LENGTH])
 {
 	if (ctx->var_i < cbook_group_length(ctx->vars, ctx->var_group))
 	{
-		snprintf(token, TOKEN_MAX_LEN, "%s", cbook_word_in_group(ctx->vars, ctx->var_group, ctx->var_i++));
+		snprintf(token, CCFG_TOKEN_LENGTH, "%s", cbook_word_in_group(ctx->vars, ctx->var_group, ctx->var_i++));
 	}
 	else if (ctx->it_i < cbook_group_length(ctx->iteration, ctx->it_group))
 	{
-		snprintf(token, TOKEN_MAX_LEN, "%s", cbook_word_in_group(ctx->iteration, ctx->it_group, ctx->it_i++));
+		snprintf(token, CCFG_TOKEN_LENGTH, "%s", cbook_word_in_group(ctx->iteration, ctx->it_group, ctx->it_i++));
 	}
 	else if (!read_word(ctx, token))
 	{
@@ -133,7 +133,7 @@ read_char(struct context *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-read_word(struct context *ctx, char token[static TOKEN_MAX_LEN])
+read_word(struct context *ctx, char token[static CCFG_TOKEN_LENGTH])
 {
 	size_t i = 0;
 	bool quotes_1 = false;
@@ -204,7 +204,7 @@ exit_lead:
 
 			default:
 			char_add:
-				if (i < TOKEN_MAX_LEN - 1)
+				if (i < CCFG_TOKEN_LENGTH - 1)
 				{
 					token[i++] = (char)c;
 				}

@@ -34,6 +34,15 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#define CONTEXT_DICT_VARIABLE  0
+#define CONTEXT_DICT_SECTION   1
+#define CONTEXT_DICT_ITERATION 2
+#define CONTEXT_MAX_DEPTH      32
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
 struct context
 {
 	/* source */
@@ -85,31 +94,22 @@ struct context
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define CONTEXT_DICT_VARIABLE  0
-#define CONTEXT_DICT_SECTION   1
-#define CONTEXT_DICT_ITERATION 2
-#define CONTEXT_MAX_DEPTH      32
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
 enum token
-context_get_token(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
+context_get_token(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_result)
 CCFG_NONNULL(1)
 CCFG_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 enum token
-context_get_token_numeral(struct context *ctx, char token[static TOKEN_MAX_LEN], double *math_result)
+context_get_token_numeral(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_result)
 CCFG_NONNULL(1)
 CCFG_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 enum token
-context_get_token_raw(struct context *ctx, char token[static TOKEN_MAX_LEN])
+context_get_token_raw(struct context *ctx, char token[static CCFG_TOKEN_LENGTH])
 CCFG_NONNULL(1)
 CCFG_HIDDEN;
 

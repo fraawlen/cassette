@@ -63,6 +63,11 @@ typedef struct ccfg ccfg;
 /************************************************************************************************************/
 
 /**
+ * Maximum length of a ccfg token including the NUL terminator.
+ */
+#define CCFG_TOKEN_LENGTH 256
+
+/**
  * A macro that gives uninitialized config objects a non-NULL value that is safe to use with the config's
  * related functions. However, any function called with a handle set to this value will return early without
  * any side effects.
