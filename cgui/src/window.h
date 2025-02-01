@@ -191,6 +191,13 @@ CGUI_HIDDEN;
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+window_update_geometry(cgui_window *window)
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 window_update_size(cgui_window *window, double width, double height)
 CGUI_NONNULL(1)
 CGUI_HIDDEN;

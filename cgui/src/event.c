@@ -274,7 +274,9 @@ action_window(uint8_t type, cgui_window *window)
 	{
 		case CGUI_SWAP_WINDOW_LOCK_GRID:
 			window_update_state(window, CGUI_WINDOW_LOCKED_GRID, !window->state.locked_grid);
+			window_update_shown_grid(window);
 			window_update_size_hints(window);
+			window_update_geometry(window);
 			break;
 
 		case CGUI_SWAP_WINDOW_LOCK_FOCUS:
