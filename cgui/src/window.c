@@ -201,7 +201,10 @@ cgui_window_activate(cgui_window *window)
 	x11_window_activate(window->x_id);
 	window_update_size_hints(window);
 	window_update_state(window, CGUI_WINDOW_ACTIVE, true);
-	if (CONFIG->window_pre_focus)
+
+	if (CONFIG->window_pre_focus
+	 && (window->type == CGUI_WINDOW_NORMAL
+	  || window->type == CGUI_WINDOW_DIALOG))
 	{
 		window_update_state(window, CGUI_WINDOW_FOCUSED, true);
 	}

@@ -618,15 +618,9 @@ pointer(struct cgui_event *event)
 static void
 pointer_raw(void)
 {
-	/* update the stored pointer position only when the following option is enabled to avoid spamming  */
-	/* X pointer requests. This is the only option that requires constant pointer tracking inside CGUI */
-	/* If the user needs constant pointer tracking while that option is disabled, he can call          */
-	/* cgui_screen_pointer_position() manually from within a custom event callback.                    */
-
-	if (!CONFIG->shadows_reactive)
-	{
-		return;
-	}
+	/* because this event is only received when reactives shadows are enabled, */
+	/* there is no need to explicitly check is that option is enabled before   */
+	/* scheduling a complete redraw of all windows.                            */
 
 	CREF_FOR_EACH(main_windows(), i)
 	{

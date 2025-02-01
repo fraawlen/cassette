@@ -232,13 +232,6 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 		XCB_EVENT_MASK_PROPERTY_CHANGE,
 	};
 
-	struct xi_input_mask xinput_mask =
-	{
-		.mask          = XCB_INPUT_XI_EVENT_MASK_RAW_MOTION,
-		.head.deviceid = XCB_INPUT_DEVICE_ALL,
-		.head.mask_len = 1,
-	};
-
 	/* setup class and cmd args */
 
 	argc        = argc_;
@@ -439,13 +432,12 @@ x11_init(int argc_, char **argv_, const char *class_name_, const char *class_cla
 	opcode_present = extension_opcode("Present");
 	opcode_xinput  = extension_opcode("XInputExtension");
 
-	/* subscribe to global XI raw pointer motion events */
+	/* track global pointer */
 
-	xc = xcb_input_xi_select_events(connection, screen->root, 1, (xcb_input_event_mask_t*)(&xinput_mask));
-	test_cookie(xc);
+	x11_update_pointer_tracking();
 
 	/* end */
-	
+
 	xcb_flush(connection);
 
 	return;
@@ -555,12 +547,7 @@ x11_key(uint8_t keycode, struct cgui_mods mods, uint32_t *keysym, uint32_t *utf3
 xcb_window_t
 x11_leader_window(void)
 {
-	if (cgui_error())
-	{
-		return 0;
-	}
-
-	return win_leader;
+	return cgui_error() ? 0 : win_leader;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -967,6 +954,31 @@ x11_update(void)
 
 	free(event);
 	xcb_flush(connection);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_update_pointer_tracking(void)
+{
+	/* track the global pointer position only when the reactive shadow option is enabled to avoid     */
+	/* spamming X events. This is the only option that requires constant pointer tracking inside CGUI */
+	/* If the user needs constant pointer tracking while that option is disabled, he can call         */
+	/* cgui_screen_pointer_position() manually from within a custom event callback.                   */
+
+	struct xi_input_mask xinput_mask =
+	{
+		.mask          = CONFIG->shadows_reactive ? XCB_INPUT_XI_EVENT_MASK_RAW_MOTION : 0,
+		.head.deviceid = XCB_INPUT_DEVICE_ALL,
+		.head.mask_len = 1,
+	};
+
+	test_cookie(
+		xcb_input_xi_select_events(
+			connection,
+			screen->root,
+			1,
+			(xcb_input_event_mask_t*)(&xinput_mask)));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

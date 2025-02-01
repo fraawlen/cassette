@@ -140,10 +140,13 @@ cgui_exit(void)
 void
 cgui_init(int argc, char **argv)
 {
-	if (!err)
+	if (err != CERR_INVALID)
 	{
 		return;
 	}
+
+	mutex_init();
+	main_lock();
 
 	if (!app_class)
 	{
@@ -170,8 +173,6 @@ cgui_init(int argc, char **argv)
 
 	config_init(app_name, app_class);
 	config_load();
-	mutex_init();
-	main_lock();
 	x11_init(argc, argv, app_name, app_class, ext_connection);
 	screen_pointer_update();
 
@@ -250,6 +251,7 @@ cgui_reconfig(void)
 	}
 
 	config_load();
+	x11_update_pointer_tracking();
 
 	CREF_FOR_EACH(windows, i)
 	{
@@ -336,8 +338,6 @@ cgui_reset(void)
 	x11_inputs_ungrab();
 	x11_reset(!ext_connection);
 	config_reset();
-	main_unlock();
-	mutex_reset();
 
 	cells          = CREF_PLACEHOLDER;
 	grids          = CREF_PLACEHOLDER;
@@ -350,6 +350,9 @@ cgui_reset(void)
 	fn_run         = dummy_fn_run;
 	fn_exit        = dummy_fn_exit;
 	err            = CERR_INVALID;
+
+	main_unlock();
+	mutex_reset();
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

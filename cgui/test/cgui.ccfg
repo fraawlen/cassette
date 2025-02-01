@@ -1,5 +1,75 @@
+//	SECTION_ADD Dev
 //	SECTION_ADD Shadow
 //	SECTION_ADD Round_Gauges
+	SECTION_ADD Wip_Theme
+
+SECTION Wip_Theme
+
+	render mode        forward
+	render sync_vblank TRUE
+	render sync_bypass TRUE
+
+	input window_move       1
+	input window_resize     3
+	input window_fullscreen 2
+
+	font face "Terminus"
+	font size 20
+
+	grid gap 10
+	grid pad 15
+
+	LET windows window window_focused window_disabled window_locked
+	FOR_EACH windows win
+		% win border_size 3
+		% win back_color  #202020
+		% win enabled     TRUE
+		% win corner_size 30
+	FOR_END
+	window          pad          13
+	window          border_color #808080
+	window_focused  border_color #AAAA00
+	window_disabled border_color #404040
+	window_locked   border_color #AA0000
+
+	LET simple_cells filler placeholder stripes label button_idle button_focused button_pressed button_disabled beacon_on beacon_off beacon_crit_on beacon_crit_off gauge gauge_bar gauge_cursor
+	FOR_EACH simple_cells cell
+		% cell border_size  3
+		% cell pad          12
+		% cell line_width   3
+		% cell back_color   #404040
+		% cell text_color   #FFFFFF
+		% cell border_color #808080
+		% cell line_color   #808080
+	FOR_END
+
+	beacon_on pad           9
+	beacon_on outline_size  3
+	beacon_on margin        3
+	beacon_on outline_color #808080
+	beacon_on border_color  #101010
+	beacon_on border_size   3
+
+	stripes     pad 0
+	placeholder pad 0
+	button_idle     back_color #602000
+	button_focused  back_color #A04000
+	button_disabled back_color #301000
+	button_pressed  back_color #FFFFFF
+	button_pressed  text_color #000000
+	button_disabled text_color #808080
+
+	gauge        pad            0
+	gauge_bar    pad           -3
+	gauge_cursor pad           12
+	gauge_bar    outline_size   3
+	gauge_bar    border_size    0
+	gauge_bar    back_color    #003030
+	gauge_bar    outline_color #808080
+	gauge_cursor back_color    #004545
+	gauge_cursor min_size       0
+
+SECTION Dev
 
 	// Configuration example
 

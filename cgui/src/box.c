@@ -82,7 +82,7 @@ cgui_box_content_offset(struct cgui_box box)
 void
 cgui_box_draw(cairo_t *drawable)
 {
-	if (!ctx_box.draw)
+	if (!ctx_box.draw || ctx_width < 1.0 || ctx_height < 1.0)
 	{
 		return;
 	}

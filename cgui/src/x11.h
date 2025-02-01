@@ -82,6 +82,12 @@ CGUI_HIDDEN;
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+x11_update_pointer_tracking(void)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 x11_window_activate(xcb_window_t id)
 CGUI_HIDDEN;
 

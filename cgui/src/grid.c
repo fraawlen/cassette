@@ -22,6 +22,7 @@
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
 #include <float.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -715,7 +716,7 @@ grid_update_geometry(cgui_grid *grid, double width, double height)
 
 	for (size_t i = 0; i < grid->n_cols; i++)
 	{
-		l = f < DBL_EPSILON ? 0.0 : n * grid->cols[i].flex / f;
+		l = f < DBL_EPSILON ? 0.0 : round(n * grid->cols[i].flex / f);
 
 		grid->cols[i].offset = o;
 		grid->cols[i].size   = col_width(grid->cols[i]) + l;
@@ -733,7 +734,7 @@ grid_update_geometry(cgui_grid *grid, double width, double height)
 
 	for (size_t i = 0; i < grid->n_rows; i++)
 	{
-		l = f < DBL_EPSILON ? 0.0 : n * grid->rows[i].flex / f;
+		l = f < DBL_EPSILON ? 0.0 : round(n * grid->rows[i].flex / f);
 
 		grid->rows[i].offset = o;
 		grid->rows[i].size   = row_height(grid->rows[i]) + l;
