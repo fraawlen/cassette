@@ -116,6 +116,19 @@ cgui_block_user_exit(void)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void
+cgui_broadcast_reconfig(void)
+{
+	if (err)
+	{
+		return;
+	}
+
+	x11_broadcast_reconfig();
+}	
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 enum cerr
 cgui_error(void)
 {

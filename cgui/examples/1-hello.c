@@ -224,6 +224,7 @@ on_click(cgui_cell *c)
 		cgui_clipboard_on_copy(1, on_clip_copy);
 		cgui_clipboard_on_lose(1, on_clip_lose);
 		cgui_beacon_set_state(beacon, CGUI_BEACON_ON);
+		cgui_broadcast_reconfig();
 	}
 	else if (c == button_2)
 	{

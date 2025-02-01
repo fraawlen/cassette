@@ -86,6 +86,7 @@ struct xi_input_mask
 static xcb_atom_t       atom                 (const char *) CGUI_NONNULL(1);
 static uint8_t          extension_opcode     (const char *) CGUI_NONNULL(1);
 static cgui_window     *find_window          (xcb_window_t);
+static bool             from_cgui            (xcb_window_t);
 static bool             prop_add             (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
 static bool             prop_set             (xcb_window_t, xcb_atom_t, xcb_atom_t, uint32_t, const void *);
 static int              selection_id         (xcb_atom_t);
@@ -201,6 +202,46 @@ static cref *events = CREF_PLACEHOLDER;
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
+
+void
+x11_broadcast_reconfig(void)
+{
+	xcb_window_t win;
+	xcb_query_tree_cookie_t xc;
+	xcb_query_tree_reply_t *xr;
+	xcb_client_message_data_t data = {.data32 = {atom_sig, atom_conf, 0, 0, 0}};
+	xcb_client_message_event_t msg =
+	{
+		.response_type = XCB_CLIENT_MESSAGE,
+		.format        = 32,
+		.type          = atom_prot,
+		.data          = data,
+	};
+
+	/* message is sent only to CGUI parent windows, */
+	/* which are always children of the root window */
+
+	xc = xcb_query_tree(connection, screen->root);
+	xr = xcb_query_tree_reply(connection, xc, NULL);
+	if (!xr)
+	{
+		main_set_error(CERR_XCB);
+		return;
+	}
+
+	for (int i = 0; i < xcb_query_tree_children_length(xr); i++)
+	{
+		if (from_cgui(win = xcb_query_tree_children(xr)[i]))
+		{
+			xcb_send_event(connection, 0, win, XCB_EVENT_MASK_NO_EVENT, (char*)&msg);
+		}
+	}
+
+	free(xr);
+	xcb_flush(connection);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 xcb_connection_t *
 x11_connection(void)
@@ -1067,7 +1108,7 @@ x11_window_create(xcb_window_t *id, xcb_pixmap_t *buffer, double x, double y, do
 		goto fail_id;
 	}
 
-	/* create buffer for present operations, it won't be used if alt_present = false */
+	/* create buffer for present operations, it won't be used if the render mode is deferred */
 
 	*buffer = xcb_generate_id(connection);
 	xc = xcb_create_pixmap_checked(connection, depth->depth, *buffer, *id, width, height);
@@ -1970,6 +2011,29 @@ find_window(xcb_window_t id)
 	}
 
 	return CGUI_WINDOW_PLACEHOLDER;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static bool
+from_cgui(xcb_window_t id)
+{
+	xcb_get_property_reply_t *xr;
+	xcb_get_property_cookie_t xc;
+	bool ok;
+
+	xc = xcb_get_property(connection, 0, id, atom_vers, XCB_ATOM_STRING, 0, UINT32_MAX);
+	xr = xcb_get_property_reply(connection, xc, NULL);
+	if (!xr)
+	{
+		main_set_error(CERR_XCB);
+		return false;
+	}
+
+	ok = xcb_get_property_value_length(xr) > 0;
+	free(xr);
+
+	return ok;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

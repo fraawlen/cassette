@@ -123,6 +123,12 @@ cgui_block_user_exit(void);
  *
  */
 void
+cgui_broadcast_reconfig(void);
+
+/**
+ *
+ */
+void
 cgui_exit(void);
 
 /**
