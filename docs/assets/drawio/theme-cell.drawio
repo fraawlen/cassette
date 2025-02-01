@@ -1,0 +1,19 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0" version="26.0.10">
+  <diagram name="Page-1" id="E3H04xMQFdIPTcgx_0kJ">
+    <mxGraphModel dx="791" dy="1150" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="7hOE4P8HAJewVo8-SUFt-1" value="" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=none;fillColor=#FFFFFF;" parent="1" vertex="1">
+          <mxGeometry x="80" y="200" width="520" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="W8upwmc08GRL9ZAsByuF-1" value="&amp;nbsp; box" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;fontSize=14;fontStyle=1;fillColor=#E44332;strokeColor=default;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="120" y="240" width="440" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="W8upwmc08GRL9ZAsByuF-3" value="text area" style="rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontSize=14;fontStyle=1;fillColor=none;strokeWidth=2;dashed=1;dashPattern=8 8;fontColor=default;" parent="1" vertex="1">
+          <mxGeometry x="180" y="300" width="320" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -215,7 +215,7 @@ static const struct word words[] =
 	{ "previous",   FOCUS,       CGUI_FOCUS_PREV              },
 	{ "first",      FOCUS,       CGUI_FOCUS_FIRST             },
 	{ "last",       FOCUS,       CGUI_FOCUS_LAST              },
-	{ "none",       FOCUS,       CGUI_FOCUS_NONE              },
+	{ "unfocus",    FOCUS,       CGUI_FOCUS_NONE              },
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -248,12 +248,12 @@ static const struct resource resources[] =
 	{ "font",         "spacing_horz",       LENGTH,    &config.font_hgap              },
 	{ "font",         "spacing_vert",       LENGTH,    &config.font_vgap              },
 	{ "font",         "width",              LENGTH,    &config.font_width             },
-	{ "font",         "height",             LENGTH,    &config.font_ascent            },
+	{ "font",         "ascent",             LENGTH,    &config.font_ascent            },
 	{ "font",         "descent",            LENGTH,    &config.font_descent           },
-	{ "font",         "x_offset",           OFFSET,  &config.font_offset_x          },
-	{ "font",         "y_offset",           OFFSET,  &config.font_offset_y          },
+	{ "font",         "x_offset",           OFFSET,    &config.font_offset_x          },
+	{ "font",         "y_offset",           OFFSET,    &config.font_offset_y          },
 	{ "font",         "override_metrics",   BOOL,      &config.font_override          },
-	{ "font",         "hint_metrics",       BOOL,      &config.font_hints             },
+	{ "font",         "hint",               BOOL,      &config.font_hints             },
 	{ "font",         "antialias",          ANTIALIAS, &config.font_antialias         },
 	{ "font",         "subpixel",           SUBPIXEL,  &config.font_subpixel          },
 	{ "font",         "bg_vert_pad",        LENGTH,    &config.font_bg_vpad           },

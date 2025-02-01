@@ -1833,7 +1833,7 @@ frame(const cgui_window *window)
 
 	/* select special border color if window is focused */
 
-	if (window->type == CGUI_WINDOW_POPUP)
+	if (window->type == CGUI_WINDOW_POPUP && CONFIG->popup.ena)
 	{
 		style = CONFIG->popup;
 	}

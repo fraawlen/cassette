@@ -96,7 +96,7 @@ font face "FONT_NAME"
 font size  VALUE
 ```
 
-Replace `FONT_NAME` and `VALUE` with your preferred font name and size. The font name follows the FontConfig naming convention. After that, if the rendered text still looks wrong, check out the other font configuration parameters in the [sample configuration file](cgui/test/cgui.ccfg) and add them to your current configuration to further tweak font rendering. 
+Replace `FONT_NAME` and `VALUE` with your preferred font name and size. The font name follows the FontConfig naming convention. After that, if the rendered text still looks wrong, check out the other font [configuration options](cgui/docs/cgui-theming.md) and add them to your current configuration to further tweak font rendering. 
 
 ## Usage
 

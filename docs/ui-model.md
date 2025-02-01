@@ -9,7 +9,7 @@ To do so, CGUI's layout system adheres to the **Window-Grid-Cell paradigm (WGC)*
 - **Grids** that serve as layout structures assigned to these windows.
 - **Cells** that are individual widgets arranged within grids.
 
-## Table of contents
+## Table of Contents <a name="toc"></a>
 
 - [Design Philosophy](#design)
 - [WGC Paradigm](#paradigm)
@@ -28,6 +28,8 @@ The overall look and feel of CGUI, as its name "Cassette" suggests, is inspired 
 |![Idea 1](assets/thirdp/wgc-alien.jpg)|![Idea 2](assets/thirdp/wgc-ccos.jpg)|![Idea 3](assets/thirdp/wgc-visioncalc.gif)|![Idea 4](assets/thirdp/wgc-sennaar.png)|
 |--|--|--|--|
 <p align=center><em>Some of the CGUI's inspiration <a href="https://www.sega.com/alien-isolation/alien-isolation">[1]</a><a href="https://dons-deals.blogspot.com/2012/08/grid-compass-computer-pioneering-laptop.html">[2]</a><a href="http://toastytech.com/guis/vision3.html">[3]</a><a href="https://www.rundisc.io/chants-of-sennaar/">[4]</a></em></p>
+
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
 
 ## WGC Paradigm <a name="paradigm"></a>
 
@@ -68,6 +70,8 @@ For this system to work smoothly, every grid added to a window must be strictly 
 Smaller grids, by nature, cannot display as much content as larger ones. Therefore, a mechanism is needed to allow cells assigned to a grid to change position, be added, or be removed dynamically. To simplify the creation and management of grids with dynamic content, the WGC paradigm supports a feature called grid swapping. Instead of creating a single grid with dynamically shown or hidden cells (e.g., a retractable sidebar), developers can use multiple grids of the same size. A default grid can be paired with another grid containing the additional content, such as the sidebar (while simultaneously excluding the cells hidden by that sidebar). Grids can then be swapped seamlessly. This approach ensures that after setting up their grids, windows, and cells, developers can swap entire layouts without micromanaging the details of their components. The CGUI API further simplifies this process by providing a grid cloning feature, which allows developers to create a template grid with pre-configured properties and common cells, and then add only the differences to cloned grids.
 
 When multiple grids are used, the intent is typically to present the same overall content with different layouts suited to varying conditions. Manually creating and synchronizing separate cell instances for each grid would be cumbersome. To address this, the WGC system allows the same cell instance to be assigned to multiple grids. When a grid is replaced, the cell retains its internal data and state, ensuring seamless transitions between layouts. Additionally, the system does not prohibit assigning the same cell instance multiple times to the same grid. However, it is generally assumed that only one assignment of a cell instance will be visible at a time. Unless specified otherwise in a cell’s documentation, simultaneously displaying multiple assignments of the same cell instance is considered undefined behavior. But as a general rule of thumb, cells that do not respond to user input and whose rendering is not time-based (e.g., static content) are safe to display multiple times within the same grid or across different windows.
+
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
 
 ## Practical example <a name="example"></a>
 
@@ -134,4 +138,6 @@ The final step is to assign the desktop grid and default mobile grid to the wind
 The final application demonstrates a fully responsive design, seamlessly transitioning between desktop and mobile layouts. The menu button allows mobile users to access additional functionality via the menu grid, while the desktop layout makes full use of the available screen space.
 
 ![Final result](assets/webp/wgc-example.webp)
+
+<div align="right">[ <a href="#toc">back to top</a> ]</div>
 

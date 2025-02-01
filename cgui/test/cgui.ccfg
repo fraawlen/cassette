@@ -60,6 +60,7 @@
 	popup corner_type  cut
 	popup corner_size  50
 	popup border_color #ff5050
+	popup enabled      TRUE
 
 	LET passives label gauge filler
 
