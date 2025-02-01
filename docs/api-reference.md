@@ -2,7 +2,8 @@
 
 TODO - proper page generation.
 
-In the meantime, check out the libraries headers directly, every function and type are fully described.
+In the meantime, check out the libraries headers directly.
+COBJ and CCFG functions and type are fully described. CGUI is a WIP.
 
 ## CGUI
 

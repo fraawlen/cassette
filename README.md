@@ -5,6 +5,7 @@ Cassette is a GUI application framework written in C11, with a UI inspired by th
 ## Table of Contents <a name="toc"></a>
 
 - [Overview](#overview)
+- [Status](#status)
 - [Documentation](#documentation)
 - [Dependencies](#dependencies)
 - [Build and Installation](#build)
@@ -32,10 +33,14 @@ A collection of self-contained data structures and utilities shared by both CCFG
 
 COBJ and CCFG Thick bindings for Ada 2012 are provided. CGUI bindings coming soon.
 
+## Status <a name="status"></a>
+
+> [!Warning]
+> Cassette is currently in an Alpha stage. COBJ and CCFG (with the exception of cstr.h) are largely complete and considered stable, but CGUI remains under active development. Notably, CGUI still needs broader Unicode support—only single codepoint glyphs work reliably at the moment—and it lacks a substantial set of widgets. Although some minimal documentation exists for end users, it is also a work in progress. Ongoing development aims to address these shortcomings and expand Cassette’s feature set.
+
 ## Documentation <a name="documentation"></a>
 
 - [UI model](docs/ui-model.md)
-- [CGUI unique features](docs/cgui-features.md)
 - [CGUI theming](docs/cgui-theming.md)
 - [CCFG language](docs/ccfg-language.md)
 - [API reference](docs/api-reference.md)
@@ -148,6 +153,7 @@ More elaborate demos:
 - Drag and drop
 - More cells (widgets)
 - More theming options
+- Complete API reference
 - Auto-generated API reference pages
 - Step-by-step CGUI tutorial
 
