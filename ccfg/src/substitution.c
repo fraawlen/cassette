@@ -137,6 +137,7 @@ substitution_apply(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], do
 		case TOKEN_OP_SINH:
 		case TOKEN_OP_LN:
 		case TOKEN_OP_LOG:
+		case TOKEN_OP_OPPOSITE:
 			type = math(ctx, token, math_result, type, 1);
 			break;
 
@@ -409,6 +410,10 @@ math(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_res
 
 		case TOKEN_OP_LOG:
 			result = log10(d[0]);
+			break;
+
+		case TOKEN_OP_OPPOSITE:
+			result = -result;
 			break;
 
 		/* 2 parameters */

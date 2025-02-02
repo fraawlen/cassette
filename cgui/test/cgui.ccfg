@@ -1,9 +1,8 @@
-	SECTION_ADD Wip_Theme
+	SECTION_ADD Monochrome
+//	SECTION_ADD Wip_Theme
 //	SECTION_ADD Dev
 //	SECTION_ADD Shadow
 //	SECTION_ADD Round_Gauges
-
-SECTION Wip_Theme
 
 	render mode           forward
 	render sync_vblank    TRUE
@@ -16,6 +15,140 @@ SECTION Wip_Theme
 
 	font face "Terminus"
 	font size 20
+
+SECTION Monochrome
+
+	// Params
+
+	LET c2  #FFFFFF
+	LET c1  #E44332
+	LET pad 15
+	LET lin 3
+	LET out 4
+	LET gap 12
+	LET win 20
+
+	// Groups
+
+	LET beacons beacon_on beacon_crit_on
+	LET buttons button_idle button_disabled button_focused button_pressed
+	LET lined_cells stripes placeholder
+	LET simple_cells \
+		filler \
+		placeholder \
+		stripes \
+		label \
+		button_idle \
+		button_focused \
+		button_pressed \
+		button_disabled \
+		beacon_on \
+		beacon_off \
+		beacon_crit_on \
+		beacon_crit_off \
+		gauge \
+		gauge_bar \
+		gauge_cursor
+
+	c
+	// General settings
+
+	grid gap $ gap
+	grid pad $ pad
+
+	window border_size  * $ lin 2
+	window back_color   $ c1
+	window border_color $ c2
+	window pad          $ win
+	
+	// Cell group settings
+
+	FOR_EACH simple_cells cell
+		% cell border_size  $ lin
+		% cell pad          - $ pad $ lin
+		% cell back_color   $ c1
+		% cell border_color $ c2
+		% cell text_color   $ c2
+	FOR_END
+
+	FOR_EACH lined_cells cell
+		% cell pad        0
+		% cell line_color $ c2
+	FOR_END
+
+	FOR_EACH buttons cell
+		% cell corner_type square square cut square
+		% cell corner_size 10
+	FOR_END
+
+	FOR_EACH beacons cell
+		% cell pad           - $ pad * $ lin 4
+		% cell margin        $ lin
+		% cell outline_size  $ lin
+		% cell outline_color $ c2
+		% cell border_size   * $ lin 3
+		% cell border_color  $ c1
+		% cell back_color    $ c2
+		% cell text_color    $ c1
+	FOR_END
+
+	// Cell custom settings
+
+	filler draw FALSE
+
+	placeholder line_width $ lin
+	stripes     line_width * $ lin 2
+	stripes     line_gap   * $ lin 3
+
+	button_idle border_size   0
+	button_idle pad           $ pad
+	button_idle back_color    $ c2
+	button_idle text_color    $ c1
+	button_idle text_bold     TRUE
+	button_idle outline_size  + $ lin $ out
+	button_idle outline_color $ c1
+	button_idle outline_shape FALSE
+
+	button_focused margin         ! $ lin
+	button_focused outline_size   $ out
+	button_focused outline_color  $ c2
+	button_focused border_size    $ lin
+	button_focused border_color   $ c1
+	button_focused back_color     $ c2
+	button_focused text_color     $ c1
+	button_focused text_bold      TRUE
+	button_focused outline_hitbox TRUE
+
+	button_pressed pad             + $ pad $ lin
+	button_pressed margin          ! $ lin
+	button_pressed outline_size    $ out
+	button_pressed outline_color   $ c2
+	button_pressed back_color      $ c1
+	button_pressed text_color      $ c2
+	button_pressed outline_hitbox  TRUE
+	button_pressed border_size     0
+
+	button_disabled outline_size  + $ lin $ out
+	button_disabled outline_color $ c1
+	button_disabled outline_shape FALSE
+
+	beacon_crit_off margin        $ lin
+	beacon_crit_off border_size   * $ lin 2
+	beacon_crit_off pad           - $ pad * $ lin 2
+	beacon_crit_off outline_size  $ lin
+	beacon_crit_off outline_color $ c1
+
+	gauge        pad          * $ lin 2
+	gauge_bar    pad          * $ lin -3
+	gauge_bar    border_size  0
+	gauge_bar    back_color   $ c2
+	gauge_cursor pad          $ pad
+	gauge_cursor min_size     0
+
+
+
+
+SECTION Wip_Theme
 
 	grid gap 10
 	grid pad 15
@@ -70,6 +203,10 @@ SECTION Wip_Theme
 	gauge_cursor back_color    #004545
 	gauge_cursor min_size       0
 
+
+
+
+
 SECTION Dev
 
 	// Configuration example
@@ -77,14 +214,6 @@ SECTION Dev
 	LET windows window window_focused window_disabled window_locked
 
 	test pad 12
-
-	render scale            1.0
-	render mode             forward
-	render sync_vblank      TRUE
-	render sync_bypass      TRUE
-	render partial_redraw   FALSE
-	render fps_async_cap    30
-	render fps_sync_divider 2
 
 	font pad_pattern       "_"
 	font face              "Terminus"
@@ -233,6 +362,10 @@ SECTION Dev
 	gauge_cursor border_size   14
 	gauge_cursor min_size      0
 
+
+
+
+
 SECTION Shadow
 
 	grid gap                    60
@@ -269,6 +402,10 @@ SECTION Shadow
 		% widget shadow_x_offset 10
 		% widget shadow_y_offset 10
 	FOR_END
+
+
+
+
 
 SECTION Round_Gauges
 

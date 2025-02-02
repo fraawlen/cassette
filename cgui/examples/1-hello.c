@@ -181,7 +181,7 @@ static const char *default_text =
 
 	if (cgui_error())
 	{
-		printf("Gui has failed during operation.\n");
+		printf("Gui has failed during operation (%i).\n", cgui_error());
 	}
 
 	cgui_window_destroy(window);

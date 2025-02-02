@@ -8,7 +8,7 @@ syntax match C_Filler /:=\|=/
 
 " Substitution tokens
 
-syntax match   C_Swap /==\|!=\|>=\|<=\|>\|<\|\$\$\|\$\|%\|\*\|\/\|+\|-/
+syntax match   C_Swap /==\|!=\|>=\|<=\|>\|<\|\$\$\|\$\|%\|\*\|\!\|\/\|+\|-/
 syntax keyword C_Swap VAR PARAM ITER JOIN STREQ SQRT CBRT ABS CEIL FLOOR ROUND COS SIN TAN ACOS ASIN ATAN COSH SINH LN LOG MOD POW BIG SMALL ITRPL LIMIT CITRPL RGB RGBA PI E TRUE FALSE TIME RAND
 
 " Sequence leads tokens

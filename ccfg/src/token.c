@@ -91,6 +91,7 @@ static const struct slot map[] =
 	{ "-",             TOKEN_OP_SUBSTRACT     },
 	{ "*",             TOKEN_OP_MULTIPLY      },
 	{ "/",             TOKEN_OP_DIVIDE        },
+	{ "!",             TOKEN_OP_OPPOSITE      },
 	{ "MOD",           TOKEN_OP_MOD           },
 	{ "POW",           TOKEN_OP_POW           },
 	{ "BIG",           TOKEN_OP_BIGGEST       },
