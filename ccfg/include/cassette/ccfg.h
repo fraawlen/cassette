@@ -202,8 +202,8 @@ CCFG_NONNULL(1);
  *
  * @param cfg : Config instance to interact with
  *
- * @error CERR_OVERFLOW : The size of an internal components was about to overflow
- * @error CERR_MEMORY   : Failed memory allocation during parsing
+ * @error CERR_OVERFLOW
+ * @error CERR_MEMORY
  */
 void
 ccfg_load(ccfg *cfg)
@@ -218,8 +218,8 @@ CCFG_NONNULL(1);
  * @param cfg    : Config instance to interact with
  * @param buffer : NUL terminated C-string to parse
  *
- * @error CERR_OVERFLOW : The size of an internal components was about to overflow
- * @error CERR_MEMORY   : Failed memory allocation during parsing
+ * @error CERR_OVERFLOW
+ * @error CERR_MEMORY
  */
 void
 ccfg_load_internal(ccfg *cfg, const char *buffer)
@@ -233,8 +233,8 @@ CCFG_NONNULL(1, 2);
  * @param name : Name of the parameter to use in the source config
  * @param d    : Value
  *
- * @error CERR_OVERFLOW : The size of an internal components was about to overflow
- * @error CERR_MEMORY   : Failed memory allocation during parsing
+ * @error CERR_OVERFLOW
+ * @error CERR_MEMORY
  */
 void
 ccfg_push_param_double(ccfg *cfg, const char *name, double d)
@@ -248,8 +248,8 @@ CCFG_NONNULL(1, 2);
  * @param name : Name of the parameter to use in the source config
  * @param l    : Value
  *
- * @error CERR_OVERFLOW : The size of an internal components was about to overflow
- * @error CERR_MEMORY   : Failed memory allocation
+ * @error CERR_OVERFLOW
+ * @error CERR_MEMORY
  */
 void
 ccfg_push_param_long(ccfg *cfg, const char *name, long long l)
@@ -263,8 +263,8 @@ CCFG_NONNULL(1, 2);
  * @param name : Name of the parameter to use in the source config
  * @param str  : Value
  *
- * @error CERR_OVERFLOW : The size of an internal components was about to overflow
- * @error CERR_MEMORY   : Failed memory allocation
+ * @error CERR_OVERFLOW
+ * @error CERR_MEMORY
  */
 void
 ccfg_push_param_str(ccfg *cfg, const char *name, const char *str)
@@ -277,8 +277,8 @@ CCFG_NONNULL(1, 2, 3);
  * @param cfg      : Config instance to interact with
  * @param filename : Full path to the source file
  *
- * @error CERR_OVERFLOW : The size of an internal components was about to overflow
- * @error CERR_MEMORY   : Failed memory allocation
+ * @error CERR_OVERFLOW 
+ * @error CERR_MEMORY
  */
 void
 ccfg_push_source(ccfg *cfg, const char *filename)

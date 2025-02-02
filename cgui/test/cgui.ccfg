@@ -5,9 +5,10 @@
 
 SECTION Wip_Theme
 
-	render mode        forward
-	render sync_vblank TRUE
-	render sync_bypass TRUE
+	render mode           forward
+	render sync_vblank    TRUE
+	render sync_bypass    TRUE
+	render partial_redraw TRUE
 
 	input window_move       1
 	input window_resize     3

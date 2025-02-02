@@ -398,7 +398,6 @@ dummy_callback_event(struct cgui_event *event)
 	(void)event;
 }
 
-
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void

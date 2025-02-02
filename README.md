@@ -154,7 +154,6 @@ More elaborate demos:
 - More cells (widgets)
 - More theming options
 - Complete API reference
-- Auto-generated API reference pages
 - Step-by-step CGUI tutorial
 
 ## Third-Party Visual Resources<a name="credits"></a>

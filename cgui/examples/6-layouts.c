@@ -178,12 +178,5 @@ on_click(cgui_cell *c)
 {
 	(void)c;
 
-	if (cgui_window_shown_grid(window) == grid_m)
-	{
-		cgui_window_swap_grid(window, grid_m, grid_mm);
-	}
-	else
-	{
-		cgui_window_swap_grid(window, grid_mm, grid_m);
-	}
+	cgui_window_swap_grid(window, grid_m, grid_mm);
 }

@@ -53,6 +53,7 @@ static void dummy_fn_draw      (cgui_window *, unsigned long)                   
 static void dummy_fn_focus     (cgui_window *, cgui_cell *)                                             CGUI_NONNULL(1, 2);
 static void dummy_fn_grid      (cgui_window *, cgui_grid *)                                             CGUI_NONNULL(1, 2);
 static void dummy_fn_state     (cgui_window *, enum cgui_window_state_mask)                             CGUI_NONNULL(1);
+static void pre_swap_grids     (cgui_grid  **, cgui_grid **)                                            CGUI_NONNULL(1, 2);
 static void refocus            (cgui_window *)                                                          CGUI_NONNULL(1);
 
 /* pure */
@@ -274,6 +275,8 @@ cgui_window_can_push_grid(const cgui_window *window, cgui_grid *grid)
 bool
 cgui_window_can_swap_grid(const cgui_window *window, cgui_grid *grid_1, cgui_grid *grid_2)
 {
+	pre_swap_grids(&grid_1, &grid_2);
+
 	if (cgui_error()
 	 || !window->valid
 	 || !grid_1->valid
@@ -921,6 +924,8 @@ cgui_window_state(const cgui_window *window)
 void
 cgui_window_swap_grid(cgui_window *window, cgui_grid *grid_1, cgui_grid *grid_2)
 {
+	pre_swap_grids(&grid_1, &grid_2);
+
 	if (!cgui_window_can_swap_grid(window, grid_1, grid_2))
 	{
 		return;
@@ -1920,6 +1925,21 @@ static double
 min_width(const cgui_window *window, const cgui_grid *grid)
 {
 	return cgui_grid_width(grid) + PADDING(window) * 2;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+pre_swap_grids(cgui_grid **grid_1, cgui_grid **grid_2)
+{
+	cgui_grid *tmp;
+
+	if ((*grid_2)->used)
+	{
+		tmp     = *grid_1;
+		*grid_1 = *grid_2;
+		*grid_2 = tmp;
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

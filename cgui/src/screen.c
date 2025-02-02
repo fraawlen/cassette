@@ -126,6 +126,5 @@ cgui_screen_specs(size_t i)
 void
 screen_pointer_update(void)
 {
-	printf("ok\n");
 	x11_pointer_position(&pointer_x, &pointer_y);
 }
