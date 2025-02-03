@@ -60,6 +60,7 @@ SECTION Monochrome
 	window back_color   $ c1
 	window border_color $ c2
 	window pad          $ win
+	popup  pad          $ win
 	
 	// Cell group settings
 
@@ -90,6 +91,7 @@ SECTION Monochrome
 		% cell border_color  $ c1
 		% cell back_color    $ c2
 		% cell text_color    $ c1
+		% cell text_bold     TRUE
 	FOR_END
 
 	// Cell custom settings
@@ -138,11 +140,11 @@ SECTION Monochrome
 	beacon_crit_off outline_size  $ lin
 	beacon_crit_off outline_color $ c1
 
-	gauge        pad          * $ lin 2
-	gauge_bar    pad          * $ lin -3
+	gauge        pad          * $ lin 3
+	gauge_bar    pad          * $ lin -4
 	gauge_bar    border_size  0
 	gauge_bar    back_color   $ c2
-	gauge_cursor pad          $ pad
+	gauge_cursor pad          - $ pad / $ lin 2
 	gauge_cursor min_size     0
 
 

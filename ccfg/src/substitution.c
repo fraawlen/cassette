@@ -413,7 +413,7 @@ math(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_res
 			break;
 
 		case TOKEN_OP_OPPOSITE:
-			result = -result;
+			result = -d[0];
 			break;
 
 		/* 2 parameters */

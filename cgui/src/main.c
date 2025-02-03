@@ -44,6 +44,9 @@
 /************************************************************************************************************/
 
 #define SET_ERR(ERR) if (err == CERR_NONE) { err = ERR; }
+#define WINDOW(I)    ((cgui_window *)cref_ptr(windows, I))
+#define GRID(I)      ((cgui_grid   *)cref_ptr(grids,   I))
+#define CELL(I)      ((cgui_cell   *)cref_ptr(cells,   I))
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -255,8 +258,6 @@ cgui_on_run(void (*fn)(void))
 void
 cgui_reconfig(void)
 {
-	cgui_window *window;
-
 	if (err)
 	{
 		return;
@@ -267,17 +268,16 @@ cgui_reconfig(void)
 
 	CREF_FOR_EACH(windows, i)
 	{
-		window = (cgui_window*)cref_ptr(windows, i);
-		if (!window->valid || !window->state.active)
+		if (!WINDOW(i)->valid)
 		{
-			continue;
+			return;
 		}
 
-		cgui_window_resize(window, window->width, window->height);
-		cgui_window_redraw_async(window);
-		window_update_size_hints(window);
-		window_update_shown_grid(window);
-		window_update_geometry(window);
+		cgui_window_resize(WINDOW(i), WINDOW(i)->width, WINDOW(i)->height);
+		cgui_window_redraw_async(WINDOW(i));
+		window_update_size_hints(WINDOW(i));
+		window_update_shown_grid(WINDOW(i));
+		window_update_geometry(WINDOW(i));
 	}
 }
 
@@ -300,12 +300,12 @@ cgui_repair(void)
 
 	CREF_FOR_EACH(windows, i)
 	{
-		window_repair((cgui_window*)cref_ptr(windows, i));
+		window_repair(WINDOW(i));
 	}
 
 	CREF_FOR_EACH(grids, i)
 	{
-		grid_repair((cgui_grid*)cref_ptr(grids, i));
+		grid_repair(GRID(i));
 	}
 }
 
@@ -316,17 +316,17 @@ cgui_reset(void)
 {
 	CREF_FOR_EACH(windows, i)
 	{
-		((cgui_window*)cref_ptr(windows, i))->valid = false;
+		WINDOW(i)->valid = false;
 	}
 
 	CREF_FOR_EACH(grids, i)
 	{
-		((cgui_grid*)cref_ptr(grids, i))->valid = false;
+		GRID(i)->valid = false;
 	}
 
 	CREF_FOR_EACH(cells, i)
 	{
-		((cgui_cell*)cref_ptr(cells, i))->valid = false;
+		CELL(i)->valid = false;
 	}
 
 	for (int i = 1; i <= CGUI_CLIPBOARDS; i++)
@@ -543,18 +543,18 @@ main_update(struct cgui_event *event)
 
 	CREF_FOR_EACH_REV(windows, i)
 	{
-		window_present((cgui_window*)cref_ptr(windows, i));
-		window_destroy((cgui_window*)cref_ptr(windows, i));
+		window_present(WINDOW(i));
+		window_destroy(WINDOW(i));
 	}
 
 	CREF_FOR_EACH_REV(grids, i)
 	{
-		grid_destroy((cgui_grid*)cref_ptr(grids, i));
+		grid_destroy(GRID(i));
 	}
 
 	CREF_FOR_EACH_REV(cells, i)
 	{
-		cell_destroy((cgui_cell*)cref_ptr(cells, i));
+		cell_destroy(CELL(i));
 	}
 }
 
@@ -583,7 +583,7 @@ is_any_window_activated(void)
 {
 	CREF_FOR_EACH(windows, i)
 	{
-		if (((cgui_window*)cref_ptr(windows, i))->state.active)
+		if (WINDOW(i)->state.active)
 		{
 			return true;
 		}
