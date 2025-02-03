@@ -23,54 +23,62 @@
 #include <cassette/cgui.h>
 
 /************************************************************************************************************/
-/* GLOBALS **************************************************************************************************/
+/************************************************************************************************************/
 /************************************************************************************************************/
 
-static const struct cgui_window_style blank_window =
-{
-	.cn_type = {CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE},
-	.bd_cl   = { .r = 0.671, .g = 0.671, .b = 0.671, .a = 1.000 },
-	.bg_cl   = { .r = 0.200, .g = 0.200, .b = 0.200, .a = 0.800 },
-	.cn_size = { 0.0, 0.0, 0.0, 0.0 },
-	.bd_size =  10.0,
-	.ena     = false,
-};
+#define COLOR(X) { ((X >> 16) & 0xFF) / 255.0, \
+                   ((X >>  8) & 0xFF) / 255.0, \
+                    (X        & 0xFF) / 255.0, 1.0 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static const struct cgui_box blank_box =
-{
-	.cn_type     = {CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE},
-	.cn_size     = {0.0, 0.0, 0.0, 0.0},
-	.ol_size     =  0.0,
-	.bd_size     = 10.0,
-	.pad         =  0.0,
-	.margin      =  0.0,
-	.sd_offset_x =  0.0,
-	.sd_offset_y =  0.0,
-	.ol_cl       = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.bd_cl       = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.bg_cl       = { .r = 0.200, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.sd_cl       = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.ol_shape    = true,
-	.bd_shape    = true,
-	.draw        = true,
-	.sd_draw     = false,
-	.cn_smart    = true,
-	.ol_hit      = false,
-};
+#define WIN(BD_CL) \
+{ \
+	.cn_type = {CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE}, \
+	.bd_cl   = COLOR(BD_CL), \
+	.bg_cl   = COLOR(0x202020), \
+	.cn_size = {0.0, 0.0, 0.0, 0.0}, \
+	.bd_size = 6.0, \
+	.ena     = true, \
+}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static const struct cgui_text blank_text =
-{
-	.cl      = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.bg_cl   = { .r = 0.900, .g = 0.900, .b = 0.900, .a = 1.000 },
-	.bg_draw = false,
-	.bold    = false,
-};
+#define BOX(MARGIN, PAD, BD_SIZE, OL_SIZE, BG_CL, BD_CL, OL_CL) \
+{ \
+	.cn_type     = {CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE, CGUI_CORNER_SQUARE}, \
+	.cn_size     = {0.0, 0.0, 0.0, 0.0}, \
+	.ol_size     = OL_SIZE, \
+	.bd_size     = BD_SIZE, \
+	.pad         = PAD, \
+	.margin      = MARGIN, \
+	.sd_offset_x =  0.0, \
+	.sd_offset_y =  0.0, \
+	.ol_cl       = COLOR(OL_CL), \
+	.bd_cl       = COLOR(BD_CL), \
+	.bg_cl       = COLOR(BG_CL), \
+	.sd_cl       = COLOR(0x000000), \
+	.ol_shape    = true, \
+	.bd_shape    = true, \
+	.draw        = true, \
+	.sd_draw     = false, \
+	.cn_smart    = true, \
+	.ol_hit      = false, \
+}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+#define TXT(CL, BOLD) \
+{ \
+	.cl      = COLOR(CL), \
+	.bg_cl   = COLOR(0x000000), \
+	.bg_draw = false, \
+	.bold    = BOLD, \
+}
+
+/************************************************************************************************************/
+/* GLOBALS **************************************************************************************************/
+/************************************************************************************************************/
 
 static const struct cgui_config config_default =
 {
@@ -118,27 +126,27 @@ static const struct cgui_config config_default =
 	/* shadows */
 	
 	.shadows_reactive       = false,
-	.shadows_max_light_dist = 0.0,
-	.shadows_max_offset     = 0.0,
+	.shadows_max_light_dist = 200.0,
+	.shadows_max_offset     = 10.0,
 
 	/* grid */
 
-	.grid_pad = 10.0,
+	.grid_pad = 18.0,
 	.grid_gap = 10.0,
 
 	/* window */
 
-	.window           = blank_window,
-	.window_focused   = blank_window,
-	.window_locked    = blank_window,
-	.window_disabled  = blank_window,
-	.window_pad       = 20.0,
+	.window           = WIN(0x808080),
+	.window_focused   = WIN(0xCCCCCC),
+	.window_locked    = WIN(0xCC0000),
+	.window_disabled  = WIN(0x000000),
+	.window_pad       = 19.0,
 	.window_pre_focus = true,
 
 	/* popup */
 
-	.popup     = blank_window,
-	.popup_pad = 10.0,
+	.popup     = WIN(0x00CCCC),
+	.popup_pad = 13.0,
 
 	/* keys */
 
@@ -188,56 +196,56 @@ static const struct cgui_config config_default =
 
 	/* cell - filler */
 
-	.filler_frame = blank_box,
+	.filler_frame           = BOX(0.0, 15.0, 3.0, 0.0, 0x404040, 0x808080, 0x808080),
 
 	/* cell - stripes */
 
-	.stripes_frame      = blank_box,
-	.stripes_line_cl    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.stripes_line_width = 20.0,
-	.stripes_line_gap   = 20.0,
+	.stripes_frame          = BOX(0.0,  0.0, 3.0, 0.0, 0x404040, 0x808080, 0x808080),
+	.stripes_line_cl        = COLOR(0x808080),
+	.stripes_line_width     =  3.0,
+	.stripes_line_gap       = 15.0,
 
 	/* cell - placeholder */
 
-	.placeholder_frame      = blank_box,
-	.placeholder_line_cl    = { .r = 0.000, .g = 0.000, .b = 0.000, .a = 1.000 },
-	.placeholder_line_width = 20.0,
+	.placeholder_frame      = BOX(0.0,  0.0, 3.0, 0.0, 0x404040, 0x808080, 0x808080),
+	.placeholder_line_cl    = COLOR(0x808080),
+	.placeholder_line_width = 3.0,
 
 	/* cell - button */
 
-	.button_frame_idle     = blank_box,
-	.button_frame_focused  = blank_box,
-	.button_frame_pressed  = blank_box,
-	.button_frame_disabled = blank_box,
-	.button_text_idle      = blank_text,
-	.button_text_focused   = blank_text,
-	.button_text_pressed   = blank_text,
-	.button_text_disabled  = blank_text,
+	.button_frame_idle      = BOX(0.0, 15.0, 3.0, 0.0, 0x602000, 0x808080, 0x808080),
+	.button_frame_focused   = BOX(0.0, 15.0, 3.0, 0.0, 0xA04000, 0xCCCCCC, 0x808080),
+	.button_frame_pressed   = BOX(0.0, 15.0, 3.0, 0.0, 0xFFFFFF, 0x808080, 0x808080),
+	.button_frame_disabled  = BOX(0.0, 15.0, 3.0, 0.0, 0x301000, 0x808080, 0x808080),
+	.button_text_idle       = TXT(0xFFFFFF, false),
+	.button_text_focused    = TXT(0xFFFFFF, false),
+	.button_text_pressed    = TXT(0x000000, true),
+	.button_text_disabled   = TXT(0x808080, false),
 
 	/* cell - label */
 
-	.label_frame = blank_box,
-	.label_text  = blank_text,
+	.label_frame            = BOX(0.0, 15.0, 3.0, 0.0, 0x404040, 0x808080, 0x808080),
+	.label_text             = TXT(0xFFFFFF, false),
 
 	/* cell - beacon */
 
-	.beacon_frame_off      = blank_box,
-	.beacon_frame_on       = blank_box,
-	.beacon_frame_crit_off = blank_box,
-	.beacon_frame_crit_on  = blank_box,
-	.beacon_text_off       = blank_text,
-	.beacon_text_on        = blank_text,
-	.beacon_text_crit_off  = blank_text,
-	.beacon_text_crit_on   = blank_text,
-	.beacon_blink_on       = 500,
-	.beacon_blink_off      = 500,
+	.beacon_frame_off       = BOX(3.0,  9.0, 6.0, 3.0, 0x404040, 0x202020, 0x808080),
+	.beacon_frame_on        = BOX(3.0,  9.0, 6.0, 3.0, 0x9B2E21, 0x401A16, 0x808080),
+	.beacon_frame_crit_off  = BOX(3.0,  9.0, 6.0, 3.0, 0x404040, 0x202020, 0x808080),
+	.beacon_frame_crit_on   = BOX(3.0,  9.0, 6.0, 3.0, 0x9B2E21, 0x401A16, 0x9B2E21),
+	.beacon_text_off        = TXT(0xFFFFFF, false),
+	.beacon_text_on         = TXT(0xFFFFFF, true),
+	.beacon_text_crit_off   = TXT(0xFFFFFF, false),
+	.beacon_text_crit_on    = TXT(0xFFFFFF, true),
+	.beacon_blink_on        = 500,
+	.beacon_blink_off       = 500,
 
 	/* cell - gauge */
 
-	.gauge_frame      = blank_box,
-	.gauge_bar        = blank_box,
-	.gauge_cursor     = blank_box,
-	.gauge_text       = blank_text,
-	.gauge_min_length = 20.0,
-	.gauge_max_thick  = DBL_MAX,
+	.gauge_frame            = BOX(0.0,  3.0, 3.0, 0.0, 0x404040, 0x808080, 0x808080),
+	.gauge_bar              = BOX(0.0, -3.0, 3.0, 0.0, 0x003030, 0x808080, 0x808080),
+	.gauge_cursor           = BOX(0.0,  9.0, 3.0, 0.0, 0x004545, 0x808080, 0x808080),
+	.gauge_text             = TXT(0xFFFFFF, false),
+	.gauge_min_length       = 0.0,
+	.gauge_max_thick        = DBL_MAX,
 };

@@ -1,4 +1,4 @@
-	SECTION_ADD Monochrome
+//	SECTION_ADD Monochrome
 //	SECTION_ADD Wip_Theme
 //	SECTION_ADD Dev
 //	SECTION_ADD Shadow
@@ -50,7 +50,6 @@ SECTION Monochrome
 		gauge_bar \
 		gauge_cursor
 
-	c
 	// General settings
 
 	grid gap $ gap
@@ -98,9 +97,9 @@ SECTION Monochrome
 
 	filler draw FALSE
 
-	placeholder line_width $ lin
-	stripes     line_width * $ lin 2
-	stripes     line_gap   * $ lin 3
+	placeholder line_size $ lin
+	stripes     line_size * $ lin 2
+	stripes     line_gap  * $ lin 3
 
 	button_idle border_size   0
 	button_idle pad           $ pad
@@ -153,58 +152,80 @@ SECTION Monochrome
 SECTION Wip_Theme
 
 	grid gap 10
-	grid pad 15
+	grid pad 18
 
-	LET windows window window_focused window_disabled window_locked
+	LET windows window window_focused window_disabled window_locked popup
 	FOR_EACH windows win
 		% win border_size 3
 		% win back_color  #202020
 		% win enabled     TRUE
-		% win corner_size 30
 	FOR_END
-	window          pad          13
+	popup           pad          13
+	window          pad          19
 	window          border_color #808080
-	window_focused  border_color #AAAA00
-	window_disabled border_color #404040
+	window_focused  border_color #CCCCCC
+	window_disabled border_color #000000
 	window_locked   border_color #AA0000
+	popup           border_color #00FFFF
 
 	LET simple_cells filler placeholder stripes label button_idle button_focused button_pressed button_disabled beacon_on beacon_off beacon_crit_on beacon_crit_off gauge gauge_bar gauge_cursor
 	FOR_EACH simple_cells cell
 		% cell border_size  3
 		% cell pad          12
-		% cell line_width   3
+		% cell line_size    3
 		% cell back_color   #404040
 		% cell text_color   #FFFFFF
 		% cell border_color #808080
 		% cell line_color   #808080
 	FOR_END
 
-	beacon_on pad           9
-	beacon_on outline_size  3
-	beacon_on margin        3
-	beacon_on outline_color #808080
-	beacon_on border_color  #101010
-	beacon_on border_size   3
-
+	stripes     line_gap 15
 	stripes     pad 0
 	placeholder pad 0
+
 	button_idle     back_color #602000
 	button_focused  back_color #A04000
 	button_disabled back_color #301000
 	button_pressed  back_color #FFFFFF
 	button_pressed  text_color #000000
 	button_disabled text_color #808080
+	button_pressed  text_bold  TRUE
+	button_focused  border_color #CCCCCC
 
-	gauge        pad            0
-	gauge_bar    pad           -3
-	gauge_cursor pad           12
-	gauge_bar    outline_size   3
-	gauge_bar    border_size    0
+	gauge        pad            3
+	gauge_bar    pad            -3
+	gauge_cursor pad            9
+	gauge_bar    border_size    3
 	gauge_bar    back_color    #003030
 	gauge_bar    outline_color #808080
 	gauge_cursor back_color    #004545
 	gauge_cursor min_size       0
 
+	LET bon  beacon_on  beacon_crit_on
+	LET boff beacon_off beacon_crit_off
+
+	FOR_EACH bon cell
+		% cell pad           9
+		% cell outline_size  3
+		% cell margin        3
+		% cell outline_color #808080
+		% cell border_color  #401A16
+		% cell back_color    #9B2E21
+		% cell border_size   6
+		% cell text_bold     TRUE
+	FOR_END
+
+	beacon_crit_on outline_color #9B2E21
+
+	FOR_EACH boff cell
+		% cell pad           9
+		% cell outline_size  3
+		% cell margin        3
+		% cell outline_color #808080
+		% cell border_color  #202020
+		% cell back_color    #404040
+		% cell border_size   6
+	FOR_END
 
 
 

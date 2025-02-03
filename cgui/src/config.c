@@ -48,7 +48,7 @@
 		scale(TARGET[I]); \
 	} \
 
-#define WINDOW(NAMESPACE, TARGET) \
+#define STYLE_WIN(NAMESPACE, TARGET) \
 	{ NAMESPACE, "corner_type",  CORNER_TYPE,  TARGET.cn_type }, \
 	{ NAMESPACE, "corner_size",  CORNER_SIZE,  TARGET.cn_size }, \
 	{ NAMESPACE, "border_size",  LENGTH,      &TARGET.bd_size }, \
@@ -56,15 +56,15 @@
 	{ NAMESPACE, "back_color",   COLOR,       &TARGET.bg_cl   }, \
 	{ NAMESPACE, "enabled",      BOOL,        &TARGET.ena     },
 
-#define BOX(NAMESPACE, TARGET) \
+#define STYLE_BOX(NAMESPACE, TARGET) \
 	{ NAMESPACE, "corner_type",     CORNER_TYPE,  TARGET.cn_type     }, \
 	{ NAMESPACE, "corner_size",     CORNER_SIZE,  TARGET.cn_size     }, \
 	{ NAMESPACE, "outline_size",    LENGTH,      &TARGET.ol_size     }, \
 	{ NAMESPACE, "border_size",     LENGTH,      &TARGET.bd_size     }, \
-	{ NAMESPACE, "pad",             OFFSET,    &TARGET.pad         }, \
-	{ NAMESPACE, "margin",          OFFSET,    &TARGET.margin      }, \
-	{ NAMESPACE, "shadow_x_offset", OFFSET,    &TARGET.sd_offset_x }, \
-	{ NAMESPACE, "shadow_y_offset", OFFSET,    &TARGET.sd_offset_y }, \
+	{ NAMESPACE, "pad",             OFFSET,      &TARGET.pad         }, \
+	{ NAMESPACE, "margin",          OFFSET,      &TARGET.margin      }, \
+	{ NAMESPACE, "shadow_x_offset", OFFSET,      &TARGET.sd_offset_x }, \
+	{ NAMESPACE, "shadow_y_offset", OFFSET,      &TARGET.sd_offset_y }, \
 	{ NAMESPACE, "outline_color",   COLOR,       &TARGET.ol_cl       }, \
 	{ NAMESPACE, "border_color",    COLOR,       &TARGET.bd_cl       }, \
 	{ NAMESPACE, "back_color",      COLOR,       &TARGET.bg_cl       }, \
@@ -76,7 +76,7 @@
 	{ NAMESPACE, "corner_smart",    BOOL,        &TARGET.cn_smart    }, \
 	{ NAMESPACE, "outline_hitbox",  BOOL,        &TARGET.ol_hit      },
 
-#define TEXT(NAMESPACE, TARGET) \
+#define STYLE_TXT(NAMESPACE, TARGET) \
 	{ NAMESPACE, "text_color",      COLOR, &TARGET.cl      }, \
 	{ NAMESPACE, "text_back_color", COLOR, &TARGET.bg_cl   }, \
 	{ NAMESPACE, "text_back_draw",  BOOL,  &TARGET.bg_draw }, \
@@ -272,11 +272,11 @@ static const struct resource resources[] =
 	{ "shadows",      "max_offset",         LENGTH,    &config.shadows_max_offset     },
 
 	{ "stripes",      "line_color",         COLOR,     &config.stripes_line_cl        },
-	{ "stripes",      "line_width",         LENGTH,    &config.stripes_line_width     },
+	{ "stripes",      "line_size",          LENGTH,    &config.stripes_line_width     },
 	{ "stripes",      "line_gap",           LENGTH,    &config.stripes_line_gap       },
 
 	{ "placeholder",  "line_color",         COLOR,     &config.placeholder_line_cl    },
-	{ "placeholder",  "line_width",         LENGTH,    &config.placeholder_line_width },
+	{ "placeholder",  "line_size",          LENGTH,    &config.placeholder_line_width },
 
 	{ "beacon",       "blink_on",           ULONG,     &config.beacon_blink_on        },
 	{ "beacon",       "blink_off",          ULONG,     &config.beacon_blink_off       },
@@ -284,38 +284,38 @@ static const struct resource resources[] =
 	{ "gauge_cursor", "min_size",           LENGTH,    &config.gauge_min_length       },
 	{ "gauge_bar",    "max_size",           LENGTH,    &config.gauge_max_thick        },
 
-	WINDOW( "window",          config.window          )
-	WINDOW( "window_focused",  config.window_focused  )
-	WINDOW( "window_disabled", config.window_disabled )
-	WINDOW( "window_locked",   config.window_locked   )
-	WINDOW( "popup",           config.popup           )
+	STYLE_WIN( "window",          config.window                )
+	STYLE_WIN( "window_focused",  config.window_focused        )
+	STYLE_WIN( "window_disabled", config.window_disabled       )
+	STYLE_WIN( "window_locked",   config.window_locked         )
+	STYLE_WIN( "popup",           config.popup                 )
 
-	BOX( "filler",          config.filler_frame          )
-	BOX( "stripes",         config.stripes_frame         )
-	BOX( "placeholder",     config.placeholder_frame     )
-	BOX( "button_idle",     config.button_frame_idle     )
-	BOX( "button_focused",  config.button_frame_focused  )
-	BOX( "button_pressed",  config.button_frame_pressed  )
-	BOX( "button_disabled", config.button_frame_disabled )
-	BOX( "beacon_off",      config.beacon_frame_off      )
-	BOX( "beacon_on",       config.beacon_frame_on       )
-	BOX( "beacon_crit_off", config.beacon_frame_crit_off )
-	BOX( "beacon_crit_on",  config.beacon_frame_crit_on  )
-	BOX( "label",           config.label_frame           )
-	BOX( "gauge",           config.gauge_frame           )
-	BOX( "gauge_bar",       config.gauge_bar             )
-	BOX( "gauge_cursor",    config.gauge_cursor          )
+	STYLE_BOX( "filler",          config.filler_frame          )
+	STYLE_BOX( "stripes",         config.stripes_frame         )
+	STYLE_BOX( "placeholder",     config.placeholder_frame     )
+	STYLE_BOX( "button_idle",     config.button_frame_idle     )
+	STYLE_BOX( "button_focused",  config.button_frame_focused  )
+	STYLE_BOX( "button_pressed",  config.button_frame_pressed  )
+	STYLE_BOX( "button_disabled", config.button_frame_disabled )
+	STYLE_BOX( "beacon_off",      config.beacon_frame_off      )
+	STYLE_BOX( "beacon_on",       config.beacon_frame_on       )
+	STYLE_BOX( "beacon_crit_off", config.beacon_frame_crit_off )
+	STYLE_BOX( "beacon_crit_on",  config.beacon_frame_crit_on  )
+	STYLE_BOX( "label",           config.label_frame           )
+	STYLE_BOX( "gauge",           config.gauge_frame           )
+	STYLE_BOX( "gauge_bar",       config.gauge_bar             )
+	STYLE_BOX( "gauge_cursor",    config.gauge_cursor          )
 
-	TEXT( "button_idle",     config.button_text_idle     )
-	TEXT( "button_focused",  config.button_text_focused  )
-	TEXT( "button_pressed",  config.button_text_pressed  )
-	TEXT( "button_disabled", config.button_text_disabled )
-	TEXT( "beacon_off",      config.beacon_text_off      )
-	TEXT( "beacon_on",       config.beacon_text_on       )
-	TEXT( "beacon_crit_off", config.beacon_text_crit_off )
-	TEXT( "beacon_crit_on",  config.beacon_text_crit_on  )
-	TEXT( "label",           config.label_text           )
-	TEXT( "gauge",           config.gauge_text           )
+	STYLE_TXT( "button_idle",     config.button_text_idle      )
+	STYLE_TXT( "button_focused",  config.button_text_focused   )
+	STYLE_TXT( "button_pressed",  config.button_text_pressed   )
+	STYLE_TXT( "button_disabled", config.button_text_disabled  )
+	STYLE_TXT( "beacon_off",      config.beacon_text_off       )
+	STYLE_TXT( "beacon_on",       config.beacon_text_on        )
+	STYLE_TXT( "beacon_crit_off", config.beacon_text_crit_off  )
+	STYLE_TXT( "beacon_crit_on",  config.beacon_text_crit_on   )
+	STYLE_TXT( "label",           config.label_text            )
+	STYLE_TXT( "gauge",           config.gauge_text            )
 };
 
 /************************************************************************************************************/
@@ -416,7 +416,7 @@ cgui_config_str_width(ssize_t cols)
 void
 cgui_config_style_box(const char *name, struct cgui_box *box)
 {
-	struct resource r[] = {BOX(name, (*box))};
+	struct resource r[] = {STYLE_BOX(name, (*box))};
 	
 	if (cgui_error())
 	{
@@ -431,7 +431,7 @@ cgui_config_style_box(const char *name, struct cgui_box *box)
 void
 cgui_config_style_text(const char *name, struct cgui_text *text)
 {
-	struct resource r[] = {TEXT(name, (*text))};
+	struct resource r[] = {STYLE_TXT(name, (*text))};
 	
 	if (cgui_error())
 	{

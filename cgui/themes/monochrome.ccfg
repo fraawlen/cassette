@@ -81,9 +81,9 @@ SECTION Monochrome
 
 	filler draw FALSE
 
-	placeholder line_width $ lin
-	stripes     line_width * $ lin 2
-	stripes     line_gap   * $ lin 3
+	placeholder line_size $ lin
+	stripes     line_size * $ lin 2
+	stripes     line_gap  * $ lin 3
 
 	button_idle border_size   0
 	button_idle pad           $ pad

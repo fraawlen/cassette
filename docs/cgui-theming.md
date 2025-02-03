@@ -2,7 +2,7 @@
 
 Below is a configuration reference for users who want to customize and theme CGUI programs. Because CGUI's configuration is powered by CCFG, it is assumed that the reader is already familiar with the [CCFG configuration language](ccfg-language.md).
 
-CGUI configuration files can be placed in any of the following filenames. When initializing, CGUI will look for these files in sequence and load the first one it finds.
+CGUI configuration files can be placed in any of the following paths. When initializing, CGUI will look for these files in sequence and load the first one it finds.
 
 1. path set by the environement variable `CGUI_CONFIG_SOURCE`
 2. ~/.config/cassette/cgui.ccfg
@@ -11,7 +11,7 @@ CGUI configuration files can be placed in any of the following filenames. When i
 5. /etc/cassette/cgui.ccfg
 6. /etc/cgui.ccfg
 
-If the environement variable `CGUI_CONFIG_HARDCODED_ONLY` is set, the these files will be ignored and only hardcoded values will be used.
+If the environement variable `CGUI_CONFIG_HARDCODED_ONLY` is set, these paths will be ignored and only hardcoded values will be used.
 
 ## Table of Contents <a name="toc"></a>
 
@@ -221,7 +221,7 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 
 | **Namespace** | **Name** | **Type** | **Default** | **Description** |
 |---------------|----------|----------|-------------|-----------------|
-| grid          | pad      | LENGTH   | 10          | Padding between the cell edges and content |
+| grid          | pad      | LENGTH   | 18          | Padding between the cell edges and content |
 | grid          | gap      | LENGTH   | 10          | Spacing between cells within a grid |
 
 ### Notes
@@ -237,24 +237,24 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 | **Namespace**   | **Name**  | **Type** | **Default** | **Description** |
 |-----------------|-----------|----------|-------------|-----------------|
 | window          | pre_focus | BOOL     | TRUE        | Focus the window before showing |
-| window          | pad       | LENGTH   | 20          | Padding around window content |
+| window          | pad       | LENGTH   | 19          | Padding around window content |
 | window          |           | WINDOW   |             | Default windows style |
 | window_focused  |           | WINDOW   |             | Style for focused windows |
 | window_disabled |           | WINDOW   |             | Style for disabled windows |
 | window_locked   |           | WINDOW   |             | Style for windows with locked grids |
-| popup           | pad       | LENGTH   | 10          | Padding around popup content |
+| popup           | pad       | LENGTH   | 13          | Padding around popup content |
 | popup           |           | WINDOW   |             | Style for popups |
 
 ### Window defaults
 
-| **Name \ Namespace** | **window**  | **window_focused** | **window_disabled** | **window_locked** | **popup** |
-|----------------------|------------|---------------------|---------------------|-------------------|------------|
-| corner_type          | square     | square              | square              | square            | square     |
-| corner_size          | 0          | 0                   | 0                   | 0                 | 0          |
-| border_size          | 10         | 10                  | 10                  | 10                | 10         |
-| border_color         | #ABABABFF  | #ABABABFF           | #ABABABFF           | #ABABABFF         | #ABABABFF  |
-| back_color           | #333333CC  | #333333CC           | #333333CC           | #333333CC         | #333333CC  |
-| enabled             |          | FALSE               | FALSE               | FALSE             | FALSE      |
+| **Name \ Namespace** | **window** | **window_focused** | **window_disabled** | **window_locked** | **popup** |
+|----------------------|------------|--------------------|---------------------|-------------------|-----------|
+| corner_type          | square     | square             | square              | square            | square    |
+| corner_size          | 0          | 0                  | 0                   | 0                 | 0         |
+| border_size          | 6          | 6                  | 6                   | 6                 | 6         |
+| border_color         | #808080FF  | #CCCCCCFF          | #000000FF           | #CC0000FF         | #00CCCCFF |
+| back_color           | #202020FF  | #202020FF          | #202020FF           | #202020FF         | #202020FF |
+| enabled              |            | TRUE               | TRUE                | TRUE              | TRUE      |
 
 ### Notes
 
@@ -271,8 +271,8 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 | **Namespace** | **Name**           | **Type** | **Default** | **Description** |
 |---------------|--------------------|----------|-------------|-----------------|
 | shadows       | reactive           | BOOL     | FALSE       | Cell shadows follow the mouse pointer |
-| shadows       | max_light_distance | LENGTH   | 0           | Maximum pointer distance from a cell's center |
-| shadows       | max_offset         | LENGTH   | 0           | Maximum offset for reactive shadows |
+| shadows       | max_light_distance | LENGTH   | 200         | Maximum pointer distance from a cell's center |
+| shadows       | max_offset         | LENGTH   | 10          | Maximum offset for reactive shadows |
 
 ### Notes
 
@@ -292,26 +292,26 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 
 ### Box defaults
 
-| **Name \ Namespace** | **filler**  |
-|----------------------|-------------|
-| corner_type          | square      |
-| corner_size          | 0           |
-| outline_size         | 0           |
-| border_size          | 10          |
-| pad                  | 0           |
-| margin               | 0           |
-| shadow_x_offset      | 0           |
-| shadow_y_offset      | 0           |
-| outline_color        | #000000FF   |
-| border_color         | #000000FF   |
-| back_color           | #330000FF   |
-| shadow_color         | #000000FF   |
-| outline_shape        | TRUE        |
-| border_shape         | TRUE        |
-| draw                 | TRUE        |
-| shadow_draw          | FALSE       |
-| corner_smart         | TRUE        |
-| outline_hitbox       | FALSE       |
+| **Name \ Namespace** | **filler** |
+|----------------------|------------|
+| corner_type          | square     |
+| corner_size          | 0          |
+| outline_size         | 0          |
+| border_size          | 3          |
+| pad                  | 15         |
+| margin               | 0          |
+| shadow_x_offset      | 0          |
+| shadow_y_offset      | 0          |
+| outline_color        | #808080FF  |
+| border_color         | #808080FF  |
+| back_color           | #404040FF  |
+| shadow_color         | #000000FF  |
+| outline_shape        | TRUE       |
+| border_shape         | TRUE       |
+| draw                 | TRUE       |
+| shadow_draw          | FALSE      |
+| corner_smart         | TRUE       |
+| outline_hitbox       | FALSE      |
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
@@ -328,35 +328,35 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 
 ### Box defaults
 
-| **Name \ Namespace** | **label**   |
-|----------------------|-------------|
-| corner_type          | square      |
-| corner_size          | 0           |
-| outline_size         | 0           |
-| border_size          | 10          |
-| pad                  | 0           |
-| margin               | 0           |
-| shadow_x_offset      | 0           |
-| shadow_y_offset      | 0           |
-| outline_color        | #000000FF   |
-| border_color         | #000000FF   |
-| back_color           | #330000FF   |
-| shadow_color         | #000000FF   |
-| outline_shape        | TRUE        |
-| border_shape         | TRUE        |
-| draw                 | TRUE        |
-| shadow_draw          | FALSE       |
-| corner_smart         | TRUE        |
-| outline_hitbox       | FALSE       |
+| **Name \ Namespace** | **label** |
+|----------------------|-----------|
+| corner_type          | square    |
+| corner_size          | 0         |
+| outline_size         | 0         |
+| border_size          | 3         |
+| pad                  | 15        |
+| margin               | 0         |
+| shadow_x_offset      | 0         |
+| shadow_y_offset      | 0         |
+| outline_color        | #808080FF |
+| border_color         | #808080FF |
+| back_color           | #404040FF |
+| shadow_color         | #000000FF |
+| outline_shape        | TRUE      |
+| border_shape         | TRUE      |
+| draw                 | TRUE      |
+| shadow_draw          | FALSE     |
+| corner_smart         | TRUE      |
+| outline_hitbox       | FALSE     |
 
 ### Text defaults
 
-| **Name \ Namespace** | **label**   |
-|----------------------|-------------|
-| text_color           | #000000FF   |
-| text_back_color      | #E5E5E5FF   |
-| text_back_draw       | FALSE       |
-| text_bold            | FALSE       |
+| **Name \ Namespace** | **label** |
+|----------------------|-----------|
+| text_color           | #FFFFFFFF |
+| text_back_color      | #000000FF |
+| text_back_draw       | FALSE     |
+| text_bold            | FALSE     |
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
@@ -384,14 +384,14 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 | corner_type          | square          | square             | square             | square              |
 | corner_size          | 0               | 0                  | 0                  | 0                   |
 | outline_size         | 0               | 0                  | 0                  | 0                   |
-| border_size          | 10              | 10                 | 10                 | 10                  |
-| pad                  | 0               | 0                  | 0                  | 0                   |
+| border_size          | 3               | 3                  | 3                  | 3                   |
+| pad                  | 15              | 15                 | 15                 | 15                  |
 | margin               | 0               | 0                  | 0                  | 0                   |
 | shadow_x_offset      | 0               | 0                  | 0                  | 0                   |
 | shadow_y_offset      | 0               | 0                  | 0                  | 0                   |
-| outline_color        | #000000FF       | #000000FF          | #000000FF          | #000000FF           |
-| border_color         | #000000FF       | #000000FF          | #000000FF          | #000000FF           |
-| back_color           | #330000FF       | #330000FF          | #330000FF          | #330000FF           |
+| outline_color        | #808080FF       | #808080FF          | #808080FF          | #808080FF           |
+| border_color         | #808080FF       | #CCCCCCFF          | #808080FF          | #808080FF           |
+| back_color           | #602000FF       | #A04000FF          | #FFFFFFFF          | #301000FF           |
 | shadow_color         | #000000FF       | #000000FF          | #000000FF          | #000000FF           |
 | outline_shape        | TRUE            | TRUE               | TRUE               | TRUE                |
 | border_shape         | TRUE            | TRUE               | TRUE               | TRUE                |
@@ -404,10 +404,10 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 
 | **Name \ Namespace** | **button_idle** | **button_focused** | **button_pressed** | **button_disabled** |
 |----------------------|-----------------|--------------------|--------------------|---------------------|
-| text_color           | #000000FF       | #000000FF          | #000000FF          | #000000FF           |
-| text_back_color      | #E5E5E5FF       | #E5E5E5FF          | #E5E5E5FF          | #E5E5E5FF           |
+| text_color           | #FFFFFFFF       | #FFFFFFFF          | #000000FF          | #808080FF           |
+| text_back_color      | #000000FF       | #000000FF          | #000000FF          | #000000FF           |
 | text_back_draw       | FALSE           | FALSE              | FALSE              | FALSE               |
-| text_bold            | FALSE           | FALSE              | FALSE              | FALSE               |
+| text_bold            | FALSE           | FALSE              | TRUE               | FALSE               |
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
@@ -419,9 +419,9 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 
 | **Namespace** | **Name**   | **Type** | **Default** | **Description** |
 |---------------|------------|----------|-------------|-----------------|
-| stripes       | line_color | COLOR    | #000000FF   | Color of stripes |
-| stripes       | line_width | LENGTH   | 20          | Thickness of stripes |
-| stripes       | line_gap   | LENGTH   | 20          | Gap between stripes |
+| stripes       | line_color | COLOR    | #808080FF   | Color of stripes |
+| stripes       | line_width | LENGTH   | 3           | Thickness of stripes |
+| stripes       | line_gap   | LENGTH   | 15          | Gap between stripes |
 | stripes       |            | BOX      |             | Frame |
 
 ### Box defaults
@@ -431,14 +431,14 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 | corner_type          | square      |
 | corner_size          | 0           |
 | outline_size         | 0           |
-| border_size          | 10          |
+| border_size          | 3           |
 | pad                  | 0           |
 | margin               | 0           |
 | shadow_x_offset      | 0           |
 | shadow_y_offset      | 0           |
-| outline_color        | #000000FF   |
-| border_color         | #000000FF   |
-| back_color           | #330000FF   |
+| outline_color        | #808080FF   |
+| border_color         | #808080FF   |
+| back_color           | #404040FF   |
 | shadow_color         | #000000FF   |
 | outline_shape        | TRUE        |
 | border_shape         | TRUE        |
@@ -457,8 +457,8 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 
 | **Namespace** | **Name**   | **Type** | **Default** | **Description** |
 |---------------|------------|----------|-------------|-----------------|
-| placeholder   | line_color | COLOR    | #000000FF   | Color of the cross lines |
-| placeholder   | line_width | LENGTH   | 20          | Thickness of the cross lines |
+| placeholder   | line_color | COLOR    | #808080FF   | Color of the cross lines |
+| placeholder   | line_width | LENGTH   | 3           | Thickness of the cross lines |
 | placeholder   |            | BOX      |             | Frame |
 
 ### Box defaults
@@ -468,14 +468,14 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 | corner_type          | square          |
 | corner_size          | 0               |
 | outline_size         | 0               |
-| border_size          | 10              |
+| border_size          | 3               |
 | pad                  | 0               |
 | margin               | 0               |
 | shadow_x_offset      | 0               |
 | shadow_y_offset      | 0               |
-| outline_color        | #000000FF       |
-| border_color         | #000000FF       |
-| back_color           | #330000FF       |
+| outline_color        | #808080FF       |
+| border_color         | #808080FF       |
+| back_color           | #404040FF       |
 | shadow_color         | #000000FF       |
 | outline_shape        | TRUE            |
 | border_shape         | TRUE            |
@@ -483,6 +483,7 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 | shadow_draw          | FALSE           |
 | corner_smart         | TRUE            |
 | outline_hitbox       | FALSE           |
+
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
@@ -511,15 +512,15 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 |----------------------|----------------|---------------|---------------------|--------------------|
 | corner_type          | square         | square        | square              | square             |
 | corner_size          | 0              | 0             | 0                   | 0                  |
-| outline_size         | 0              | 0             | 0                   | 0                  |
-| border_size          | 10             | 10            | 10                  | 10                 |
-| pad                  | 0              | 0             | 0                   | 0                  |
-| margin               | 0              | 0             | 0                   | 0                  |
+| outline_size         | 3              | 3             | 3                   | 3                  |
+| border_size          | 6              | 6             | 6                   | 6                  |
+| pad                  | 9              | 9             | 9                   | 9                  |
+| margin               | 3              | 3             | 3                   | 3                  |
 | shadow_x_offset      | 0              | 0             | 0                   | 0                  |
 | shadow_y_offset      | 0              | 0             | 0                   | 0                  |
-| outline_color        | #000000FF      | #000000FF     | #000000FF           | #000000FF          |
-| border_color         | #000000FF      | #000000FF     | #000000FF           | #000000FF          |
-| back_color           | #330000FF      | #330000FF     | #330000FF           | #330000FF          |
+| outline_color        | #808080FF      | #808080FF     | #808080FF           | #9B2E21FF          |
+| border_color         | #202020FF      | #401A16FF     | #202020FF           | #401A16FF          |
+| back_color           | #404040FF      | #9B2E21FF     | #404040FF           | #9B2E21FF          |
 | shadow_color         | #000000FF      | #000000FF     | #000000FF           | #000000FF          |
 | outline_shape        | TRUE           | TRUE          | TRUE                | TRUE               |
 | border_shape         | TRUE           | TRUE          | TRUE                | TRUE               |
@@ -532,10 +533,10 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 
 | **Name \ Namespace** | **beacon_off** | **beacon_on** | **beacon_crit_off** | **beacon_crit_on** |
 |----------------------|----------------|---------------|---------------------|--------------------|
-| text_color           | #000000FF      | #000000FF     | #000000FF           | #000000FF          |
-| text_back_color      | #E5E5E5FF      | #E5E5E5FF     | #E5E5E5FF           | #E5E5E5FF          |
+| text_color           | #FFFFFFFF      | #FFFFFFFF     | #FFFFFFFF           | #FFFFFFFF          |
+| text_back_color      | #000000FF      | #000000FF     | #000000FF           | #000000FF          |
 | text_back_draw       | FALSE          | FALSE         | FALSE               | FALSE              |
-| text_bold            | FALSE          | FALSE         | FALSE               | FALSE              |
+| text_bold            | FALSE          | TRUE          | FALSE               | TRUE               |
 
 ### Notes
 
@@ -566,14 +567,14 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 | corner_type          | square    | square        | square           |
 | corner_size          | 0         | 0             | 0                |
 | outline_size         | 0         | 0             | 0                |
-| border_size          | 10        | 10            | 10               |
-| pad                  | 0         | 0             | 0                |
+| border_size          | 3         | 3             | 3                |
+| pad                  | 3         | -3            | 9                |
 | margin               | 0         | 0             | 0                |
 | shadow_x_offset      | 0         | 0             | 0                |
 | shadow_y_offset      | 0         | 0             | 0                |
-| outline_color        | #000000FF | #000000FF     | #000000FF        |
-| border_color         | #000000FF | #000000FF     | #000000FF        |
-| back_color           | #330000FF | #330000FF     | #330000FF        |
+| outline_color        | #808080FF | #808080FF     | #808080FF        |
+| border_color         | #808080FF | #808080FF     | #808080FF        |
+| back_color           | #404040FF | #003030FF     | #004545FF        |
 | shadow_color         | #000000FF | #000000FF     | #000000FF        |
 | outline_shape        | TRUE      | TRUE          | TRUE             |
 | border_shape         | TRUE      | TRUE          | TRUE             |
@@ -584,12 +585,12 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 
 ### Text defaults
 
-| **Name \ Namespace** | **gauge**  |
-|----------------------|------------|
-| text_color           | #000000FF  |
-| text_back_color      | #E5E5E5FF  |
-| text_back_draw       | FALSE      |
-| text_bold            | FALSE      |
+| **Name \ Namespace** | **gauge** |
+|----------------------|-----------|
+| text_color           | #FFFFFFFF |
+| text_back_color      | #000000FF |
+| text_back_draw       | FALSE     |
+| text_bold            | FALSE     |
 
 ### Notes
 
