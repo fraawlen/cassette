@@ -103,7 +103,7 @@ Windows have a simpler box model with commonly named components. In the windows 
 | border_size  | LENGTH   | Thickness of the border |
 | border_color | COLOR    | Color of the window's border |
 | back_color   | COLOR    | Background color of the window |
-| enabled      | BOOL     | Use this style instead of default |
+| enable_style | BOOL     | Use this style instead of default |
 
 ### Notes
 

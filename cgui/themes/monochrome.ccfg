@@ -44,6 +44,11 @@ SECTION Monochrome
 	window border_color $ c2
 	window pad          $ win
 	popup  pad          $ win
+
+	window_focused  enable_style FALSE
+	window_disabled enable_style FALSE
+	window_locked   enable_style FALSE
+	popup           enable_style FALSE
 	
 	// Cell group settings
 
@@ -53,6 +58,8 @@ SECTION Monochrome
 		% cell back_color   $ c1
 		% cell border_color $ c2
 		% cell text_color   $ c2
+		% cell outline_size 0
+		% cell margin       0
 	FOR_END
 
 	FOR_EACH lined_cells cell

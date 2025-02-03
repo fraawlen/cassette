@@ -54,7 +54,7 @@
 	{ NAMESPACE, "border_size",  LENGTH,      &TARGET.bd_size }, \
 	{ NAMESPACE, "border_color", COLOR,       &TARGET.bd_cl   }, \
 	{ NAMESPACE, "back_color",   COLOR,       &TARGET.bg_cl   }, \
-	{ NAMESPACE, "enabled",      BOOL,        &TARGET.ena     },
+	{ NAMESPACE, "enable_style", BOOL,        &TARGET.ena     },
 
 #define STYLE_BOX(NAMESPACE, TARGET) \
 	{ NAMESPACE, "corner_type",     CORNER_TYPE,  TARGET.cn_type     }, \
