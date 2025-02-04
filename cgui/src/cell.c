@@ -34,9 +34,10 @@
 
 static void dummy_fn_destroy  (cgui_cell *)                           CGUI_NONNULL(1);
 static void dummy_fn_draw     (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
-static void dummy_fn_event    (cgui_cell *, struct cgui_cell_event *) CGUI_NONNULL(1, 2);
+static bool dummy_fn_event    (cgui_cell *, struct cgui_cell_event *) CGUI_NONNULL(1, 2);
 static void dummy_fn_frame    (cgui_cell *, struct cgui_box *)        CGUI_NONNULL(1, 2);
 static void dummy_fn_pre_draw (cgui_cell *, unsigned long)            CGUI_NONNULL(1);
+static void lock_focus        (const cgui_cell *, bool)               CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -189,7 +190,7 @@ void
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
+bool
 (*cgui_cell_fn_event(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_event *event)
 {
 	if (cgui_error() || !cell->valid)
@@ -286,16 +287,28 @@ cgui_cell_is_valid(const cgui_cell *cell)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void
+cgui_cell_lock_focus(const cgui_cell *cell)
+{
+	if (cgui_error() || !cell->valid)
+	{
+		return;
+	}
+
+	lock_focus(cell, true);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 bool
 cgui_cell_need_draw(const cgui_cell *cell)
 {
-	if (cgui_error())
+	if (cgui_error() || !cell->valid) 
 	{
 		return false;
 	}
 
 	return cell->draw;
-
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -327,7 +340,7 @@ cgui_cell_on_draw(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_cell_on_event(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_event *event))
+cgui_cell_on_event(cgui_cell *cell, bool (*fn)(cgui_cell *cell, struct cgui_cell_event *event))
 {
 	if (cgui_error() || !cell->valid)
 	{
@@ -428,6 +441,19 @@ cgui_cell_set_serial(cgui_cell *cell, int serial)
 	cell->serial = serial;
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_cell_unlock_focus(const cgui_cell *cell)
+{
+	if (cgui_error() || !cell->valid)
+	{
+		return;
+	}
+
+	lock_focus(cell, false);
+}
+
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
@@ -466,12 +492,13 @@ dummy_fn_draw(cgui_cell *cell, struct cgui_cell_context context)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void
+static bool
 dummy_fn_event(cgui_cell *cell, struct cgui_cell_event *event)
 {
 	(void)cell;
+	(void)event;
 
-	event->msg = CGUI_CELL_MSG_REJECT;
+	return false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -490,4 +517,22 @@ dummy_fn_pre_draw(cgui_cell *cell, unsigned long time)
 {
 	(void)cell;
 	(void)time;
+}
+
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+lock_focus(const cgui_cell *cell, bool lock)
+{
+	cgui_window *window;
+
+	CREF_FOR_EACH(main_windows(), i)
+	{
+		window = (cgui_window*)cref_ptr(main_windows(), i);
+		if (window->focus.cell == cell)
+		{
+			window_focus_lock(window, lock);
+		}
+	}
 }

@@ -1379,7 +1379,6 @@ window_process_cell_event(cgui_window *window, struct grid_area area, struct cgu
 
 	/* fill out common fields */
 	
-	event->msg          = CGUI_CELL_MSG_NONE;
 	event->x            = area.x + PADDING(window);
 	event->y            = area.y + PADDING(window);
 	event->x_root       = area.x + PADDING(window) + window->x;
@@ -1393,35 +1392,7 @@ window_process_cell_event(cgui_window *window, struct grid_area area, struct cgu
 
 	/* send event */
 
-	area.cell->fn_event(area.cell, event);
-
-	/* process msg */
-
-	switch (event->msg)
-	{
-		case CGUI_CELL_MSG_REJECT:
-			return false;
-
-		case CGUI_CELL_MSG_LOCK:
-			if (area.cell == window->focus.cell && CONFIG->input_auto_lock)
-			{
-				window_focus_lock(window, true);
-			}
-			break;
-
-		case CGUI_CELL_MSG_UNLOCK:
-			if (area.cell == window->focus.cell && CONFIG->input_auto_lock)
-			{
-				window_focus_lock(window, false);
-			}
-			break;
-
-		case CGUI_CELL_MSG_NONE:
-		default:
-			break;
-	}
-
-	return true;
+	 return area.cell->fn_event(area.cell, event);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

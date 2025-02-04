@@ -44,6 +44,7 @@
 #include "cgui-label.h"
 #include "cgui-placeholder.h"
 #include "cgui-stripes.h"
+#include "cgui-switch.h"
 
 /* Low-level headers */
 

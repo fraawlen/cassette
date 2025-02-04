@@ -45,17 +45,6 @@ typedef struct cgui_cell cgui_cell;
 /**
  *
  */
-enum cgui_cell_msg
-{
-	CGUI_CELL_MSG_NONE = 0,
-	CGUI_CELL_MSG_REJECT,
-	CGUI_CELL_MSG_LOCK,
-	CGUI_CELL_MSG_UNLOCK,
-};
-
-/**
- *
- */
 enum cgui_cell_event_type
 {
 	CGUI_CELL_EVENT_NONE = 0,
@@ -94,9 +83,6 @@ enum cgui_cell_event_type
 struct cgui_cell_event
 {
 	cairo_t *drawable;
-	bool is_focused;
-	bool focus_locked;
-	enum cgui_cell_msg msg;
 	enum cgui_cell_event_type type;
 	struct cgui_box frame;
 	double x;
@@ -105,6 +91,8 @@ struct cgui_cell_event
 	double y_root;
 	double width;
 	double height;
+	bool is_focused;
+	bool focus_locked;
 	union
 	{
 		/* CGUI_CELL_EVENT_KEY_PRESS   */
@@ -244,6 +232,13 @@ CGUI_NONNULL(1);
  *
  */
 void
+cgui_cell_lock_focus(const cgui_cell *cell)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
 cgui_cell_on_destroy(cgui_cell *cell, void (*fn)(cgui_cell *cell))
 CGUI_NONNULL(1);
 
@@ -258,7 +253,7 @@ CGUI_NONNULL(1);
  *
  */
 void
-cgui_cell_on_event(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_event *event))
+cgui_cell_on_event(cgui_cell *cell, bool (*fn)(cgui_cell *cell, struct cgui_cell_event *event))
 CGUI_NONNULL(1);
 
 /**
@@ -303,6 +298,13 @@ void
 cgui_cell_set_serial(cgui_cell *cell, int serial)
 CGUI_NONNULL(1);
 
+/**
+ *
+ */
+void
+cgui_cell_unlock_focus(const cgui_cell *cell)
+CGUI_NONNULL(1);
+
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
 /************************************************************************************************************/
@@ -336,7 +338,7 @@ CGUI_PURE;
 /**
  *
  */
-void
+bool
 (*cgui_cell_fn_event(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_event *event)
 CGUI_NONNULL_RETURN
 CGUI_NONNULL(1)

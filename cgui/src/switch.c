@@ -46,7 +46,7 @@ enum state
 
 struct data
 {
-	void (*fn_click)(cgui_cell *);
+	void (*fn_toggle)(cgui_cell *);
 	enum cgui_align align;
 	enum cgui_rotation rot;
 	enum state state;
@@ -58,20 +58,21 @@ struct data
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void destroy        (cgui_cell *)                                              CGUI_NONNULL(1);
-static void draw           (cgui_cell *, struct cgui_cell_context)                    CGUI_NONNULL(1);
-static void dummy_fn_click (cgui_cell *)                                              CGUI_NONNULL(1);
-static bool event          (cgui_cell *, struct cgui_cell_event *)                    CGUI_NONNULL(1, 2);
-static void frame          (cgui_cell *, struct cgui_box *)                           CGUI_NONNULL(1, 2);
-static bool invalid        (const cgui_cell *)                                        CGUI_NONNULL(1);
-static void style          (const cgui_cell *, struct cgui_box *, struct cgui_text *) CGUI_NONNULL(1, 2, 3);
+static void destroy        (cgui_cell *)                                 CGUI_NONNULL(1);
+static void draw           (cgui_cell *, struct cgui_cell_context)       CGUI_NONNULL(1);
+static void dummy_fn_toggle (cgui_cell *)                                 CGUI_NONNULL(1);
+static bool event          (cgui_cell *, struct cgui_cell_event *)       CGUI_NONNULL(1, 2);
+static void frame          (cgui_cell *, struct cgui_box *)              CGUI_NONNULL(1, 2);
+static bool invalid        (const cgui_cell *)                           CGUI_NONNULL(1);
+//static void setup_cursor   (const cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
+static void style          (const cgui_cell *, struct cgui_box *, struct cgui_box *, struct cgui_text *) CGUI_NONNULL(1, 2, 3);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 void
-cgui_button_align_label(cgui_cell *cell, enum cgui_align alignment)
+cgui_switch_align_label(cgui_cell *cell, enum cgui_align alignment)
 {
 	if (invalid(cell))
 	{
@@ -86,7 +87,7 @@ cgui_button_align_label(cgui_cell *cell, enum cgui_align alignment)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 cgui_cell *
-cgui_button_create(void)
+cgui_switch_create(void)
 {
 	cgui_cell   *cell;
 	struct data *data;
@@ -111,7 +112,7 @@ cgui_button_create(void)
 		goto fail_cell;
 	}
 
-	data->fn_click = dummy_fn_click;
+	data->fn_toggle = dummy_fn_toggle;
 	data->align    = CGUI_ALIGN_CENTER;
 	data->rot      = CGUI_ROTATION_NORMAL;
 	data->enabled  = true;
@@ -141,7 +142,7 @@ fail_main:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_button_disable(cgui_cell *cell)
+cgui_switch_disable(cgui_cell *cell)
 {
 	if (invalid(cell))
 	{
@@ -156,7 +157,7 @@ cgui_button_disable(cgui_cell *cell)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_button_enable(cgui_cell *cell)
+cgui_switch_enable(cgui_cell *cell)
 {
 	if (invalid(cell))
 	{
@@ -172,20 +173,20 @@ cgui_button_enable(cgui_cell *cell)
 
 
 void
-cgui_button_on_click(cgui_cell *cell, void (*fn)(cgui_cell *cell))
+cgui_switch_on_toggle(cgui_cell *cell, void (*fn)(cgui_cell *cell))
 {
 	if (invalid(cell))
 	{
 		return;
 	}
 
-	DATA->fn_click = fn ? fn : dummy_fn_click;
+	DATA->fn_toggle = fn ? fn : dummy_fn_toggle;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_button_rotate_label(cgui_cell *cell, enum cgui_rotation rotation)
+cgui_switch_rotate_label(cgui_cell *cell, enum cgui_rotation rotation)
 {
 	if (invalid(cell))
 	{
@@ -200,7 +201,7 @@ cgui_button_rotate_label(cgui_cell *cell, enum cgui_rotation rotation)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_button_set_label(cgui_cell *cell, const char *label)
+cgui_switch_set_label(cgui_cell *cell, const char *label)
 {
 	if (invalid(cell))
 	{
@@ -216,7 +217,7 @@ cgui_button_set_label(cgui_cell *cell, const char *label)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_button_toggle(cgui_cell *cell)
+cgui_switch_toggle(cgui_cell *cell)
 {
 	if (invalid(cell))
 	{
@@ -248,9 +249,10 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 	double x = context.x + o + cgui_align_offset_x(DATA->align, context.width  - o * 2);
 	double y = context.y + o + cgui_align_offset_y(DATA->align, context.height - o * 2);
 	struct cgui_box dummy;
+	struct cgui_box cursor;
 	struct cgui_text label;
 
-	style(cell, &dummy, &label);
+	style(cell, &dummy, &cursor, &label);
 
 	/* frame */
 
@@ -269,7 +271,7 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-dummy_fn_click(cgui_cell *cell)
+dummy_fn_toggle(cgui_cell *cell)
 {
 	(void)cell;
 }
@@ -348,7 +350,7 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 
 	if (trigger)
 	{
-		DATA->fn_click(cell);
+		DATA->fn_toggle(cell);
 	}
 
 	return true;
@@ -359,9 +361,10 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 static void
 frame(cgui_cell *cell, struct cgui_box *box)
 {
-	struct cgui_text dummy;
+	struct cgui_box  dummy;
+	struct cgui_text dummy_2;
 
-	style(cell, box, &dummy);
+	style(cell, box, &dummy, &dummy_2);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -369,7 +372,7 @@ frame(cgui_cell *cell, struct cgui_box *box)
 static bool
 invalid(const cgui_cell *cell)
 {
-	if (cell->serial != CELL_BUTTON)
+	if (cell->serial != CELL_SWITCH)
 	{
 		main_set_error(CERR_PARAM);
 	}
@@ -380,31 +383,37 @@ invalid(const cgui_cell *cell)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-style(const cgui_cell *cell, struct cgui_box *frame, struct cgui_text *label)
+style(const cgui_cell *cell, struct cgui_box *frame, struct cgui_box *cursor, struct cgui_text *label)
 {
-	if (!DATA->enabled)
+	/*
+	if (DATA->enabled)
 	{
-		*frame = CONFIG->button_frame_disabled;
-		*label = CONFIG->button_text_disabled;
+		*frame  = CONFIG->switch_frame_disabled;
+		*cursor = CONFIG->switch_cursor_disabled;
+		*label  = CONFIG->switch_text_disabled;
 		return;
 	}
 
 	switch (DATA->state)
 	{
 		case FOCUSED:
-			*frame = CONFIG->button_frame_focused;
-			*label = CONFIG->button_text_focused;
+			*frame  = CONFIG->switch_frame_focused;
+			*cursor = CONFIG->switch_cursor_focused;
+			*label  = CONFIG->switch_text_focused;
 			break;
 
 		case PRESSED:
-			*frame = CONFIG->button_frame_pressed;
-			*label = CONFIG->button_text_pressed;
+			*frame  = CONFIG->switch_frame_pressed;
+			*cursor = CONFIG->switch_cursor_pressed;
+			*label  = CONFIG->switch_text_pressed;
 			break;
 
 		case IDLE:
 		default:
-			*frame = CONFIG->button_frame_idle;	
-			*label = CONFIG->button_text_idle;	
+			*frame  = CONFIG->switch_frame_idle;	
+			*cursor = CONFIG->switch_cursor_idle;
+			*label  = CONFIG->switch_text_idle;	
 			break;
 	}
+	*/
 }
