@@ -187,24 +187,6 @@ struct cgui_config
 	double gauge_min_length;
 	double gauge_max_thick;
 	bool gauge_clip;
-
-	/* cell - switch */
-
-	/**
-	 * states :       
-	 * 	0 : IDLE    
-	 * 	1 : FOCUSED 
-	 * 	2 : PRESSED 
-	 * 	3 : DISABLED
-	 *
-	 * switch position :
-	 * 	0 : OFF
-	 * 	1 : ON
-	 */
-
-	struct cgui_box switch_frame[4][2];
-	struct cgui_box switch_cursor[4][2];
-	struct cgui_text switch_text[4][2];
 };
 
 /************************************************************************************************************/

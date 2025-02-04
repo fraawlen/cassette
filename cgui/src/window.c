@@ -1193,7 +1193,10 @@ window_draw(cgui_window *window)
 	/* potentially schedule an extra redraw of the focus in */
 	/* case a theme with overlapping geometry is active     */
 
-	schedule_focus_redraw(window);
+	if (level < WINDOW_DRAW_FULL)
+	{
+		schedule_focus_redraw(window);
+	}
 
 	/* draw unfocused areas first and the focused area last so that       */
 	/* it's always drawn on top of other cells if they happen to overlap  */

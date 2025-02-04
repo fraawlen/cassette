@@ -1,5 +1,5 @@
-	SECTION_ADD Pcb
-	SECTION_ADD Pcb_Shadows
+//	SECTION_ADD Pcb
+//	SECTION_ADD Pcb_Shadows
 //	SECTION_ADD Binary
 //	SECTION_ADD Oxide
 //	SECTION_ADD Dijon
@@ -175,7 +175,7 @@ SECTION Pcb
 	// Groups
 
 	LET windows window window_focused window_disabled window_locked popup
-	LET buttons button_idle button_focused button_perssed button_disabled
+	LET buttons button_idle button_focused button_pressed button_disabled
 	LET bon  beacon_on  beacon_crit_on
 	LET boff beacon_off beacon_crit_off
 	LET cells \
@@ -294,7 +294,7 @@ SECTION Pcb
 
 	SECTION Pcb_Shadows
 
-		render  partial             FALSE
+		render  partial_redraw      FALSE
 		shadows reactive            TRUE
 		shadows max_light_distance  200
 		shadows max_offset          * $ lin 3
