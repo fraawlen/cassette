@@ -147,14 +147,16 @@ struct cgui_config
 
 	/* cell - button */
 
-	struct cgui_box button_frame_idle;
-	struct cgui_box button_frame_focused;
-	struct cgui_box button_frame_pressed;
-	struct cgui_box button_frame_disabled;
-	struct cgui_text button_text_idle;
-	struct cgui_text button_text_focused;
-	struct cgui_text button_text_pressed;
-	struct cgui_text button_text_disabled;
+	/**
+	 * states :       
+	 * 	0 : IDLE    
+	 * 	1 : FOCUSED 
+	 * 	2 : PRESSED 
+	 * 	3 : DISABLED
+	 */
+
+	struct cgui_box button_frame[4];
+	struct cgui_text button_text[4];
 
 	/* cell - label */
 
@@ -163,14 +165,16 @@ struct cgui_config
 
 	/* cell - beacon */
 
-	struct cgui_box beacon_frame_off;
-	struct cgui_box beacon_frame_on;
-	struct cgui_box beacon_frame_crit_off;
-	struct cgui_box beacon_frame_crit_on;
-	struct cgui_text beacon_text_off;
-	struct cgui_text beacon_text_on;
-	struct cgui_text beacon_text_crit_off;
-	struct cgui_text beacon_text_crit_on;
+	/**
+	 * states :       
+	 * 	0 : OFF   
+	 * 	1 : ON
+	 * 	2 : CRITICAL OFF
+	 * 	3 : CRITICAL ON
+	 */
+
+	struct cgui_box beacon_frame[4];
+	struct cgui_text beacon_text[4];
 	unsigned long beacon_blink_on;
 	unsigned long beacon_blink_off;
 
@@ -183,6 +187,24 @@ struct cgui_config
 	double gauge_min_length;
 	double gauge_max_thick;
 	bool gauge_clip;
+
+	/* cell - switch */
+
+	/**
+	 * states :       
+	 * 	0 : IDLE    
+	 * 	1 : FOCUSED 
+	 * 	2 : PRESSED 
+	 * 	3 : DISABLED
+	 *
+	 * switch position :
+	 * 	0 : OFF
+	 * 	1 : ON
+	 */
+
+	struct cgui_box switch_frame[4][2];
+	struct cgui_box switch_cursor[4][2];
+	struct cgui_text switch_text[4][2];
 };
 
 /************************************************************************************************************/

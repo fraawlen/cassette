@@ -197,14 +197,14 @@ static const struct cgui_config config_default =
 
 	/* cell - filler */
 
-	.filler_frame           = BOX(0.0, 15.0, 3.0, 0.0, 0x404040, 0x808080, 0x808080),
+	.filler_frame = BOX(0.0, 15.0, 3.0, 0.0, 0x404040, 0x808080, 0x808080),
 
 	/* cell - stripes */
 
-	.stripes_frame          = BOX(0.0,  0.0, 3.0, 0.0, 0x404040, 0x808080, 0x808080),
-	.stripes_line_cl        = COLOR(0x808080),
-	.stripes_line_width     =  3.0,
-	.stripes_line_gap       = 15.0,
+	.stripes_frame      = BOX(0.0,  0.0, 3.0, 0.0, 0x404040, 0x808080, 0x808080),
+	.stripes_line_cl    = COLOR(0x808080),
+	.stripes_line_width =  3.0,
+	.stripes_line_gap   = 15.0,
 
 	/* cell - placeholder */
 
@@ -214,40 +214,55 @@ static const struct cgui_config config_default =
 
 	/* cell - button */
 
-	.button_frame_idle      = BOX(0.0, 15.0, 3.0, 0.0, 0x602000, 0x808080, 0x808080),
-	.button_frame_focused   = BOX(0.0, 15.0, 3.0, 0.0, 0xA04000, 0xCCCCCC, 0x808080),
-	.button_frame_pressed   = BOX(0.0, 15.0, 3.0, 0.0, 0xFFFFFF, 0x808080, 0x808080),
-	.button_frame_disabled  = BOX(0.0, 15.0, 3.0, 0.0, 0x301000, 0x808080, 0x808080),
-	.button_text_idle       = TXT(0xFFFFFF, false),
-	.button_text_focused    = TXT(0xFFFFFF, false),
-	.button_text_pressed    = TXT(0x000000, true),
-	.button_text_disabled   = TXT(0x808080, false),
+	.button_frame =
+	{
+		BOX(0.0, 15.0, 3.0, 0.0, 0x602000, 0x808080, 0x808080),
+		BOX(0.0, 15.0, 3.0, 0.0, 0xA04000, 0xCCCCCC, 0x808080),
+		BOX(0.0, 15.0, 3.0, 0.0, 0xFFFFFF, 0x808080, 0x808080),
+		BOX(0.0, 15.0, 3.0, 0.0, 0x301000, 0x808080, 0x808080),
+	},
+
+	.button_text =
+	{
+		TXT(0xFFFFFF, false),
+		TXT(0xFFFFFF, false),
+		TXT(0x000000, true),
+		TXT(0x808080, false),
+	},
 
 	/* cell - label */
 
-	.label_frame            = BOX(0.0, 15.0, 3.0, 0.0, 0x404040, 0x808080, 0x808080),
-	.label_text             = TXT(0xFFFFFF, false),
+	.label_frame = BOX(0.0, 15.0, 3.0, 0.0, 0x404040, 0x808080, 0x808080),
+	.label_text  = TXT(0xFFFFFF, false),
 
 	/* cell - beacon */
 
-	.beacon_frame_off       = BOX(3.0,  9.0, 6.0, 3.0, 0x404040, 0x202020, 0x808080),
-	.beacon_frame_on        = BOX(3.0,  9.0, 6.0, 3.0, 0x9B2E21, 0x401A16, 0x808080),
-	.beacon_frame_crit_off  = BOX(3.0,  9.0, 6.0, 3.0, 0x404040, 0x202020, 0x808080),
-	.beacon_frame_crit_on   = BOX(3.0,  9.0, 6.0, 3.0, 0x9B2E21, 0x401A16, 0x9B2E21),
-	.beacon_text_off        = TXT(0xFFFFFF, false),
-	.beacon_text_on         = TXT(0xFFFFFF, true),
-	.beacon_text_crit_off   = TXT(0xFFFFFF, false),
-	.beacon_text_crit_on    = TXT(0xFFFFFF, true),
-	.beacon_blink_on        = 500,
-	.beacon_blink_off       = 500,
+	.beacon_frame =
+	{
+		BOX(3.0,  9.0, 6.0, 3.0, 0x404040, 0x202020, 0x808080),
+		BOX(3.0,  9.0, 6.0, 3.0, 0x9B2E21, 0x401A16, 0x808080),
+		BOX(3.0,  9.0, 6.0, 3.0, 0x404040, 0x202020, 0x808080),
+		BOX(3.0,  9.0, 6.0, 3.0, 0x9B2E21, 0x401A16, 0x9B2E21),
+	},
+
+	.beacon_text = 
+	{
+		TXT(0xFFFFFF, false),
+		TXT(0xFFFFFF, true),
+		TXT(0xFFFFFF, false),
+		TXT(0xFFFFFF, true),
+	},
+
+	.beacon_blink_on = 500,
+	.beacon_blink_off = 500,
 
 	/* cell - gauge */
 
-	.gauge_frame            = BOX(0.0,  3.0, 3.0, 0.0, 0x404040, 0x808080, 0x808080),
-	.gauge_bar              = BOX(0.0, -3.0, 3.0, 0.0, 0x003030, 0x808080, 0x808080),
-	.gauge_cursor           = BOX(0.0,  9.0, 3.0, 0.0, 0x004545, 0x808080, 0x808080),
-	.gauge_text             = TXT(0xFFFFFF, false),
-	.gauge_min_length       = 0.0,
-	.gauge_max_thick        = DBL_MAX,
-	.gauge_clip             = false,
+	.gauge_frame      = BOX(0.0,  3.0, 3.0, 0.0, 0x404040, 0x808080, 0x808080),
+	.gauge_bar        = BOX(0.0, -3.0, 3.0, 0.0, 0x003030, 0x808080, 0x808080),
+	.gauge_cursor     = BOX(0.0,  9.0, 3.0, 0.0, 0x004545, 0x808080, 0x808080),
+	.gauge_text       = TXT(0xFFFFFF, false),
+	.gauge_min_length = 0.0,
+	.gauge_max_thick  = DBL_MAX,
+	.gauge_clip       = false,
 };

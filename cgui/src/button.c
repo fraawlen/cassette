@@ -31,15 +31,17 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DATA ((struct data*)cgui_cell_data(cell))
+#define DATA  ((struct data*)cgui_cell_data(cell))
+#define FRAME CONFIG->button_frame[style(cell)]
+#define LABEL CONFIG->button_text[style(cell)]
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 enum state
 {
-	IDLE,
-	FOCUSED,
-	PRESSED,
+	IDLE    = 0,
+	FOCUSED = 1,
+	PRESSED = 2,
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -58,13 +60,13 @@ struct data
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void destroy        (cgui_cell *)                                              CGUI_NONNULL(1);
-static void draw           (cgui_cell *, struct cgui_cell_context)                    CGUI_NONNULL(1);
-static void dummy_fn_click (cgui_cell *)                                              CGUI_NONNULL(1);
-static bool event          (cgui_cell *, struct cgui_cell_event *)                    CGUI_NONNULL(1, 2);
-static void frame          (cgui_cell *, struct cgui_box *)                           CGUI_NONNULL(1, 2);
-static bool invalid        (const cgui_cell *)                                        CGUI_NONNULL(1);
-static void style          (const cgui_cell *, struct cgui_box *, struct cgui_text *) CGUI_NONNULL(1, 2, 3);
+static void destroy        (cgui_cell *)                           CGUI_NONNULL(1);
+static void draw           (cgui_cell *, struct cgui_cell_context) CGUI_NONNULL(1);
+static void dummy_fn_click (cgui_cell *)                           CGUI_NONNULL(1);
+static bool event          (cgui_cell *, struct cgui_cell_event *) CGUI_NONNULL(1, 2);
+static void frame          (cgui_cell *, struct cgui_box *)        CGUI_NONNULL(1, 2);
+static bool invalid        (const cgui_cell *)                     CGUI_NONNULL(1);
+static int  style          (const cgui_cell *)                     CGUI_NONNULL(1);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -247,10 +249,6 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 	double o = cgui_box_content_offset(context.frame);
 	double x = context.x + o + cgui_align_offset_x(DATA->align, context.width  - o * 2);
 	double y = context.y + o + cgui_align_offset_y(DATA->align, context.height - o * 2);
-	struct cgui_box dummy;
-	struct cgui_text label;
-
-	style(cell, &dummy, &label);
 
 	/* frame */
 
@@ -262,7 +260,7 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 	cgui_text_move(x, y);
 	cgui_text_align(cgui_align_rotation(DATA->align, DATA->rot));
 	cgui_text_rotate(DATA->rot);
-	cgui_text_style(label);
+	cgui_text_style(LABEL);
 	cgui_text_draw(context.drawable, DATA->label);
 }
 
@@ -359,9 +357,7 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 static void
 frame(cgui_cell *cell, struct cgui_box *box)
 {
-	struct cgui_text dummy;
-
-	style(cell, box, &dummy);
+	*box = FRAME;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -379,32 +375,24 @@ invalid(const cgui_cell *cell)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void
-style(const cgui_cell *cell, struct cgui_box *frame, struct cgui_text *label)
+static int
+style(const cgui_cell *cell)
 {
 	if (!DATA->enabled)
 	{
-		*frame = CONFIG->button_frame_disabled;
-		*label = CONFIG->button_text_disabled;
-		return;
+		return 3;
 	}
 
 	switch (DATA->state)
 	{
-		case FOCUSED:
-			*frame = CONFIG->button_frame_focused;
-			*label = CONFIG->button_text_focused;
-			break;
-
-		case PRESSED:
-			*frame = CONFIG->button_frame_pressed;
-			*label = CONFIG->button_text_pressed;
-			break;
-
 		case IDLE:
 		default:
-			*frame = CONFIG->button_frame_idle;	
-			*label = CONFIG->button_text_idle;	
-			break;
+			return 0;
+
+		case FOCUSED:
+			return 1;
+
+		case PRESSED:
+			return 2;
 	}
 }

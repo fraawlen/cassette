@@ -151,3 +151,4 @@ SECTION Pcb_Shadows
 	window         pad          35
 	window         border_color #303030
 	button_pressed outline_size 0
+	gauge_bar      shadow_draw  FALSE

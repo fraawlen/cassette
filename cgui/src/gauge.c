@@ -34,7 +34,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DATA ((struct data*)cgui_cell_data(cell))
+#define DATA   ((struct data*)cgui_cell_data(cell))
+#define FRAME  CONFIG->gauge_frame
+#define BAR    CONFIG->gauge_bar
+#define CURSOR CONFIG->gauge_cursor
+#define LABEL  CONFIG->gauge_text
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -397,7 +401,6 @@ static struct bar_context
 pre_setup(const cgui_cell *cell, struct zone z)
 {
 	struct bar_context ctx;
-	struct cgui_box bar;
 	double ratio;
 	ssize_t lw;
 	ssize_t lh;
@@ -405,10 +408,9 @@ pre_setup(const cgui_cell *cell, struct zone z)
 	/* independent values */
 
 	ratio  = util_progress(DATA->val, DATA->min, DATA->max);
-	bar    = CONFIG->gauge_bar;
 	ctx.o1 = cgui_box_content_offset(z.frame);
-	ctx.o2 = cgui_box_content_offset(bar);
-	ctx.o3 = cgui_box_content_offset(CONFIG->gauge_cursor);
+	ctx.o2 = cgui_box_content_offset(BAR);
+	ctx.o3 = cgui_box_content_offset(CURSOR);
 
 	/* label length */
 
@@ -436,7 +438,7 @@ pre_setup(const cgui_cell *cell, struct zone z)
 		case CGUI_ROTATION_RIGHT:
 			ctx.l2 = DATA->show_label ? cgui_config_str_height(lh) + ctx.o3 * 2 : 0.0;
 			ctx.l2 = ctx.l2 < CONFIG->gauge_min_length ? CONFIG->gauge_min_length : ctx.l2;
-			ctx.a  = bar.bd_size * 2 + (ctx.l2 > 0.0 ? ctx.l2 + bar.pad * 2 : 0.0);
+			ctx.a  = BAR.bd_size * 2 + (ctx.l2 > 0.0 ? ctx.l2 + BAR.pad * 2 : 0.0);
 			ctx.b  = (z.height - ctx.o1 * 2 - ctx.a) * (1 - ratio);
 			ctx.c  =  z.width  - ctx.o1 * 2;
 			ctx.l1 =  z.height - ctx.o1 * 2 - ctx.a - ctx.b;
@@ -447,7 +449,7 @@ pre_setup(const cgui_cell *cell, struct zone z)
 		case CGUI_ROTATION_NORMAL:
 			ctx.l2 = DATA->show_label ? cgui_config_str_width(lw) + ctx.o3 * 2 : 0.0;
 			ctx.l2 = ctx.l2 < CONFIG->gauge_min_length ? CONFIG->gauge_min_length : ctx.l2;
-			ctx.a  = bar.bd_size * 2 + (ctx.l2 > 0.0 ? ctx.l2 + bar.pad * 2 : 0.0);
+			ctx.a  = BAR.bd_size * 2 + (ctx.l2 > 0.0 ? ctx.l2 + BAR.pad * 2 : 0.0);
 			ctx.b  = (z.width  - ctx.o1 * 2 - ctx.a) * (1 - ratio);
 			ctx.c  =  z.height - ctx.o1 * 2;
 			ctx.l1 =  z.width  - ctx.o1 * 2 - ctx.a - ctx.b;
@@ -463,7 +465,7 @@ static void
 setup_bar(const cgui_cell *cell, struct zone z)
 {
 	struct bar_context ctx = pre_setup(cell, z);
-	struct cgui_box box = CONFIG->gauge_bar;
+	struct cgui_box box = BAR;
 	double x = 0.0;
 	double y = 0.0;
 	double w;
@@ -525,7 +527,7 @@ static void
 setup_cursor(const cgui_cell *cell, struct zone z)
 {
 	struct bar_context ctx = pre_setup(cell, z);
-	struct cgui_box box = CONFIG->gauge_cursor;
+	struct cgui_box box = CURSOR;
 	double x = 0.0;
 	double y = 0.0;
 	double w;
@@ -627,7 +629,7 @@ setup_label(const cgui_cell *cell, struct zone z)
 	cgui_text_move(x, y);
 	cgui_text_align(cgui_align_rotation(DATA->label_align, DATA->label_rot));
 	cgui_text_rotate(DATA->label_rot);
-	cgui_text_style(CONFIG->gauge_text);
+	cgui_text_style(LABEL);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

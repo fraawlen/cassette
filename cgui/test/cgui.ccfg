@@ -1,8 +1,8 @@
-//	SECTION_ADD Pcb
-//	SECTION_ADD Pcb_Shadows
+	SECTION_ADD Pcb
+	SECTION_ADD Pcb_Shadows
 //	SECTION_ADD Binary
 //	SECTION_ADD Oxide
-	SECTION_ADD Dijon
+//	SECTION_ADD Dijon
 //	SECTION_ADD Dev
 //	SECTION_ADD Dev_Shadows
 
@@ -313,6 +313,7 @@ SECTION Pcb
 		window         pad          35
 		window         border_color #303030
 		button_pressed outline_size 0
+		gauge_bar      shadow_draw  FALSE
 
 // ----------------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------------
