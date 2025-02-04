@@ -63,6 +63,7 @@ struct cgui_config
 	bool render_sync_vblank;
 	bool render_sync_bypass;
 	bool render_partial;
+	bool render_overlap;
 	double render_scale;
 	double render_fps_async_cap;
 	unsigned long render_fps_sync_div;

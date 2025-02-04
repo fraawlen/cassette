@@ -76,6 +76,8 @@ SECTION Dijon
 
 	// Individual settings
 
+	render focus_overlaps TRUE
+
 	grid gap $ lin
 	grid pad $ pad
 

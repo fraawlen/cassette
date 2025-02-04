@@ -44,27 +44,29 @@
 
 /* impure */
 
-static void cairo_data_destroy (cgui_window *)                                                          CGUI_NONNULL(1);
-static bool cairo_setup        (cgui_window *, double, double)                                          CGUI_NONNULL(1);
-static void draw_area          (cgui_window *, struct grid_area, enum window_draw_level, unsigned long) CGUI_NONNULL(1);
-static void dummy_fn_accel     (cgui_window *, int)                                                     CGUI_NONNULL(1);
-static void dummy_fn_close     (cgui_window *)                                                          CGUI_NONNULL(1);
-static void dummy_fn_draw      (cgui_window *, unsigned long)                                           CGUI_NONNULL(1);
-static void dummy_fn_focus     (cgui_window *, cgui_cell *)                                             CGUI_NONNULL(1, 2);
-static void dummy_fn_grid      (cgui_window *, cgui_grid *)                                             CGUI_NONNULL(1, 2);
-static void dummy_fn_state     (cgui_window *, enum cgui_window_state_mask)                             CGUI_NONNULL(1);
-static void pre_swap_grids     (cgui_grid  **, cgui_grid **)                                            CGUI_NONNULL(1, 2);
-static void refocus            (cgui_window *)                                                          CGUI_NONNULL(1);
+static void cairo_data_destroy    (cgui_window *)                                                          CGUI_NONNULL(1);
+static bool cairo_setup           (cgui_window *, double, double)                                          CGUI_NONNULL(1);
+static void draw_area             (cgui_window *, struct grid_area, enum window_draw_level, unsigned long) CGUI_NONNULL(1);
+static void dummy_fn_accel        (cgui_window *, int)                                                     CGUI_NONNULL(1);
+static void dummy_fn_close        (cgui_window *)                                                          CGUI_NONNULL(1);
+static void dummy_fn_draw         (cgui_window *, unsigned long)                                           CGUI_NONNULL(1);
+static void dummy_fn_focus        (cgui_window *, cgui_cell *)                                             CGUI_NONNULL(1, 2);
+static void dummy_fn_grid         (cgui_window *, cgui_grid *)                                             CGUI_NONNULL(1, 2);
+static void dummy_fn_state        (cgui_window *, enum cgui_window_state_mask)                             CGUI_NONNULL(1);
+static void pre_swap_grids        (cgui_grid  **, cgui_grid **)                                            CGUI_NONNULL(1, 2);
+static void refocus               (cgui_window *)                                                          CGUI_NONNULL(1);
+static void schedule_focus_redraw (cgui_window *)                                                          CGUI_NONNULL(1);
 
 /* pure */
 
-static bool             cairo_error    (const cgui_window *)                                         CGUI_NONNULL(1)    CGUI_PURE;
-static struct cgui_box  cell_frame     (const cgui_window *, struct grid_area)                       CGUI_NONNULL(1)    CGUI_PURE;
-static struct cgui_box  frame          (const cgui_window *)                                         CGUI_NONNULL(1)    CGUI_PURE;
-static cgui_grid       *min_grid       (const cgui_window *)                                         CGUI_NONNULL(1)    CGUI_PURE;
-static double           min_height     (const cgui_window *, const cgui_grid *)                      CGUI_NONNULL(1, 2) CGUI_PURE;
-static double           min_width      (const cgui_window *, const cgui_grid *)                      CGUI_NONNULL(1, 2) CGUI_PURE;
-static void             size_limits    (const cgui_window *, double *, double *, double *, double *) CGUI_NONNULL(1, 2, 3, 4, 5);
+static bool             cairo_error       (const cgui_window *)                                         CGUI_NONNULL(1)    CGUI_PURE;
+static struct cgui_box  cell_frame        (const cgui_window *, struct grid_area)                       CGUI_NONNULL(1)    CGUI_PURE;
+static struct cgui_box  frame             (const cgui_window *)                                         CGUI_NONNULL(1)    CGUI_PURE;
+static bool             area_needs_redraw (cgui_window *, struct grid_area)                             CGUI_NONNULL(1);
+static cgui_grid       *min_grid          (const cgui_window *)                                         CGUI_NONNULL(1)    CGUI_PURE;
+static double           min_height        (const cgui_window *, const cgui_grid *)                      CGUI_NONNULL(1, 2) CGUI_PURE;
+static double           min_width         (const cgui_window *, const cgui_grid *)                      CGUI_NONNULL(1, 2) CGUI_PURE;
+static void             size_limits       (const cgui_window *, double *, double *, double *, double *) CGUI_NONNULL(1, 2, 3, 4, 5);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -1188,10 +1190,15 @@ window_draw(cgui_window *window)
 		cgui_box_draw(window->drawable);
 	}
 
+	/* potentially schedule an extra redraw of the focus in */
+	/* case a theme with overlapping geometry is active     */
+
+	schedule_focus_redraw(window);
+
 	/* draw unfocused areas first and the focused area last so that       */
 	/* it's always drawn on top of other cells if they happen to overlap  */
-	/* (it is possible thanks to boxes margins)                           */
-	
+	/* (it is possible thanks to boxes margins)                           */	
+
 	CREF_FOR_EACH(window->shown_grid->areas, i)
 	{
 		if (i != window->focus.id)
@@ -1662,6 +1669,27 @@ window_update_state(cgui_window *window, enum cgui_window_state_mask mask, bool 
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
+static bool
+area_needs_redraw(cgui_window *window, struct grid_area area)
+{
+	/* this function exists in case an area hosts a meta-cell that doesn't need to be    */
+	/* drawn but its child cells do. Normal cells can just ignore and reject this event. */
+
+	struct cgui_cell_event event =
+	{
+		.type = CGUI_CELL_EVENT_QUERY_DRAW,
+	};
+
+	if (area.id == SIZE_MAX)
+	{
+		return false;
+	}
+
+	return area.cell->draw || window_process_cell_event(window, area, &event);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 static void
 cairo_data_destroy(cgui_window *window)
 {
@@ -1743,11 +1771,6 @@ cell_frame(const cgui_window *window, struct grid_area area)
 static void
 draw_area(cgui_window *window, struct grid_area area, enum window_draw_level level, unsigned long time)
 {
-	struct cgui_cell_event event =
-	{
-		.type = CGUI_CELL_EVENT_QUERY_DRAW,
-	};
-
 	struct cgui_cell_context context =
 	{
 		.drawable  = window->drawable,
@@ -1760,15 +1783,7 @@ draw_area(cgui_window *window, struct grid_area area, enum window_draw_level lev
 		.full_draw = level >= WINDOW_DRAW_FULL || area.cell->draw,
 	};
 
-	if (area.id == SIZE_MAX)
-	{
-		return;
-	}
-
-	/* this check is here in case the area hosts a meta-cell that doesn't need to be     */
-	/* drawn but its child cells do. Normal cells can just ignore and reject this event. */
-
-	if (!context.full_draw && !window_process_cell_event(window, area, &event))
+	if (!area_needs_redraw(window, area) && !context.full_draw)
 	{
 		return;
 	}
@@ -2001,6 +2016,46 @@ refocus(cgui_window *window)
 
 	window_focus_lock(window, false);
 	window_focus(window, GRID_AREA_NONE);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+schedule_focus_redraw (cgui_window *window)
+{
+	struct grid_area area;
+	double x;
+	double y;
+	double w;
+	double h;
+
+	if (!CONFIG->render_overlap
+	 || !CONFIG->render_partial
+	 || !window->focus.cell->valid
+	 ||  window->focus.cell->draw)
+	{
+		return;
+	}
+
+	x = window->focus.col    - 1.5;
+	y = window->focus.row    - 1.5;
+	w = window->focus.n_cols + 2.0;
+	h = window->focus.n_rows + 2.0;
+
+	CREF_FOR_EACH(window->shown_grid->areas, i)
+	{
+		area = grid_area(window->shown_grid, i);
+		if (area.cell == window->focus.cell || !area_needs_redraw(window, area))
+		{
+			continue;
+		}
+
+		if (util_point_inside(area.col,               area.row,               x, y, w, h)
+		 || util_point_inside(area.col + area.n_cols, area.row + area.n_rows, x, y, w, h))
+		{
+			cgui_cell_redraw_delayed(window->focus.cell, window->draw_delay);
+		}
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

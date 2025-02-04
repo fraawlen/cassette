@@ -231,6 +231,7 @@ static const struct resource resources[] =
 	{ "render",       "sync_vblank",        BOOL,      &config.render_sync_vblank     },
 	{ "render",       "sync_bypass",        BOOL,      &config.render_sync_bypass     },
 	{ "render",       "partial_redraw",     BOOL,      &config.render_partial         },
+	{ "render",       "focus_overlaps",     BOOL,      &config.render_overlap         },
 	{ "render",       "fps_async_cap",      UDOUBLE,   &config.render_fps_async_cap   },
 	{ "render",       "fps_sync_divider",   ULONG,     &config.render_fps_sync_div    },
 

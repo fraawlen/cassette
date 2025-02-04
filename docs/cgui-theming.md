@@ -195,6 +195,7 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 | render        | sync_vblank      | BOOL     | TRUE        | Synchronize rendering with vertical blank |
 | render        | sync_bypass      | BOOL     | TRUE        | Bypass vblank sync on window resize or map |
 | render        | partial_redraw   | BOOL     | TRUE        | Only redraw cells that need it |
+| render        | focus_overlaps   | BOOL     | FALSE       | Redraw focused cell if a neighbour is getting redrawn |
 | render        | fps_async_cap    | UDOUBLE  | no limit    | Max framerate when rendering asynchronously |
 | render        | fps_sync_divider | ULONG    | 1           | Divider for synced framerate |
 
@@ -212,6 +213,7 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 - `sync_bypass` removes the "lag" of window content when resizing a windows on uncomposited X
 - When `partial_redraw` is enabled only cells that need it are redrawn, improving performance
 - Disabling `partial_redraw` is useful when dealing themes that feature cells changing size between state (like a button becoming smaller when pressed), themes that feature overlapping cells or when reactive shadows are enabled.
+- `focus_overlaps` should only be enabled when the running theme features overlapping cells (like the Dijon theme) and `partial_redraw` is enabled too. This option exists to ensure that the focused cell is always drawn on top of everything.
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 
