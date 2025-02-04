@@ -1,8 +1,14 @@
-	SECTION_ADD Monochrome
-//	SECTION_ADD Wip_Theme
+//	SECTION_ADD Pcb
+//	SECTION_ADD Pcb_Shadows
+//	SECTION_ADD Binary
+//	SECTION_ADD Oxide
+	SECTION_ADD Dijon
 //	SECTION_ADD Dev
-//	SECTION_ADD Shadow
-//	SECTION_ADD Round_Gauges
+//	SECTION_ADD Dev_Shadows
+
+// ----------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
 
 	render mode           forward
 	render sync_vblank    TRUE
@@ -16,7 +22,11 @@
 	font face "Terminus"
 	font size 20
 
-SECTION Monochrome
+// ----------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
+
+SECTION Binary
 
 	// Params
 
@@ -49,24 +59,8 @@ SECTION Monochrome
 		gauge \
 		gauge_bar \
 		gauge_cursor
-
-	// General settings
-
-	grid gap $ gap
-	grid pad $ pad
-
-	window border_size  * $ lin 2
-	window back_color   $ c1
-	window border_color $ c2
-	window pad          $ win
-	popup  pad          $ win
-
-	window_focused  enable_style FALSE
-	window_disabled enable_style FALSE
-	window_locked   enable_style FALSE
-	popup           enable_style FALSE
 	
-	// Cell group settings
+	// Group settings
 
 	FOR_EACH simple_cells cell
 		% cell border_size  $ lin
@@ -100,7 +94,21 @@ SECTION Monochrome
 		% cell text_bold     TRUE
 	FOR_END
 
-	// Cell custom settings
+	// Individual settings
+
+	grid gap $ gap
+	grid pad $ pad
+
+	window border_size  * $ lin 2
+	window back_color   $ c1
+	window border_color $ c2
+	window pad          $ win
+	popup  pad          $ win
+
+	window_focused  enable_style FALSE
+	window_disabled enable_style FALSE
+	window_locked   enable_style FALSE
+	popup           enable_style FALSE
 
 	filler draw FALSE
 
@@ -153,30 +161,194 @@ SECTION Monochrome
 	gauge_cursor pad          - $ pad / $ lin 2
 	gauge_cursor min_size     0
 
+// ----------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
 
+SECTION Pcb
 
+	// Params
 
-SECTION Wip_Theme
+	LET lin 5
+	LET pad 16
 
-	grid gap 10
-	grid pad 18
+	// Groups
 
 	LET windows window window_focused window_disabled window_locked popup
+	LET buttons button_idle button_focused button_perssed button_disabled
+	LET bon  beacon_on  beacon_crit_on
+	LET boff beacon_off beacon_crit_off
+	LET cells \
+		filler \
+		placeholder \
+		stripes \
+		label \
+		button_idle \
+		button_focused \
+		button_pressed \
+		button_disabled \
+		beacon_on \
+		beacon_off \
+		beacon_crit_on \
+		beacon_crit_off \
+		gauge gauge_bar \
+		gauge_cursor
+
+	// Group settings
+
+	FOR_EACH windows win
+		% win border_size 10
+		% win back_color  #131313
+		% win corner_type round
+		% win corner_size 40
+	FOR_END
+
+	FOR_EACH cells cell
+		% cell margin          0
+		% cell pad             - $ pad $ lin
+		% cell border_size     $ lin
+		% cell border_color    #C78B00
+		% cell back_color      #003131
+		% cell outline_size    $ lin
+		% cell outline_color   #EEEEEE
+		% cell text_color      #FFFFFF
+		% cell text_bold       TRUE
+		% cell line_gap        $ lin
+		% cell line_size       $ lin
+		% cell line_color      #C78B00
+		% cell shadow_color    #202020
+		% cell shadow_x_offset * $ lin 2
+		% cell shadow_y_offset * $ lin 2
+	FOR_END
+
+	FOR_EACH buttons cell
+		% cell corner_type square square cut square
+		% cell corner_size * $ lin 2
+	FOR_END
+
+	FOR_EACH bon cell
+		% cell border_color  #4C1708
+		% cell back_color    #CF4118
+		% cell text_color    #000000
+	FOR_END
+
+	FOR_EACH boff cell
+		% cell border_color  #202020
+		% cell back_color    #404040
+	FOR_END
+
+	// Individual settings
+
+	grid gap * $ lin 3
+	grid pad $ pad
+
+	popup           pad          20
+	window          pad          20
+	window          border_color #4F4F4F
+	window_focused  border_color #909090
+	window_disabled border_color #303030
+	window_locked   border_color #CF4118
+	popup           border_color #303030
+
+	stripes     pad -1
+	placeholder pad -1
+
+	button_idle border_color #003131
+	button_idle back_color   #008B8B
+	button_idle text_color   #000000
+
+	button_focused border_color #003131
+	button_focused back_color   #FFFFFF
+	button_focused text_color   #000000
+
+	button_pressed border_color  #FFFFFF
+	button_pressed back_color    #001919
+	button_pressed text_color    #FFFFFF
+	button_pressed outline_color #131313
+	button_pressed outline_size  + $ lin 1
+
+	button_disabled border_color #003131
+	button_disabled back_color   #001919
+	button_disabled text_color   #808080
+
+	gauge pad           $ lin
+	gauge border_size   0
+	gauge border_color  #003131
+	gauge text_color    #000000
+	gauge clip_contents TRUE
+
+	gauge_bar pad          0
+	gauge_bar margin       0
+	gauge_bar border_size  0
+	gauge_bar outline_size 0
+	gauge_bar back_color   #C78B00
+	gauge_bar corner_smart FALSE
+
+	gauge_cursor pad          - $ pad $ lin
+	gauge_cursor border_size  0
+	gauge_cursor outline_size 0
+	gauge_cursor corner_smart FALSE
+	gauge_cursor draw         FALSE
+
+	// Optional, reactive shadows setup
+
+	SECTION Pcb_Shadows
+
+		render  partial             FALSE
+		shadows reactive            TRUE
+		shadows max_light_distance  200
+		shadows max_offset          * $ lin 3
+	
+		FOR_EACH windows win
+			% win back_color  #505050
+			% win corner_size 55
+		FOR_END
+	
+		FOR_EACH cells cell
+			% cell shadow_draw TRUE
+		FOR_END
+		
+		grid           gap          * $ lin 6
+		popup          pad          35
+		window         pad          35
+		window         border_color #303030
+		button_pressed outline_size 0
+
+// ----------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
+
+SECTION Oxide
+
+	// Groups
+
+	LET windows window window_focused window_disabled window_locked popup
+	LET bon  beacon_on  beacon_crit_on
+	LET boff beacon_off beacon_crit_off
+	LET cells \
+		filler \
+		placeholder \
+		stripes \
+		label \
+		button_idle \
+		button_focused \
+		button_pressed \
+		button_disabled \
+		beacon_on \
+		beacon_off \
+		beacon_crit_on \
+		beacon_crit_off \
+		gauge gauge_bar \
+		gauge_cursor
+
+	// Group settings
+
 	FOR_EACH windows win
 		% win border_size 3
 		% win back_color  #202020
-		% win enabled     TRUE
 	FOR_END
-	popup           pad          13
-	window          pad          19
-	window          border_color #808080
-	window_focused  border_color #CCCCCC
-	window_disabled border_color #000000
-	window_locked   border_color #AA0000
-	popup           border_color #00FFFF
 
-	LET simple_cells filler placeholder stripes label button_idle button_focused button_pressed button_disabled beacon_on beacon_off beacon_crit_on beacon_crit_off gauge gauge_bar gauge_cursor
-	FOR_EACH simple_cells cell
+	FOR_EACH cells cell
 		% cell border_size  3
 		% cell pad          12
 		% cell line_size    3
@@ -185,31 +357,6 @@ SECTION Wip_Theme
 		% cell border_color #808080
 		% cell line_color   #808080
 	FOR_END
-
-	stripes     line_gap 15
-	stripes     pad 0
-	placeholder pad 0
-
-	button_idle     back_color #602000
-	button_focused  back_color #A04000
-	button_disabled back_color #301000
-	button_pressed  back_color #FFFFFF
-	button_pressed  text_color #000000
-	button_disabled text_color #808080
-	button_pressed  text_bold  TRUE
-	button_focused  border_color #CCCCCC
-
-	gauge        pad            3
-	gauge_bar    pad            -3
-	gauge_cursor pad            9
-	gauge_bar    border_size    3
-	gauge_bar    back_color    #003030
-	gauge_bar    outline_color #808080
-	gauge_cursor back_color    #004545
-	gauge_cursor min_size       0
-
-	LET bon  beacon_on  beacon_crit_on
-	LET boff beacon_off beacon_crit_off
 
 	FOR_EACH bon cell
 		% cell pad           9
@@ -222,8 +369,6 @@ SECTION Wip_Theme
 		% cell text_bold     TRUE
 	FOR_END
 
-	beacon_crit_on outline_color #9B2E21
-
 	FOR_EACH boff cell
 		% cell pad           9
 		% cell outline_size  3
@@ -234,30 +379,158 @@ SECTION Wip_Theme
 		% cell border_size   6
 	FOR_END
 
+	// Individual settings
 
+	grid gap 10
+	grid pad 18
 
+	popup           pad          13
+	window          pad          19
+	window          border_color #808080
+	window_focused  border_color #CCCCCC
+	window_disabled border_color #000000
+	window_locked   border_color #AA0000
+	popup           border_color #00FFFF
+
+	stripes     line_gap 15
+	stripes     pad      0
+	placeholder pad      0
+
+	button_idle     back_color   #602000
+	button_focused  border_color #CCCCCC
+	button_focused  back_color   #A04000
+	button_pressed  back_color   #FFFFFF
+	button_pressed  text_color   #000000
+	button_pressed  text_bold    TRUE
+	button_disabled back_color   #301000
+	button_disabled text_color   #808080
+
+	gauge        pad           3
+	gauge_bar    pad           -3
+	gauge_cursor pad           9
+	gauge_bar    border_size   3
+	gauge_bar    back_color    #003030
+	gauge_bar    outline_color #808080
+	gauge_cursor back_color    #004545
+	gauge_cursor min_size       0
+
+	beacon_crit_on outline_color #9B2E21
+
+// ----------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
+
+SECTION Dijon
+
+	// Params
+
+	LET lin 2
+	LET pad 12
+
+	// Groups
+
+	LET windows window window_focused window_disabled window_locked popup
+	LET buttons button_idle button_focused button_perssed button_disabled
+	LET bon  beacon_on  beacon_crit_on
+	LET boff beacon_off beacon_crit_off
+	LET cells \
+		filler \
+		placeholder \
+		stripes \
+		label \
+		button_idle \
+		button_focused \
+		button_pressed \
+		button_disabled \
+		beacon_on \
+		beacon_off \
+		beacon_crit_on \
+		beacon_crit_off \
+		gauge gauge_bar \
+		gauge_cursor
+
+	// Group settings
+
+	FOR_EACH windows win
+		% win pad          $ lin
+		% win border_size  0
+		% win enable_style FALSE
+	FOR_END
+
+	FOR_EACH cells cell
+		% cell margin          0
+		% cell pad             $ pad
+		% cell border_size     0
+		% cell back_color      #202020
+		% cell outline_size    $ lin
+		% cell outline_color   #000000
+		% cell text_color      #EBDBB2
+		% cell line_gap        * $ lin 6
+		% cell line_size       $ lin
+		% cell line_color      #000000
+	FOR_END
+
+	FOR_EACH buttons cell
+		% cell outline_hitbox TRUE
+		% cell text_bold      TRUE
+	FOR_END
+
+	FOR_EACH bon cell
+		% cell pad           * / 1 2 $ pad 
+		% cell border_size   / $ pad 2
+		% cell border_color  #241616
+		% cell back_color    #AB2424
+		% cell text_color    #CCCCCC
+		% cell text_bold     TRUE
+	FOR_END
+
+	FOR_EACH boff cell
+		% cell pad           * / 1 2 $ pad 
+		% cell border_size   / $ pad 2
+		% cell border_color  #202020
+		% cell back_color    #101010
+		% cell text_color    #998F71
+	FOR_END
+
+	// Individual settings
+
+	grid gap $ lin
+	grid pad $ pad
+
+	placeholder pad 0
+	stripes     pad 0
+
+	button_idle back_color #AB8124
+	button_idle text_color #000000
+
+	button_focused back_color    #AB8124
+	button_focused outline_color #DDDDDD
+	button_focused text_color    #000000
+
+	button_pressed back_color    #DDDDDD
+	button_pressed outline_color #000000
+	button_pressed text_color    #000000
+
+	button_disabled back_color #51401B
+	button_disabled text_color #141414
+
+	gauge pad 0
+
+	gauge_bar pad          0
+	gauge_bar back_color   #363636
+
+	gauge_cursor back_color   #505050
+	gauge_cursor min_size     10
+
+// ----------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
 
 SECTION Dev
-
-	// Configuration example
 
 	LET windows window window_focused window_disabled window_locked
 
 	test pad 12
-
-	font pad_pattern       "_"
-	font face              "Terminus"
-	font size              32
-	font spacing_horz      0
-	font spacing_vert      2
-	font x_offset          0
-	font y_offset          0
-	font width             7
-	font ascent            14
-	font descent           0
-	font override_geometry FALSE
-	font antialias         subpixel
-	font subpixel          rgb
 
 	grid pad 60
 	grid gap 45
@@ -315,7 +588,7 @@ SECTION Dev
 		% cell border_size   14
 		% cell outline_size  14
 		% cell pad           -1
-		% cell line_width    14
+		% cell line_size     14
 		% cell line_gap      20
 	FOR_END
 
@@ -392,11 +665,7 @@ SECTION Dev
 	gauge_cursor border_size   14
 	gauge_cursor min_size      0
 
-
-
-
-
-SECTION Shadow
+SECTION Dev_Shadows
 
 	grid gap                    60
 	grid pad                    70
@@ -432,36 +701,3 @@ SECTION Shadow
 		% widget shadow_x_offset 10
 		% widget shadow_y_offset 10
 	FOR_END
-
-
-
-
-
-SECTION Round_Gauges
-
-	grid pad 60
-
-	gauge corner_type  round
-	gauge corner_size  75
-	gauge corner_smart FALSE
-	gauge text_color   #000000
-	gauge text_bold    TRUE
-	gauge pad          50
-	gauge margin        0
-	gauge border_size  10
-	gauge outline_size 10
-
-	gauge_bar margin       0
-	gauge_bar pad        -50
-	gauge_bar border_size 10
-	gauge_bar back_color  #51401b
-	gauge_bar max_size    33
-
-	gauge_cursor pad          30
-	gauge_cursor margin       0
-	gauge_cursor corner_smart TRUE
-	gauge_cursor back_color   #c88c00
-	gauge_cursor border_color #ffffff
-	gauge_cursor border_size  10
-	gauge_cursor min_size     112
-

@@ -181,6 +181,7 @@ struct cgui_config
 	struct cgui_text gauge_text;
 	double gauge_min_length;
 	double gauge_max_thick;
+	bool gauge_clip;
 };
 
 /************************************************************************************************************/

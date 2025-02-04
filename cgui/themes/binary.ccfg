@@ -1,16 +1,17 @@
-	SECTION_ADD Monochrome
+// Monochromatic, 1-bit Theme.
+// Great for displays that can only turn pixels ON or OFF.
 
-SECTION Monochrome
+SECTION Binary
 
 	// Params
 
-	LET c2  #FFFFFF
-	LET c1  #E44332
-	LET pad 15
-	LET lin 3
-	LET out 4
-	LET gap 12
-	LET win 20
+	LET c1  #E44332 // First color  (pixel = OFF)
+	LET c2  #FFFFFF // Second color (pixel = ON)
+	LET pad 15      // Padding
+	LET lin 3       // General line / border width
+	LET out 4       // Outline width (around buttons)
+	LET gap 12      // Cell gap
+	LET win 20      // Window padding (from window edge to cell edge, without window border)
 
 	// Groups
 
@@ -33,24 +34,8 @@ SECTION Monochrome
 		gauge \
 		gauge_bar \
 		gauge_cursor
-
-	// General settings
-
-	grid gap $ gap
-	grid pad $ pad
-
-	window border_size  * $ lin 2
-	window back_color   $ c1
-	window border_color $ c2
-	window pad          $ win
-	popup  pad          $ win
-
-	window_focused  enable_style FALSE
-	window_disabled enable_style FALSE
-	window_locked   enable_style FALSE
-	popup           enable_style FALSE
 	
-	// Cell group settings
+	// Group settings
 
 	FOR_EACH simple_cells cell
 		% cell border_size  $ lin
@@ -84,7 +69,21 @@ SECTION Monochrome
 		% cell text_bold     TRUE
 	FOR_END
 
-	// Cell custom settings
+	// Individual settings
+
+	grid gap $ gap
+	grid pad $ pad
+
+	window border_size  * $ lin 2
+	window back_color   $ c1
+	window border_color $ c2
+	window pad          $ win
+	popup  pad          $ win
+
+	window_focused  enable_style FALSE
+	window_disabled enable_style FALSE
+	window_locked   enable_style FALSE
+	popup           enable_style FALSE
 
 	filler draw FALSE
 
@@ -134,5 +133,7 @@ SECTION Monochrome
 	gauge_bar    pad          * $ lin -4
 	gauge_bar    border_size  0
 	gauge_bar    back_color   $ c2
-	gauge_cursor pad          $ pad
+	gauge_cursor pad          - $ pad / $ lin 2
 	gauge_cursor min_size     0
+
+

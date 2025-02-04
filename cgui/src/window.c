@@ -1494,6 +1494,11 @@ window_touch_area(const cgui_window *window, uint32_t id)
 void
 window_update_geometry(cgui_window *window)
 {
+	if (!window->shown_grid->valid)
+	{
+		return;
+	}
+
 	grid_update_geometry(
 		window->shown_grid,
 		window->width  - PADDING(window) * 2,

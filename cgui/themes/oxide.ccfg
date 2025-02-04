@@ -1,0 +1,104 @@
+// This is the hardcoded theme that's used when no valid CGUI config is found
+// Note that it does not include every parameters, but rather, only the
+// parameters that controls the looks.
+
+	SECTION_ADD Oxide
+
+SECTION Oxide
+
+	// Groups
+
+	LET windows window window_focused window_disabled window_locked popup
+	LET bon  beacon_on  beacon_crit_on
+	LET boff beacon_off beacon_crit_off
+	LET cells \
+		filler \
+		placeholder \
+		stripes \
+		label \
+		button_idle \
+		button_focused \
+		button_pressed \
+		button_disabled \
+		beacon_on \
+		beacon_off \
+		beacon_crit_on \
+		beacon_crit_off \
+		gauge gauge_bar \
+		gauge_cursor
+
+	// Group settings
+
+	FOR_EACH windows win
+		% win border_size  3
+		% win back_color   #202020
+		% win enable_style TRUE
+	FOR_END
+
+	FOR_EACH cells cell
+		% cell border_size  3
+		% cell pad          12
+		% cell line_size    3
+		% cell back_color   #404040
+		% cell text_color   #FFFFFF
+		% cell border_color #808080
+		% cell line_color   #808080
+	FOR_END
+
+	FOR_EACH bon cell
+		% cell pad           9
+		% cell outline_size  3
+		% cell margin        3
+		% cell outline_color #808080
+		% cell border_color  #401A16
+		% cell back_color    #9B2E21
+		% cell border_size   6
+		% cell text_bold     TRUE
+	FOR_END
+
+	FOR_EACH boff cell
+		% cell pad           9
+		% cell outline_size  3
+		% cell margin        3
+		% cell outline_color #808080
+		% cell border_color  #202020
+		% cell back_color    #404040
+		% cell border_size   6
+	FOR_END
+
+	// Individual settings
+
+	grid gap 10
+	grid pad 18
+
+	popup           pad          13
+	window          pad          19
+	window          border_color #808080
+	window_focused  border_color #CCCCCC
+	window_disabled border_color #000000
+	window_locked   border_color #AA0000
+	popup           border_color #00FFFF
+
+	stripes     line_gap 15
+	stripes     pad      0
+	placeholder pad      0
+
+	button_idle     back_color   #602000
+	button_focused  border_color #CCCCCC
+	button_focused  back_color   #A04000
+	button_pressed  back_color   #FFFFFF
+	button_pressed  text_color   #000000
+	button_pressed  text_bold    TRUE
+	button_disabled back_color   #301000
+	button_disabled text_color   #808080
+
+	gauge        pad           3
+	gauge_bar    pad           -3
+	gauge_cursor pad           9
+	gauge_bar    border_size   3
+	gauge_bar    back_color    #003030
+	gauge_bar    outline_color #808080
+	gauge_cursor back_color    #004545
+	gauge_cursor min_size       0
+
+	beacon_crit_on outline_color #9B2E21

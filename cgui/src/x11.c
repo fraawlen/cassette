@@ -225,7 +225,8 @@ x11_broadcast_reconfig(void)
 	xr = xcb_query_tree_reply(connection, xc, NULL);
 	if (!xr)
 	{
-		main_set_error(CERR_XCB);
+		/* disabled because it happens way too often for some reason */
+		// main_set_error(CERR_XCB);
 		return;
 	}
 
@@ -2026,7 +2027,8 @@ from_cgui(xcb_window_t id)
 	xr = xcb_get_property_reply(connection, xc, NULL);
 	if (!xr)
 	{
-		main_set_error(CERR_XCB);
+		/* disabled because it happens way too often for some reason */
+		// main_set_error(CERR_XCB);
 		return false;
 	}
 

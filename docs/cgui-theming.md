@@ -552,13 +552,14 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 
 ### Resources
 
-| **Namespace** | **Name** | **Type** | **Default** | **Description** |
-|---------------|----------|----------|-------------|-----------------|
-| gauge_cursor  | min_size | LENGTH   | 20          | Minimum length or size of gauge cursor |
-| gauge_bar     | max_size | LENGTH   | no limit    | Maximum thickness or size of the gauge bar |
-| gauge         |          | BOX      |             | Frame |
-| gauge_bar     |          | BOX      |             | Progress bar |
-| gauge_cursor  |          | BOX      |             | Cursor with label |
+| **Namespace** | **Name**      | **Type** | **Default** | **Description** |
+|---------------|---------------|----------|-------------|-----------------|
+| gauge         | clip_contents | BOOL     | FALSE       | Clips the bar, cursor and label inside the frame area |
+| gauge_cursor  | min_size      | LENGTH   | 20          | Minimum length or size of gauge cursor |
+| gauge_bar     | max_size      | LENGTH   | no limit    | Maximum thickness or size of the gauge bar |
+| gauge         |               | BOX      |             | Frame |
+| gauge_bar     |               | BOX      |             | Progress bar |
+| gauge_cursor  |               | BOX      |             | Cursor with label |
 
 ### Box defaults
 
@@ -595,6 +596,7 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 ### Notes
 
 - Each box used by the gauge has its own namespace for styling.
+- `clip_contents` is usefull when dealing with non-square corners
 
 <div align="right">[ <a href="#toc">back to top</a> ]</div>
 

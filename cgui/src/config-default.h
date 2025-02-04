@@ -248,4 +248,5 @@ static const struct cgui_config config_default =
 	.gauge_text             = TXT(0xFFFFFF, false),
 	.gauge_min_length       = 0.0,
 	.gauge_max_thick        = DBL_MAX,
+	.gauge_clip             = false,
 };

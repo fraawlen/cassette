@@ -281,8 +281,9 @@ static const struct resource resources[] =
 	{ "beacon",       "blink_on",           ULONG,     &config.beacon_blink_on        },
 	{ "beacon",       "blink_off",          ULONG,     &config.beacon_blink_off       },
 
-	{ "gauge_cursor", "min_size",           LENGTH,    &config.gauge_min_length       },
+	{ "gauge",        "clip_contents",      BOOL,      &config.gauge_clip             },
 	{ "gauge_bar",    "max_size",           LENGTH,    &config.gauge_max_thick        },
+	{ "gauge_cursor", "min_size",           LENGTH,    &config.gauge_min_length       },
 
 	STYLE_WIN( "window",          config.window                )
 	STYLE_WIN( "window_focused",  config.window_focused        )

@@ -344,6 +344,10 @@ draw(cgui_cell *cell, struct cgui_cell_context context)
 	/* frame */
 
 	cgui_cell_draw_frame(context);
+	if (CONFIG->gauge_clip)
+	{
+		cgui_cell_clip_frame(context);
+	}
 
 	/* bar */
 
