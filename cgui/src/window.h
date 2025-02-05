@@ -128,6 +128,13 @@ CGUI_HIDDEN;
 /************************************************************************************************************/
 
 void
+window_accelerate(cgui_window *window, int id)
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 window_cancel_cell_events(cgui_window *window)
 CGUI_NONNULL(1)
 CGUI_HIDDEN;

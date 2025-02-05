@@ -1058,6 +1058,22 @@ cgui_window_y(const cgui_window *window)
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
+void
+window_accelerate(cgui_window *window, int id)
+{
+	if (!window->state.active
+	 ||  window->state.disabled
+	 ||  id == 0
+	 ||  id > CGUI_CONFIG_ACCELS)
+	{
+		return;
+	}
+
+	window->accels[id - 1].fn(window, id);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 struct grid_area
 window_area_at_coords(const cgui_window *window, double x, double y)
 {
@@ -1847,13 +1863,13 @@ frame(const cgui_window *window)
 	{
 		style = CONFIG->popup;
 	}
-	else if (!window->state.focused)
-	{
-		style = CONFIG->window;
-	}
 	else if (CONFIG->window_disabled.ena && window->state.disabled)
 	{
 		style = CONFIG->window_disabled;
+	}
+	else if (!window->state.focused)
+	{
+		style = CONFIG->window;
 	}
 	else if (CONFIG->window_locked.ena && window->state.locked_grid)
 	{

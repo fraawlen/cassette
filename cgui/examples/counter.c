@@ -51,6 +51,14 @@ static pthread_t thread;
 /* MAIN *****************************************************************************************************/
 /************************************************************************************************************/
 
+/**
+ * Basic seconds counter using multithreading. cgui_init(), cgui_run() and cgui_reset() should be on the
+ * same thread. The counter thread is created and joined from a callback that gets called when CGUI enters
+ * and exits its main event loop. The counter thread is created inside these callbacks to simplify its CGUI
+ * state checking. cgui_lock() and cgui_unlock() help safely access CGUI methods from different threads.
+ * sleep is called outside lock and unlock to not keep the main CGUI thread waiting.
+ */
+
 int
 main(int argc, char **argv)
 {
@@ -123,14 +131,19 @@ main(int argc, char **argv)
 static void *
 increment(void *params)
 {
+	bool run = true;
+
 	(void)params;
 
-	while (cgui_is_running())
+	while (run)
 	{
 		sleep(1);
 		cgui_lock();
+
 		count++;
 		update_label();
+		run = cgui_is_running();
+
 		cgui_unlock();
 	}
 
@@ -178,3 +191,4 @@ update_label(void)
 	cstr_append(str, count);
 	cgui_label_set(label, cstr_chars(str));
 }
+

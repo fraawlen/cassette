@@ -55,6 +55,10 @@ double val = INI;
 /* MAIN *****************************************************************************************************/
 /************************************************************************************************************/
 
+/**
+ * A series of gauges (progress bars) in different configurations.
+ */
+
 int
 main(int argc, char **argv)
 {
@@ -113,10 +117,8 @@ main(int argc, char **argv)
 	cgui_grid_resize_row(grid, 2,  2);
 
 	cgui_grid_set_col_flex(grid, 0, 1.0);
-	cgui_grid_set_row_flex(grid, 0, 1.0);
+	cgui_grid_set_row_flex(grid, 0, 3.0);
 	cgui_grid_set_row_flex(grid, 1, 1.0);
-	cgui_grid_set_row_flex(grid, 2, 1.0);
-	cgui_grid_set_row_flex(grid, 3, 1.0);
 
 	cgui_grid_assign_cell(grid, gauge_1,  0, 0, 3, 1);
 	cgui_grid_assign_cell(grid, gauge_2,  0, 1, 3, 1);
@@ -171,3 +173,4 @@ on_click(cgui_cell *c)
 	cgui_gauge_set_value(gauge_4, val);
 	cgui_gauge_set_value(gauge_5, val);
 }
+

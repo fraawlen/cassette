@@ -39,7 +39,7 @@ SECTION Pcb
 		% win border_size 10
 		% win back_color  #131313
 		% win corner_type round
-		% win corner_size 40
+		% win corner_size + $ pad 20
 	FOR_END
 
 	FOR_EACH cells cell

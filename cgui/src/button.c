@@ -296,8 +296,8 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 			break;
 
 		case CGUI_CELL_EVENT_KEY_RELEASE:
+			trigger     = event->key_sym == 0xff0d && DATA->state == PRESSED;
 			DATA->state = event->key_sym == 0xff0d ? FOCUSED : DATA->state;
-			trigger     = event->key_sym == 0xff0d;
 			break;
 
 		case CGUI_CELL_EVENT_BUTTON_PRESS:
@@ -305,8 +305,8 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 			break;
 
 		case CGUI_CELL_EVENT_BUTTON_RELEASE:
+			trigger     = event->button_id == 1 && cgui_cell_event_inside(event) && DATA->state == PRESSED;
 			DATA->state = event->button_id == 1 ? FOCUSED : DATA->state;
-			trigger     = event->button_id == 1 && cgui_cell_event_inside(event);
 			break;
 
 		case CGUI_CELL_EVENT_TOUCH_BEGIN:

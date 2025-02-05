@@ -199,12 +199,12 @@ event_process(struct cgui_event *event)
 static void
 accelerate(struct cgui_event *event)
 {
-	if (!event->window->valid || event->accelerator == 0 || event->accelerator > CGUI_CONFIG_ACCELS)
+	if (!event->window->valid)
 	{
 		return;
 	}
 
-	event->window->accels[event->accelerator - 1].fn(event->window, event->accelerator);
+	window_accelerate(event->window, event->accelerator);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -834,7 +834,7 @@ swap_input(struct cgui_event *event)
 	switch (swap.type)
 	{
 		case CGUI_SWAP_TO_ACCELERATOR:
-			event->window->accels[swap.value - 1].fn(event->window, swap.value);
+			window_accelerate(event->window, swap.value);
 			break;
 
 		case CGUI_SWAP_TO_CLIPBOARD_CUT:

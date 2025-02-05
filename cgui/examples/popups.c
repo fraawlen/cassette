@@ -78,6 +78,11 @@ static struct popup popups[N] =
 /* MAIN *****************************************************************************************************/
 /************************************************************************************************************/
 
+/**
+ * Custom popups example. Popups are essentially standard windows with their type set to CGUI_WINDOW_POPUP.
+ * This also means that popup windows get composed with grids and cell just like standard windows.
+ */
+
  int
  main(int argc, char **argv)
  {
@@ -96,7 +101,7 @@ static struct popup popups[N] =
 	cgui_window_activate(popups[0].window);
 	cgui_run();
 
-	/* End */
+	/* End & cleanup */
 
 	if (cgui_error())
 	{
@@ -208,6 +213,8 @@ popup_setup(int i)
 	if (i == 0)
 	{
 		cstr_append(str, "Main window");
+		cgui_grid_set_col_flex(popups[i].grid, 0, 1.0);
+		cgui_grid_set_row_flex(popups[i].grid, 1, 1.0);
 		cgui_window_on_close(popups[i].window, on_close);
 	}
 	else
@@ -243,3 +250,4 @@ popup_setup(int i)
 	cgui_window_rename(popups[i].window, cstr_chars(str));
 	cgui_window_set_accelerator(popups[i].window, 1, "close popups", on_accel);
 }
+
