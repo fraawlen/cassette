@@ -1,6 +1,6 @@
 //	SECTION_ADD Pcb
 //	SECTION_ADD Pcb_Shadows
-	SECTION_ADD Binary
+//	SECTION_ADD Binary
 //	SECTION_ADD Oxide
 //	SECTION_ADD Dijon
 
@@ -76,8 +76,9 @@ SECTION Binary
 	FOR_END
 
 	FOR_EACH buttons cell
-		% cell corner_type square square cut square
-		% cell corner_size 10
+		% cell corner_type    square square cut square
+		% cell corner_size    10
+		% cell outline_hitbox TRUE
 	FOR_END
 
 	FOR_EACH beacons cell

@@ -141,7 +141,7 @@ struct resource
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void dummy_fn_load (ccfg *)                                    CGUI_NONNULL(1);
+static void dummy_fn_load (void);
 static void fetch         (const struct resource);
 static void font_setup    (void);
 static void load_buttons  (void);
@@ -156,7 +156,7 @@ static void update_err    (void);
 /************************************************************************************************************/
 
 static struct cgui_config config       = config_default;
-static void (*fn_load)(ccfg *cfg)      = dummy_fn_load;
+static void (*fn_load)(void)           = dummy_fn_load;
 static ccfg  *parser                   = CCFG_PLACEHOLDER;
 static cdict *dict                     = CDICT_PLACEHOLDER;
 static bool first_load                 = true;
@@ -367,7 +367,7 @@ cgui_config_get_parser(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_config_on_load(void (*fn)(ccfg *cfg))
+cgui_config_on_load(void (*fn)(void))
 {
 	if (cgui_error())
 	{
@@ -547,7 +547,7 @@ config_load(void)
 	/* fill in the blanks and check for errors */
 	
 	font_setup();
-	fn_load(parser);
+	fn_load();
 	update_err();
 }
 
@@ -630,9 +630,9 @@ config_swap_input(uint8_t id, struct cgui_mods mods, enum config_swap type)
 /************************************************************************************************************/
 
 static void
-dummy_fn_load (ccfg *cfg)
+dummy_fn_load (void)
 {
-	(void)cfg;
+	/* nothing */
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

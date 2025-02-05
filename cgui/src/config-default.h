@@ -92,7 +92,7 @@ static const struct cgui_config config_default =
 	.render_partial       = true,
 	.render_overlap       = false,
 	.render_scale         = 1.0,
-	.render_fps_async_cap = DBL_MAX,
+	.render_fps_async_cap = 0.0,
 	.render_fps_sync_div  = 1,
 
 	/* inputs */

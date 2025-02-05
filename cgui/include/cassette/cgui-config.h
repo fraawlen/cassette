@@ -197,7 +197,7 @@ struct cgui_config
  *
  */
 void
-cgui_config_on_load(void (*fn)(ccfg *cfg));
+cgui_config_on_load(void (*fn)(void));
 
 /**
  *
