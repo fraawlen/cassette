@@ -12,7 +12,7 @@ Cassette is a GUI application framework written in C11, with a UI inspired by th
 - [Post-Installation](#post-install)
 - [Gallery](#gallery)
 - [Planned Features](#future)
-- [Apps Powered by Casette](#apps)
+- [Apps Powered by Cassette](#apps)
 - [Third-Party Visual Resources](#credits)
 - [Mirrors](#mirrors)
 
@@ -150,7 +150,7 @@ More elaborate demos:
 - Complete API reference
 - Step-by-step CGUI tutorial
 
-## Apps Powered by Casette <a name="apps"></a>
+## Apps Powered by Cassette <a name="apps"></a>
 
 - [Sysgauges](https://github.com/fraawlen/sysgauges)
 
