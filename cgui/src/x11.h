@@ -1,0 +1,249 @@
+/**
+ * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ *
+ * This file is part of the Cassette Graphics (CGUI) library.
+ *
+ * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
+ * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
+ * License or (at your option) any later version.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * See the LGPL for the specific language governing rights and limitations.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with this program. If not,
+ * see <http://www.gnu.org/licenses/>.
+ */
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+#pragma once
+
+#include <cassette/cgui.h>
+#include <cassette/cobj.h>
+#include <stdbool.h>
+#include <xcb/xcb.h>
+
+/************************************************************************************************************/
+/* INIT / RESET *********************************************************************************************/
+/************************************************************************************************************/
+
+void
+x11_init(int argc, char **argv, const char *class_name, const char *class_class, xcb_connection_t *conn)
+CGUI_NONNULL(3, 4)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_reset(bool kill_connection)
+CGUI_HIDDEN;
+
+/************************************************************************************************************/
+/* IMPURE METHODS *******************************************************************************************/
+/************************************************************************************************************/
+
+void
+x11_broadcast_reconfig(void)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+x11_inputs_grab(void)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_inputs_ungrab(void)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_selection_clear(int id)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_selection_copy(int id, xcb_timestamp_t time)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+char *
+x11_selection_paste(int id, size_t *n)
+CGUI_NONNULL(2)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_update(void)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_update_pointer_tracking(void)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_activate(xcb_window_t id)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+x11_window_create(xcb_window_t *id, xcb_pixmap_t *buffer, double x, double y, double width, double height)
+CGUI_NONNULL(1, 2)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_deactivate(xcb_window_t id)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_destroy(xcb_window_t id, xcb_pixmap_t buffer)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_move(xcb_window_t id, double x, double y)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_present(xcb_window_t id, xcb_pixmap_t buffer, uint32_t serial, bool async)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_rename(xcb_window_t id, const char *name)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_resize(xcb_window_t id, double width, double height)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_set_accel(xcb_window_t id, int accel, const char *name)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_set_transient(xcb_window_t id, xcb_window_t id_under)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_set_type(xcb_window_t id, enum cgui_window_type type)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_set_urgency(xcb_window_t id, bool set_on)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_toggle_fullscreen(xcb_window_t id)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_update_buffer(xcb_window_t id, xcb_pixmap_t *buffer, double width, double height)
+CGUI_NONNULL(2)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_update_focus_hints(xcb_window_t id, double x, double y, double width, double height)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_update_size_hints(xcb_window_t id, double min_width, double min_height, double max_width, double max_height)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_window_update_state_hints(xcb_window_t id, struct cgui_window_state_flags state)
+CGUI_HIDDEN;
+
+/************************************************************************************************************/
+/* PURE METHODS *********************************************************************************************/
+/************************************************************************************************************/
+
+xcb_connection_t *
+x11_connection(void)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_key(uint8_t keycode, struct cgui_mods mods, uint32_t *keysym, uint32_t *utf32, char utf8[static 8])
+CGUI_NONNULL(3, 4, 5)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+xcb_window_t
+x11_leader_window(void)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_pointer_position(double *x, double *y)
+CGUI_NONNULL(1, 2)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct cgui_screen
+x11_screen(size_t i, size_t *n, size_t *primary)
+CGUI_NONNULL(2, 3)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct cgui_screen
+x11_screen_at_coords(double x, double y)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+xcb_timestamp_t
+x11_timestamp(void)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+xcb_visualtype_t *
+x11_visual(void)
+CGUI_HIDDEN;

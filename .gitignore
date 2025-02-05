@@ -1,6 +1,7 @@
-build/**
-prototypes/**
-website/**
+cgui/build/**
+cobj/build/**
+ccfg/build/**
+bindings/ada/build/**
 
 *.swj
 *.swk

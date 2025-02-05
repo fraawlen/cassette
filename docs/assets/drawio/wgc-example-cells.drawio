@@ -1,0 +1,106 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0" version="26.0.8">
+  <diagram name="Page-1" id="zK4LOoqOt2bcMu2SVmND">
+    <mxGraphModel dx="1798" dy="2710" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="g_LVHewbJXyWDJzusLfM-16" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#000000;strokeWidth=2;fontStyle=1;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="120" y="240" width="640" height="480" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-70" value="Status bar" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#dae8fc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="280" y="680" width="480" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-71" value="Viewport" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#e1d5e7;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="280" y="240" width="480" height="440" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-72" value="Button 1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="120" y="240" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-73" value="Button 2" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="120" y="280" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-74" value="Button 3" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="120" y="320" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-75" value="Button 4" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="120" y="360" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-76" value="Button .." style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="120" y="560" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-77" value="Button N" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="120" y="600" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-78" value="Filler" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="120" y="640" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-79" value="Menu button" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#f8cecc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="840" y="680" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-80" value="Menu button" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#f8cecc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="680" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-81" value="Status bar" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#dae8fc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="840" y="240" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-82" value="Viewport" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#e1d5e7;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="840" y="280" width="240" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-89" value="Filler" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="240" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-90" value="Button 5" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="120" y="400" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-91" value="Button 6" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="120" y="440" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-92" value="Button 7" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="120" y="480" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-93" value="Button 8" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="120" y="520" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-94" value="Button 1" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="280" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-95" value="Button 2" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="320" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-96" value="Button 3" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="360" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-97" value="Button 4" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="400" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-98" value="Button .." style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="600" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-99" value="Button N" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="640" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-100" value="Button 5" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="440" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-101" value="Button 6" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="480" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-102" value="Button 7" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="520" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-103" value="Button 8" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=16;fillColor=#ffe6cc;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="560" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-106" value="Desktop" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="120" y="190" width="640" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-108" value="Mobile" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="840" y="190" width="240" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="g_LVHewbJXyWDJzusLfM-109" value="Mobile - Menu" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1160" y="190" width="240" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,82 @@
+/**
+ * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ *
+ * This file is part of the Cassette Objects (COBJ) library.
+ *
+ * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
+ * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
+ * License or (at your option) any later version.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * See the LGPL for the specific language governing rights and limitations.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with this program. If not,
+ * see <http://www.gnu.org/licenses/>.
+ */
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+#pragma once
+
+#include <stdbool.h>
+#include <stdlib.h>
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ * Safe addition.
+ *
+ * @param result : Optional, if given, the result will be put there
+ * @param a      : First value
+ * @param b      : Second value
+ *
+ * @return : True if the operation is safe, false otherwhise
+ */
+bool
+csafe_add(size_t *result, size_t a, size_t b);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * Safe division.
+ *
+ * @param result : Optional, if given, the result will be put there
+ * @param a      : First value
+ * @param b      : Second value
+ *
+ * @return : True if the operation is safe, false otherwhise
+ */
+bool
+csafe_div(size_t *result, size_t a, size_t b);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * Safe multiplication
+ *
+ * @param result : Optional, if given, the result will be put there
+ * @param a      : First value
+ * @param b      : Second value
+ *
+ * @return : True if the operation is safe, false otherwhise
+ */
+bool
+csafe_mul(size_t *result, size_t a, size_t b);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * Safe substraction.
+ *
+ * @param result : Optional, if given, the result will be put there
+ * @param a      : First value
+ * @param b      : Second value
+ *
+ * @return : True if the operation is safe, false otherwhise
+ */
+bool
+csafe_sub(size_t *result, size_t a, size_t b);

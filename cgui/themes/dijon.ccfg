@@ -1,0 +1,109 @@
+// Compact theme which make use of cells with overlapping outlines.
+
+	SECTION_ADD Dijon
+
+SECTION Dijon
+
+	// Params
+
+	LET lin 2
+	LET pad 12
+
+	// Groups
+
+	LET windows window window_focused window_disabled window_locked popup
+	LET buttons button_idle button_focused button_perssed button_disabled
+	LET bon  beacon_on  beacon_crit_on
+	LET boff beacon_off beacon_crit_off
+	LET cells \
+		filler \
+		placeholder \
+		stripes \
+		label \
+		button_idle \
+		button_focused \
+		button_pressed \
+		button_disabled \
+		beacon_on \
+		beacon_off \
+		beacon_crit_on \
+		beacon_crit_off \
+		gauge gauge_bar \
+		gauge_cursor
+
+	// Group settings
+
+	FOR_EACH windows win
+		% win pad          $ lin
+		% win border_size  0
+		% win enable_style FALSE
+	FOR_END
+
+	FOR_EACH cells cell
+		% cell margin          0
+		% cell pad             $ pad
+		% cell border_size     0
+		% cell back_color      #202020
+		% cell outline_size    $ lin
+		% cell outline_color   #000000
+		% cell text_color      #EBDBB2
+		% cell line_gap        * $ lin 6
+		% cell line_size       $ lin
+		% cell line_color      #000000
+	FOR_END
+
+	FOR_EACH buttons cell
+		% cell outline_hitbox TRUE
+		% cell text_bold      TRUE
+	FOR_END
+
+	FOR_EACH bon cell
+		% cell pad           * / 1 2 $ pad 
+		% cell border_size   / $ pad 2
+		% cell border_color  #241616
+		% cell back_color    #AB2424
+		% cell text_color    #CCCCCC
+		% cell text_bold     TRUE
+	FOR_END
+
+	FOR_EACH boff cell
+		% cell pad           * / 1 2 $ pad 
+		% cell border_size   / $ pad 2
+		% cell border_color  #202020
+		% cell back_color    #101010
+		% cell text_color    #998F71
+	FOR_END
+
+	// Individual settings
+
+	render focus_overlaps TRUE
+
+	grid gap $ lin
+	grid pad $ pad
+
+	placeholder pad 0
+	stripes     pad 0
+
+	button_idle back_color #AB8124
+	button_idle text_color #000000
+
+	button_focused back_color    #AB8124
+	button_focused outline_color #DDDDDD
+	button_focused text_color    #000000
+
+	button_pressed back_color    #DDDDDD
+	button_pressed outline_color #000000
+	button_pressed text_color    #000000
+
+	button_disabled back_color #51401B
+	button_disabled text_color #141414
+
+	gauge pad 0
+
+	gauge_bar pad          0
+	gauge_bar back_color   #363636
+
+	gauge_cursor back_color   #505050
+	gauge_cursor min_size     10
+
+

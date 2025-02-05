@@ -1,0 +1,83 @@
+/**
+ * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ *
+ * This file is part of the Cassette Graphics (CGUI) library.
+ *
+ * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
+ * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
+ * License or (at your option) any later version.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * See the LGPL for the specific language governing rights and limitations.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with this program. If not,
+ * see <http://www.gnu.org/licenses/>.
+ */
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+#pragma once
+
+#include <cairo/cairo.h>
+#include <cassette/cgui.h>
+#include <cassette/cobj.h>
+
+/************************************************************************************************************/
+/* TYPES ****************************************************************************************************/
+/************************************************************************************************************/
+
+enum config_swap
+{
+	CONFIG_SWAP_KEYS,
+	CONFIG_SWAP_BUTTONS,
+};
+
+/************************************************************************************************************/
+/* INIT / RESET *********************************************************************************************/
+/************************************************************************************************************/
+
+void
+config_init(const char *app_name, const char *app_class)
+CGUI_NONNULL(1, 2)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+config_reset(void)
+CGUI_HIDDEN;
+
+/************************************************************************************************************/
+/* IMPURE METHODS *******************************************************************************************/
+/************************************************************************************************************/
+
+void
+config_load(void)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+config_repair(void)
+CGUI_HIDDEN;
+
+/************************************************************************************************************/
+/* PURE METHODS *********************************************************************************************/
+/************************************************************************************************************/
+
+#define CONFIG cgui_config_get()
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cairo_font_options_t *
+config_font_options(void)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct cgui_swap
+config_swap_input(uint8_t id, struct cgui_mods mods, enum config_swap type)
+CGUI_HIDDEN;
+

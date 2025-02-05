@@ -1,0 +1,19 @@
+LET_ENUM n 1 100
+FOR_EACH n
+
+	SECTION_DEL Fizz Buzz No_Fizz No_Buzz
+
+	SECTION_ADD (== (MOD ((% n) 3) 0 Fizz No_Fizz)
+	SECTION_ADD (== (MOD ((% n) 5) 0 Buzz No_Buzz)
+
+	SECTION Fizz Buzz
+		DEBUG_PRINT "Fizz Buzz"
+	SECTION Fizz No_Buzz
+		DEBUG_PRINT "Fizz"
+	SECTION No_Fizz Buzz
+		DEBUG_PRINT "Buzz"
+	SECTION No_Fizz No_Buzz
+		DEBUG_PRINT (% n)
+	SECTION
+
+FOR_END

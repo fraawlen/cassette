@@ -1,0 +1,417 @@
+/**
+ * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ *
+ * This file is part of the Cassette Graphics (CGUI) library.
+ *
+ * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
+ * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
+ * License or (at your option) any later version.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * See the LGPL for the specific language governing rights and limitations.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with this program. If not,
+ * see <http://www.gnu.org/licenses/>.
+ */
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+#pragma once
+
+#include <cairo/cairo.h>
+#include <cassette/cobj.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "cgui-attributes.h"
+#include "cgui-box.h"
+#include "cgui-types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/************************************************************************************************************/
+/* TYPES ****************************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ *
+ */
+typedef struct cgui_cell cgui_cell;
+
+/**
+ *
+ */
+enum cgui_cell_event_type
+{
+	CGUI_CELL_EVENT_NONE = 0,
+	CGUI_CELL_EVENT_KEY_PRESS,
+	CGUI_CELL_EVENT_KEY_RELEASE,
+	CGUI_CELL_EVENT_BUTTON_PRESS,
+	CGUI_CELL_EVENT_BUTTON_RELEASE,
+	CGUI_CELL_EVENT_TOUCH_BEGIN,
+	CGUI_CELL_EVENT_TOUCH_END,
+	CGUI_CELL_EVENT_TOUCH_UPDATE,
+	CGUI_CELL_EVENT_POINTER_MOTION,
+	CGUI_CELL_EVENT_FOCUS_GAIN_BY_ACTION,
+	CGUI_CELL_EVENT_FOCUS_GAIN_BY_POINTER,
+	CGUI_CELL_EVENT_FOCUS_GAIN_BY_TOUCH,
+	CGUI_CELL_EVENT_FOCUS_GAIN_BY_REFERENCE,
+	CGUI_CELL_EVENT_FOCUS_LOSE,
+	CGUI_CELL_EVENT_FOCUS_LOCK,
+	CGUI_CELL_EVENT_FOCUS_UNLOCK,
+	CGUI_CELL_EVENT_FOCUS_INFO,
+	CGUI_CELL_EVENT_CELL_SEEK,
+	CGUI_CELL_EVENT_SUBFOCUS,
+	CGUI_CELL_EVENT_SELECT_LESS,
+	CGUI_CELL_EVENT_SELECT_MORE,
+	CGUI_CELL_EVENT_SELECT_NONE,
+	CGUI_CELL_EVENT_SELECT_ALL,
+	CGUI_CELL_EVENT_CLIPBOARD_CUT,
+	CGUI_CELL_EVENT_CLIPBOARD_COPY,
+	CGUI_CELL_EVENT_CLIPBOARD_PASTE,
+	CGUI_CELL_EVENT_QUERY_DRAW,
+	CGUI_CELL_EVENT_CANCEL,
+};
+
+/**
+ *
+ */
+struct cgui_cell_event
+{
+	cairo_t *drawable;
+	enum cgui_cell_event_type type;
+	struct cgui_box frame;
+	double x;
+	double y;
+	double x_root;
+	double y_root;
+	double width;
+	double height;
+	bool is_focused;
+	bool focus_locked;
+	union
+	{
+		/* CGUI_CELL_EVENT_KEY_PRESS   */
+		/* CGUI_CELL_EVENT_KEY_RELEASE */
+		struct
+		{
+			uint8_t key_code;
+			uint32_t key_sym;
+			uint32_t utf32;
+			char utf8[8];
+			struct cgui_mods key_mods;
+		};
+		/* CGUI_CELL_EVENT_BUTTON_PRESS   */
+		/* CGUI_CELL_EVENT_BUTTON_RELEASE */
+		struct
+		{
+			uint8_t button_id;
+			size_t button_n;
+			double button_x;
+			double button_y;
+			struct cgui_mods button_mods;
+		};
+		/* CGUI_CELL_EVENT_TOUCH_BEGIN  */
+		/* CGUI_CELL_EVENT_TOUCH_UPDATE */
+		/* CGUI_CELL_EVENT_TOUCH_END    */
+		struct
+		{
+			uint32_t touch_id;
+			size_t touch_n;
+			double touch_x;
+			double touch_y;
+		};
+		/* CGUI_CELL_EVENT_POINTER_MOTION */
+		struct
+		{
+			double pointer_x;
+			double pointer_y;
+		};
+		/* CGUI_CELL_EVENT_FOCUS_GAIN_BY_POINTER */
+		/* CGUI_CELL_EVENT_FOCUS_GAIN_BY_TOUCH   */
+		struct
+		{
+			double focus_x;
+			double focus_y;
+		};
+		/* CGUI_CELL_EVENT_FOCUS_GAIN_BY_ACTION    */
+		enum cgui_focus focus;
+		/* CGUI_CELL_EVENT_FOCUS_GAIN_BY_REFERENCE */
+		cgui_cell *focus_cell;
+		/* CGUI_CELL_EVENT_FOCUS_INFO */
+		struct
+		{
+			cgui_cell *focus_info_cell;
+			double focus_info_x;
+			double focus_info_y;
+			double focus_info_width;
+			double focus_info_height;
+		};
+		/* CGUI_CELL_EVENT_CELL_SEEK */
+		cgui_cell *seek_cell;
+		/* CGUI_CELL_EVENT_SUBFOCUS */
+		enum cgui_focus subfocus;
+		/* CGUI_CELL_EVENT_CLIPBOARD_CUT   */
+		/* CGUI_CELL_EVENT_CLIPBOARD_COPY  */
+		/* CGUI_CELL_EVENT_CLIPBOARD_PASTE */
+		int clipboard;
+		/* CGUI_CELL_EVENT_FOCUS_LOSE   */
+		/* CGUI_CELL_EVENT_FOCUS_LOCK   */
+		/* CGUI_CELL_EVENT_FOCUS_UNLOCK */
+		/* CGUI_CELL_EVENT_CANCEL       */
+		/* CGUI_CELL_EVENT_SELECT_LESS  */
+		/* CGUI_CELL_EVENT_SELECT_MORE  */
+		/* CGUI_CELL_EVENT_SELECT_NONE  */
+		/* CGUI_CELL_EVENT_SELECT_ALL   */
+		/* CGUI_CELL_EVENT_QUERY_DRAW   */
+		/* CGUI_CELL_EVENT_NONE         */
+		/* no extra fields for these events */
+	};
+};
+
+/**
+ *
+ */
+struct cgui_cell_context
+{
+	cairo_t *drawable;
+	struct cgui_box frame;
+	double x_root;
+	double y_root;
+	double x;
+	double y;
+	double width;
+	double height;
+	bool full_draw;
+};
+
+/************************************************************************************************************/
+/* GLOBALS **************************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ * A macro that gives uninitialized cell a non-NULL value that is safe to use with the cell's realted
+ * functions. However, any function called with a handle set to this value will return early and without any
+ * side effects.
+ */
+#define CGUI_CELL_PLACEHOLDER (&cgui_cell_placeholder_instance)
+
+/**
+ * Global cell instance with the error state set to CERR_INVALID. This instance is only made available to
+ * allow the static initialization of cell pointers with the macro CGUI_CELL_PLACEHOLDER.
+ */
+extern cgui_cell cgui_cell_placeholder_instance;
+
+/************************************************************************************************************/
+/* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
+/************************************************************************************************************/
+
+/**
+ *
+ */
+cgui_cell *
+cgui_cell_create(void)
+CGUI_NONNULL_RETURN;
+
+/**
+ *
+ */
+void
+cgui_cell_destroy(cgui_cell *cell)
+CGUI_NONNULL(1);
+
+/************************************************************************************************************/
+/* IMPURE METHODS *******************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ *
+ */
+void
+cgui_cell_lock_focus(const cgui_cell *cell)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_cell_on_destroy(cgui_cell *cell, void (*fn)(cgui_cell *cell))
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_cell_on_draw(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_cell_context context))
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_cell_on_event(cgui_cell *cell, bool (*fn)(cgui_cell *cell, struct cgui_cell_event *event))
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_cell_on_frame(cgui_cell *cell, void (*fn)(cgui_cell *cell, struct cgui_box *box))
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_cell_on_pre_draw(cgui_cell *cell, void (*fn)(cgui_cell *cell, unsigned long time))
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_cell_redraw(cgui_cell *cell)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_cell_redraw_delayed(cgui_cell *cell, unsigned long delay)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_cell_set_data(cgui_cell *cell, void *data)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_cell_set_serial(cgui_cell *cell, int serial)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_cell_unlock_focus(const cgui_cell *cell)
+CGUI_NONNULL(1);
+
+/************************************************************************************************************/
+/* PURE METHODS *********************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ *
+ */
+void *
+cgui_cell_data(const cgui_cell *cell)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+void
+(*cgui_cell_fn_destroy(cgui_cell *cell))(cgui_cell *cell)
+CGUI_NONNULL_RETURN
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+void
+(*cgui_cell_fn_draw(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_context context)
+CGUI_NONNULL_RETURN
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+bool
+(*cgui_cell_fn_event(cgui_cell *cell))(cgui_cell *cell, struct cgui_cell_event *event)
+CGUI_NONNULL_RETURN
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+void
+(*cgui_cell_fn_frame(cgui_cell *cell))(cgui_cell *cell, struct cgui_box *box)
+CGUI_NONNULL_RETURN
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+void
+(*cgui_cell_fn_pre_draw(cgui_cell *cell))(cgui_cell *cell, unsigned long)
+CGUI_NONNULL_RETURN
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+bool
+cgui_cell_need_draw(const cgui_cell *cell)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+bool
+cgui_cell_is_valid(const cgui_cell *cell)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/**
+ *
+ */
+int
+cgui_cell_serial(const cgui_cell *cell)
+CGUI_NONNULL(1)
+CGUI_PURE;
+
+/************************************************************************************************************/
+/* EXTRA HELPERS ********************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ *
+ */
+void
+cgui_cell_clip_frame(struct cgui_cell_context context);
+
+/**
+ *
+ */
+void
+cgui_cell_draw_frame(struct cgui_cell_context context);
+
+/**
+ *
+ */
+bool
+cgui_cell_event_inside(const struct cgui_cell_event *event) CGUI_NONNULL(1);
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+#ifdef __cplusplus
+}
+#endif

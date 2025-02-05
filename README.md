@@ -1,148 +1,169 @@
-<p align=center><img src="./extras/banner.svg"></p>
+<h1 align="center"><img src="extras/banner.svg" alt="project banner"></h1>
 
-Cassette is a modular general-purpose GUI toolkit written in C for X11 end-user applications. It's designed as a universal GUI, equally targeting desktop, laptop, mobile, and miscellaneous devices with more or less limited inputs. All thanks to a flexible grid layout, simple widget appearance, and an advanced configuration system, allowing one to tailor the theme, behavior, keybinds and input interpretation for each device class. CGUI also tries to limit the amount of direct external dependencies to make it easier to set it up on any system running an X11 display server.
+Cassette is a GUI application framework written in C11, with a UI inspired by the cassette-futurism aesthetic. Built for modern POSIX systems, it's made out of three libraries: CGUI, CCFG and COBJ. Cassette is free and open-source software, licensed under the [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html).
 
-The library is free and open-source software licensed under the [LGPL-2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). It's made to run on modern POSIX-compliant systems.
+## Table of Contents <a name="toc"></a>
+
+- [Overview](#overview)
+- [Status](#status)
+- [Documentation](#documentation)
+- [Dependencies](#dependencies)
+- [Build and Installation](#build)
+- [Post-Installation](#post-install)
+- [Gallery](#gallery)
+- [Planned Features](#future)
+- [Apps Powered by Casette](#apps)
+- [Third-Party Visual Resources](#credits)
+- [Mirrors](#mirrors)
+
+## Overview <a name="overview"></a>
+
+#### [CGUI - Cassette Graphics](cgui)
+
+The main component of the framework - a retained-mode X11 GUI toolkit library designed as a universal interface, equally targeting desktop, laptop, mobile, and miscellaneous devices with more or less limited inputs. All thanks to a flexible and responsive grid layout, simple widget appearance, and an advanced configuration system powered by CCFG, allowing one to tailor the theme, behavior, keybinds and input interpretation for each device class.
+
+#### [CCFG - Cassette Configuration](ccfg)
+
+A configuration language and parser library featuring array based values and short s-like expressions based functions. The language's syntax aims to be both human-readable and easy to parse. Yet provides enough tools to the end user to create branching and dynamic configurations that can be modified and reloaded on the fly.
+
+#### [COBJ - Cassette Objects](cobj)
+
+A collection of self-contained data structures and utilities shared by both CCFG and CGUI. Notably, it includes a versatile 2D UTF-8 string object with associated methods, designed for easy manipulation of strings in monospace text displays.
+
+#### [Bindings](bindings/ada)
+
+COBJ and CCFG Thick bindings for Ada 2012 are provided. CGUI bindings coming soon.
+
+## Status <a name="status"></a>
 
 > [!Warning]
-> This library is alpha software! Some features and widgets are still missing. Moreover, it is currently being rewritten in a better code and interface style under the Cassette name (formerly Derelict Graphics or DG, and on this branch the functions namespaces have not been yet updated). Because of that, the function names, will change in the next release. Checkout the 'rewrite' branch for the latest developments.
+> Cassette is currently in an Alpha stage. COBJ and CCFG (with the exception of cstr.h) are largely complete and considered stable, but CGUI remains under active development. Notably, CGUI still needs broader Unicode support—only single codepoint glyphs work reliably at the moment—and it lacks a substantial set of widgets. Although some minimal documentation exists for end users, it is also a work in progress. Ongoing development aims to address these shortcomings and expand Cassette’s feature set.
 
-Features
---------
+## Documentation <a name="documentation"></a>
 
-- C API
-- Retained mode
-- Responsive layouts
-- Font based window geometry
-- Pointer, Keyboard and Multi-Touch inputs
-- Run-time configuration and theme reload
-- Custom widgets support
-- Enhanced WM hinting
-- Fractional scaling
-- Native transparency
-- Vertically synced animations
+- [UI model](docs/ui-model.md)
+- [CGUI theming](docs/cgui-theming.md)
+- [CCFG language](docs/ccfg-language.md)
+- [API reference](docs/api-reference.md)
 
-Dependencies
-------------
+## Dependencies <a name="dependencies"></a>
 
-- Tools :
+Tools:
 
-	- C11 compiler with a stdlib + POSIX 200809L
-	- Make
-	- Rsync
+- C11 compiler with a stdlib + POSIX 200809L
+- Make
 
-- Third-party libraries :
+Libraries:
 
-	- [Cairo](https://cgit.freedesktop.org/cairo/)
-	- [FontConfig](https://gitlab.freedesktop.org/fontconfig/fontconfig)
-	- [XCB](https://gitlab.freedesktop.org/xorg/lib/libxcb)
-	- [XKBCommon](https://github.com/xkbcommon/libxkbcommon)
+- [Cairo](https://cgit.freedesktop.org/cairo/)
+- [FontConfig](https://gitlab.freedesktop.org/fontconfig/fontconfig)
+- [XKBCommon](https://github.com/xkbcommon/libxkbcommon)
+- [XCB](https://gitlab.freedesktop.org/xorg/lib/libxcb)
+- [XCB-ICCCM](https://gitlab.freedesktop.org/xorg/lib/libxcb-wm)
+- [XCB-Keysyms](https://gitlab.freedesktop.org/xorg/lib/libxcb-keysyms)
+- [XCB-Present](https://gitlab.freedesktop.org/xorg/lib/libxcb)
+- [XCB-Randr](https://gitlab.freedesktop.org/xorg/lib/libxcb)
+- [XCB-XInput](https://gitlab.freedesktop.org/xorg/lib/libxcb)
 
-Installation
-------------
+## Build and Installation <a name="build"></a>
 
-First, edit the makefile if you want to change the installation destinations. These are represented by the variables DEST_HEADERS and DEST_LIBS for the public API headers and library files respectively. By default, they are set to /usr/include/dg/ and /usr/lib. Then, build and install CGUI with the following commands :
+First, edit the makefile if you want to change the installation destinations. These are represented by the variables `DIR_INSTALL_INC` and `DIR_INSTALL_LIB` for the public API headers and library files respectively. By default, they are set to `/usr/include/cassette/` and `/usr/lib`.
+Then, build and install Cassette with the following commands (Examples will also be built and placed under the `*/build/bin` directory of each library):
 
 ```
 make
 make install
 ```
 
-After these steps, a shared binary will be generated and installed on your system. Examples will also be built and placed under `build/bin`.
-
-Post-Installation
------------------
-
-By default, the library is set to use the font "Monospace" with size 14 because it currently does not ship with its own built-in font. But because the windows geometry is dependent on the font, it is recommended to customize your font before anything else. Do note, that the font must be mono-spaced since CGUI has been specifically developed around this class of font. To set it, create a configuration file `~/.config/dg.conf` and add to it these two lines :
+Optional step to install CCFG vim syntax highlighting:
 
 ```
-core.font_face = "FONT_NAME"
-core.font_size = VALUE
+make install-syntax
 ```
 
-Replace `FONT_NAME` and `VALUE` with your preferred font name and size. The font name follows the FontConfig naming convention. After that, if the rendered text still looks wrong, check out the other font configuration parameters `core.font_*` in the [sample configuration file](dg.conf) and add them to your current configuration to further tweak font rendering. A few themes are also provided in the `theme` directory. To install them, simply copy paste their contents into your working configuration file.
-
-Minimal Example
----------------
-
-One of the simplest GUI programs, a HelloWorld :
-
-```c
-#include <dg/core/core.h>
-#include <dg/base/base.h>
-
-int
-main(int argc, char **argv)
-{
-	dg_core_window_t *w;
-	dg_core_grid_t *g;
-	dg_core_cell_t *c;
-
-	/* library modules initialisation */
-
-	dg_core_init(argc, argv, NULL, NULL, NULL);
-	dg_base_init();
-
-	/* object instantiation */
-
-	w = dg_core_window_create(DG_CORE_WINDOW_DEFAULT);
-	g = dg_core_grid_create(1, 1);
-	c = dg_base_label_create();
-
-	/* cell configuration */
-
-	dg_base_label_set_label(c, "Hello World");
-	
-	/* grid configuration */
-
-	dg_core_grid_set_column_width(g, 0, 11);
-	dg_core_grid_assign_cell(g, c, 0, 0, 1, 1);
-	
-	/* window configuration */
-
-	dg_core_window_push_grid(w, g);
-	dg_core_window_activate(w);
-
-	/* run */
-
-	dg_core_loop_run();
-
-	/* end */
-
-	return 0;
-}
-```
-
-Compile with :
+Once you're done you can get rid of build files with:
 
 ```
-cc hello.c -ldg -ldg-base 
+make clean
 ```
 
-Output :
+If you want to uninstall the library:
 
-![hello world output](./extras/hello.png)
+```
+make uninstall
+```
 
-Check out the `examples` directory for more in depth demonstrations.
+## Post-Installation <a name="post-install"></a>
 
-Screenshots
------------
+By default, the CGUI library is set to use the font "Monospace" with size 14 because it currently does not ship with its own built-in font. But because the windows geometry is dependent on the font, it is recommended to customize your font before anything else. Do note, that the font must be mono-spaced since CGUI has been specifically developed around this class of font. To set it, create a configuration file `~/.config/cassette/cgui.ccfg` and add to it these two lines :
 
-![Screenshot 1](./extras/screenshot-1.png)
-![Screenshot 2](./extras/screenshot-2.png)
-![Screenshot 3](./extras/screenshot-3.png)
+```
+font face "FONT_NAME"
+font size  VALUE
+```
 
-In these screenshots, the following third-party resources were used :
+Replace `FONT_NAME` and `VALUE` with your preferred font name and size. The font name follows the FontConfig naming convention. More font and CGUI theme configuration options can be found [here](docs/cgui-theming.md). For full theme examples, check out these [pre-made themes](cgui/themes).
 
+## Usage
+
+Add these includes to access the functions of each library :
+
+```
+#include <cassette/cgui.h>
+#include <cassette/ccfg.h>
+#incluce <cassette/cobj.h>
+```
+
+As well as these compilation flags :
+
+```
+-lcgui
+-lccfg
+-lcobj
+```
+Minimal examples:
+
+- [Hello world window](docs/cgui-example.md)
+- [Simple resource lookup](docs/ccfg-example.md)
+
+More elaborate demos:
+
+- [CGUI](cgui/examples)
+- [CCFG](ccfg/examples)
+- [COBJ](cobj/examples)
+
+## Gallery <a name="gallery"></a>
+
+| ![Screenshot 1](extras/screenshots/1.png) | ![Screenshot 2](extras/screenshots/2.png) |
+|-------------------------------------------|-------------------------------------------|
+| ![Screenshot 3](extras/screenshots/3.png) | ![Screenshot 4](extras/screenshots/4.png) |
+
+## Planned Features <a name="future"></a>
+
+- Proper Unicode Plane-0 EGC handling
+- Improved font rendering
+- Native Wayland backend
+- Navigation-to-text output for screen-readers accessibility
+- Drag and drop
+- More cells (widgets)
+- More theming options
+- Complete API reference
+- Step-by-step CGUI tutorial
+
+## Apps Powered by Casette <a name="apps"></a>
+
+- [Sysgauges](https://github.com/fraawlen/sysgauges)
+
+## Third-Party Visual Resources <a name="credits"></a>
+
+- [Nostromo font](https://www.fontspring.com/fonts/great-scott/nostromo)
 - [Terminus font](https://terminus-font.sourceforge.net/)
+- [Fira Code font](https://github.com/tonsky/FiraCode)
 - [Scientifica font](https://github.com/nerdypepper/scientifica)
-- [NASA Curiosity's view of Mars sky at sunset](https://www.nasa.gov/)
-- [Picom for shadow and blur effects](https://github.com/yshui/picom)
+- [Picom shadow and blur effects](https://github.com/yshui/picom)
 
-Mirrors
--------
+## Mirrors <a name="mirrors"></a>
 
-- https://codeberg.org/fraawlen/cassette-graphics
-- https://github.com/fraawlen/cassette-graphics
-
+- [Github](https://github.com/fraawlen/cassette)
+- [Codeberg](https://codeberg.org/fraawlen/cassette)
 
