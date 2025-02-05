@@ -190,7 +190,7 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 
 | **Namespace** | **Name**         | **Type** | **Default** | **Description** |
 |---------------|------------------|----------|-------------|-----------------|
-| render        | mode             | RENDER   | deferred    | Rendering mode |
+| render        | mode             | DICT     | deferred    | Rendering mode |
 | render        | scale            | UDOUBLE  | 1.0         | UI scaling factor |
 | render        | sync_vblank      | BOOL     | TRUE        | Synchronize rendering with vertical blank |
 | render        | sync_bypass      | BOOL     | TRUE        | Bypass vblank sync on window resize or map |
@@ -202,6 +202,7 @@ One of CGUI's particularities is its ability to configure exactly how each key a
 ### Notes
 
 - The `mode` property accepts `forward` and `deferred`
+- The `mode` property is the only option that requires an application restart
 - In forward mode, the window is first drawn to a pixmap, then presented to the display server to use on a window surface
 - In deferred mode, CGUI first waits for a signal from the display server, then starts drawing directly on the window surface without an intermediate pixmap
 - Because of unresolved issues mixing 32-bit depth pixmaps, Cairo, and XCB windows, forward mode uses standard 24-bit depth. If you run a compositor and need transparency, enable deferred mode. However, in deferred mode, if `sync_vblank` is disabled and you're not using a compositor, windows can flicker when being redrawn. General recommendation:  
