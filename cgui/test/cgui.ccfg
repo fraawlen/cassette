@@ -1,8 +1,8 @@
 //	SECTION_ADD Pcb
 //	SECTION_ADD Pcb_Shadows
 //	SECTION_ADD Binary
-//	SECTION_ADD Oxide
-//	SECTION_ADD Dijon
+	SECTION_ADD Oxide
+//    SECTION_ADD Dijon
 
 // ----------------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------------
@@ -18,7 +18,7 @@
 	input window_fullscreen 2
 
 	font face "Terminus"
-	font size 20
+	font size 16
 
 // ----------------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------------
@@ -28,13 +28,16 @@ SECTION Binary
 
 	// Params
 
-	LET c2  #FFFFFF
-	LET c1  #E44332
+	LET c2  #00FF00
+	LET c1  #000000
 	LET pad 15
 	LET lin 3
 	LET out 4
 	LET gap 12
 	LET win 20
+
+
+
 
 	// Groups
 

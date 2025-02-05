@@ -12,6 +12,7 @@ Cassette is a GUI application framework written in C11, with a UI inspired by th
 - [Post-Installation](#post-install)
 - [Gallery](#gallery)
 - [Planned Features](#future)
+- [Apps Powered by Casette](#apps)
 - [Third-Party Visual Resources](#credits)
 - [Mirrors](#mirrors)
 
@@ -101,7 +102,7 @@ font face "FONT_NAME"
 font size  VALUE
 ```
 
-Replace `FONT_NAME` and `VALUE` with your preferred font name and size. The font name follows the FontConfig naming convention. After that, if the rendered text still looks wrong, check out the other font [configuration options](cgui/docs/cgui-theming.md) and add them to your current configuration to further tweak font rendering. 
+Replace `FONT_NAME` and `VALUE` with your preferred font name and size. The font name follows the FontConfig naming convention. More font and CGUI theme configuration options can be found [here](docs/cgui-theming.md). For full theme examples, check out these [pre-made themes](cgui/themes).
 
 ## Usage
 
@@ -133,16 +134,9 @@ More elaborate demos:
 
 ## Gallery <a name="gallery"></a>
 
-<table> 
-<tr>
-<td><img src="extras/screenshots/1.png" alt="Screenshot 1"></td> 
-<td><img src="extras/screenshots/2.png" alt="Screenshot 3"></td>
-</tr> 
-<tr>
-<td><img src="extras/screenshots/3.png" alt="Screenshot 3"></td>
-<td><img src="extras/screenshots/4.png" alt="Screenshot 4"></td>
-</tr>
-</table>
+| ![Screenshot 1](extras/screenshots/1.png) | ![Screenshot 2](extras/screenshots/2.png) |
+|-------------------------------------------|-------------------------------------------|
+| ![Screenshot 3](extras/screenshots/3.png) | ![Screenshot 4](extras/screenshots/4.png) |
 
 ## Planned Features <a name="future"></a>
 
@@ -156,16 +150,20 @@ More elaborate demos:
 - Complete API reference
 - Step-by-step CGUI tutorial
 
-## Third-Party Visual Resources<a name="credits"></a>
+## Apps Powered by Casette <a name="apps"></a>
+
+- [Sysgauges](https://github.com/fraawlen/sysgauges)
+
+## Third-Party Visual Resources <a name="credits"></a>
 
 - [Nostromo font](https://www.fontspring.com/fonts/great-scott/nostromo)
 - [Terminus font](https://terminus-font.sourceforge.net/)
+- [Fira Code font](https://github.com/tonsky/FiraCode)
 - [Scientifica font](https://github.com/nerdypepper/scientifica)
-- [Mars picture background](https://www.nasa.gov/)
 - [Picom shadow and blur effects](https://github.com/yshui/picom)
 
 ## Mirrors <a name="mirrors"></a>
 
-- https://github.com/fraawlen/cassette
-- https://codeberg.org/fraawlen/cassette
+- [Github](https://github.com/fraawlen/cassette)
+- [Codeberg](https://codeberg.org/fraawlen/cassette)
 

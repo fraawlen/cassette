@@ -1,6 +1,6 @@
 # CGUI Minimal Example
 
-Simple hello world window.
+Simple hello world window. As per the WGC UI model, the column width of 11 is not specifed in pixels but instead represents a number of glyphs to fit in.
 
 ```c
 #include <cassette/cgui.h>

@@ -257,7 +257,7 @@ on_draw(cgui_window *w, unsigned long delay)
 		return;
 	}
 
-	/* hack to skip the first delay that will shows an inaccurate delay */
+	/* hack to skip the update that will shows an inaccurate delay */
 
 	if (first_frame)
 	{
@@ -275,14 +275,10 @@ on_draw(cgui_window *w, unsigned long delay)
 
 	/* update pressure on one random gauge */
 
-	i = rand() % N;
+	update_gauge((i = rand() % N));
 	if ((rows[i].pressure += difficulty * delay / 10000.0) > P_END)
 	{
 		update_state(OVER);
-	}
-	else
-	{
-		update_gauge(i);
 	}
 }
 
@@ -292,7 +288,7 @@ static void
 restart(void)
 {
 	timer      = 0;
-	difficulty = 0.0;
+	difficulty = 1.0;
 	update_info();
 
 	for (int i = 0; i < N; i++)
