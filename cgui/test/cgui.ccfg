@@ -1,6 +1,6 @@
 //	SECTION_ADD Pcb
 //	SECTION_ADD Pcb_Shadows
-//	SECTION_ADD Binary
+	SECTION_ADD Binary
 //	SECTION_ADD Oxide
 //	SECTION_ADD Dijon
 
@@ -114,8 +114,8 @@ SECTION Binary
 	stripes     line_size * $ lin 2
 	stripes     line_gap  * $ lin 3
 
-	button_idle border_size   0
 	button_idle pad           $ pad
+	button_idle border_size   0
 	button_idle back_color    $ c2
 	button_idle text_color    $ c1
 	button_idle text_bold     TRUE
@@ -124,6 +124,7 @@ SECTION Binary
 	button_idle outline_shape FALSE
 
 	button_focused margin         ! $ lin
+	button_focused pad            $ pad
 	button_focused outline_size   $ out
 	button_focused outline_color  $ c2
 	button_focused border_size    $ lin

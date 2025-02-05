@@ -85,6 +85,7 @@ static cgui_cell   *cells[11];
 	cgui_button_set_label(cells[7], "Button");
 	cgui_button_set_label(cells[8], "Disabled button");
 	cgui_button_align_label(cells[7], CGUI_ALIGN_RIGHT);
+	cgui_button_align_label(cells[8], CGUI_ALIGN_RIGHT);
 	cgui_button_disable(cells[8]);	
 
 	cgui_gauge_set_value(cells[ 9], 82);

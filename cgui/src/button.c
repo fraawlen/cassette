@@ -39,9 +39,10 @@
 
 enum state
 {
-	IDLE    = 0,
-	FOCUSED = 1,
-	PRESSED = 2,
+	IDLE     = 0,
+	FOCUSED  = 1,
+	PRESSED  = 2,
+	DISABLED = 3,
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -52,7 +53,6 @@ struct data
 	enum cgui_align align;
 	enum cgui_rotation rot;
 	enum state state;
-	bool enabled;
 	cstr *label;
 };
 
@@ -116,7 +116,6 @@ cgui_button_create(void)
 	data->fn_click = dummy_fn_click;
 	data->align    = CGUI_ALIGN_CENTER;
 	data->rot      = CGUI_ROTATION_NORMAL;
-	data->enabled  = true;
 	data->state    = IDLE;
 
 	cgui_cell_on_destroy(cell, destroy);
@@ -150,7 +149,7 @@ cgui_button_disable(cgui_cell *cell)
 		return;
 	}
 	
-	DATA->enabled = false;
+	DATA->state = DISABLED;
 	
 	cgui_cell_redraw(cell);
 }
@@ -160,12 +159,12 @@ cgui_button_disable(cgui_cell *cell)
 void
 cgui_button_enable(cgui_cell *cell)
 {
-	if (invalid(cell))
+	if (invalid(cell) || DATA->state != DISABLED)
 	{
 		return;
 	}
 
-	DATA->enabled = true;
+	DATA->state = IDLE;
 
 	cgui_cell_redraw(cell);
 }
@@ -225,7 +224,7 @@ cgui_button_toggle(cgui_cell *cell)
 		return;
 	}
 
-	DATA->enabled = !DATA->enabled;
+	DATA->state = DATA->state == DISABLED ? IDLE : DISABLED;
 
 	cgui_cell_redraw(cell);
 }
@@ -282,7 +281,7 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 
 	/* pre-filter */
 
-	if (!DATA->enabled)
+	if (DATA->state == DISABLED)
 	{
 		return false;
 	}
@@ -378,11 +377,6 @@ invalid(const cgui_cell *cell)
 static int
 style(const cgui_cell *cell)
 {
-	if (!DATA->enabled)
-	{
-		return 3;
-	}
-
 	switch (DATA->state)
 	{
 		case IDLE:
@@ -394,5 +388,8 @@ style(const cgui_cell *cell)
 
 		case PRESSED:
 			return 2;
+
+		case DISABLED:
+			return 3;
 	}
 }

@@ -101,6 +101,7 @@ SECTION Binary
 	button_idle outline_shape FALSE
 
 	button_focused margin         ! $ lin
+	button_focused pad            $ pad
 	button_focused outline_size   $ out
 	button_focused outline_color  $ c2
 	button_focused border_size    $ lin
