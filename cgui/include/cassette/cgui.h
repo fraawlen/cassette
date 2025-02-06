@@ -193,7 +193,7 @@ void
 cgui_reconfig(void);
 
 /**
- * Attemps to repair the internal state of the CGUI library if an error occured. On success, the error value
+ * Attempts to repair the internal state of the CGUI library if an error occurred. On success, the error value
  * is set back to CERR_NONE.
  */
 void
