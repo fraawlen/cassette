@@ -10,7 +10,7 @@ main(int argc, char **argv)
 {
 	cgui_window *window;
 	cgui_grid   *grid;
-	cgui_label  *label;
+	cgui_cell   *label;
 
 	/* Instantiation */
 
