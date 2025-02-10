@@ -31,7 +31,7 @@ DIR_BIN   := $(DIR_BUILD)/bin
 #############################################################################################################
 
 LDFLAGS := -shared
-CFLAGS  := -std=c11 -O3 -D_POSIX_C_SOURCE=200809L -pedantic -pedantic-errors -Wall -Wextra -Wformat=2 \
+CFLAGS  := -std=c23 -O3 -D_POSIX_C_SOURCE=200809L -pedantic -pedantic-errors -Wall -Wextra -Wformat=2 \
            -Wbad-function-cast -Wcast-align -Wdeclaration-after-statement -Wfloat-equal \
            -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wmissing-prototypes -Wswitch \
            -Wnested-externs -Wpointer-arith -Wredundant-decls -Wsequence-point -Wshadow -Wwrite-strings \

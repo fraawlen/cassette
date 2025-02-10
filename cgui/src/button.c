@@ -49,7 +49,14 @@ enum state
 
 struct data
 {
+	/* callbacks */
+
 	void (*fn_click)(cgui_cell *);
+	void (*fn_click_arg)(cgui_cell *, void *);
+	void  *fn_click_data;
+
+	/* state */
+
 	enum cgui_align align;
 	enum cgui_rotation rot;
 	enum state state;
@@ -113,10 +120,12 @@ cgui_button_create(void)
 		goto fail_cell;
 	}
 
-	data->fn_click = dummy_fn_click;
-	data->align    = CGUI_ALIGN_CENTER;
-	data->rot      = CGUI_ROTATION_NORMAL;
-	data->state    = IDLE;
+	data->fn_click      = dummy_fn_click;
+	data->fn_click_arg  = NULL;
+	data->fn_click_data = NULL;
+	data->align         = CGUI_ALIGN_CENTER;
+	data->rot           = CGUI_ROTATION_NORMAL;
+	data->state         = IDLE;
 
 	cgui_cell_on_destroy(cell, destroy);
 	cgui_cell_on_draw(cell, draw);
@@ -171,16 +180,39 @@ cgui_button_enable(cgui_cell *cell)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-
 void
-cgui_button_on_click(cgui_cell *cell, void (*fn)(cgui_cell *cell))
+cgui_button_on_click_arg(cgui_cell *cell, void (*fn)(cgui_cell *cell, void *data), void *data)
 {
 	if (invalid(cell))
 	{
 		return;
 	}
 
-	DATA->fn_click = fn ? fn : dummy_fn_click;
+	if (!fn)
+	{
+		cgui_button_on_click_no_arg(cell, NULL);
+	}
+	else
+	{
+		DATA->fn_click      = NULL;
+		DATA->fn_click_arg  = fn;
+		DATA->fn_click_data = data;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_button_on_click_no_arg(cgui_cell *cell, void (*fn)(cgui_cell *cell))
+{
+	if (invalid(cell))
+	{
+		return;
+	}
+
+	DATA->fn_click      = fn ? fn : dummy_fn_click;
+	DATA->fn_click_arg  = NULL;
+	DATA->fn_click_data = NULL;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -345,7 +377,14 @@ event(cgui_cell *cell, struct cgui_cell_event *event)
 
 	if (trigger)
 	{
-		DATA->fn_click(cell);
+		if (DATA->fn_click_arg)
+		{
+			DATA->fn_click_arg(cell, DATA->fn_click_data);
+		}
+		else
+		{
+			DATA->fn_click(cell);
+		}
 	}
 
 	return true;

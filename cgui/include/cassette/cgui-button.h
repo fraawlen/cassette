@@ -44,6 +44,16 @@ CGUI_NONNULL_RETURN;
 /************************************************************************************************************/
 
 /**
+ * Convenience wrapper for optional on_click callback arguments
+ */
+#define cgui_button_on_click(CELL, FN, ...) \
+    _Generic(FN, \
+        void (*)(cgui_cell *, void *) : cgui_button_on_click_arg,    \
+        void (*)(cgui_cell *)         : cgui_button_on_click_no_arg, \
+        nullptr_t                     : cgui_button_on_click_no_arg  \
+    )(CELL, FN __VA_OPT__(,) __VA_ARGS__)
+
+/**
  *
  */
 void
@@ -68,7 +78,14 @@ CGUI_NONNULL(1);
  *
  */
 void
-cgui_button_on_click(cgui_cell *cell, void (*fn)(cgui_cell *cell))
+cgui_button_on_click_arg(cgui_cell *cell, void (*fn)(cgui_cell *cell, void *data), void *data)
+CGUI_NONNULL(1);
+
+/**
+ *
+ */
+void
+cgui_button_on_click_no_arg(cgui_cell *cell, void (*fn)(cgui_cell *cell))
 CGUI_NONNULL(1);
 
 /**
