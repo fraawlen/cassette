@@ -1,6 +1,6 @@
 <h1 align="center"><img src="extras/banner.svg" alt="project banner"></h1>
 
-Cassette is a GUI application framework written in C11, with a UI inspired by the cassette-futurism aesthetic. Built for modern POSIX systems, it's made out of three libraries: CGUI, CCFG and COBJ. Cassette is free and open-source software, licensed under the [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html).
+Cassette is a GUI application framework written in C23, with a UI inspired by the cassette-futurism aesthetic. Built for modern POSIX systems, it's made out of three libraries: CGUI, CCFG and COBJ. Cassette is free and open-source software, licensed under the [LGPL-3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html).
 
 ## Table of Contents <a name="toc"></a>
 
@@ -12,7 +12,6 @@ Cassette is a GUI application framework written in C11, with a UI inspired by th
 - [Post-Installation](#post-install)
 - [Gallery](#gallery)
 - [Planned Features](#future)
-- [Apps Powered by Cassette](#apps)
 - [Third-Party Visual Resources](#credits)
 - [Mirrors](#mirrors)
 
@@ -50,7 +49,7 @@ COBJ and CCFG Thick bindings for Ada 2012 are provided. CGUI bindings coming soo
 
 Tools:
 
-- C11 compiler with a stdlib + POSIX 200809L
+- C23 compiler with a stdlib + POSIX 200809L
 - Make
 
 Libraries:
@@ -149,10 +148,6 @@ More elaborate demos:
 - More theming options
 - Complete API reference
 - Step-by-step CGUI tutorial
-
-## Apps Powered by Cassette <a name="apps"></a>
-
-- [Sysgauges](https://github.com/fraawlen/sysgauges)
 
 ## Third-Party Visual Resources <a name="credits"></a>
 
