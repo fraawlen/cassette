@@ -24,6 +24,8 @@
 #include "cgui-cell.h"
 #include "cgui-types.h"
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
