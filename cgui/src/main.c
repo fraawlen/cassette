@@ -190,11 +190,9 @@ cgui_init(int argc, char **argv)
 	config_init(app_name, app_class);
 	config_load();
 	x11_init(argc, argv, app_name, app_class, ext_connection);
-	screen_pointer_update();
-
-	if (err)
+	if (!err)
 	{
-		cgui_reset();
+		screen_pointer_update();
 	}
 }
 
@@ -343,7 +341,6 @@ cgui_reset(void)
 	cref_destroy(cells);
 	cref_destroy(grids);
 	cref_destroy(windows);
-	x11_inputs_ungrab();
 	x11_reset(!ext_connection);
 	config_reset();
 

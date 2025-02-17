@@ -628,6 +628,7 @@ x11_reset(bool kill_connection)
 
 	if (connection)
 	{
+		x11_inputs_ungrab();
 		xcb_key_symbols_free(keysyms);
 		xcb_destroy_window(connection, win_leader);
 		xcb_free_colormap(connection, colormap);
