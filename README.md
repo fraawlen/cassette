@@ -103,6 +103,16 @@ font size  VALUE
 
 Replace `FONT_NAME` and `VALUE` with your preferred font name and size. The font name follows the FontConfig naming convention. More font and CGUI theme configuration options can be found [here](docs/cgui-theming.md). For full theme examples, check out these [pre-made themes](cgui/themes).
 
+### Configuration for X11 Forwarding
+
+If you are configuring Cassette applications to run on a remote X server without 32 bit transparency, such as many X servers for MS Windows or MacOS XQuartz, you *must* set the following line in `cgui.ccfg` :
+
+```
+render mode forward
+```
+
+and choose a font face that is available on the X *server*.  In most cases, `Monospace` will work fine.
+
 ## Usage
 
 Add these includes to access the functions of each library :
@@ -120,6 +130,7 @@ As well as these compilation flags :
 -lccfg
 -lcobj
 ```
+
 Minimal examples:
 
 - [Hello world window](docs/cgui-example.md)
@@ -161,4 +172,3 @@ More elaborate demos:
 
 - [Github](https://github.com/fraawlen/cassette)
 - [Codeberg](https://codeberg.org/fraawlen/cassette)
-
