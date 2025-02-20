@@ -103,6 +103,14 @@ font size  VALUE
 
 Replace `FONT_NAME` and `VALUE` with your preferred font name and size. The font name follows the FontConfig naming convention. More font and CGUI theme configuration options can be found [here](docs/cgui-theming.md). For full theme examples, check out these [pre-made themes](cgui/themes).
 
+---
+
+Some X servers (like those for for MS Windows or MacOS XQuartz) do not support visuals with 32-bit depths (needed for transparency). On these servers, CGUI may fail to initialize using the default settings. In this case, you *must* add the following line in your configuration ([more info](docs/cgui-theming.md#render)):
+
+```
+render mode forward
+```
+
 ## Usage
 
 Add these includes to access the functions of each library :
@@ -120,6 +128,7 @@ As well as these compilation flags :
 -lccfg
 -lcobj
 ```
+
 Minimal examples:
 
 - [Hello world window](docs/cgui-example.md)
@@ -161,4 +170,3 @@ More elaborate demos:
 
 - [Github](https://github.com/fraawlen/cassette)
 - [Codeberg](https://codeberg.org/fraawlen/cassette)
-
