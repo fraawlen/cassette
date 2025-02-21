@@ -225,6 +225,12 @@ CGUI_HIDDEN;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+xcb_screen_t *
+x11_root_screen(void)
+CGUI_HIDDEN;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 struct cgui_screen
 x11_screen(size_t i, size_t *n, size_t *primary)
 CGUI_NONNULL(2, 3)

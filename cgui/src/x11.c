@@ -616,6 +616,14 @@ x11_pointer_position(double *x, double *y)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+xcb_screen_t *
+x11_root_screen(void)
+{
+	return connection ? screen : NULL;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 x11_reset(bool kill_connection)
 {

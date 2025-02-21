@@ -445,6 +445,14 @@ cgui_x11_leader_window(void)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+xcb_screen_t *
+cgui_x11_screen(void)
+{
+	return x11_root_screen();
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 cgui_unlock(void)
 {
