@@ -679,7 +679,7 @@ cgui_window_non_urgent(cgui_window *window)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_window_on_close(cgui_window *window, void (*fn)(cgui_window *window))
+cgui_window_on_close(cgui_window *window, void (*fn)(cgui_window *))
 {
 	if (cgui_error() || !window->valid)
 	{
@@ -692,7 +692,7 @@ cgui_window_on_close(cgui_window *window, void (*fn)(cgui_window *window))
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_window_on_destroy(cgui_window *window, void (*fn)(cgui_window *window))
+cgui_window_on_destroy(cgui_window *window, void (*fn)(cgui_window *))
 {
 	if (cgui_error() || !window->valid)
 	{
@@ -705,7 +705,7 @@ cgui_window_on_destroy(cgui_window *window, void (*fn)(cgui_window *window))
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_window_on_draw(cgui_window *window, void (*fn)(cgui_window *window, unsigned long delay))
+cgui_window_on_draw(cgui_window *window, void (*fn)(cgui_window *, unsigned long))
 {
 	if (cgui_error() || !window->valid)
 	{
@@ -718,7 +718,7 @@ cgui_window_on_draw(cgui_window *window, void (*fn)(cgui_window *window, unsigne
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_window_on_grid(cgui_window *window, void (*fn)(cgui_window *window, cgui_grid *grid))
+cgui_window_on_grid(cgui_window *window, void (*fn)(cgui_window *, cgui_grid *))
 {
 	if (cgui_error() || !window->valid)
 	{
@@ -731,7 +731,7 @@ cgui_window_on_grid(cgui_window *window, void (*fn)(cgui_window *window, cgui_gr
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgui_window_on_state(cgui_window *window, void (*fn)(cgui_window *window, enum cgui_window_state_mask mask))
+cgui_window_on_state(cgui_window *window, void (*fn)(cgui_window *, enum cgui_window_state_mask))
 {
 	if (cgui_error() || !window->valid)
 	{

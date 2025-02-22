@@ -162,6 +162,18 @@ void
 cgui_lock(void);
 
 /**
+ * Registers a callback function to be executed whenever an event is received.
+ * The callback is called after the event was processed by CGUI.
+ * If a NULL function pointer is given, the callback is disabled.
+ *
+ * @param fn : Callback function
+ *
+ * @param fn.event : Received event
+ */
+void
+cgui_on_event(void (*fn)(struct cgui_event *event));
+
+/**
  * Registers a callback function to be executed upon exiting cgui_run().
  * If a NULL function pointer is given, the callback is disabled.
  * Usefull in multithreading scenarios.

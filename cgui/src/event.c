@@ -38,27 +38,26 @@
 
 /* event handlers */
 
-static void accelerate           (struct cgui_event *) CGUI_NONNULL(1);
-static void button_press         (struct cgui_event *) CGUI_NONNULL(1);
-static void button_release       (struct cgui_event *) CGUI_NONNULL(1);
-static void close                (struct cgui_event *) CGUI_NONNULL(1);
-static void dummy_callback_event (struct cgui_event *) CGUI_NONNULL(1);
-static void focus_window         (struct cgui_event *) CGUI_NONNULL(1);
-static void key_press            (struct cgui_event *) CGUI_NONNULL(1);
-static void key_release          (struct cgui_event *) CGUI_NONNULL(1);
-static void leave                (struct cgui_event *) CGUI_NONNULL(1);
-static void map                  (struct cgui_event *) CGUI_NONNULL(1);
-static void pointer              (struct cgui_event *) CGUI_NONNULL(1);
-static void pointer_raw          (void);
-static void present              (struct cgui_event *) CGUI_NONNULL(1);
-static void reconfig             (void);
-static void redraw               (struct cgui_event *) CGUI_NONNULL(1);
-static void touch_begin          (struct cgui_event *) CGUI_NONNULL(1);
-static void touch_end            (struct cgui_event *) CGUI_NONNULL(1);
-static void touch_update         (struct cgui_event *) CGUI_NONNULL(1);
-static void transform            (struct cgui_event *) CGUI_NONNULL(1);
-static void unfocus              (struct cgui_event *) CGUI_NONNULL(1);
-static void unmap                (struct cgui_event *) CGUI_NONNULL(1);
+static void accelerate     (struct cgui_event *) CGUI_NONNULL(1);
+static void button_press   (struct cgui_event *) CGUI_NONNULL(1);
+static void button_release (struct cgui_event *) CGUI_NONNULL(1);
+static void close          (struct cgui_event *) CGUI_NONNULL(1);
+static void focus_window   (struct cgui_event *) CGUI_NONNULL(1);
+static void key_press      (struct cgui_event *) CGUI_NONNULL(1);
+static void key_release    (struct cgui_event *) CGUI_NONNULL(1);
+static void leave          (struct cgui_event *) CGUI_NONNULL(1);
+static void map            (struct cgui_event *) CGUI_NONNULL(1);
+static void pointer        (struct cgui_event *) CGUI_NONNULL(1);
+static void pointer_raw    (void);
+static void present        (struct cgui_event *) CGUI_NONNULL(1);
+static void reconfig       (void);
+static void redraw         (struct cgui_event *) CGUI_NONNULL(1);
+static void touch_begin    (struct cgui_event *) CGUI_NONNULL(1);
+static void touch_end      (struct cgui_event *) CGUI_NONNULL(1);
+static void touch_update   (struct cgui_event *) CGUI_NONNULL(1);
+static void transform      (struct cgui_event *) CGUI_NONNULL(1);
+static void unfocus        (struct cgui_event *) CGUI_NONNULL(1);
+static void unmap          (struct cgui_event *) CGUI_NONNULL(1);
 
 /* other functions */
 
@@ -69,27 +68,6 @@ static void   clipboard      (enum cgui_cell_event_type, uint8_t, cgui_window *)
 static void   focus_cell     (uint8_t, cgui_window *)                            CGUI_NONNULL(2);
 static void   popup_redirect (struct cgui_event *)                               CGUI_NONNULL(1);
 static size_t swap_input     (struct cgui_event *)                               CGUI_NONNULL(1);
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-static void (*fn_event) (struct cgui_event *) = dummy_callback_event;
-
-/************************************************************************************************************/
-/* PUBLIC ***************************************************************************************************/
-/************************************************************************************************************/
-
-void
-cgui_event_on_event(void (*fn)(struct cgui_event *event))
-{
-	if (cgui_error())
-	{
-		return;
-	}
-
-	fn_event = fn ? fn : dummy_callback_event;
-}
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -188,8 +166,6 @@ event_process(struct cgui_event *event)
 		default:
 			break;
 	}
-
-	fn_event(event);
 }
 
 /************************************************************************************************************/
@@ -388,14 +364,6 @@ static void
 close(struct cgui_event *event)
 {
 	event->window->fn_close(event->window);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-dummy_callback_event(struct cgui_event *event)
-{
-	(void)event;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

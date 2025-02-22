@@ -52,6 +52,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static void dummy_fn_event          (struct cgui_event *) CGUI_NONNULL(1);
 static void dummy_fn_exit           (void);
 static void dummy_fn_run            (void);
 static bool is_any_window_activated (void) CGUI_PURE;
@@ -82,8 +83,9 @@ static enum cerr err = CERR_INVALID;
 
 /* callbacks */
 
-static void (*fn_run)  (void) = dummy_fn_run;
-static void (*fn_exit) (void) = dummy_fn_exit;
+static void (*fn_event) (struct cgui_event *) = dummy_fn_event;
+static void (*fn_run)   (void)                = dummy_fn_run;
+static void (*fn_exit)  (void)                = dummy_fn_exit;
 
 /* misc */
 
@@ -228,6 +230,19 @@ cgui_lock(void)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cgui_on_event(void (*fn)(struct cgui_event *))
+{
+	if (err)
+	{
+		return;
+	}
+
+	fn_event = fn ? fn : dummy_fn_event;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cgui_on_exit(void (*fn)(void))
 {
 	if (err)
@@ -357,6 +372,7 @@ cgui_reset(void)
 	app_name       = NULL;
 	usr_exit       = true;
 	running        = false;	
+	fn_event       = dummy_fn_event;
 	fn_run         = dummy_fn_run;
 	fn_exit        = dummy_fn_exit;
 	err            = CERR_INVALID;
@@ -550,6 +566,7 @@ void
 main_update(struct cgui_event *event)
 {
 	event_process(event);
+	fn_event(event);
 
 	CREF_FOR_EACH_REV(windows, i)
 	{
@@ -571,6 +588,14 @@ main_update(struct cgui_event *event)
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
+
+static void
+dummy_fn_event(struct cgui_event *event)
+{
+	(void)event;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
 dummy_fn_exit(void)
