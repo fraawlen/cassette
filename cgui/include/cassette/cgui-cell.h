@@ -194,6 +194,11 @@ struct cgui_cell_context
 /************************************************************************************************************/
 
 /**
+ * Key to be used by cell implementations for their internal data.
+ */
+#define CGUI_CELL_IMPLEMENTATION "_IMPL"
+
+/**
  * A macro that gives uninitialized cell a non-NULL value that is safe to use with the cell's realted
  * functions. However, any function called with a handle set to this value will return early and without any
  * side effects.
@@ -271,6 +276,18 @@ cgui_cell_on_pre_draw(cgui_cell *cell, void (*fn)(cgui_cell *cell, unsigned long
 CGUI_NONNULL(1);
 
 /**
+ * Reserved key value for cell implementations: CGUI_CELL_IMPLEMENTATION
+ * This key should be the first to be pushed.
+ * If this value is passed and previous data has already been pushed, then this function has no effects.
+ * Otherwhise,the data the key points to is overwritten.
+ *
+ * TODO : rest of docs
+ */
+void
+cgui_cell_set_data(cgui_cell *cell, const char *key, void *data)
+CGUI_NONNULL(1, 2, 3);
+
+/**
  *
  */
 void
@@ -282,13 +299,6 @@ CGUI_NONNULL(1);
  */
 void
 cgui_cell_redraw_delayed(cgui_cell *cell, unsigned long delay)
-CGUI_NONNULL(1);
-
-/**
- *
- */
-void
-cgui_cell_set_data(cgui_cell *cell, void *data)
 CGUI_NONNULL(1);
 
 /**
@@ -313,9 +323,8 @@ CGUI_NONNULL(1);
  *
  */
 void *
-cgui_cell_data(const cgui_cell *cell)
-CGUI_NONNULL(1)
-CGUI_PURE;
+cgui_cell_data(const cgui_cell *cell, const char *key)
+CGUI_NONNULL(1, 2);
 
 /**
  *

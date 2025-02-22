@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cassette/cgui.h>
+#include <cassette/cobj.h>
 #include <stdbool.h>
 
 /************************************************************************************************************/
@@ -46,7 +47,8 @@ struct cgui_cell
 {
 	/* data */
 
-	void *data;
+	cdict *keys;
+	cref  *data;
 	int serial;
 
 	/* callbacks */
@@ -69,5 +71,14 @@ struct cgui_cell
 
 void
 cell_destroy(cgui_cell *cell)
+CGUI_NONNULL(1)
+CGUI_HIDDEN;
+
+/************************************************************************************************************/
+/* IMPURE METHODS *******************************************************************************************/
+/************************************************************************************************************/
+
+void
+cell_repair(cgui_cell *cell)
 CGUI_NONNULL(1)
 CGUI_HIDDEN;

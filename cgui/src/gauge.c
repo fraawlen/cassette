@@ -34,7 +34,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DATA   ((struct data*)cgui_cell_data(cell))
+#define DATA   ((struct data*)cgui_cell_data(cell, CGUI_CELL_IMPLEMENTATION))
 #define FRAME  CONFIG->gauge_frame
 #define BAR    CONFIG->gauge_bar
 #define CURSOR CONFIG->gauge_cursor
@@ -182,7 +182,7 @@ cgui_gauge_create(void)
 	cgui_cell_on_destroy(cell, destroy);
 	cgui_cell_on_draw(cell, draw);
 	cgui_cell_on_frame(cell, frame);
-	cgui_cell_set_data(cell, data);
+	cgui_cell_set_data(cell, CGUI_CELL_IMPLEMENTATION, data);
 	cgui_cell_set_serial(cell, CELL_GAUGE);
 
 	return cell;

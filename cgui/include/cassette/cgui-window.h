@@ -459,6 +459,21 @@ cgui_window_set_accelerator(cgui_window *window, int id, const char *name, void 
 CGUI_NONNULL(1, 3);
 
 /**
+ * Adds a key-value pair. Used to bind arbitrary data to the given specific window.
+ * Its up to the caller of this function to manage the validity of the given pointer.
+ *
+ * @param window : Window instance to interact with
+ * @param key    : NUL terminated string
+ * @param data   : pointer to user data
+ *
+ * @error CERR_OVERFLOW
+ * @error CERR_MEMORY
+ */
+void
+cgui_window_set_data(cgui_window *window, const char *key, void *data)
+CGUI_NONNULL(1, 2, 3);
+
+/**
  * Sets the type of the window.
  *
  * @param window : Window instance to interact with
@@ -574,6 +589,20 @@ bool
 cgui_window_can_swap_grid(const cgui_window *window, cgui_grid *grid_1, cgui_grid *grid_2)
 CGUI_NONNULL(1, 2, 3)
 CGUI_PURE;
+
+/**
+ * Retrieves a pointer matching the key that was previously set with cgui_window_set_data().
+ * Its up to the caller of this function to manage the validity of the given pointer.
+ *
+ * @param window : Window instance to interact with
+ * @param key    : NUL terminated string
+ *
+ * @return     : Pointer that matches the key, NULL is none is found
+ * @return_err : NULL
+ */
+void *
+cgui_window_data(const cgui_window *, const char *key)
+CGUI_NONNULL(1);
 
 /**
  * Retrieves the currently focused cell within the window.

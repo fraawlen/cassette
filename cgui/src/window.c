@@ -102,6 +102,8 @@ cgui_window cgui_window_placeholder_instance =
 	.buttons       = CINPUTS_PLACEHOLDER,
 	.touches       = CINPUTS_PLACEHOLDER,
 	.grids         = CREF_PLACEHOLDER,
+	.data          = CREF_PLACEHOLDER,
+	.keys          = CDICT_PLACEHOLDER,
 	.fn_close      = dummy_fn_close,
 	.fn_draw       = dummy_fn_draw,
 	.fn_focus      = dummy_fn_focus,
@@ -121,7 +123,7 @@ cgui_window cgui_window_placeholder_instance =
 	.draw_time     = 0,
 	.draw_delay    = 0,
 	.draw_level    = WINDOW_DRAW_NONE,
-	.focus         =
+	.focus =
 	{
 		.cell   = CGUI_CELL_PLACEHOLDER,
 		.col    = 0,
@@ -133,7 +135,7 @@ cgui_window cgui_window_placeholder_instance =
 		.width  = 0.0,
 		.height = 0.0,
 	},
-	.accels         =
+	.accels =
 	{
 		{.name = NULL, .fn = dummy_fn_accel},
 		{.name = NULL, .fn = dummy_fn_accel},
@@ -321,6 +323,16 @@ cgui_window_create(void)
 		goto fail_grids;
 	}
 
+	if ((window->data = cref_create()) == CREF_PLACEHOLDER)
+	{
+		goto fail_data;
+	}
+
+	if ((window->keys = cdict_create()) == CDICT_PLACEHOLDER)
+	{
+		goto fail_keys;
+	}
+
 	if ((window->buttons = cinputs_create(CGUI_CONFIG_BUTTONS)) == CINPUTS_PLACEHOLDER)
 	{
 		goto fail_buttons;
@@ -398,17 +410,31 @@ fail_push:
 fail_cairo:
 	x11_window_destroy(window->x_id, window->x_buffer);
 fail_backend:
-	cref_destroy(window->grids);
-fail_touches:
 	cinputs_destroy(window->touches);
-fail_buttons:
+fail_touches:
 	cinputs_destroy(window->buttons);
+fail_buttons:
+	cdict_destroy(window->keys);
+fail_keys:
+	cref_destroy(window->data);
+fail_data:
+	cref_destroy(window->grids);
 fail_grids:
 	free(window);
 fail_alloc:
 	main_set_error(CERR_INSTANCE);
 fail_main:
 	return CGUI_WINDOW_PLACEHOLDER;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void *
+cgui_window_data(const cgui_window *window, const char *key)
+{
+	size_t i;
+
+	return cdict_find(window->keys, key, 0, &i) ?  cref_ptr(window->data, i) : nullptr;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -866,6 +892,28 @@ cgui_window_set_accelerator(cgui_window *window, int id, const char *name, void 
 	window->accels[id].fn   = fn;
 
 	x11_window_set_accel(window->x_id, id, fn ? name : NULL);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_set_data(cgui_window *window, const char *key, void *data)
+{
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+
+	cref_push(window->data, data);
+	if (!cref_error(window->data))
+	{
+		cdict_write(window->keys, key, 0, cref_length(window->data) - 1);
+	}
+
+	main_set_error(cdict_error(window->keys));
+	main_set_error(cref_error(window->data));
+
+	// TODO rework if repair functions get purged
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1431,6 +1479,8 @@ window_repair(cgui_window *window)
 	}
 
 	cref_repair(window->grids);
+	cref_repair(window->data);
+	cdict_repair(window->keys);
 	cinputs_repair(window->buttons);
 	cinputs_repair(window->touches);
 	window_schedule_draw(window, WINDOW_DRAW_FULL, 0);

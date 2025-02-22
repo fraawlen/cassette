@@ -305,6 +305,11 @@ cgui_repair(void)
 	{
 		grid_repair(GRID(i));
 	}
+
+	CREF_FOR_EACH(cells, i)
+	{
+		cell_repair(CELL(i));
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

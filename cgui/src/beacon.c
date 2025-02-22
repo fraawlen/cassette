@@ -31,7 +31,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DATA ((struct data*)cgui_cell_data(cell))
+#define DATA  ((struct data*)cgui_cell_data(cell, CGUI_CELL_IMPLEMENTATION))
 #define FRAME CONFIG->beacon_frame[style(cell)]
 #define LABEL CONFIG->beacon_text[style(cell)]
 
@@ -115,7 +115,7 @@ cgui_beacon_create(void)
 	cgui_cell_on_draw(cell, draw);
 	cgui_cell_on_frame(cell, frame);
 	cgui_cell_on_pre_draw(cell, blink);
-	cgui_cell_set_data(cell, data);
+	cgui_cell_set_data(cell, CGUI_CELL_IMPLEMENTATION, data);
 	cgui_cell_set_serial(cell, CELL_BEACON);
 
 	return cell;

@@ -83,6 +83,8 @@ struct cgui_window
 	cinputs *buttons;
 	cinputs *touches;
 	cref *grids;
+	cref *data;
+	cdict *keys;
 
 	/* callbacks */
 
