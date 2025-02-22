@@ -88,11 +88,12 @@ struct cgui_window
 
 	/* callbacks */
 
-	void (*fn_close) (cgui_window *);
-	void (*fn_draw)  (cgui_window *, unsigned long);
-	void (*fn_focus) (cgui_window *, cgui_cell *);
-	void (*fn_grid)  (cgui_window *, cgui_grid *);
-	void (*fn_state) (cgui_window *, enum cgui_window_state_mask);
+	void (*fn_close)   (cgui_window *);
+	void (*fn_destroy) (cgui_window *);
+	void (*fn_draw)    (cgui_window *, unsigned long);
+	void (*fn_focus)   (cgui_window *, cgui_cell *);
+	void (*fn_grid)    (cgui_window *, cgui_grid *);
+	void (*fn_state)   (cgui_window *, enum cgui_window_state_mask);
 
 	/* states */
 

@@ -49,6 +49,7 @@ static bool cairo_setup           (cgui_window *, double, double)               
 static void draw_area             (cgui_window *, struct grid_area, enum window_draw_level, unsigned long) CGUI_NONNULL(1);
 static void dummy_fn_accel        (cgui_window *, int)                                                     CGUI_NONNULL(1);
 static void dummy_fn_close        (cgui_window *)                                                          CGUI_NONNULL(1);
+static void dummy_fn_destroy      (cgui_window *)                                                          CGUI_NONNULL(1);
 static void dummy_fn_draw         (cgui_window *, unsigned long)                                           CGUI_NONNULL(1);
 static void dummy_fn_focus        (cgui_window *, cgui_cell *)                                             CGUI_NONNULL(1, 2);
 static void dummy_fn_grid         (cgui_window *, cgui_grid *)                                             CGUI_NONNULL(1, 2);
@@ -105,6 +106,7 @@ cgui_window cgui_window_placeholder_instance =
 	.data          = CREF_PLACEHOLDER,
 	.keys          = CDICT_PLACEHOLDER,
 	.fn_close      = dummy_fn_close,
+	.fn_destroy    = dummy_fn_destroy,
 	.fn_draw       = dummy_fn_draw,
 	.fn_focus      = dummy_fn_focus,
 	.fn_grid       = dummy_fn_grid,
@@ -381,6 +383,7 @@ cgui_window_create(void)
 	window->popup_parent  = CGUI_WINDOW_PLACEHOLDER;
 	window->popup_child   = CGUI_WINDOW_PLACEHOLDER;
 	window->fn_close      = dummy_fn_close;
+	window->fn_destroy    = dummy_fn_destroy;
 	window->fn_draw       = dummy_fn_draw;
 	window->fn_focus      = dummy_fn_focus;
 	window->fn_grid       = dummy_fn_grid;
@@ -684,6 +687,19 @@ cgui_window_on_close(cgui_window *window, void (*fn)(cgui_window *window))
 	}
 	
 	window->fn_close = fn ? fn : dummy_fn_close;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgui_window_on_destroy(cgui_window *window, void (*fn)(cgui_window *window))
+{
+	if (cgui_error() || !window->valid)
+	{
+		return;
+	}
+	
+	window->fn_destroy = fn ? fn : dummy_fn_destroy;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1210,12 +1226,16 @@ window_destroy(cgui_window *window)
 		free(window->accels[i].name);
 	}
 
+	window->fn_destroy(window);
+
 	cairo_data_destroy(window);
 	main_pull_instance(main_windows(), window);
 	x11_window_destroy(window->x_id, window->x_buffer);
 	cinputs_destroy(window->buttons);
 	cinputs_destroy(window->touches);
 	cref_destroy(window->grids);
+	cref_destroy(window->data);
+	cdict_destroy(window->keys);
 	free(window->name);
 	free(window);
 }
@@ -1861,6 +1881,14 @@ static void
 dummy_fn_close(cgui_window *window)
 {
 	cgui_window_deactivate(window);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+dummy_fn_destroy(cgui_window *window)
+{
+	(void)window;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

@@ -498,6 +498,7 @@ cell_destroy(cgui_cell *cell)
 	}
 
 	cell->fn_destroy(cell);
+
 	main_pull_instance(main_cells(), cell);
 	cref_destroy(cell->data);
 	cdict_destroy(cell->keys);

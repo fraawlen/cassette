@@ -286,6 +286,22 @@ cgui_window_on_close(cgui_window *window, void (*fn)(cgui_window *window))
 CGUI_NONNULL(1);
 
 /**
+ * Registers a callback function to be invoked when the window gets destroyed.
+ * If a NULL function pointer is given, the callabck is deactivated.
+ * When the callback gets called, the window is already put in an invalid state,
+ * therefore any cgui_window_* functions will exit early when called from within
+ * the callback. The only exception to that rule is cgui_window_data().
+ *
+ * @param window : Window instance to interact with
+ * @param fn     : Callback function
+ *
+ * @param fn->window : Window that got redrawn
+ */
+ void
+ cgui_window_on_destroy(cgui_window *window, void (*fn)(cgui_window *window))
+ CGUI_NONNULL(1);
+
+/**
  * Registers a callback function to be invoked after the window is redrawn.
  * If a NULL function pointer is given, the callback is deactivated.
  *
