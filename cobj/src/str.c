@@ -287,10 +287,11 @@ cstr_cut(cstr *str, size_t offset, size_t length)
 nullptr_t
 cstr_destroy(cstr *str)
 {
-	GUARD(str, nullptr);
-
-	free(str->bytes);
-	free(str);
+	if (str)
+	{
+		free(str->bytes);
+		free(str);
+	}
 
 	return nullptr;
 }

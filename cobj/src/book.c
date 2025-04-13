@@ -153,12 +153,13 @@ cbook_create(void)
 nullptr_t
 cbook_destroy(cbook *book)
 {
-	GUARD(book, nullptr);
-
-	free(book->groups);
-	free(book->words);
-	free(book->bytes);
-	free(book);
+	if (book)
+	{
+		free(book->groups);
+		free(book->words);
+		free(book->bytes);
+		free(book);
+	}
 
 	return nullptr;
 }

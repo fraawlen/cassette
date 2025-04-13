@@ -171,10 +171,11 @@ cdict_create(void)
 nullptr_t
 cdict_destroy(cdict *dict)
 {
-	GUARD(dict, nullptr);
-
-	free(dict->slots);
-	free(dict);
+	if (dict)
+	{
+		free(dict->slots);
+		free(dict);
+	}
 
 	return nullptr;
 }

@@ -151,10 +151,11 @@ cref_create(void)
 nullptr_t
 cref_destroy(cref *ref)
 {
-	GUARD(ref, nullptr);
-
-	free(ref->slots);
-	free(ref);
+	if (ref)
+	{
+		free(ref->slots);
+		free(ref);
+	}
 
 	return nullptr;
 }

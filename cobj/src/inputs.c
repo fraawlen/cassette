@@ -137,10 +137,11 @@ cinputs_create(size_t max_inputs)
 nullptr_t
 cinputs_destroy(cinputs *inputs)
 {
-	GUARD(inputs, nullptr);
-
-	free(inputs->slots);
-	free(inputs);
+	if (inputs)
+	{
+		free(inputs->slots);
+		free(inputs);
+	}
 
 	return nullptr;
 }
