@@ -84,6 +84,9 @@ cbook_clear_warnings(cbook *book)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-null-argument"
+
 cbook *
 cbook_clone(const cbook *book)
 {
@@ -117,6 +120,8 @@ cbook_clone(const cbook *book)
 
 	return book_new;
 }
+
+#pragma GCC diagnostic pop
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -343,10 +348,12 @@ cbook_write(cbook *book, const char *str)
 {
 	GUARD(book);
 
+	str = str ? str : "";
+
 	size_t ns = strlen(str) + 1;
 	size_t nc = book->n_alloc_bytes;
-	size_t nw = book->n_alloc_words  * (book->n_words  >= book->n_alloc_words  ? 2 : 1);
-	size_t ng = book->n_alloc_groups * (book->n_groups >= book->n_alloc_groups ? 2 : 1);
+	size_t nw = book->n_alloc_words;
+	size_t ng = book->n_alloc_groups;
 
 	while (ns > nc - book->n_bytes)
 	{
@@ -355,6 +362,13 @@ cbook_write(cbook *book, const char *str)
 			cerr_set(&book->err, CERR_OVERFLOW);
 			return;
 		}
+	}
+
+	if (ckd_mul(&nw, nw, book->n_words  >= book->n_alloc_words  ? 2 : 1)
+	 || ckd_mul(&ng, ng, book->n_groups >= book->n_alloc_groups ? 2 : 1))
+	{
+		cerr_set(&book->err, CERR_OVERFLOW);
+		return;
 	}
 
 	if (!grow(book, nc, nw, ng))
@@ -413,15 +427,22 @@ group_size(const cbook *book, size_t i)
 static bool
 grow(cbook *book, size_t n_bytes, size_t n_words, size_t n_groups)
 {
-	size_t n = 0;
+	bool ok = true;
 
-	n_bytes  > book->n_alloc_bytes  ? n++ : (n_bytes  = book->n_alloc_bytes);
-	n_words  > book->n_alloc_words  ? n++ : (n_words  = book->n_alloc_words);
-	n_groups > book->n_alloc_groups ? n++ : (n_groups = book->n_alloc_groups);
+	if (n_bytes > book->n_alloc_bytes)
+	{
+		ok &= CUTIL_REALLOC(book->bytes, book->n_alloc_bytes, n_bytes, 1, book->err);
+	}
 
-	return
-		   n > 0
-		&& CUTIL_REALLOC(book->bytes,  book->n_alloc_bytes,  n_bytes,  1,              book->err)
-		&& CUTIL_REALLOC(book->words,  book->n_alloc_words,  n_words,  sizeof(size_t), book->err)
-		&& CUTIL_REALLOC(book->groups, book->n_alloc_groups, n_groups, sizeof(size_t), book->err);
+	if (n_words > book->n_alloc_words)
+	{
+		ok &= CUTIL_REALLOC(book->words, book->n_alloc_words, n_words, sizeof(size_t), book->err);
+	}
+
+	if (n_groups > book->n_alloc_groups)
+	{
+		ok &= CUTIL_REALLOC(book->groups, book->n_alloc_groups, n_groups, sizeof(size_t), book->err);
+	}
+
+	return ok;
 }

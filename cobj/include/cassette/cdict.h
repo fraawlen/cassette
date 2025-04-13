@@ -256,6 +256,7 @@ void cdict_write(cdict *dict, const char *key, size_t group, size_t value);
  *
  * 	Searches for a slot that matches the given key and group.
  * 	If the optional value parameter is not NULL, the associated value will be written to it.
+ * 	A NULL key value is equivalent to an empty "" value.
  *
  * [Parameters]
  *

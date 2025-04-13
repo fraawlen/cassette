@@ -33,6 +33,7 @@ static const char *to_str   (double val);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static cstr *str;
 static struct ccolor cl_1;
 static struct ccolor cl_2;
 static struct ccolor cl_3;
@@ -45,9 +46,9 @@ static struct ccolor cl_4;
 int
 main(void)
 {
-//	str = cstr_create();
+	str = cstr_create();
 
-//	cstr_set_precision(str, 0);
+	cstr_set_precision(str, 0);
 
 	cl_1 = ccolor_blue;
 	cl_2 = ccolor_from_str("#FF0000", NULL);
@@ -59,9 +60,7 @@ main(void)
 	print_cl(cl_3);
 	print_cl(cl_4);
 	
-//	cerr_print(cstr_error(str));
-
-//	str = cstr_destroy(str);
+	str = cstr_destroy(str);
 
 	return 0;
 }
@@ -84,16 +83,9 @@ print_cl(struct ccolor cl)
 static const char *
 to_str(double val)
 {
-/*
 	cstr_clear(str);
 	cstr_append(str, val * 255.0);
 	cstr_pad(str, " ", 0, 4);
 
-	return cstr_chars(str);
-*/
-	(void)val;
-
-	return "";
-
-	// TODO
+	return cstr_bytes(str);
 }

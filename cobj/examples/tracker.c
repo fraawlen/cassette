@@ -84,7 +84,7 @@ main(void)
 	
 	if (cref_error(refs))
 	{
-		printf("Reference counter errored dunring operation (%s)\n", cerr_name(cref_error(refs)));
+		printf("Reference counter errored during operation (%s)\n", cerr_name(cref_error(refs)));
 	}
 
 	refs = cref_destroy(refs);

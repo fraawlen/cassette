@@ -68,7 +68,7 @@ main(void)
 
 	if (cdict_error(dict))
 	{
-		printf("Dictionary errored dunring operation (%s)\n", cerr_name(cdict_error(dict)));
+		printf("Dictionary errored during operation (%s)\n", cerr_name(cdict_error(dict)));
 	}
 
 	dict = cdict_destroy(dict);

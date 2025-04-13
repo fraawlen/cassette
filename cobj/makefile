@@ -14,6 +14,7 @@ SRC_DEMOS := $(wildcard $(DIR_DEMOS)/*.c)
 SRC_LIB   := $(wildcard $(DIR_SRC)/*.c)
 OBJ_LIB   := $(patsubst $(DIR_SRC)/%.c,   $(DIR_OBJ)/%.o, $(SRC_LIB))
 BIN_DEMOS := $(patsubst $(DIR_DEMOS)/%.c, $(DIR_BIN)/%,   $(SRC_DEMOS))
+RPATH     := -Wl,-rpath='$$ORIGIN'/../lib
 
 #############################################################################################################
 # PUBLIC TARGETS ############################################################################################
@@ -44,4 +45,4 @@ $(DIR_OBJ)/%.o: $(DIR_SRC)/%.c
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@ $(INCS)
 
 $(DIR_BIN)%: $(DIR_DEMOS)/%.c
-	$(CC) $(CFLAGS) $< -o $@ $(INCS) -L$(DIR_LIB) -l$(NAME) $(DEPS) -Wl,-rpath='$$ORIGIN'/../lib
+	$(CC) $(CFLAGS) $< -o $@ $(INCS) -L$(DIR_LIB) -l$(NAME) $(DEPS) $(RPATH)

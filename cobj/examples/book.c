@@ -88,7 +88,7 @@ main(void)
 
 	if (cbook_error(book))
 	{
-		printf("Book errored dunring operation (%s)\n", cerr_name(cbook_error(book)));
+		printf("Book errored during operation (%s)\n", cerr_name(cbook_error(book)));
 	}
 
 	book = cbook_destroy(book);
