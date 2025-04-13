@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Objects (COBJ) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -21,21 +21,10 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdlib.h>
 
 #include "cerr.h"
-
-#if __GNUC__ > 4
-	#define CSTR_NONNULL_RETURN __attribute__((returns_nonnull))
-	#define CSTR_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
-	#define CSTR_PURE           __attribute__((pure))
-	#define CSTR_CONST          __attribute__((const))
-#else
-	#define CSTR_NONNULL_RETURN
-	#define CSTR_NONNULL(...)
-	#define CSTR_PURE
-	#define CSTR_CONST
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,547 +35,697 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Opaque string object. Theses strings have the particularity of storing not just the string char array along
- * with its size, but they also keep track of the number of UTF-8 multi-byte characters, the number of rows 
- * and columns. It's assumed that all UTF-8 characters are 1 column wide. But it does not differencies between
- * printable or non printable characters. The only exception to this width rule are tab characters, whose
- * width can be customized with cstr_set_tab_width().
+ * [Description]
  *
- * Some methods, upon failure, will set an error that can be checked with cstr_error(). If any error is set
- * all string methods will exit early with default return values and no side-effects. It's possible to clear
- * errors with cstr_repair().
+ * 	Opaque UTF-8 string object implemented as a dynamically sized array. Cassette strings were
+ * 	developped specifically to be used within GUI/TUI applications, but they can be used as a
+ * 	convenient general purpose string library. They keep track of their byte length (including the
+ * 	NUL terminator), number of Unicode codepoints, rows and columns. Thanks to these parameters,
+ * 	it is possible to layout the string inside a 2D space without advanced text shaping libraries.
+ * 	However, it assumes that monospaced single-width fonts are used to render the string.
+ *
+ * 	Currently only single codepoint unicode characters are supported, but support for Unicode
+ * 	plane 0 graphemes is planned. Because only single-codepoint graphemes characters are supported
+ * 	right now, the methods length and offset parameters will work with codepoint. These parameters
+ * 	will use graphemes once support for them is implemented.
+ * 	Support for variable tab widths is also planned.
+ *
+ * 	Some methods may fail and set an internal error, which can be checked using cstr_error().
+ * 	If an error is set, all methods will exit early with default return values and no side
+ * 	effects, leaving only the destruction function available.
  */
 typedef struct cstr cstr;
-
-/************************************************************************************************************/
-/* GLOBALS **************************************************************************************************/
-/************************************************************************************************************/
-
-/**
- * A macro that gives uninitialized string objects a non-NULL value that is safe to use with the string's
- * related functions. However, any function called with a handle set to this value will return early and
- * without any side effects.
- */
-#define CSTR_PLACEHOLDER (&cstr_placeholder_instance)
-
-/**
- * Global string object instance with the error state set to CERR_INVALID. This instance is only made
- * available to allow the static initialization of string object pointers with the macro CSTR_PLACEHOLDER.
- */
-extern cstr cstr_placeholder_instance;
 
 /************************************************************************************************************/
 /* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Create a string instance and deep copy the contents of another string instance into it.
+ * [Description]
  *
- * @param str : String to copy contents from
+ * 	Destroys a string and frees all associated memory.
+ * 	Calling this function on a NULL string has no effect.
  *
- * @return     : New string instance
- * @return_err : CSTR_PLACEHOLDER
+ * [Parameters]
+ *
+ * 	str - String to destroy.
+ *
+ * [Returns]
+ *
+ * 	To prevent dandling pointers while keeping this function a one-liner, this function
+ * 	conveniently returns nullptr.
  */
-cstr *
-cstr_clone(const cstr *str)
-CSTR_NONNULL_RETURN
-CSTR_NONNULL(1);
+[[nodiscard]] nullptr_t cstr_destroy(cstr *str);
 
 /**
- * Creates an empty string instance.
+ * [Description]
  *
- * @return     : New string instance
- * @return_err : CSTR_PLACEHOLDER
+ * 	Create a string instance and deep copy the contents of another string instance into it.
+ * 	Calling this function on a NULL string is the same as calling cstr_create().
+ *
+ * [Parameters]
+ *
+ * 	str - String to copy.
+ *
+ * [Returns]
+ *
+ * 	On succes, a pointer to a newly allocated instance. Returns nullptr on failure.
+ * 	The caller is responsible for freeing the returned instance using cstr_destroy().
  */
-cstr *
-cstr_create(void)
-CSTR_NONNULL_RETURN;
+[[nodiscard]] [[gnu::malloc(cstr_destroy)]] cstr *cstr_clone(const cstr *str);
 
 /**
- * Destroys the given string and frees memory.
+ * [Description]
  *
- * @param str : String to interact with
+ * Creates a new, empty string instance.
+ *
+ * [Returns]
+ *
+ * 	On succes, a pointer to a newly allocated instance. Returns nullptr on failure.
+ * 	The caller is responsible for freeing the returned instance using cstr_destroy().
  */
-void
-cstr_destroy(cstr *str)
-CSTR_NONNULL(1);
+[[nodiscard]] [[gnu::malloc(cstr_destroy)]] cstr *cstr_create(void);
 
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Convenience generic wrapper to insert new data at the end of a string.
- */
-#define cstr_append(DST, SRC) \
-	_Generic (SRC, \
-		cstr *       : cstr_insert_cstr,   \
-		char *       : cstr_insert_raw,    \
-		const char * : cstr_insert_raw,    \
-		float        : cstr_insert_double, \
-		double       : cstr_insert_double, \
-		default      : cstr_insert_long    \
-	)(DST, SRC, SIZE_MAX)
-
-/**
- * Convenience generic wrapper to insert new data at a specific UTF-8 character offset.
+ * [Description]
+ *
+ * 	Convenience generic wrapper to insert new data at a specific codepoint offset.
  */
 #define cstr_insert(DST, SRC, OFFSET) \
 	_Generic (SRC, \
-		cstr *       : cstr_insert_cstr,   \
-		char *       : cstr_insert_raw,    \
-		const char * : cstr_insert_raw,    \
+		cstr *       : cstr_insert_str,    \
+		char *       : cstr_insert_bytes,  \
+		const char * : cstr_insert_bytes,  \
 		float        : cstr_insert_double, \
 		double       : cstr_insert_double, \
 		default      : cstr_insert_long    \
 	)(DST, SRC, OFFSET)
 
 /**
- * Convenience generic wrapper to insert new data at the beginning of a string.
+ * [Description]
+ *
+ * 	Convenience generic wrapper to insert new data at the end of a string.
  */
-#define cstr_prepend(DST, SRC) \
-	_Generic (SRC, \
-		cstr *       : cstr_insert_cstr,   \
-		char *       : cstr_insert_raw,    \
-		const char * : cstr_insert_raw,    \
-		float        : cstr_insert_double, \
-		double       : cstr_insert_double, \
-		default      : cstr_insert_long    \
-	)(DST, SRC, 0)
+#define cstr_append(DST, SRC) cstr_insert(DST, SRC, SIZE_MAX)
 
 /**
- * Clears the contents of a given string. Allocated memory is not freed, use cstr_destroy() for that.
+ * [Description]
  *
- * @param str : String to interact with
+ * 	Convenience generic wrapper to insert new data at the beginning of a string.
  */
-void
-cstr_clear(cstr *str)
-CSTR_NONNULL(1);
+#define cstr_prepend(DST, SRC) cstr_insert(DST, SRC, 0)
 
 /**
- * Removes a set number of UTF-8 characters at a specific offset.
- * This function is bounds-protected, meaning that offset + length parameters will be capped at the string's
- * length, even if a SIZE_MAX value is supplied.
+ * [Description]
  *
- * @param str    : String to interact with
- * @param offset : UTF-8 character position to start cutting from
- * @param length : number of UTF-8 characters to remove
+ * 	Clears the contents of a string.
+ * 	Allocated memory is not freed, use cstr_destroy() for that.
+ * 	Calling this function on a NULL string has no effect.
+ *
+ * [Parameters]
+ *
+ * 	str - String to modify.
  */
-void
-cstr_cut(cstr *str, size_t offset, size_t length)
-CSTR_NONNULL(1);
+void cstr_clear(cstr *str);
 
 /**
- * Insert the contents of str_src at a specific offset.
- * The string's allocated memory will be automatically extended if needed to accommodate the inserted data.
- * This function comes with overlap detection, so a raw_str obtained from cstr_char*() can be used. This
- * function is bounds-protected, so the offset parameter is capped at the string's length, even if a SIZE_MAX
- * value is supplied.
+ * [Description]
  *
- * @param str     : String to insert new data to
- * @param str_src : String to ger new data from
- * @param offset  : UTF-8 character position to insert the new data at
+ * 	Clears any warning error the string may have. Does not clears criticial errors.
+ * 	Calling this function on a NULL string has no effect.
  *
- * @error CERR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
- * @error CERR_MEMORY   : Failed memory allocation
+ * [Parameters]
+ *
+ * 	str - string to modify.
  */
-void
-cstr_insert_cstr(cstr *str, const cstr *str_src, size_t offset)
-CSTR_NONNULL(1, 2);
+void cstr_clear_warnings(cstr *str);
 
 /**
- * Converts a double into a character array then inserts it at a specific offset. The double digits number is
- * controlled with cstr_set_double_digits().
- * The string's allocated memory will be automatically extended if needed to accommodate the inserted data.
- * This function comes with overlap detection, so a raw_str obtained from cstr_char*() can be used. This
- * function is bounds-protected, so the offset parameter is capped at the string's length, even if a SIZE_MAX
- * value is supplied.
+ * [Description]
  *
- * @param str     : String to insert new data to
- * @param d       : Double value to insert
- * @param offset  : UTF-8 character position to insert the new data at
+ * 	Removes a set number of codepoints from a specific offset.
+ * 	Calling this function on a NULL string has no effect.
  *
- * @error CERR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
- * @error CERR_MEMORY   : Failed memory allocation
+ * 	This function is bounds-protected. Offset + length will be capped at the string's length,
+ * 	even if SIZE_MAX is passed.
+ *
+ * [Parameters]
+ *
+ * 	str    - String to modify.
+ * 	offset - Codepoint index to start cutting from.
+ * 	length - Number of codepoints to remove.
  */
-void
-cstr_insert_double(cstr *str, double d, size_t offset)
-CSTR_NONNULL(1);
+void cstr_cut(cstr *str, size_t offset, size_t length);
 
 /**
- * Converts a long into a character array then inserts it at a specific offset.
- * The string's allocated memory will be automatically extended if needed to accommodate the inserted data.
- * This function comes with overlap detection, so a raw_str obtained from cstr_char*() can be used. This
- * function is bounds-protected, so the offset parameter is capped at the string's length, even if a SIZE_MAX
- * value is supplied.
+ * [Description]
  *
- * @param str     : String to insert new data to
- * @param l       : Long value to insert
- * @param offset  : UTF-8 character position to insert the new data at
+ * 	Insert a NUL terminated byte array at a specific offset.
+ * 	The string will automatically grow if needed to accommodate the inserted data.
+ * 	This function comes with memory overlap detection, raw_str obtained from str can be used.
  *
- * @error CERR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
- * @error CERR_MEMORY   : Failed memory allocation
+ * 	Calling this function on a NULL str or str_src has no effect.
+ * 	This function is bounds-protected. Offset is capped at the string's length, even if
+ * 	SIZE_MAX is passed.
+ *
+ * [Parameters]
+ *
+ * 	str    - String to modify.
+ * 	bytes  - Raw C string to get new data from.
+ * 	offset - Codepoint index to insert the new data at.
+ *
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
  */
-void
-cstr_insert_long(cstr *str, long long l, size_t offset)
-CSTR_NONNULL(1);
+void cstr_insert_bytes(cstr *str, const char *bytes, size_t offset);
 
 /**
- * Insert a raw C string at a specific offset.
- * The string's allocated memory will be automatically extended if needed to accommodate the inserted data.
- * This function comes with overlap detection, so a raw_str obtained from cstr_char*() can be used. This
- * function is bounds-protected, so the offset parameter is capped at the string's length, even if a SIZE_MAX
- * value is supplied.
+ * [Description]
  *
- * @param str     : String to insert new data to
- * @param raw_str : Raw C string to insert
- * @param offset  : UTF-8 character position to insert the new data at
+ * 	Converts a double into a string then inserts it at a specific offset.
+ * 	The number of digits can be set with cstr_set_double_digits().
+ * 	The string will automatically grow if needed to accommodate the inserted data.
  *
- * @error CERR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
- * @error CERR_MEMORY   : Failed memory allocation
+ * 	Calling this function on a NULL string has no effect.
+ * 	This function is bounds-protected. Offset is capped at the string's length, even if
+ * 	SIZE_MAX is passed.
+ *
+ * [Parameters]
+ *
+ * 	str    - String to modify.
+ * 	d      - Double value to insert.
+ * 	offset - Codepoint index to insert the new data at.
+ *
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
  */
-void
-cstr_insert_raw(cstr *str, const char *raw_str, size_t offset)
-CSTR_NONNULL(1, 2);
+void cstr_insert_double(cstr *str, double d, size_t offset);
 
 /**
- * Pads a string with a repeated sequence of characters set by pattern until its length matches length_target.
- * This function has no effects if the string's length is bigger than the target length or if the given
- * pattern is empty. The sequence of padding characters will be inserted at the given offset. This function is
- * bounds-protected, so the offset parameter is capped at the string's length, even if a SIZE_MAX value is
- * supplied.
+ * [Description]
  *
- * Example :
+ * 	Converts a long into a string then inserts it at a specific offset.
+ * 	The number of digits can be set with cstr_set_double_digits().
+ * 	The string will automatically grow if needed to accommodate the inserted data.
  *
- *	cstr_clear(str);
- *	cstr_append(str, "test");
- *	cstr_pad(str, "_Ͳ", 1, 9);
- *	printf("%s\n", cstr_chars(str));
+ * 	Calling this function on a NULL string has no effect.
+ * 	This function is bounds-protected. Offset is capped at the string's length, even if
+ * 	SIZE_MAX is passed.
  *
- *	--> t_Ͳ_Ͳ_est
+ * [Parameters]
  *
- * @param str           : String to interact with
- * @param pattern       : UTF-8 character to use as padding
- * @param offset        : UTF-8 character position to insert the padded sequence at
- * @param length_target : Resulting string length that should be reached
+ * 	str    - String to modify.
+ * 	l      - Long value to insert.
+ * 	offset - Codepoint index to insert the new data at.
  *
- * @error CERR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
- * @error CERR_MEMORY   : Failed memory allocation
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
  */
-void
-cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
-CSTR_NONNULL(1, 2);
+void cstr_insert_long(cstr *str, long long l, size_t offset);
+
+/**
+ * [Description]
+ *
+ * 	Insert the contents of str_src at a specific offset.
+ * 	The string will automatically grow if needed to accommodate the inserted data.
+ * 	This function comes with memory overlap detection, raw_str can be str.
+ *
+ * 	Calling this function on a NULL str or str_src has no effect.
+ * 	This function is bounds-protected. Offset is capped at the string's length, even if
+ * 	SIZE_MAX is passed.
+ *
+ * [Parameters]
+ *
+ * 	str     - String to modify.
+ * 	str_src - String to get new data from.
+ * 	offset  - Codepoint index to insert the new data at.
+ *
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
+ */
+void cstr_insert_str(cstr *str, const cstr *str_src, size_t offset);
+
+/**
+ * [Description]
+ *
+ * 	Pads a string with a repeated pattern of bytes until the string reaches a target length.
+ * 	The pattern may end up truncated to exactly match the target length.
+ * 	The string will automatically grow if needed to accommodate the inserted data.
+ *
+ * 	This function has no effect if the string is NULL, the pattern is NULL or empty, or if the
+ * 	string initial length is bigger than the target length.
+ * 	This function is bounds-protected. Offset is capped at the string's length, even if
+ * 	SIZE_MAX is passed.
+ *
+ * [Example]
+ *
+ * 	cstr_clear(str);
+ * 	cstr_append(str, "test");
+ * 	cstr_pad(str, "_Ͳ", 1, 9);
+ * 	printf("%s\n", cstr_chars(str));
+ *
+ * 	--> t_Ͳ_Ͳ_est
+ *
+ * [Parameters]
+ *
+ * 	str     - String to modify.
+ * 	pattern - Byte sequence to use as padding.
+ * 	offset  - Codepoint index to pad from.
+ * 	length  - Target string length.
+ *
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
+ */
+void cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length);
 
 /** 
- * Preallocates a set number of bytes to avoid triggering multiple automatic reallocs when adding data to the
- * string. This function has no effect if the requested number of bytes is smaller than the previously
- * allocated number.
+ * [Description]
  *
- * @param str         : String to interact with
- * @param byte_length : Number of bytes
+ * 	Preallocates a set number of bytes to prevent multiple automatic reallocations when
+ * 	inserting new data.
+ * 	This function has no effect is the string is NULL or if the requested number is smaller
+ * 	than the previously allocated amount.
  *
- * @error CERR_MEMORY : Failed memory allocation
+ * [Parameters]
+ *
+ * 	str          - String to modify.
+ * 	bytes_number - Number of bytes.
+ *
+ * [Errors]
+ *
+ * 	CERR_MEMORY
  */
-void
-cstr_prealloc(cstr *str, size_t byte_length)
-CSTR_NONNULL(1);
-
-/** 
- * Clears errors and puts the string back into an usable state. The only unrecoverable error is CSTR_INVALID.
- *
- * @param str : String to interact with
- */
-void
-cstr_repair(cstr *str)
-CSTR_NONNULL(1);
+void cstr_prealloc(cstr *str, size_t bytes_number);
 
 /**
- * Sets the number of digits to show when a double value gets inserted. The effects of the int values are
- * limited by the printf's "%.*Lf" operator.
+ * [Description]
  *
- * @param str    : String to interact with
- * @param digits : Number of decimal digits
+ * 	Sets the number of digits to keep when a double is converted into a string.
+ * 	The effects of the digit value is limited by the printf's "%.*Lf" operator.
+ * 	By default, a string has a precision of 0 (no digits).
+ * 	Calling this function on a NULL string has no effect.
+ *
+ * [Parameters]
+ *
+ * 	str    - String to modify.
+ * 	digits - Number of decimal digits.
  */
-void
-cstr_set_precision(cstr *str, int precision)
-CSTR_NONNULL(1);
+void cstr_set_precision(cstr *str, int digits);
 
 /**
- * Slices out a set number of UTF-8 characters at a specific offset and discards the rest.
+ * [Description]
  *
- * @param str    : String to interact with
- * @param offset : UTF-8 character position to start slicing from
- * @param length : number of UTF-8 characters to slice out
+ * 	Slices out a set range of codepoints from a string and discard the rest.
+ * 	Calling this function on a NULL string has no effect.
+ *
+ * [Parameters]
+ *
+ * 	str    - String to modify.
+ * 	offset - Codepoint to start slicing from.
+ * 	length - Number of codepoints to keep.
  */
-void
-cstr_slice(cstr *str, size_t offset, size_t length)
-CSTR_NONNULL(1);
+void cstr_slice(cstr *str, size_t offset, size_t length);
 
 /**
- * Removes extra leading and trailing whitespaces (space and tab characters).
+ * [Description]
  *
- * @param str : String to interact with
+ * 	Removes extra leading and trailing whitespaces (space and tab characters).
+ * 	Calling this function on a NULL string has no effect.
+ *
+ * [Parameters]
+ *
+ * 	str - String to modify.
  */
-void
-cstr_trim(cstr *str)
-CSTR_NONNULL(1);
+void cstr_trim(cstr *str);
 
 /**
- * Wraps a string by adding newlines to rows that are longer than max_width. Old newlines are also kept.
- * This function has no effects if max_width is bigger than the string's width. A max_width of 0 is
- * illegal.
+ * [Description]
  *
- * @param str       : String to interact with
- * @param max_width : Width after which a newline is added to the string
+ * 	Wraps a string around a column limit. To do so, extra newlines are inserted. Rows shorter
+ * 	than the passed width are not modified, and existing newlines are kept.
+ * 	The string will automatically grow if needed to accommodate the inserted newlines.
  *
- * @error CERR_PARAM    : Invalid width = 0 was given
- * @error CERR_OVERFLOW : The size of the resulting string will be > SIZE_MAX
- * @error CERR_MEMORY   : Failed memory allocation
+ * 	Calling this function on a NULL string has no effect.
+ * 	A width of 0 is illegal.
+ *
+ * [Parameters]
+ *
+ * 	str   - String to modify.
+ * 	width - Maximum width of the resulting string.
+ *
+ * [Errors]
+ *
+ * 	CERR_PARAM
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
  */
-void
-cstr_wrap(cstr *str, size_t max_width)
-CSTR_NONNULL(1);
+void cstr_wrap(cstr *str, size_t width);
 
 /**
- * Similar to cstr_clear() but all of the allocated memory is also zeroed.
+ * [Description]
  *
- * @param str : String to interact with
+ * 	Clears the contents of a string and zeroes all of the allocated memory.
+ * 	Allocated memory is not freed, use cstr_destroy() for that.
+ * 	Calling this function on a NULL string has no effect.
+ *
+ * [Parameters]
+ *
+ * 	str - String to modify.
  */
-void
-cstr_zero(cstr *str)
-CSTR_NONNULL(1);
+void cstr_zero(cstr *str);
 
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Gets the string's length in bytes, including the NUL terminator.
+ * [Description]
  *
- * @param str : String to interact with
+ * 	Retrieves the string's byte length, including the NUL terminator.
  *
- * @return     : Number of bytes
- * @return_err : 0
+ * [Parameters]
+ *
+ * 	str - String to inspect
+ *
+ * [Returns]
+ *
+ * 	The number of bytes.
+ * 	If the string is NULL or in a critical error state, this function always returns 0.
  */
-size_t
-cstr_byte_length(const cstr *str)
-CSTR_NONNULL(1)
-CSTR_PURE;
+[[gnu::pure]] size_t cstr_byte_length(const cstr *str);
 
 /**
- * Converts the given UTF-8 character offset into a byte offset.
- * This function is bounds-protected, so the offset parameter is capped at the string's length, even if
- * a SIZE_MAX value is supplied.
+ * [Description]
  *
- * @param str    : String to interact with
- * @param offset : UTF-8 character offset
+ * 	Converts a codepoint offset into a byte offset.
+ * 	This function is bounds-protected. Offset is capped at the string's length, even if
+ * 	SIZE_MAX is passed.
  *
- * @return     : Converted offset in bytes
- * @return_err : 0
+ * [Parameters]
+ *
+ * 	str    - String to inspect.
+ * 	offset - Codepoint index to convert.
+ *
+ * [Returns]
+ *
+ * 	The converted codepoint offset in bytes.
+ * 	If the string is NULL or in a critical error state, this function always returns 0.
  */
-size_t
-cstr_byte_offset(const cstr *str, size_t offset)
-CSTR_NONNULL(1)
-CSTR_PURE;
+[[gnu::pure]] size_t cstr_byte_offset(const cstr *str, size_t offset);
 
 /**
- * Gets the raw NUL terminated C string.
+ * [Description]
  *
- * @param str : String to interact with
+ * 	Retrieves the raw NUL terminated C string.
  *
- * @return     : Raw C string
- * @return_err : "\0"
+ * [Parameters]
+ *
+ * 	str - String to inspect.
+ *
+ * [Returns]
+ *
+ * 	A NUL terminated array of chars.
+ * 	If the string is NULL or in a critical error state, this function always returns '\0'.
+ * 	This function never returns nullptr.
  */
-const char *
-cstr_chars(const cstr *str)
-CSTR_NONNULL_RETURN
-CSTR_NONNULL(1)
-CSTR_PURE;
+[[gnu::pure]] [[gnu::returns_nonnull]] const char *cstr_bytes(const cstr *str);
 
 /**
- * Gets the raw NUL terminated C string offseted by 2d coordinates.
- * This function is bounds-protected, so the row and col parameter are capped at the string's height and
- * width respectively, even if SIZE_MAX values are supplied.
+ * [Description]
  *
- * @param str : String to interact with
- * @param row : Row index
- * @param col : Columns index
+ * 	Retrieves the raw NUL terminated C string offseted by 2D coordinates.
+ * 	This function is bounds-protected. Row and col are capped at the string's height and width
+ * 	even if SIZE_MAX is passed.
  *
- * @return     : Raw C string
- * @return_err : "\0"
+ * [Parameters]
+ *
+ * 	str - String to inspect.
+ * 	row - Row index.
+ * 	col - Column index.
+ *
+ * [Returns]
+ *
+ * 	A NUL terminated array of chars.
+ * 	If the string is NULL or in a critical error state, this function always returns '\0'.
+ * 	This function never returns nullptr.
  */
-const char *
-cstr_chars_at_coords(const cstr *str, size_t row, size_t col)
-CSTR_NONNULL_RETURN
-CSTR_NONNULL(1)
-CSTR_PURE;
+[[gnu::pure]] [[gnu::returns_nonnull]] const char *cstr_bytes_at_coords(const cstr *str, size_t row, size_t col);
 
 /**
- * Gets the raw NUL terminated C string offseted by an specific number of UTF-8 characters.
- * This function is bounds-protected, so the offset parameter is capped at the string's length, even if
- * a SIZE_MAX value is supplied.
+ * [Description]
  *
- * @param str    : String to interact with
- * @param offset : UTF-8 character offset
+ * 	Retrieves the raw NUL terminated C string offseted by a codepoint index.
+ * 	This function is bounds-protected. Offset is capped at the string's length, even if
+ * 	SIZE_MAX is passed.
  *
- * @return     : Raw C string
- * @return_err : "\0"
+ * [Parameters]
+ *
+ * 	str    - String to inspect.
+ * 	offset - Codepoint index.
+ *
+ * [Returns]
+ *
+ * 	A NUL terminated array of chars.
+ * 	If the string is NULL or in a critical error state, this function always returns '\0'.
+ * 	This function never returns nullptr.
  */
-const char *
-cstr_chars_at_offset(const cstr *str, size_t offset)
-CSTR_NONNULL_RETURN
-CSTR_NONNULL(1)
-CSTR_PURE;
+[[gnu::pure]] [[gnu::returns_nonnull]] const char *cstr_bytes_at_offset(const cstr *str, size_t offset);
 
 /**
- * Converts the given 2d coordinates into a UTF-8 character offset.
- * This function is bounds-protected, so the row and col parameter are capped at the string's height and
- * width respectively, even if SIZE_MAX values are supplied.
+ * [Description]
  *
- * @param str : String to interact with
- * @param row : Row index
- * @param col : Columns index
+ * 	Converts 2D coordinates into a codepoint offset.
+ * 	This function is bounds-protected. Row and col are capped at the string's height and width,
+ * 	even if SIZE_MAX us passed.
  *
- * @return     : Converted offset in number of UTF-8 characters
- * @return_err : 0
+ * [Parameters]
+ *
+ * 	str - String to inspect.
+ * 	row - Row index.
+ * 	col - Columns index.
+ *
+ * [Returns]
+ *
+ * 	The converted 2D coordinates into a codepoint offset.
+ * 	If the string is NULL or in a critical error state, this function always returns 0.
  */
-size_t
-cstr_coords_offset(const cstr *str, size_t row, size_t col)
-CSTR_NONNULL(1)
-CSTR_PURE;
+[[gnu::pure]] size_t cstr_coords_offset(const cstr *str, size_t row, size_t col);
 
 /**
- * Gets the error state.
+ * [Description]
  *
- * @param str : String to interact with
+ * 	Retrieves the string's current error state.
  *
- * @return : Error value
+ * [Parameters]
+ *
+ * 	str - String to inspect.
+ *
+ * [Returns]
+ *
+ * 	The current error code.
+ * 	If the string is NULL, this function always returns CERR_INVALID.
  */
-enum cerr
-cstr_error(const cstr *str)
-CSTR_NONNULL(1)
-CSTR_PURE;
+[[gnu::pure]] enum cerr cstr_error(const cstr *str);
 
 /**
- * Get the number of rows.
+ * [Description]
  *
- * @param str : String to interact with
+ * 	Retrieves the number of rows.
+ * 	An empty string will still have a height of 1.
  *
- * @return     : Number of rows
- * @return_err : 0
+ * [Parameters]
+ *
+ * 	str - String to inspect.
+ *
+ * [Returns]
+ *
+ * 	Total number of rows.
+ * 	If the string is NULL or in a critical error state, this function always returns 0.
  */
-size_t
-cstr_height(const cstr *str)
-CSTR_NONNULL(1)
-CSTR_PURE;
+[[gnu::pure]] size_t cstr_height(const cstr *str);
 
 /**
- * Gets the number of UTF-8 characters a string is made of. Unlike cstr_byte_length(), the NUL terminator is
- * not included.
+ * [Description]
  *
- * @param str : String to interact with
+ * 	Retrieves the length of the string.
+ * 	The NUL terminator is not included.
  *
- * @return     : Number of UTF-8 characters
- * @return_err : 0
+ * [Parameters]
+ *
+ * 	str - String to inspect.
+ *
+ * [Returns]
+ *
+ * 	Total number of codepoints.
+ * 	If the string is NULL or in a critical error state, this function always returns 0.
  */
-size_t
-cstr_length(const cstr *str)
-CSTR_NONNULL(1)
-CSTR_PURE;
+[[gnu::pure]] size_t cstr_length(const cstr *str);
 
 /**
- * Gets the number of columns of a given row. The NUL terminator and newline characters are not included.
- * This function is bounds-protected, so the row parameter is capped at the string's height, even if
- * a SIZE_MAX value is supplied.
+ * [Description]
  *
- * @param str : String to interact with
+ * 	Retrieves width of a specific row.
+ * 	The NUL terminator and newline characters are not included.
+ * 	This function is bounds-protected. Row is capped at the string's height, even if
+ * 	SIZE_MAX is passed.
  *
- * @return     : Number of columns
- * @return_err : 0
+ * [Parameters]
+ *
+ * 	str - String to inspect.
+ *
+ * [Returns]
+ *
+ * 	Total number of columns.
+ * 	If the string is NULL or in a critical error state, this function always returns 0.
  */
-size_t
-cstr_row_width(const cstr *str, size_t row)
-CSTR_NONNULL(1)
-CSTR_PURE;
+[[gnu::pure]] size_t cstr_row_width(const cstr *str, size_t row);
 
 /**
- * Calculates the number of rows a string wrapped with max_width will have. But unlike cstr_wrap() the string
- * is not modified.
+ * [Description]
  *
- * @param str       : String to interact with
- * @param max_width : Width after which a newline is added to the string
+ * 	Calculates the number of rows a string will have after a wrapping operation. But unlike
+ * 	cstr_wrap(), the string is not modified, its geometry is not recalculated, and no memory
+ * 	reallocations can happen.
+ * 	This function is intended to be used before cstr_wrap() when displaying large amount of text
+ * 	inside widgets, to check whether or not a scrollbar needs to be shown.
  *
- * @return     : Number of rows
- * @return_err : 0
+ * [Parameters]
+ *
+ * 	str   - String to inspect.
+ * 	width - Maximum width of the resulting string.
+ *
+ * [Returns]
+ *
+ * 	The resulting number of rows.
+ * 	If the string is NULL, in a critical error state, or the illegal width value 0 is passed,
+ * 	then this function always returns 0.
  */
-size_t
-cstr_test_wrap(const cstr *str, size_t max_width)
-CSTR_NONNULL(1)
-CSTR_PURE;
+[[gnu::pure]] size_t cstr_test_wrap(const cstr *str, size_t width);
 
 /**
- * Converts the UTF-8 character offset of a wrapped string into an offset that matches the character position
- * of the unwrapped string. It is assumed the difference between str_wrap and str is a single cstr_wrap()
- * operation and that the tab width of both strings is equal. Check out the provided example for more
- * details about this function use case.
- * This function is bounds-protected, so the offset parameter is capped at the string's length, even if
- * a SIZE_MAX value is supplied.
+ * [Description]
  *
- * @param str      : Reference string
- * @param str_wrap : Wrapped string
- * @param offset   : UTF-8 character offset
+ * 	Converts a wrapped string codepoint offset into an equivalent unwrapped string codepoint
+ * 	offset. It is assumed the difference between str_wrap and str is a single cstr_wrap()
+ * 	operation. Check out the provided example for more details about this function's use case.
+ * 	This function is bounds-protected. Offset is capped at str_wrap's length, even if
+ * 	SIZE_MAX is passed.
  *
- * @return     : Converted offset in number of UTF-8 characters
- * @return_err : 0
+ * [Example]
+ *
+ * 	Here str1 is used to keep data in its original form. And str2 is the string displayed inside
+ * 	a widget or terminal. The end user only see and interacts with str2. Any modifications to str2
+ * 	(like data insertion) should be passed first to str1, and only then str2 can be updated.
+ * 	cstr_unwrapped offset() helps with that.
+ * 	In the second part, a "_" character is supposed to be insert into str1 at a position that
+ * 	matches the 7th codepoint in str2 (this offset value includes newlines). After the new
+ * 	character is inserted into str1, str2 is regenerated.
+ *
+ * 	cstr_clear(str1);
+ * 	cstr_clear(str2);
+ * 	cstr_append(str1, "1234567890");
+ * 	cstr_append(str2, str1);
+ * 	cstr_wrap(str2, 4);
+ *
+ * 	--> str1 = 1234567890
+ * 	--> str2 = 1234
+ * 	           5678
+ * 	           90
+ *
+ * 	cstr_insert(str1, "_", cstr_unwrapped_offset(str1, str2, 7);
+ * 	cstr_clear(str2);
+ * 	cstr_append(str2, str1);
+ * 	cstr_wrap(str2, 4);
+ *
+ * 	-->str1 = 12345_6890
+ * 	-->str2 = 1234
+ * 	          5_67
+ * 	          890
+ *
+ * [Parameters]
+ *
+ * 	str      : Reference string.
+ * 	str_wrap : Wrapped string.
+ * 	offset   : Copedpoint index to convert.
+ *
+ * [Returns]
+ *
+ * 	The converted codepoint offset.
+ * 	If the str or str_wrap are NULL or in a critical error state, this function always returns 0.
  */
-size_t
-cstr_unwrapped_offset(const cstr *str, const cstr *str_wrap, size_t offset)
-CSTR_NONNULL(1, 2)
-CSTR_PURE;
+[[gnu::pure]] size_t cstr_unwrapped_offset(const cstr *str, const cstr *str_wrap, size_t offset);
 
 /**
- * Gets the number of columns. The NUL terminator and newline characters are not included.
+ * [Description]
  *
- * @param str : String to interact with
+ * 	Retrieves the number of columns.
+ * 	The NUL terminator and newline are not included.
  *
- * @return     : Number of columns
- * @return_err : 0
+ * [Parameters]
+ *
+ * 	str - String to inspect.
+ *
+ * [Returns]
+ *
+ * 	Total number of columns.
+ * 	If the string is NULL or in a critical error state, this function always returns 0.
  */
-size_t
-cstr_width(const cstr *str)
-CSTR_NONNULL(1)
-CSTR_PURE;
+[[gnu::pure]] size_t cstr_width(const cstr *str);
 
 /************************************************************************************************************/
 /* EXTRAS ***************************************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Traverses the given C string until the next UTF-8 character starts.
+ * [Description]
  *
- * @param byte : Character to start from
+ * 	Traverses a NUL terminated byte array until the start of the next codepoint.
+ * 	This function EXPECTS a non-NULL byte pointer, it's undefined behavior otherwhise.
  *
- * @return : Pointer to next UTF-8 character.
+ * [Parameters]
+ *
+ * 	byte - Starting point.
+ *
+ * [Returns]
+ *
+ * 	Pointer to the start of the next codepoint.
+ * 	This function never returns nullptr.
  */
-const char *
-cstr_next_char(const char *byte)
-CSTR_NONNULL(1)
-CSTR_PURE;
+[[gnu::pure]] [[gnu::nonnull(1)]] [[gnu::returns_nonnull]] const char *cstr_next_codepoint(const char *byte);
 
 /**
- * Traverses the given C string until the next row starts.
+ * [Description]
  *
- * @param byte      : Character to start from
- * @param tab_width : Optional, only used to calculate the row width.
- * @param row_width : Optional, if non-NULL, the width (in columns) of the traversed row from the start byte.
- *                    NUL terminator and newline characters are not included.
+ * 	Traverses a NUL terminated byte array until the start of the next row.
+ * 	This function EXPECTS a non-NULL byte pointer, it's undefined behavior otherwhise.
+ * 	The width parameter is optional
  *
- * @return : Pointer to next row.
+ * [Parameters]
+ *
+ * 	byte  - Starting point.
+ * 	width - If given, the width of the row is written into it.
+ * 	        NUL terminator and newline are not included.
+ *
+ * [Returns]
+ *
+ * 	Pointer to the start of the next row.
+ * 	This function never returns nullptr.
  */
-const char *
-cstr_next_row(const char *byte, size_t tab_width, size_t *row_width)
-CSTR_NONNULL(1)
-CSTR_PURE;
+[[gnu::pure]] [[gnu::nonnull(1)]] [[gnu::returns_nonnull]] const char *cstr_next_row(const char *byte, size_t *width);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

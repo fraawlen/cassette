@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Objects (COBJ) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -38,8 +38,6 @@ static struct ccolor cl_2;
 static struct ccolor cl_3;
 static struct ccolor cl_4;
 
-static cstr *str  = CSTR_PLACEHOLDER;
-
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -47,11 +45,11 @@ static cstr *str  = CSTR_PLACEHOLDER;
 int
 main(void)
 {
-	str = cstr_create();
+//	str = cstr_create();
 
-	cstr_set_precision(str, 0);
+//	cstr_set_precision(str, 0);
 
-	cl_1 = CCOLOR_BLUE;
+	cl_1 = ccolor_blue;
 	cl_2 = ccolor_from_str("#FF0000", NULL);
 	cl_3 = ccolor_from_rgba(128, 128, 128, 255);
 	cl_4 = ccolor_interpolate(cl_1, cl_2, 0.5);
@@ -61,12 +59,9 @@ main(void)
 	print_cl(cl_3);
 	print_cl(cl_4);
 	
-	if (cstr_error(str))
-	{
-		printf("String errored during operation\n");	
-	}
+//	cerr_print(cstr_error(str));
 
-	cstr_destroy(str);
+//	str = cstr_destroy(str);
 
 	return 0;
 }
@@ -89,9 +84,16 @@ print_cl(struct ccolor cl)
 static const char *
 to_str(double val)
 {
+/*
 	cstr_clear(str);
 	cstr_append(str, val * 255.0);
 	cstr_pad(str, " ", 0, 4);
 
 	return cstr_chars(str);
+*/
+	(void)val;
+
+	return "";
+
+	// TODO
 }

@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Objects (COBJ) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -19,76 +19,91 @@
 /************************************************************************************************************/
 
 #include <cassette/cobj.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /************************************************************************************************************/
-/* PRIVATE **************************************************************************************************/
+/* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-bool
-csafe_add(size_t *result, size_t a, size_t b)
+void
+cerr_clear_warnings(enum cerr *err)
 {
-	bool safe;
-
-	safe = a <= SIZE_MAX - b;
-
-	if (result)
+	if (err && !cerr_critical(*err))
 	{
-		*result = safe ? a + b : a;
+		*err = CERR_NONE;
 	}
-
-	return safe;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-csafe_div(size_t *result, size_t a, size_t b)
+cerr_critical(enum cerr code)
 {
-	bool safe;
-
-	safe = b != 0;
-
-	if (result)
+	switch (code)
 	{
-		*result = safe ? a / b : a;
-	}
+		case CERR_NONE:
+		case CERR_PARAM:
+			return false;
 
-	return safe;
+		default:
+			return true;
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
-csafe_mul(size_t *result, size_t a, size_t b)
+const char *
+cerr_name(enum cerr code)
 {
-	bool safe;
-
-	safe = b == 0 || a <= SIZE_MAX / b;
-
-	if (result)
+	switch (code)
 	{
-		*result = safe ? a * b : a;
-	}
+		case CERR_NONE:
+			return "CERR_NONE";
 
-	return safe;
+		case CERR_PARAM:
+			return "CERR_PARAM";
+
+		case CERR_INVALID:
+			return "CERR_INVALID";
+
+		case CERR_OVERFLOW:
+			return "CERR_OVERFLOW";
+
+		case CERR_MEMORY:
+			return "CERR_MEMORY";
+
+		case CERR_CONFIG:
+			return "CERR_CONFIG";
+
+		case CERR_XCB:
+			return "CERR_XCB";
+
+		case CERR_CAIRO:
+			return "CERR_CAIRO";
+
+		case CERR_MUTEX:
+			return "CERR_MUTEX";
+
+		case CERR_INSTANCE:
+			return "CERR_INSTANCE";
+
+		case CERR_MALFORMED:
+			return "CERR_MALFORMED";
+
+		default:
+			return "UNKNOWN";
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-bool
-csafe_sub(size_t *result, size_t a, size_t b)
+void
+cerr_set(enum cerr *err, enum cerr code)
 {
-	bool safe;
-
-	safe = a > b;
-
-	if (result)
+	if (err && (*err == CERR_NONE || (!cerr_critical(*err) && cerr_critical(code))))
 	{
-		*result = safe ? a - b : a;
+		*err = code;
 	}
-
-	return safe;
 }

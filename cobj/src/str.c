@@ -20,6 +20,8 @@
 
 #include <cassette/cobj.h>
 #include <stdbool.h>
+#include <stdckdint.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,16 +31,20 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#define GUARD(OBJ, ...) if (!OBJ || cerr_critical(OBJ->err)) { return __VA_OPT__(__VA_ARGS__); }
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 struct cstr
 {
-	char *chars;
+	char *bytes;
 	size_t n_rows;
 	size_t n_cols;
-	size_t n_chars;
+	size_t n_bytes;
 	size_t n_alloc;
 	size_t n_codepoints;
 	size_t tab_width;
-	int precision;
+	int digits;
 	enum cerr err;
 };
 
@@ -46,27 +52,10 @@ struct cstr
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static size_t byte_offset     (const cstr *, size_t) CSTR_NONNULL(1) CSTR_PURE;
-static bool   is_head_byte    (uint8_t)              CSTR_CONST;
-static size_t tab_real_width  (size_t, size_t)       CSTR_CONST;
-static void   update_n_values (cstr *)               CSTR_NONNULL(1);
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-cstr cstr_placeholder_instance =
-{
-	.chars        = NULL,
-	.n_rows       = 0,
-	.n_cols       = 0,
-	.n_chars      = 0,
-	.n_alloc      = 0,
-	.n_codepoints = 0,
-	.tab_width    = 0,
-	.precision    = 0,
-	.err          = CERR_INVALID,
-};
+static size_t byte_offset     (const cstr *, size_t);
+static bool   is_head_byte    (uint8_t);
+static size_t tab_real_width  (size_t, size_t);
+static void   update_n_values (cstr *);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -75,12 +64,9 @@ cstr cstr_placeholder_instance =
 size_t
 cstr_byte_length(const cstr *str)
 {
-	if (str->err)
-	{
-		return 0;
-	}
+	GUARD(str, 0);
 
-	return str->n_chars;
+	return str->n_bytes;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -88,10 +74,7 @@ cstr_byte_length(const cstr *str)
 size_t
 cstr_byte_offset(const cstr *str, size_t offset)
 {
-	if (str->err)
-	{
-		return 0;
-	}
+	GUARD(str, 0);
 
 	return byte_offset(str, offset);
 }
@@ -99,40 +82,31 @@ cstr_byte_offset(const cstr *str, size_t offset)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-cstr_chars(const cstr *str)
+cstr_bytes(const cstr *str)
 {
-	if (str->err)
-	{
-		return "";
-	}
+	GUARD(str, "");
 
-	return str->chars;
+	return str->bytes;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-cstr_chars_at_coords(const cstr *str, size_t row, size_t col)
+cstr_bytes_at_coords(const cstr *str, size_t row, size_t col)
 {
-	if (str->err)
-	{
-		return "";
-	}
+	GUARD(str, "");
 
-	return str->chars + byte_offset(str, cstr_coords_offset(str, row, col));
+	return str->bytes + byte_offset(str, cstr_coords_offset(str, row, col));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-cstr_chars_at_offset(const cstr *str, size_t offset)
+cstr_bytes_at_offset(const cstr *str, size_t offset)
 {
-	if (str->err)
-	{
-		return "";
-	}
+	GUARD(str, "");
 
-	return str->chars + byte_offset(str, offset);
+	return str->bytes + byte_offset(str, offset);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -140,14 +114,21 @@ cstr_chars_at_offset(const cstr *str, size_t offset)
 void
 cstr_clear(cstr *str)
 {
-	if (str->err)
-	{
-		return;
-	}
+	GUARD(str);
 
-	str->chars[0] = '\0';
+	str->bytes[0] = '\0';
 
 	update_n_values(str);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cstr_clear_warnings(cstr *str)
+{
+	GUARD(str);
+
+	cerr_clear_warnings(&str->err);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -155,29 +136,31 @@ cstr_clear(cstr *str)
 cstr *
 cstr_clone(const cstr *str)
 {
+	GUARD(str, nullptr);
+
 	cstr *str_new;
 
-	if (str->err || !(str_new = malloc(sizeof(cstr))))
+	if (!(str_new = malloc(sizeof(cstr))))
 	{
-		return CSTR_PLACEHOLDER;
+		return nullptr;
 	}
 
-	if (!(str_new->chars = malloc(str->n_alloc)))
+	if (!(str_new->bytes = malloc(str->n_alloc)))
 	{
 		free(str_new);
-		return CSTR_PLACEHOLDER;
+		return nullptr;
 	}
 
-	memcpy(str_new->chars, str->chars, str->n_chars);
+	memcpy(str_new->bytes, str->bytes, str->n_bytes);
 
 	str_new->n_rows       = str->n_rows;
 	str_new->n_cols       = str->n_cols;
-	str_new->n_chars      = str->n_chars;
+	str_new->n_bytes      = str->n_bytes;
 	str_new->n_codepoints = str->n_codepoints;
 	str_new->n_alloc      = str->n_alloc;
 	str_new->tab_width    = str->tab_width;
-	str_new->precision    = str->precision;
-	str_new->err          = CERR_NONE;
+	str_new->digits       = str->digits;
+	str_new->err          = str->err;
 	
 	return str_new;
 }
@@ -187,13 +170,10 @@ cstr_clone(const cstr *str)
 size_t
 cstr_coords_offset(const cstr *str, size_t row, size_t col)
 {
-	const char *codepoint;
-	size_t offset = 0;
+	GUARD(str, 0);
 
-	if (str->err)
-	{
-		return 0;
-	}
+	const char *codepoint = str->bytes;
+	size_t      offset    = 0;
 
 	if (row >= str->n_rows)
 	{
@@ -205,8 +185,6 @@ cstr_coords_offset(const cstr *str, size_t row, size_t col)
 		col = str->n_cols;
 	}
 
-	codepoint = str->chars;
-
 	/* skip rows */
 
 	while (row > 0)
@@ -215,7 +193,7 @@ cstr_coords_offset(const cstr *str, size_t row, size_t col)
 		{
 			row--;
 		}
-		codepoint = cstr_next_char(codepoint);
+		codepoint = cstr_next_codepoint(codepoint);
 		offset++;
 	}
 
@@ -241,7 +219,7 @@ cstr_coords_offset(const cstr *str, size_t row, size_t col)
 				col--;
 				break;
 		}
-		codepoint = cstr_next_char(codepoint);
+		codepoint = cstr_next_codepoint(codepoint);
 		offset++;
 	}
 
@@ -257,19 +235,19 @@ cstr_create(void)
 
 	if (!(str = malloc(sizeof(cstr))))
 	{
-		return CSTR_PLACEHOLDER;
+		return nullptr;
 	}
 
-	if (!(str->chars = malloc(1)))
+	if (!(str->bytes = malloc(1)))
 	{
 		free(str);
-		return CSTR_PLACEHOLDER;
+		return nullptr;
 	}
 
-	str->chars[0]  = '\0';
+	str->bytes[0]  = '\0';
 	str->n_alloc   = 1;
 	str->tab_width = 1;
-	str->precision = 0;
+	str->digits    = 0;
 	str->err       = CERR_NONE;
 	
 	update_n_values(str);
@@ -282,9 +260,11 @@ cstr_create(void)
 void
 cstr_cut(cstr *str, size_t offset, size_t length)
 {
+	GUARD(str);
+
 	size_t offset_2;
 
-	if (str->err || offset >= str->n_codepoints || length == 0)
+	if (offset >= str->n_codepoints || length == 0)
 	{
 		return;
 	}
@@ -297,23 +277,22 @@ cstr_cut(cstr *str, size_t offset, size_t length)
 	offset_2 = byte_offset(str, offset + length);
 	offset   = byte_offset(str, offset);
 
-	memmove(str->chars + offset, str->chars + offset_2, str->n_chars - offset_2);
+	memmove(str->bytes + offset, str->bytes + offset_2, str->n_bytes - offset_2);
 
 	update_n_values(str);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
+nullptr_t
 cstr_destroy(cstr *str)
 {
-	if (str == CSTR_PLACEHOLDER)
-	{
-		return;
-	}
+	GUARD(str, nullptr);
 
-	free(str->chars);
+	free(str->bytes);
 	free(str);
+
+	return nullptr;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -321,7 +300,7 @@ cstr_destroy(cstr *str)
 enum cerr
 cstr_error(const cstr *str)
 {
-	return str->err;
+	return str ? str->err : CERR_INVALID;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -329,10 +308,7 @@ cstr_error(const cstr *str)
 size_t
 cstr_height(const cstr *str)
 {
-	if (str->err)
-	{
-		return 0;
-	}
+	GUARD(str, 0);
 
 	return str->n_rows;
 }
@@ -340,14 +316,55 @@ cstr_height(const cstr *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cstr_insert_cstr(cstr *str, const cstr *str_src, size_t offset)
+cstr_insert_bytes(cstr *str, const char *bytes, size_t offset)
 {
-	if (str_src->err)
+	GUARD(str);
+
+	if (!bytes)
 	{
 		return;
 	}
 
-	cstr_insert_raw(str, str_src->chars, offset);
+	size_t n = strlen(bytes);
+
+	/* extend allocated memory if needed */
+
+	size_t m;
+
+	if (ckd_add(&m, n, str->n_bytes))
+	{
+		cerr_set(&str->err, CERR_OVERFLOW);
+		return;
+	}
+
+	if (m > str->n_alloc && !CUTIL_REALLOC(str->bytes, str->n_alloc, m, 1, str->err))
+	{
+		return;
+	}
+	
+	/* detect overlapping memory areas */
+
+	char *tmp = NULL;
+
+	if (bytes >= str->bytes && bytes <= str->bytes + str->n_alloc)
+	{
+		if (!(tmp = strdup(bytes)))
+		{
+			cerr_set(&str->err, CERR_MEMORY);
+			return;
+		}
+		bytes = tmp;
+	}
+
+	/* insert */
+
+	offset = byte_offset(str, offset);
+
+	memmove(str->bytes + offset + n, str->bytes + offset, str->n_bytes - offset);
+	memcpy(str->bytes + offset, bytes, n);
+	
+	update_n_values(str);
+	free(tmp);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -357,9 +374,9 @@ cstr_insert_double(cstr *str, double d, size_t offset)
 {
 	char tmp[64];
 
-	snprintf(tmp, 64, "%.*f", str->precision, d);
+	snprintf(tmp, 64, "%.*f", str->digits, d);
 
-	cstr_insert_raw(str, tmp, offset);
+	cstr_insert_bytes(str, tmp, offset);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -371,65 +388,18 @@ cstr_insert_long(cstr *str, long long l, size_t offset)
 
 	snprintf(tmp, 64, "%lli", l);
 
-	cstr_insert_raw(str, tmp, offset);
+	cstr_insert_bytes(str, tmp, offset);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cstr_insert_raw(cstr *str, const char *raw_str, size_t offset)
+cstr_insert_str(cstr *str, const cstr *str_src, size_t offset)
 {
-	size_t n;
-	size_t m;
-	char *tmp_dst;
-	char *tmp_src = NULL;
+	GUARD(str);
+	GUARD(str_src);
 
-	if (str->err)
-	{
-		return;
-	}
-
-	if (!csafe_add(&m, n = strlen(raw_str), str->n_chars))
-	{
-		str->err = CERR_OVERFLOW;
-		return;
-	}
-	
-	/* detect overlapping memory areas */
-
-	if (raw_str >= str->chars && raw_str <= str->chars + str->n_alloc)
-	{
-		if (!(tmp_src = strdup(raw_str)))
-		{
-			str->err = CERR_MEMORY;
-			return;
-		}
-		raw_str = tmp_src;
-	}
-
-	/* extend allocated memory if needed */
-
-	if (m > str->n_alloc)
-	{
-		if (!(tmp_dst = realloc(str->chars, m)))
-		{
-			str->err = CERR_MEMORY;
-			free(tmp_src);
-			return;
-		}
-		str->chars   = tmp_dst;
-		str->n_alloc = m;
-	}
-
-	/* insert */
-
-	offset = byte_offset(str, offset);
-
-	memmove(str->chars + offset + n, str->chars + offset, str->n_chars - offset);
-	memcpy(str->chars + offset, raw_str, n);
-	free(tmp_src);
-	
-	update_n_values(str);
+	cstr_insert_bytes(str, str_src->bytes, offset);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -437,10 +407,7 @@ cstr_insert_raw(cstr *str, const char *raw_str, size_t offset)
 size_t
 cstr_length(const cstr *str)
 {
-	if (str->err)
-	{
-		return 0;
-	}
+	GUARD(str, 0);
 
 	return str->n_codepoints;
 }
@@ -448,7 +415,7 @@ cstr_length(const cstr *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-cstr_next_char(const char *byte)
+cstr_next_codepoint(const char *byte)
 {
 	if (*byte != '\0')
 	{
@@ -465,11 +432,12 @@ cstr_next_char(const char *byte)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 const char *
-cstr_next_row(const char *byte, size_t tab_width, size_t *row_width)
+cstr_next_row(const char *byte, size_t *row_width)
 {
+	size_t tab_width = 1; /* hardcoded until proper tab support */
 	size_t col = 0;
 
-	for (const char *codepoint = byte;; codepoint = cstr_next_char(codepoint))
+	for (const char *codepoint = byte;; codepoint = cstr_next_codepoint(codepoint))
 	{
 		switch (*codepoint)
 		{
@@ -500,8 +468,10 @@ cstr_next_row(const char *byte, size_t tab_width, size_t *row_width)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
+cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length)
 {
+	GUARD(str);
+
 	size_t n_codepoints = 0;
 	size_t length_diff;
 	size_t n;
@@ -509,25 +479,24 @@ cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 	size_t j;
 	char *tmp;
 
-	if (str->err || length_target <= str->n_codepoints || pattern[0] == '\0')
+	if (length <= str->n_codepoints || !pattern || pattern[0] == '\0')
 	{
 		return;
 	}
 
-	length_diff = length_target - str->n_codepoints;
+	length_diff = length - str->n_codepoints;
 
 	/* alloc memory for the padding string */
 
-	if (!csafe_mul(&n, length_diff, 4)
-	 || !csafe_add(&n, n, 1))
+	if (ckd_mul(&n, length_diff, 4) || ckd_add(&n, n, 1))
 	{
-		str->err = CERR_OVERFLOW;
+		cerr_set(&str->err, CERR_OVERFLOW);
 		return;
 	}
 
 	if (!(tmp = calloc(n, 1)))
 	{
-		str->err = CERR_MEMORY;
+		cerr_set(&str->err, CERR_MEMORY);
 		return;
 	}
 
@@ -551,7 +520,7 @@ cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 
 	/* insert it */
 
-	cstr_insert_raw(str, tmp, offset);
+	cstr_insert_bytes(str, tmp, offset);
 
 	free(tmp);
 }
@@ -559,33 +528,13 @@ cstr_pad(cstr *str, const char *pattern, size_t offset, size_t length_target)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cstr_prealloc(cstr *str, size_t byte_length)
+cstr_prealloc(cstr *str, size_t bytes_number)
 {
-	char *tmp;
+	GUARD(str);
 
-	if (str->err || byte_length <= str->n_alloc)
+	if (bytes_number > str->n_alloc)
 	{
-		return;
-	}
-
-	if (!(tmp = realloc(str->chars, byte_length)))
-	{
-		str->err = CERR_MEMORY;
-		return;
-	}
-
-	str->chars   = tmp;
-	str->n_alloc = byte_length;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cstr_repair(cstr *str)
-{
-	if (str->err != CERR_INVALID)
-	{
-		str->err = CERR_NONE;
+		CUTIL_REALLOC(str->bytes, str->n_alloc, bytes_number, 1, str->err);
 	}
 }
 
@@ -594,7 +543,9 @@ cstr_repair(cstr *str)
 size_t
 cstr_row_width(const cstr *str, size_t row)
 {
-	const char *codepoint = str->chars;
+	GUARD(str, 0);
+
+	const char *codepoint = str->bytes;
 	size_t width = 0;
 
 	if (row >= str->n_rows)
@@ -604,7 +555,7 @@ cstr_row_width(const cstr *str, size_t row)
 
 	do
 	{
-		codepoint = cstr_next_row(codepoint, str->tab_width, &width);
+		codepoint = cstr_next_row(codepoint, &width);
 	}
 	while (row-- > 0);
 
@@ -614,14 +565,11 @@ cstr_row_width(const cstr *str, size_t row)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cstr_set_precision(cstr *str, int precision)
+cstr_set_precision(cstr *str, int digits)
 {
-	if (str->err)
-	{
-		return;
-	}
+	GUARD(str);
 
-	str->precision = precision;
+	str->digits = digits;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -648,10 +596,7 @@ cstr_set_tab_width(cstr *str, size_t width)
 void
 cstr_slice(cstr *str, size_t offset, size_t length)
 {
-	if (str->err)
-	{
-		return;
-	}
+	GUARD(str);
 
 	if (offset >= str->n_codepoints || length == 0)
 	{
@@ -670,22 +615,24 @@ cstr_slice(cstr *str, size_t offset, size_t length)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 size_t
-cstr_test_wrap(const cstr *str, size_t max_width)
+cstr_test_wrap(const cstr *str, size_t width)
 {
+	GUARD(str, 0);
+
 	size_t row = 1;
 	size_t col = 0;
 
-	if (str->err || max_width == 0)
+	if (width == 0)
 	{
 		return 0;
 	}
 
-	if (max_width >= str->n_cols)
+	if (width >= str->n_cols)
 	{
 		return str->n_rows;
 	}
 
-	for (const char *codepoint = str->chars; *codepoint != '\0'; codepoint = cstr_next_char(codepoint))
+	for (const char *codepoint = str->bytes; *codepoint != '\0'; codepoint = cstr_next_codepoint(codepoint))
 	{
 		if (*codepoint == '\n')
 		{
@@ -696,7 +643,7 @@ cstr_test_wrap(const cstr *str, size_t max_width)
 		{
 			col += tab_real_width(str->tab_width, col);
 		}
-		else if (col >= max_width)
+		else if (col >= width)
 		{
 			col = 1;
 			row++;
@@ -715,16 +662,13 @@ cstr_test_wrap(const cstr *str, size_t max_width)
 void
 cstr_trim(cstr *str)
 {
-	if (str->err)
-	{
-		return;
-	}
+	GUARD(str);
 
 	/* leading whitespaces */
 
 	for (size_t i = 0;; i++)
 	{
-		switch (str->chars[i])
+		switch (str->bytes[i])
 		{
 			case '\v':
 			case '\t':
@@ -741,14 +685,14 @@ exit_lead:
 
 	/* trailing whitespaces */
 
-	if (str->n_chars < 2)
+	if (str->n_bytes < 2)
 	{
 		return;
 	}
 
-	for (size_t i = str->n_chars - 2;; i--)
+	for (size_t i = str->n_bytes - 2;; i--)
 	{
-		switch (str->chars[i])
+		switch (str->bytes[i])
 		{
 			case '\v':
 			case '\t':
@@ -767,22 +711,20 @@ exit_lead:
 size_t
 cstr_unwrapped_offset(const cstr *str, const cstr *str_wrap, size_t offset)
 {
+	GUARD(str, 0);
+	GUARD(str_wrap, 0);
+
 	const char *codepoint_1;
 	const char *codepoint_2;
 	size_t diff = 0;
-
-	if (str->err || str_wrap->err)
-	{
-		return 0;
-	}
 
 	if (offset >= str_wrap->n_codepoints)
 	{
 		return str->n_codepoints;
 	}
 
-	codepoint_1 = str->chars;
-	codepoint_2 = str_wrap->chars;
+	codepoint_1 = str->bytes;
+	codepoint_2 = str_wrap->bytes;
 
 	for (size_t i = 0; i < offset; i++)
 	{
@@ -792,10 +734,10 @@ cstr_unwrapped_offset(const cstr *str, const cstr *str_wrap, size_t offset)
 		}
 		else
 		{
-			codepoint_1 = cstr_next_char(codepoint_1);
+			codepoint_1 = cstr_next_codepoint(codepoint_1);
 		}
 
-		codepoint_2 = cstr_next_char(codepoint_2);
+		codepoint_2 = cstr_next_codepoint(codepoint_2);
 	}
 
 	return offset - diff;
@@ -806,10 +748,7 @@ cstr_unwrapped_offset(const cstr *str, const cstr *str_wrap, size_t offset)
 size_t
 cstr_width(const cstr *str)
 {
-	if (str->err)
-	{
-		return 0;
-	}
+	GUARD(str, 0);
 
 	return str->n_cols;
 }
@@ -817,34 +756,36 @@ cstr_width(const cstr *str)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cstr_wrap(cstr *str, size_t max_width)
+cstr_wrap(cstr *str, size_t width)
 {
+	GUARD(str);
+
 	size_t col;
 	size_t n;
 	char *tmp;
 
-	if (str->err || max_width >= str->n_cols)
+	if (width >= str->n_cols)
 	{
 		return;
 	}
 
-	if (max_width == 0)
+	if (width == 0)
 	{
-		str->err = CERR_PARAM;
+		cerr_set(&str->err, CERR_PARAM);
 		return;
 	}
 
 	/* alloc memory */
 
-	if (!csafe_mul(&n, str->n_alloc, 2))
+	if (ckd_mul(&n, str->n_alloc, 2))
 	{
-		str->err = CERR_OVERFLOW;
+		cerr_set(&str->err, CERR_OVERFLOW);
 		return;
 	}
 
 	if (!(tmp = malloc(n)))
 	{
-		str->err = CERR_MEMORY;
+		cerr_set(&str->err, CERR_MEMORY);
 		return;
 	}
 
@@ -854,36 +795,36 @@ cstr_wrap(cstr *str, size_t max_width)
 
 	str->n_cols       = 0;
 	str->n_rows       = 1;
-	str->n_chars      = 0;
+	str->n_bytes      = 0;
 	str->n_codepoints = 0;
 
 	col = 0;
 
 	for (size_t i = 0;; i++)
 	{
-		if (is_head_byte(str->chars[i]))
+		if (is_head_byte(str->bytes[i]))
 		{
-			if (str->chars[i] == '\0')
+			if (str->bytes[i] == '\0')
 			{
-				tmp[str->n_chars++] = str->chars[i];
+				tmp[str->n_bytes++] = str->bytes[i];
 				break;
 			}
-			else if (str->chars[i] == '\n')
+			else if (str->bytes[i] == '\n')
 			{
 				str->n_rows++;
 				col = 0;
 			}
-			else if (str->chars[i] == '\t')
+			else if (str->bytes[i] == '\t')
 			{
 				col += tab_real_width(str->tab_width, col);
 			}
-			else if (col >= max_width)
+			else if (col >= width)
 			{
-				tmp[str->n_chars] = '\n';
+				tmp[str->n_bytes] = '\n';
 				str->n_cols = col > str->n_cols ? col : str->n_cols;
 				str->n_codepoints++;
 				str->n_rows++;
-				str->n_chars++;
+				str->n_bytes++;
 				col = 1;
 			}
 			else
@@ -892,11 +833,11 @@ cstr_wrap(cstr *str, size_t max_width)
 			}
 			str->n_codepoints++;
 		}
-		tmp[str->n_chars++] = str->chars[i];
+		tmp[str->n_bytes++] = str->bytes[i];
 	}
 
-	free(str->chars);
-	str->chars = tmp;
+	free(str->bytes);
+	str->bytes = tmp;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -904,12 +845,9 @@ cstr_wrap(cstr *str, size_t max_width)
 void
 cstr_zero(cstr *str)
 {
-	if (str->err)
-	{
-		return;
-	}
+	GUARD(str);
 
-	memset(str->chars, '\0', str->n_alloc);
+	memset(str->bytes, '\0', str->n_alloc);
 
 	update_n_values(str);
 }
@@ -921,14 +859,14 @@ cstr_zero(cstr *str)
 static size_t
 byte_offset(const cstr *str, size_t offset)
 {
-	const char *codepoint = str->chars;
+	const char *codepoint = str->bytes;
 
-	while (offset > 0 && *(codepoint = cstr_next_char(codepoint)) != '\0')
+	while (offset > 0 && *(codepoint = cstr_next_codepoint(codepoint)) != '\0')
 	{
 		offset--;
 	}
 
-	return codepoint - str->chars;
+	return codepoint - str->bytes;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -965,16 +903,16 @@ update_n_values(cstr *str)
 
 	str->n_rows       = 1;
 	str->n_cols       = 0;
-	str->n_chars      = 0;
+	str->n_bytes      = 0;
 	str->n_codepoints = 0;
 	
-	for (;; str->n_chars++)
+	for (;; str->n_bytes++)
 	{
-		switch (str->chars[str->n_chars])
+		switch (str->bytes[str->n_bytes])
 		{
 			case '\0':
 				str->n_cols = col > str->n_cols ? col : str->n_cols;
-				str->n_chars++;
+				str->n_bytes++;
 				return;
 
 			case '\n':
@@ -990,7 +928,7 @@ update_n_values(cstr *str)
 				break;
 
 			default:
-				if (is_head_byte(str->chars[str->n_chars]))
+				if (is_head_byte(str->bytes[str->n_bytes]))
 				{
 					str->n_codepoints++;
 					col++;

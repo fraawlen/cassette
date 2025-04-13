@@ -33,8 +33,8 @@ static void update_wrap (void);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static cstr *str_ref  = CSTR_PLACEHOLDER;
-static cstr *str_wrap = CSTR_PLACEHOLDER;
+static cstr *str_ref  = nullptr;
+static cstr *str_wrap = nullptr;
 
 static size_t columns = 10; /* size of a supposed widget */
 
@@ -90,16 +90,16 @@ main(void)
 
 	if (cstr_error(str_ref))
 	{
-		printf("Reference string errored during operation\n");
+		printf("Reference string errored during operation (%s)\n", cerr_name(cstr_error(str_ref)));
 	}
 
 	if (cstr_error(str_wrap))
 	{
-		printf("Wrapped string errored during operation\n");
+		printf("Wrapped string errored during operation (%s)\n", cerr_name(cstr_error(str_wrap)));
 	}
 
-	cstr_destroy(str_ref);
-	cstr_destroy(str_wrap);
+	str_ref  = cstr_destroy(str_ref);
+	str_wrap = cstr_destroy(str_wrap);
 
 	return 0;
 }
@@ -139,7 +139,7 @@ update_wrap()
 
 	printf(
 		"%s\n\t-> %zu rows x %zu cols / %zu utf8-characters / %zu bytes\n\n",
-		cstr_chars(str_wrap),
+		cstr_bytes(str_wrap),
 		cstr_height(str_wrap),
 		cstr_width(str_wrap),
 		cstr_length(str_wrap),

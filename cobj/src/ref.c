@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Objects (COBJ) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -21,6 +21,8 @@
 #include <cassette/cobj.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <stdckdint.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,6 +30,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
+
+#define GUARD(OBJ, ...)       if (!OBJ || cerr_critical(OBJ->err)) { return __VA_OPT__(__VA_ARGS__); }
+#define GUARD_ID(OBJ, I, ...) if (I >= OBJ->n) { return __VA_OPT__(__VA_ARGS__); }
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct slot
 {
@@ -42,7 +49,6 @@ struct cref
 	struct slot *slots;
 	size_t n;
 	size_t n_alloc;
-	void *default_ptr;
 	enum cerr err;
 };
 
@@ -50,21 +56,8 @@ struct cref
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool grow (cref *, size_t) CREF_NONNULL(1);
-static void pull (cref *, size_t) CREF_NONNULL(1);
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-cref cref_placeholder_instance = 
-{
-	.slots       = NULL,
-	.n           = 0,
-	.n_alloc     = 0,
-	.default_ptr = NULL,
-	.err         = CERR_INVALID,
-};
+static bool grow (cref *, size_t);
+static void pull (cref *, size_t);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -73,37 +66,46 @@ cref cref_placeholder_instance =
 void
 cref_clear(cref *ref)
 {
-	if (ref->err)
-	{
-		return;
-	}
+	GUARD(ref);
 
 	ref->n = 0;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-cref *
-cref_clone(cref *ref)
+void
+cref_clear_warnings(cref *ref)
 {
+	GUARD(ref);
+
+	cerr_clear_warnings(&ref->err);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+cref *
+cref_clone(const cref *ref)
+{
+	GUARD(ref, nullptr);
+
 	cref *ref_new;
 
-	if (ref->err || !(ref_new = calloc(1, sizeof(cref))))
+	if (!(ref_new = calloc(1, sizeof(cref))))
 	{
-		return CREF_PLACEHOLDER;
+		return nullptr;
 	}
 
-	if (!grow(ref_new, ref->n_alloc))
+	if (!(ref_new->slots = malloc(ref->n_alloc * sizeof(struct slot))))
 	{
 		free(ref_new);
-		return CREF_PLACEHOLDER;
+		return nullptr;
 	}
 
 	memcpy(ref_new->slots, ref->slots, ref->n * sizeof(struct slot));
 
-	ref_new->n           = ref->n;
-	ref_new->default_ptr = ref->default_ptr;
-	ref_new->err         = CERR_NONE;
+	ref_new->n       = ref->n;
+	ref_new->n_alloc = ref->n_alloc;
+	ref_new->err     = ref->err;
 
 	return ref_new;
 }
@@ -113,10 +115,8 @@ cref_clone(cref *ref)
 unsigned int
 cref_count(const cref *ref, size_t index)
 {
-	if (ref->err || index >= ref->n)
-	{
-		return 0;
-	}
+	GUARD(ref, 0);
+	GUARD_ID(ref, index, 0);
 
 	return ref->slots[index].n_ref;
 }
@@ -128,36 +128,35 @@ cref_create(void)
 {
 	cref *ref;
 
-	if (!(ref = calloc(1, sizeof(cref))))
+	if (!(ref = malloc(sizeof(cref))))
 	{
-		return CREF_PLACEHOLDER;
+		return nullptr;
 	}
 
-	if (!grow(ref, 1))
+	if (!(ref->slots = calloc(1, sizeof(struct slot))))
 	{
 		free(ref);
-		return CREF_PLACEHOLDER;
+		return nullptr;
 	}
 
-	ref->n           = 0;
-	ref->default_ptr = NULL;
-	ref->err         = CERR_NONE;
+	ref->n       = 0;
+	ref->n_alloc = 1;
+	ref->err     = CERR_NONE;
 
 	return ref;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
+nullptr_t
 cref_destroy(cref *ref)
 {
-	if (ref == CREF_PLACEHOLDER)
-	{
-		return;
-	}
+	GUARD(ref, nullptr);
 
 	free(ref->slots);
 	free(ref);
+
+	return nullptr;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -165,7 +164,7 @@ cref_destroy(cref *ref)
 enum cerr
 cref_error(const cref *ref)
 {
-	return ref->err;
+	return ref ? ref->err : CERR_INVALID;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -173,10 +172,7 @@ cref_error(const cref *ref)
 unsigned int
 cref_find(const cref *ref, void *ptr, size_t *index)
 {
-	if (ref->err)
-	{
-		return 0;
-	}
+	GUARD(ref, 0);
 
 	for (size_t i = 0; i < ref->n; i++)
 	{
@@ -198,10 +194,7 @@ cref_find(const cref *ref, void *ptr, size_t *index)
 size_t
 cref_length(const cref *ref)
 {
-	if (ref->err)
-	{
-		return 0;
-	}
+	GUARD(ref, 0);
 
 	return ref->n;
 }
@@ -211,10 +204,7 @@ cref_length(const cref *ref)
 void
 cref_prealloc(cref *ref, size_t slots_number)
 {
-	if (ref->err)
-	{
-		return;
-	}
+	GUARD(ref);
 
 	grow(ref, slots_number);
 }
@@ -224,11 +214,9 @@ cref_prealloc(cref *ref, size_t slots_number)
 void *
 cref_ptr(const cref *ref, size_t index)
 {
-	if (ref->err || index >= ref->n)
-	{
-		return ref->default_ptr;
-	}
-	
+	GUARD(ref, nullptr);
+	GUARD_ID(ref, index, nullptr);
+
 	return ref->slots[index].ptr;
 }
 
@@ -237,12 +225,13 @@ cref_ptr(const cref *ref, size_t index)
 void
 cref_pull_index(cref *ref, size_t index)
 {
-	if (ref->err || index >= ref->n || --ref->slots[index].n_ref > 0)   
-	{
-		return;
-	}
+	GUARD(ref);
+	GUARD_ID(ref, index);
 
-	pull(ref, index);
+	if (--ref->slots[index].n_ref == 0)   
+	{
+		pull(ref, index);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -250,6 +239,8 @@ cref_pull_index(cref *ref, size_t index)
 void
 cref_pull_ptr(cref *ref, void *ptr)
 {
+	GUARD(ref);
+
 	size_t i = 0;
 
 	if (cref_find(ref, ptr, &i) > 0)
@@ -263,10 +254,8 @@ cref_pull_ptr(cref *ref, void *ptr)
 void
 cref_purge_index(cref *ref, size_t index)
 {
-	if (ref->err || index >= ref->n)   
-	{
-		return;
-	}
+	GUARD(ref);
+	GUARD_ID(ref, index);
 
 	pull(ref, index);
 }
@@ -276,6 +265,8 @@ cref_purge_index(cref *ref, size_t index)
 void
 cref_purge_ptr(cref *ref, void *ptr)
 {
+	GUARD(ref);
+
 	size_t i = 0;
 
 	if (cref_find(ref, ptr, &i) > 0)
@@ -289,20 +280,22 @@ cref_purge_ptr(cref *ref, void *ptr)
 void
 cref_push(cref *ref, void *ptr)
 {
-	size_t i = 0;
+	GUARD(ref);
 
-	if (ref->err)
+	if (!ptr)
 	{
 		return;
 	}
 
 	/* if found, increment ref counter */
+	
+	size_t i = 0;
 
 	if (cref_find(ref, ptr, &i) > 0)
 	{
 		if (ref->slots[i].n_ref == UINT_MAX)
 		{
-			ref->err = CERR_OVERFLOW;
+			cerr_set(&ref->err, CERR_OVERFLOW);
 			return;
 		}
 		ref->slots[i].n_ref++;
@@ -311,14 +304,16 @@ cref_push(cref *ref, void *ptr)
 
 	/* if not, add new ref */
 
+	size_t n;
+
 	if (ref->n >= ref->n_alloc)
 	{
-		if (!csafe_mul(NULL, ref->n_alloc, 2))
+		if (ckd_mul(&n, ref->n_alloc, 2))
 		{
-			ref->err = CERR_OVERFLOW;
+			cerr_set(&ref->err, CERR_OVERFLOW);
 			return;
 		}
-		if (!grow(ref, ref->n_alloc * 2))
+		if (!grow(ref, n))
 		{
 			return;
 		}
@@ -329,30 +324,6 @@ cref_push(cref *ref, void *ptr)
 	ref->n++;
 }
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cref_repair(cref *ref)
-{
-	if (ref->err != CERR_INVALID)
-	{
-		ref->err = CERR_NONE;
-	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cref_set_default_ptr(cref *ref, void *ptr)
-{
-	if (ref->err)
-	{
-		return;
-	}
-
-	ref->default_ptr = ptr;
-}
-
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
@@ -360,29 +331,7 @@ cref_set_default_ptr(cref *ref, void *ptr)
 static bool
 grow(cref *ref, size_t n)
 {
-	struct slot *tmp;
-
-	if (n <= ref->n_alloc)
-	{
-		return true;
-	}
-
-	if (!csafe_mul(NULL, n, sizeof(struct slot)))
-	{
-		ref->err = CERR_OVERFLOW;
-		return false;
-	}
-
-	if (!(tmp = realloc(ref->slots, n * sizeof(struct slot))))
-	{
-		ref->err = CERR_MEMORY;
-		return false;
-	}
-
-	ref->n_alloc = n;
-	ref->slots   = tmp;
-
-	return true;
+	return n > ref->n_alloc && CUTIL_REALLOC(ref->slots, ref->n_alloc, n, sizeof(struct slot), ref->err);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

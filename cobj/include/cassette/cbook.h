@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Objects (COBJ) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -21,19 +21,10 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdlib.h>
 
 #include "cerr.h"
-
-#if __GNUC__ > 4
-	#define CBOOK_NONNULL_RETURN __attribute__((returns_nonnull))
-	#define CBOOK_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
-	#define CBOOK_PURE           __attribute__((pure))
-#else
-	#define CBOOK_NONNULL_RETURN
-	#define CBOOK_NONNULL(...)
-	#define CBOOK_PURE
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,78 +35,82 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Opaque book object. It stores an automatically extensible array of chars. Chars are grouped into NUL
- * terminated words, and words can also be grouped. The book behaves like a stack, words can only be added or
- * erased from the end of the book.
+ * [Description]
  *
- * Some methods, upon failure, will set an error that can be checked with cbook_error(). If any error is set
- * all string methods will exit early with default return values and no side-effects. It's possible to clear
- * errors with cbook_repair().
+ * 	Opaque book object implemented as a dynamic stack of arbitrarily sized strings. Each string,
+ * 	called a word, get written into the book sequencially. Words can only be removed starting from
+ * 	the last added word. Words can be grouped. The book automatically grow when new words get
+ * 	written.
+ *
+ * 	Words are retrieved using either a global word index, or width a local index along with a
+ * 	group index.
+ *
+ * 	Some methods may fail and set an internal error, which can be checked using cbook_error().
+ * 	If an error is set, all methods will exit early with default return values and no side
+ * 	effects, leaving only the destruction function available.
  */
 typedef struct cbook cbook;
-
-/************************************************************************************************************/
-/* GLOBALS **************************************************************************************************/
-/************************************************************************************************************/
-
-/**
- * A macro that gives uninitialized books a non-NULL value that is safe to use with the book's related
- * functions. However, any function called with a handle set to this value will return early and without any
- * side effects.
- */
-#define CBOOK_PLACEHOLDER (&cbook_placeholder_instance)
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-/**
- * Global book instance with the error state set to CERR_INVALID. This instance is made available to allow the
- * static initialization of book pointers with the macro CBOOK_PLACEHOLDER.
- */
-extern cbook cbook_placeholder_instance;
 
 /************************************************************************************************************/
 /* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Create a book instance and deep copy the contents of another book instance into it.
+ * [Description]
  *
- * @param book : Book to copy contents from
+ * 	Destroys a book and frees all associated memory.
+ * 	Calling this function on a NULL book has no effect.
  *
- * @return     : New book instance
- * @return_err : CBOOK_PLACEHOLDER
+ * [Parameters]
+ *
+ * 	book - Book to destroy.
+ *
+ * [Returns]
+ *
+ * 	To prevent dandling pointers while keeping the function a one-liner, this function
+ * 	conveniently returns nullptr.
  */
-cbook *
-cbook_clone(const cbook *book)
-CBOOK_NONNULL_RETURN
-CBOOK_NONNULL(1);
+[[nodiscard]] nullptr_t cbook_destroy(cbook *book);
 
 /**
- * Creates an empty book instance.
+ * [Description]
  *
- * @return     : New book instance
- * @return_err : CBOOK_PLACEHOLDER
+ * 	Creates a book instance and deep copies the contents of another book into it.
+ * 	Calling this function on a NULL book is the same as calling cbook_create().
+ *
+ * [Parameters]
+ *
+ * 	book - Book to copy.
+ *
+ * [Returns]
+ *
+ * 	On succes, a pointer to a newly allocated instance. Returns nullptr on failure.
+ * 	The caller is responsible for freeing the returned instance using cbook_destroy().
  */
-cbook *
-cbook_create(void)
-CBOOK_NONNULL_RETURN;
+[[nodiscard]] [[gnu::malloc(cbook_destroy)]] cbook *cbook_clone(const cbook *book);
 
 /**
- * Destroys the given book and frees memory.
+ * [Description]
  *
- * @param book : Book to interact with
+ * 	Creates a new, empty book instance.
+ *
+ * [Returns]
+ *
+ * 	On succes, a pointer to a newly allocated instance. Returns nullptr on failure.
+ * 	The caller is responsible for freeing the returned instance using cbook_destroy().
  */
-void
-cbook_destroy(cbook *book)
-CBOOK_NONNULL(1);
+[[nodiscard]] [[gnu::malloc(cbook_destroy)]] cbook *cbook_create(void);
 
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Convenience for-loop wrapper. The I parameter is the global, not local, word index. Therefore, cbook_word()
- * needs to be used inside the loop instead of cbook_word_in_group().
+ * [Description]
+ *
+ * 	Convenience for-loop wrapper.
+ * 	The I parameter is the global, not local, word index. Therefore, cbook_word() needs to be used
+ * 	inside the loop instead of cbook_word_in_group().
  */
 #define CBOOK_FOR_EACH(BOOK, GROUP, I) \
 	for( \
@@ -124,8 +119,11 @@ CBOOK_NONNULL(1);
 		I++)
 
 /**
- * Convenience inverse for-loop wrapper. The I parameter is the global, not local, word index. Therefore,
- * cbook_word() needs to be used inside the loop instead of cbook_word_in_group().
+ * [Description]
+ *
+ * 	Convenience inverse for-loop wrapper.
+ * 	The I parameter is the global, not local, word index. Therefore, cbook_word() needs to be used
+ * 	inside the loop instead of cbook_word_in_group().
  */
 #define CBOOK_FOR_EACH_REV(BOOK, GROUP, I) \
 	for( \
@@ -136,231 +134,282 @@ CBOOK_NONNULL(1);
 		I--)
 
 /**
- * Clears the contents of a given book. Allocated memory is not freed, use cbook_destroy() for that.
+ * [Description]
  *
- * @param book : Book to interact with
+ * 	Clears the contents of a book.
+ * 	Allocated memory is not freed, use cbook_destroy() for that.
+ * 	Calling this function on a NULL book has no effect.
+ *
+ * [Parameters]
+ *
+ * 	book : Book to modify.
  */
-void
-cbook_clear(cbook *book)
-CBOOK_NONNULL(1);
+void cbook_clear(cbook *book);
 
 /**
- * Deletes the last group of words. Allocated memory is not freed, use cbook_destroy() for that
+ * [Description]
+ *
+ * 	Clears any warning error the book may have. Does not clears criticial errors.
+ * 	Calling this function on a NULL book has no effect.
+ *
+ * [Parameters]
+ *
+ * 	book - Book to modify.
+ */
+void cbook_clear_warnings(cbook *book);
+
+/**
+ * [Description]
+ *
+ * 	Deletes the last word group.
+ * 	Allocated memory is not freed, use cbook_destroy() for that
+ * 	Calling this function on a NULL book has no effect.
  * 
- * @param book : Book to interact with
+ * [Parameters]
+ *
+ * 	book - Book to modify.
  */
-void
-cbook_pop_group(cbook *book)
-CBOOK_NONNULL(1);
+void cbook_pop_group(cbook *book);
 
 /**
- * Deletes the last word. Allocated memory is not freed, use cbook_destroy() for that.
+ * [Description]
+ *
+ * 	Deletes the last word.
+ * 	Allocated memory is not freed, use cbook_destroy() for that.
+ * 	Calling this function on a NULL book has no effect.
  * 
- * @param book : Book to interact with
+ * [Parameters]
+ *
+ * 	book - Book to modify.
  */
-void
-cbook_pop_word(cbook *book)
-CBOOK_NONNULL(1);
+void cbook_pop_word(cbook *book);
 
 /**
- * Preallocates a set number of characters, words, references, and groups to avoid triggering multiple
- * automatic reallocs when adding data to the book. This function has no effect if the requested numbers
- * are smaller than the previously allocated amounts.
+ * [Description]
  *
- * @param book          : Book to interact with
- * @param bytes_number  : Total number of bytes across all words
- * @param words_number  : Total number of words across all groups
- * @param groups_number : Total number of groups
+ * 	Preallocates a set number of bytes, words, and groups to prevent multiple automatic
+ * 	reallocations when writing new words. The number of bytes represent the total amount of bytes
+ * 	across all words, NUL separators included (because the book store words in a packed
+ * 	manner). The number of words and group is needed to reallocate enought space for index arrays.
  *
- * @error CERR_OVERFLOW : The size of the resulting book will be > SIZE_MAX
- * @error CERR_MEMORY   : Failed memory allocation
+ * 	This function has no effect if the book is NULL or if the requested numbers are smaller than
+ * 	the previously allocated amounts.
+ *
+ * [Parameters]
+ *
+ * 	book          - Book to modify.
+ * 	bytes_number  - Total number of bytes across all words.
+ * 	words_number  - Total number of words across all groups.
+ * 	groups_number - Total number of groups.
+ *
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
  */
-void
-cbook_prealloc(cbook *book, size_t bytes_number, size_t words_number, size_t groups_number)
-CBOOK_NONNULL(1);
+void cbook_prealloc(cbook *book, size_t bytes_number, size_t words_number, size_t groups_number);
 
 /**
- * After this function is called, the next word that is added with cbook_write() will be part of a new group.
+ * [Description]
  *
- * @param book : Book to interact with.
+ * 	The words written with cbook_write() after this function is called will belong to a new group.
+ * 	Calling this function on a NULL book has no effect.
+ *
+ * [Parameters]
+ *
+ * 	book - Book to modify.
  */
-void
-cbook_prepare_new_group(cbook *book)
-CBOOK_NONNULL(1);
+void cbook_prepare_new_group(cbook *book);
 
 /**
- * Clears errors and puts the book back into an usable state. The only unrecoverable error is CBOOK_INVALID.
+ * [Description]
  *
- * @param book : Book to interact with
+ * 	Reverts the effects of cbook_prepare_new_group().
+ * 	Calling this function on a NULL book has no effect.
+ *
+ * [Parameters]
+ *
+ * 	book - Book to modify.
  */
-void
-cbook_repair(cbook *book)
-CBOOK_NONNULL(1);
+void cbook_undo_new_group(cbook *book);
 
 /**
- * Tries to rewrite a word at the given index. If the new word is longer than the original word, this function
- * exits without modifying anything. If word_index is out of bounds, the default return_err value is returned.
+ * [Description]
  *
- * @param book       : Book to interact with
- * @param word_index : Index in book across all groups
- * @param str        : C string
+ * 	Appends a new word to the book and increments the book byte and word count (NUL terminator
+ * 	included). If cbook_prepare_new_group() has been called beforehand, the word is part of a new
+ * 	group, and the group count gets incremented.
  *
- * @return     : True if the word was rewriten, false if it failed.
- * @return_err : False
- */
-bool
-cbook_rewrite(cbook *book, size_t word_index, const char *str)
-CBOOK_NONNULL(1, 3);
-
-/**
- * Reverts the effects of cbook_prepare_new_group().
+ * 	The book will automatically extend its allocated memory to accommodate the new word.
  *
- * @param book : Book to interact with
- */
-void
-cbook_undo_new_group(cbook *book)
-CBOOK_NONNULL(1);
-
-/**
- * Appends a new word to the book and increments the book word count (and possibly group count) by 1 as well
- * as the character count by the string's length (NUL terminator included). The book will automatically extend
- * its allocated memory to accommodate the new word.
+ * 	Calling this function on a NULL book has no effect.
  * 
- * @param book : Book to interact with
- * @param str  : C string
+ * [Parameters]
  *
- * @error CERR_OVERFLOW : The size of the resulting book will be > SIZE_MAX
- * @error CERR_MEMORY   : Failed memory allocation
+ * 	book - Book to modify.
+ * 	str  - Word to write.
+ *
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
  */
-void
-cbook_write(cbook *book, const char *str)
-CBOOK_NONNULL(1, 2);
+void cbook_write(cbook *book, const char *str);
 
 /**
- * Similar to cbook_clear() but all of the allocated memory is also zeroed.
+ * [Description]
+ *
+ * 	Clears the contents of a book and zeroes all of the allocated memory.
+ * 	Allocated memory is not freed, use cbook_destroy() for that.
+ * 	Calling this function on a NULL book has no effect.
  * 
- * @param book : Book to interact with
+ * [Parameters]
+ *
+ * 	book - Book to modify.
  */
-void
-cbook_zero(cbook *book)
-CBOOK_NONNULL(1);
+void cbook_zero(cbook *book);
 
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Gets the errror state.
+ * [Description]
  *
- * @param book : Book to interact with
+ * 	Retrieves the book's current error state.
  *
- * @return : Error value
+ * [Parameters]
+ *
+ * 	book - Book to inspect.
+ *
+ * [Returns]
+ *
+ * 	The current error code.
+ * 	If the book is NULL, this function always returns CERR_INVALID.
  */
-enum cerr
-cbook_error(const cbook *book)
-CBOOK_NONNULL(1)
-CBOOK_PURE;
+[[gnu::pure]] enum cerr cbook_error(const cbook *book);
 
 /**
- * Gets a group's word count. If group_index is out of bounds, the default return_err value is returned.
+ * [Description]
+ *
+ * 	Retrieves a group's word count.
  * 
- * @param book        : Book to interact with
- * @param group_index : Group index within book
+ * [Parameters]
  *
- * @return     : Number of words
- * @return_err : 0
+ * 	book        - Book to inspect.
+ * 	group_index - Group index within book.
+ *
+ * [Returns]
+ *
+ * 	The group's size.
+ * 	If the book is NULL, in a critical error state, or the index is out of bounds, this function
+ * 	always returns 0.
  */
-size_t
-cbook_group_length(const cbook *book, size_t group_index)
-CBOOK_NONNULL(1)
-CBOOK_PURE;
+[[gnu::pure]] size_t cbook_group_length(const cbook *book, size_t group_index);
 
 /**
- * Gets the total number of groups.
+ * [Description]
+ *
+ * 	Retrieves the total number of groups a book has.
  * 
- * @param book : Book to interact with
+ * [Parameters]
  *
- * @return     : Number of groups
- * @return_err : 0
+ * 	book - Book to inspect.
+ *
+ * [Returns]
+ *
+ * 	The number of groups.
+ * 	If the book is NULL or in a critical error state, this function always returns 0.
  */
-size_t
-cbook_groups_number(const cbook *book)
-CBOOK_NONNULL(1)
-CBOOK_PURE;
+[[gnu::pure]] size_t cbook_groups_number(const cbook *book);
 
 /**
- * Gets the total length of the book (all NUL terminators included).
+ * [Description]
  *
- * @param book : Book to interact with
+ * 	Retrieves the total length of the book (separating NUL terminators included).
  *
- * @return     : Number of bytes
- * @return_err : 0
+ * [Parameters]
+ *
+ * 	book - Book to inspect.
+ *
+ * [Returns]
+ *
+ * 	The total number of bytes.
+ * 	If the book is NULL or in a critical error state, this function always returns 0.
  */
-size_t
-cbook_length(const cbook *book)
-CBOOK_NONNULL(1)
-CBOOK_PURE;
+[[gnu::pure]] size_t cbook_length(const cbook *book);
 
 /**
- * Gets a word. If word_index is out of bounds, the default return_err value is returned.
+ * [Description]
+ *
+ * 	Retrieves a word using a global word index. 
  * 
- * @param book       : Book to interact with
- * @param word_index : Word index in book across all groups
+ * [Parameters]
  *
- * @return     : C string
- * @return_err : "\0"
+ * 	book       - Book to inspect.
+ * 	word_index - Word index in book across all groups.
+ *
+ * [Returns]
+ *
+ * 	The word (a NUL terminated string) at index.
+ * 	If the book is NULL, in a critical error state, or the index is out of bounds, this function
+ * 	always returns '\0'. This function never returns nullptr.
  */
-const char *
-cbook_word(const cbook *book, size_t word_index)
-CBOOK_NONNULL_RETURN
-CBOOK_NONNULL(1)
-CBOOK_PURE;
+[[gnu::pure]] [[gnu::returns_nonnull]] const char  *cbook_word(const cbook *book, size_t word_index);
 
 /**
- * Gets a word from a specific group. If group_index or word_local_index are out of bounds, the default
- * return_err value is returned.
- * 
- * @param book             : Book to interact with
- * @param group_index      : Group index within book
- * @param word_local_index : Word index within group
+ * [Description]
  *
- * @return     : C string
- * @return_err : "\0"
+ * 	Retrieves a word from a specific group.
+ *
+ * [Parameters]
+ *
+ * 	book             - Book to inspect.
+ * 	group_index      - Group index within book.
+ * 	word_local_index - Word index within group.
+ *
+ * [Returns]
+ *
+ * 	The word (a NUL terminated string) at index.
+ * 	If the book is NULL, in a critical error state, or the indexes are out of bounds, this
+ * 	function always returns "\0". This function never returns nullptr.
  */
-const char *
-cbook_word_in_group(const cbook *book, size_t group_index, size_t word_local_index)
-CBOOK_NONNULL_RETURN
-CBOOK_NONNULL(1)
-CBOOK_PURE;
+[[gnu::pure]] [[gnu::returns_nonnull]] const char *cbook_word_in_group(const cbook *book, size_t group_index, size_t word_local_index);
 
 /**
- * Converts a group + local word indexes to a book-wide word index. If group_index or word_local_index are
- * out of bounds, the default return_err value is returned.
+ * [Description]
  *
- * @param book             : Book to interact with
- * @param group_index      : Group index within book
- * @param word_local_index : Word index within group
+ * 	Converts a group + local word indexes to a book-wide word index.
+ *
+ * [Parameters]
+ *
+ * 	book             - Book to inspect.
+ * 	group_index      - Group index within book.
+ * 	word_local_index - Word index within group.
  * 
- * @return     : Word index
- * @return_err : 0
+ * [Returns]
+ *
+ * 	The converted word index.
+ * 	If the book is NULL, in a critical error state, or the indexes are out of bounds, this
+ * 	function always returns "\0". This function never returns nullptr.
  */
-size_t
-cbook_word_index(const cbook *book, size_t group_index, size_t word_local_index)
-CBOOK_NONNULL(1)
-CBOOK_PURE;
+[[gnu::pure]] size_t cbook_word_index(const cbook *book, size_t group_index, size_t word_local_index);
 
 /**
- * Gets the total number of words.
- * 
- * @param book : Book to interact with
+ * [Description]
  *
- * @return     : Total number of words across all groups
- * @return_err : 0
+ * 	Retrieves the total number of words.
+ * 
+ * [Parameters]
+ *
+ * 	book - Book to inspect.
+ *
+ * [Returns]
+ *
+ * 	The total number of words across all groups.
+ * 	If the book is NULL or in a critical error state, this funciton always returns 0.
  */
-size_t
-cbook_words_number(const cbook *book)
-CBOOK_NONNULL(1)
-CBOOK_PURE;
+[[gnu::pure]] size_t cbook_words_number(const cbook *book);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

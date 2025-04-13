@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Objects (COBJ) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -19,41 +19,50 @@
 /************************************************************************************************************/
 
 #include <cassette/cobj.h>
-#include <stdio.h>
+#include <stdbool.h>
+#include <stdckdint.h>
+#include <stddef.h>
+#include <stdlib.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void print (const struct cseg seg);
-
-/************************************************************************************************************/
-/* MAIN *****************************************************************************************************/
-/************************************************************************************************************/
-
-int
-main(void)
+bool
+cutil_realloc(void **ptr, size_t *n_store, size_t n_new, size_t size, enum cerr *err)
 {
-	struct cseg seg = CSEG_I8;
+	void *tmp;
+	size_t r;
 
-	cseg_limit(&seg, 20, -20);
-	cseg_move(&seg, 7);
-	cseg_resize(&seg, -5);
-	cseg_grow(&seg, -30);
-	cseg_offset(&seg, -7);
+	if (!ptr)
+	{
+		return false;
+	}
 
-	print(seg);
+	if (n_new == 0 || size == 0)
+	{
+		cerr_set(err, CERR_PARAM);
+		return false;
+	}
 
-	return 0;
+	if (ckd_mul(&r, n_new, size))
+	{
+		cerr_set(err, CERR_OVERFLOW);
+		return false;
+	}
+
+	if (!(tmp = realloc(*ptr, r)))
+	{
+		cerr_set(err, CERR_MEMORY);
+		return false;
+	}
+
+	if (n_store)
+	{
+		*n_store = n_new;
+	}
+
+	*ptr = tmp;
+
+	return true;
 }
-
-/************************************************************************************************************/
-/* STATIC ***************************************************************************************************/
-/************************************************************************************************************/
-
-static void
-print(const struct cseg seg)
-{
-	printf("%li <= %li + %li <= %li\n", seg.min, seg.origin, seg.length, seg.max);
-}
-

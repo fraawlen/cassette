@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Objects (COBJ) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -19,7 +19,9 @@
 /************************************************************************************************************/
 
 #include <cassette/cobj.h>
-#include <stdbool.h>
+#include <math.h>
+#include <stdckdint.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,8 +30,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define HASH_OFFSET 14695981039346656037ULL
-#define HASH_PRIME  1099511628211ULL
+#define GUARD(OBJ, ...) if (!OBJ || cerr_critical(OBJ->err)) { return __VA_OPT__(__VA_ARGS__); }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -65,22 +66,9 @@ struct cdict
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static struct slot *find     (const cdict *, uint64_t, enum state) CDICT_NONNULL(1) CDICT_PURE;
-static uint64_t     get_hash (const char *, size_t)                CDICT_NONNULL(1) CDICT_PURE;
-static bool         grow     (cdict *, size_t)                     CDICT_NONNULL(1);
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-cdict cdict_placeholder_instance = 
-{
-	.slots    = NULL,
-	.n        = 0,
-	.n_alloc  = 0,
-	.max_load = 1.0,
-	.err      = CERR_INVALID,
-};
+[[gnu::pure]] static struct slot *find     (const cdict *, uint64_t, enum state);
+[[gnu::pure]] static uint64_t     get_hash (const char *, size_t);
+              static bool         grow     (cdict *, size_t);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -89,10 +77,7 @@ cdict cdict_placeholder_instance =
 void
 cdict_clear(cdict *dict)
 {
-	if (dict->err)
-	{
-		return;
-	}
+	GUARD(dict);
 
 	memset(dict->slots, 0, dict->n_alloc * sizeof(struct slot));
 	dict->n = 0;
@@ -103,10 +88,7 @@ cdict_clear(cdict *dict)
 void
 cdict_clear_group(cdict *dict, size_t group)
 {
-	if (dict->err)
-	{
-		return;
-	}
+	GUARD(dict);
 
 	for (size_t i = 0; i < dict->n_alloc; i++)
 	{
@@ -120,20 +102,32 @@ cdict_clear_group(cdict *dict, size_t group)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void
+cdict_clear_warnings(cdict *dict)
+{
+	GUARD(dict);
+
+	cerr_clear_warnings(&dict->err);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 cdict *
 cdict_clone(const cdict *dict)
 {
+	GUARD(dict, nullptr);
+
 	cdict *dict_new;
 
-	if (dict->err || !(dict_new = malloc(sizeof(cdict))))
+	if (!(dict_new = malloc(sizeof(cdict))))
 	{
-		return CDICT_PLACEHOLDER;
+		return nullptr;
 	}
 
 	if (!(dict_new->slots = malloc(dict->n_alloc * sizeof(struct slot))))
 	{
 		free(dict_new);
-		return CDICT_PLACEHOLDER;
+		return nullptr;
 	}
 
 	memcpy(dict_new->slots, dict->slots, dict->n_alloc * sizeof(struct slot));
@@ -141,7 +135,7 @@ cdict_clone(const cdict *dict)
 	dict_new->n        = dict->n;
 	dict_new->n_alloc  = dict->n_alloc;
 	dict_new->max_load = dict->max_load;
-	dict_new->err      = CERR_NONE;
+	dict_new->err      = dict->err;
 
 	return dict_new;
 }
@@ -155,13 +149,13 @@ cdict_create(void)
 
 	if (!(dict = malloc(sizeof(cdict))))
 	{
-		return CDICT_PLACEHOLDER;
+		return nullptr;
 	}
 
 	if (!(dict->slots = calloc(1, sizeof(struct slot))))
 	{
 		free(dict);
-		return CDICT_PLACEHOLDER;
+		return nullptr;
 	}
 
 	dict->n        = 0;
@@ -174,16 +168,15 @@ cdict_create(void)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
+nullptr_t
 cdict_destroy(cdict *dict)
 {
-	if (dict == CDICT_PLACEHOLDER)
-	{
-		return;
-	}
+	GUARD(dict, nullptr);
 
 	free(dict->slots);
 	free(dict);
+
+	return nullptr;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -191,14 +184,11 @@ cdict_destroy(cdict *dict)
 void
 cdict_erase(cdict *dict, const char *key, size_t group)
 {
-	struct slot *slot;
+	GUARD(dict);
 
-	if (dict->err)
-	{
-		return;
-	}
+	struct slot *slot = find(dict, get_hash(key, group), UNUSED);
 
-	if ((slot = find(dict, get_hash(key, group), UNUSED)) && slot->state == ACTIVE)
+	if (slot && slot->state == ACTIVE)
 	{
 		slot->state = DELETED;
 		dict->n--;
@@ -210,7 +200,7 @@ cdict_erase(cdict *dict, const char *key, size_t group)
 enum cerr
 cdict_error(const cdict *dict)
 {
-	return dict->err;
+	return dict ? dict->err : CERR_INVALID;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -218,9 +208,11 @@ cdict_error(const cdict *dict)
 bool
 cdict_find(const cdict *dict, const char *key, size_t group, size_t *value)
 {
-	struct slot *slot;
+	GUARD(dict, false);
 
-	if (dict->err || !(slot = find(dict, get_hash(key, group), UNUSED)) || slot->state != ACTIVE)
+	struct slot *slot = find(dict, get_hash(key, group), UNUSED);
+
+	if (!slot || slot->state != ACTIVE)
 	{
 		return false;
 	}
@@ -238,10 +230,7 @@ cdict_find(const cdict *dict, const char *key, size_t group, size_t *value)
 size_t
 cdict_load(const cdict *dict)
 {
-	if (dict->err)
-	{
-		return 0;
-	}
+	GUARD(dict, 0);
 
 	return dict->n;
 }
@@ -251,10 +240,7 @@ cdict_load(const cdict *dict)
 double
 cdict_load_factor(const cdict *dict)
 {
-	if (dict->err)
-	{
-		return 0.0;
-	}
+	GUARD(dict, 0.0);
 
 	return (double)dict->n / dict->n_alloc;
 }
@@ -264,29 +250,15 @@ cdict_load_factor(const cdict *dict)
 void
 cdict_prealloc(cdict *dict, size_t slots_number)
 {
-	if (dict->err)
+	GUARD(dict);
+
+	if (slots_number > (SIZE_MAX - 1) * dict->max_load)
 	{
+		cerr_set(&dict->err, CERR_OVERFLOW);
 		return;
 	}
 
-	if (slots_number > SIZE_MAX * dict->max_load)
-	{
-		dict->err = CERR_OVERFLOW;
-		return;
-	}
-
-	grow(dict, slots_number / dict->max_load);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cdict_repair(cdict *dict)
-{
-	if (dict->err != CERR_INVALID)
-	{
-		dict->err = CERR_NONE;
-	}
+	grow(dict, slots_number / dict->max_load + 1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -294,27 +266,21 @@ cdict_repair(cdict *dict)
 void
 cdict_set_max_load(cdict *dict, double load_factor)
 {
-	if (dict->err)
+	GUARD(dict);
+
+	if (isnan(load_factor) || isinf(load_factor) || load_factor <= 0.0 || load_factor > 1.0)
 	{
+		cerr_set(&dict->err, CERR_PARAM);
 		return;
 	}
 
-	if (load_factor <= 0.0 || load_factor > 1.0)
+	if (dict->n > (SIZE_MAX - 1) * load_factor)
 	{
-		dict->err = CERR_PARAM;
+		cerr_set(&dict->err, CERR_OVERFLOW);
 		return;
 	}
 
-	if (dict->n > SIZE_MAX * load_factor)
-	{
-		dict->err = CERR_OVERFLOW;
-		return;
-	}
-
-	if (grow(dict, dict->n / load_factor))
-	{
-		dict->max_load = load_factor;
-	}
+	grow(dict, dict->n / (dict->max_load = load_factor) + 1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -322,30 +288,31 @@ cdict_set_max_load(cdict *dict, double load_factor)
 void
 cdict_write(cdict *dict, const char *key, size_t group, size_t value)
 {
-	struct slot *slot;
-	struct slot *slot_2;
-	uint64_t hash;
+	GUARD(dict);
 
-	if (dict->err)
-	{
-		return;
-	}
+	size_t n;
 
 	if (dict->n >= dict->n_alloc * dict->max_load)
 	{
-		if (!csafe_mul(NULL, dict->n_alloc, 2))
+		if (ckd_mul(&n, dict->n_alloc, 2))
 		{
-			dict->err = CERR_OVERFLOW;
+			cerr_set(&dict->err, CERR_OVERFLOW);
 			return;
 		}
-		if (!grow(dict, dict->n_alloc * 2))
+		if (!grow(dict, n))
 		{
 			return;
 		}
 	}
 
-	hash = get_hash(key, group);
-	slot = find(dict, hash, DELETED);
+	uint64_t     hash = get_hash(key, group);
+	struct slot *slot = find(dict, hash, DELETED);
+	struct slot *slot_2;
+
+	if (!slot)
+	{
+		return;
+	}
 
 	switch (slot->state)
 	{
@@ -355,14 +322,14 @@ cdict_write(cdict *dict, const char *key, size_t group, size_t value)
 				slot_2->state = DELETED;
 				dict->n--;
 			}
-			/* fallthrough */
+			[[fallthrough]];
 
 		case UNUSED:
 			slot->hash  = hash;
 			slot->group = group;
 			slot->state = ACTIVE;
 			dict->n++;
-			/* fallthrough */
+			[[fallthrough]];
 
 		case ACTIVE:
 			slot->value = value;
@@ -377,13 +344,9 @@ cdict_write(cdict *dict, const char *key, size_t group, size_t value)
 static struct slot *
 find(const cdict *dict, uint64_t hash, enum state state_cutoff)
 {
-	struct slot *slot;
-	uint64_t i0;
-	uint64_t i;
-
-	i0   = hash % dict->n_alloc;
-	i    = i0;
-	slot = dict->slots + i;
+	uint64_t i0       = hash % dict->n_alloc;
+	uint64_t i        = i0;
+	struct slot *slot = dict->slots + i;
 
 	while (state_cutoff < slot->state && slot->hash != hash)
 	{
@@ -393,7 +356,7 @@ find(const cdict *dict, uint64_t hash, enum state state_cutoff)
 		}
 		if (i == i0)
 		{
-			return NULL;
+			return nullptr;
 		}
 		slot = dict->slots + i;
 	}
@@ -401,21 +364,27 @@ find(const cdict *dict, uint64_t hash, enum state state_cutoff)
 	return slot;
 }
 
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static uint64_t
 get_hash(const char *str, size_t group)
 {
-	uint64_t h = HASH_OFFSET;
+	constexpr uint64_t offset = 14695981039346656037ULL;
+	constexpr uint64_t prime  = 1099511628211ULL;
+	          uint64_t h      = offset;
 
 	for (size_t i = 0; i < sizeof(group); i++)
 	{
-		h = (h ^ (group & (0xFF << i))) * HASH_PRIME;
+		h = (h ^ (group & (0xFF << i))) * prime;
 	}
 
-	for (size_t i = 0; str[i] != '\0'; i++)
+	if (str)
 	{
-		h = (h ^ str[i]) * HASH_PRIME;
+		for (size_t i = 0; str[i] != '\0'; i++)
+		{
+			h = (h ^ str[i]) * prime;
+		}
 	}
 
 	return h;
@@ -423,11 +392,15 @@ get_hash(const char *str, size_t group)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-imprecise-fp-arithmetic"
+
 static bool
 grow(cdict *dict, size_t n)
 {
 	struct slot *tmp;
 	struct slot *tmp_2;
+	size_t dummy;
 	size_t n_2;
 
 	if (n <= dict->n_alloc)
@@ -435,15 +408,15 @@ grow(cdict *dict, size_t n)
 		return true;
 	}
 
-	if (!csafe_mul(NULL, n, sizeof(struct slot)))
+	if (ckd_mul(&dummy, n, sizeof(struct slot)))
 	{
-		dict->err = CERR_OVERFLOW;
+		cerr_set(&dict->err, CERR_OVERFLOW);
 		return false;
 	}
 
 	if (!(tmp = calloc(n, sizeof(struct slot))))
 	{
-		dict->err = CERR_MEMORY;
+		cerr_set(&dict->err, CERR_MEMORY);
 		return false;
 	}
 
@@ -457,7 +430,10 @@ grow(cdict *dict, size_t n)
 	{
 		if (tmp_2[i].state == ACTIVE)
 		{
-			*find(dict, tmp_2[i].hash, UNUSED) = tmp_2[i];
+			if ((tmp = find(dict, tmp_2[i].hash, UNUSED)))
+			{
+				*tmp = tmp_2[i];
+			}
 		}
 	}
 
@@ -465,3 +441,5 @@ grow(cdict *dict, size_t n)
 
 	return true;
 }
+
+#pragma GCC diagnostic pop

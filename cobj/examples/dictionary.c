@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Objects (COBJ) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -33,7 +33,7 @@ static void print_value (const char *key, unsigned int group);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static cdict *dict = CDICT_PLACEHOLDER;
+static cdict *dict = nullptr;
 
 /************************************************************************************************************/
 /* MAIN *****************************************************************************************************/
@@ -68,10 +68,10 @@ main(void)
 
 	if (cdict_error(dict))
 	{
-		printf("Dictionary errored during operation\n");	
+		printf("Dictionary errored dunring operation (%s)\n", cerr_name(cdict_error(dict)));
 	}
 
-	cdict_destroy(dict);
+	dict = cdict_destroy(dict);
 
 	return 0;
 }

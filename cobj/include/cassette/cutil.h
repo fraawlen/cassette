@@ -20,39 +20,14 @@
 
 #pragma once
 
+#include <stdbool.h>
+#include <stdlib.h>
+
+#include "cerr.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/************************************************************************************************************/
-/* TYPES ****************************************************************************************************/
-/************************************************************************************************************/
-
-/**
- * [Description]
- *
- * 	Keeper value that keeps track of the LCG (rand48-based) state.
- */
-typedef unsigned long crand;
-
-/************************************************************************************************************/
-/* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
-/************************************************************************************************************/
-
-/**
- * [Description]
- *
- * 	Sets the initial value of the keeper.
- *
- * [Parameters]
- *
- * 	seed - Initial value to apply
- *
- * [Returns]
- *
- * 	Value
- */
-[[nodiscard]] crand crand_seed(unsigned long seed);
 
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
@@ -61,21 +36,34 @@ typedef unsigned long crand;
 /**
  * [Description]
  *
- * 	Gets the next random value bound between lim_1 and lim_2 for the given keeper.
- * 	Calling this function on a NULL rand has no effect.
- * 	lim_1 and lim_2 can be in any order.
+ * 	Convenience macro to not have to cast ptr and get param addresses.
+ */
+#define CUTIL_REALLOC(PTR, N_STORE, N_NEW, SIZE, ERR) \
+	cutil_realloc((void**)&PTR, &N_STORE, N_NEW, SIZE, &ERR)
+
+/**
+ * [Description]
+ *
+ * 	Cassette's realloc wrapper for arrays.
+ * 	If the function fails, a Cassette error is set.
+ * 	The realloc size (n_new * size) should not be 0.
+ * 	On success, the size of the new memory area is written into n_store if it's not NULL.
  *
  * [Parameters]
  *
- * 	rand  - Keeper value to interact with
- * 	lim_1 - First bound 
- * 	lim_2 - Second bound
+ * 	ptr     - Pointer to memory to realloc.
+ * 	n_store - Optional parameter to store the total size of the new memory area.
+ * 	n_new   - Number of elements.
+ * 	size    - Size of each element.
+ * 	err     - Optional parameter to store an error in case of failure.
  *
  * [Returns]
  *
- * 	Generated random value.
+ * 	True when the realloc is successful, false otherwhise.
+ * 	This function can fail when: ptr is NULL, n_new * size overflows, the realloc fails.
+ * 	In case of failure, ptr and n_store are not modified.
  */
-double crand_next(crand *rand, double lim_1, double lim_2);
+bool cutil_realloc(void **ptr, size_t *n_store, size_t n_new, size_t size, enum cerr *err);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Objects (COBJ) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -21,19 +21,10 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdlib.h>
 
 #include "cerr.h"
-
-#if __GNUC__ > 4
-	#define CDICT_NONNULL_RETURN __attribute__((returns_nonnull))
-	#define CDICT_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
-	#define CDICT_PURE           __attribute__((pure))
-#else
-	#define CDICT_NONNULL_RETURN
-	#define CDICT_NONNULL(...)
-	#define CDICT_PURE
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,220 +35,273 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Opawue dictionary object. It's implemented using the FNV1-A hash function and collisions are resolved using
- * linear probing. A dictionary can automatically grow to maintain a maximum load factor (set by default to
- * 0.6). Values are retrieved using both a NUL terminated string key and a group value.
+ * [Description]
  *
- * Some methods, upon failure, will set an error that can be checked with cdict_error(). If any error is set
- * all string methods will exit early with default return values and no side-effects. It's possible to clear
- * errors with cdict_repair().
+ * 	Opaque dictionary object implemented as a hashmap using the FNV-1a hash function.
+ * 	Collisions are resolved using linear probing, and the dictionary automatically grows
+ * 	to maintain a maximum load factor (default: 0.6).
+ *
+ * 	Values are retrieved using both a NUL-terminated string key and a group value.
+ *
+ * 	Some methods may fail and set an internal error, which can be checked using cdict_error().
+ * 	If an error is set, all methods will exit early with default return values and no side
+ * 	effects, leaving only the destruction function available.
  */
 typedef struct cdict cdict;
-
-/************************************************************************************************************/
-/* GLOBALS **************************************************************************************************/
-/************************************************************************************************************/
-
-/**
- * A macro that gives uninitialized dictionaries a non-NULL value that is safe to use with the dictionary's
- * related functions. However, any function called with a handle set to this value will return early and
- * without any side effects.
- */
-#define CDICT_PLACEHOLDER (&cdict_placeholder_instance)
-
-/**
- * Global dictionary instance with the error state set to CERR_INVALID. This instance is made available to
- * allow the static initialization of dictionary pointers with the macro CDICT_PLACEHOLDER.
- */
-extern cdict cdict_placeholder_instance;
 
 /************************************************************************************************************/
 /* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Create a dictionary instance and deep copy the contents of another dictionary instance into it.
+ * [Description]
  *
- * @param dict : Dictionary to copy contents from
+ * 	Destroys a dictionary and frees all associated memory.
+ * 	Calling this function on a NULL dictionary has no effect.
  *
- * @return     : New dictionary instance
- * @return_err : CDICT_PLACEHOLDER
+ * [Parameters]
+ *
+ * 	dict - Dictionary to destroy.
+ *
+ * [Returns]
+ *
+ * 	To prevent dangling pointers while keeping the function a one-liner, this function
+ * 	conveniently returns nullptr.
  */
-cdict *
-cdict_clone(const cdict *dict)
-CDICT_NONNULL_RETURN
-CDICT_NONNULL(1);
+[[nodiscard]] nullptr_t cdict_destroy(cdict *dict);
 
 /**
- * Creates an empty dictionary instance.
+ * [Description]
  *
- * @return     : New dictionary instance
- * @return_err : CDICT_PLACEHOLDER
+ * 	Creates a dictionary instance and deep copies the content of another dictionary into it.
+ * 	Calling this function on a NULL dictionary is the same as calling cdict_create().
+ *
+ * [Parameters]
+ *
+ * 	dict - Dictionary to copy.
+ *
+ * [Returns]
+ *
+ * 	On success, a pointer to a newly allocated instance. Returns nullptr on failure.
+ * 	The caller is responsible for freeing the returned instance using cdict_destroy().
  */
-cdict *
-cdict_create(void)
-CDICT_NONNULL_RETURN;
+[[nodiscard]] [[gnu::malloc(cdict_destroy)]] cdict *cdict_clone(const cdict *dict);
 
 /**
- * Destroys the given dictionary and frees memory.
+ * [Description]
  *
- * @param dict : Dictionary to interact with
+ * 	Creates a new, empty dictionary instance.
+ *
+ * [Returns]
+ *
+ * 	On success, a pointer to a newly allocated instance. Returns nullptr on failure.
+ * 	The caller is responsible for freeing the returned instance using cdict_destroy().
  */
-void
-cdict_destroy(cdict *dict)
-CDICT_NONNULL(1);
+[[nodiscard]] [[gnu::malloc(cdict_destroy)]] cdict *cdict_create(void);
 
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Clears all active slots. Allocated memory is not freed, use cdict_destroy() for that.
+ * [Description]
  *
- * @param dict : Dictionary to interact with
+ * 	Clears all active slots in the dictionary.
+ * 	Allocated memory is not freed. Use cdict_destroy() for that.
+ * 	Calling this function on a NULL dictionary has no effect.
+ *
+ * [Parameters]
+ *
+ * 	dict - Dictionary to modify.
  */
-void
-cdict_clear(cdict *dict)
-CDICT_NONNULL(1);
+void cdict_clear(cdict *dict);
 
 /**
- * Clears all active slots of a specific group. Allocated memory is not freed, use cdict_destroy() for that.
+ * [Description]
  *
- * @param dict  : Dictionary to interact with
- * @param group : Group to match
+ * 	Clears all active slots associated with a specific group.
+ * 	Allocated memory is not freed. Use cdict_destroy() for that.
+ * 	Calling this function on a NULL dictionary has no effect.
+ *
+ * [Parameters]
+ *
+ * 	dict  - Dictionary to modify.
+ * 	group - Group identifier to clear.
  */
-void
-cdict_clear_group(cdict *dict, size_t group)
-CDICT_NONNULL(1);
+void cdict_clear_group(cdict *dict, size_t group);
 
 /**
- * Deletes the slot that matches the given key and group. This function has no effect if there are no matching
- * slots. Allocated memory is not freed, use cdict_destroy() for that.
+ * [Description]
  *
- * @param dict  : Dictionary to interact with
- * @param key   : Key to match
- * @param group : Group to match
+ * 	Clears any warning error the dictionary may have. Does not clears criticial errors.
+ * 	Calling this function on a NULL dictionary has no effect.
+ *
+ * [Parameters]
+ *
+ * 	dict - Dictionary to modify.
  */
-void
-cdict_erase(cdict *dict, const char *key, size_t group)
-CDICT_NONNULL(1, 2);
-
-/** 
- * Preallocates a set amount of slots to avoid triggering multiple automatic reallocs and rehashes when adding
- * data to the dictionary. To stay under the set maximum load factor (default = 0.6), the actual amount of
- * allocated hashtable slots is slot_number / max_load_factor. This function has no effect if the requested
- * number of slots is smaller than the previously allocated amount.
- *
- * @param dict         : Dictionary to interact with
- * @param slots_number : Number of slots
- *
- * @error CERR_OVERFLOW : The size of the resulting dictionary will be > SIZE_MAX
- * @error CERR_MEMORY   : Failed memory allocation
- */
-void
-cdict_prealloc(cdict *dict, size_t slots_number)
-CDICT_NONNULL(1);
+void cdict_clear_warnings(cdict *dict);
 
 /**
- * Sets the maximum load factor. To stay under it, the dictionary may automatically extend its number of
- * allocated slots. Default value = 0.6. Values outside of the [0.0 1.0], 0.0 excluded, are illegal.
+ * [Description]
  *
- * @param dict        : Dictionary to interact with
- * @param load_factor : Maximum load factor to set
+ * 	Deletes the slot that matches the given key and group.
+ * 	If no matching slot exists, the function has no effect.
+ * 	Allocated memory is not freed. Use cdict_destroy() for that.
+ * 	Calling this function on a NULL dictionary has no effect.
  *
- * @error CERR_OVERFLOW : The size of the resulting dictionary will be > SIZE_MAX
- * @error CERR_MEMORY   : Failed memory allocation
- * @error CERR_INPUT    : Illegal load_factor values were given
+ * [Parameters]
+ *
+ * 	dict  - Dictionary to modify.
+ * 	key   - NUL terminated string key to match. Can be NULL.
+ * 	group - Group identifier to match.
  */
-void
-cdict_set_max_load(cdict *dict, double load_factor)
-CDICT_NONNULL(1);
-
-/** 
- * Clears errors and puts the dictionary back into an usable state. The only unrecoverable error is
- * CDICT_INVALID.
- *
- * @param dict : Dictionary to interact with
- */
-void
-cdict_repair(cdict *dict)
-CDICT_NONNULL(1);
+void cdict_erase(cdict *dict, const char *key, size_t group);
 
 /**
- * Activates a slot in the dictionary's hashtable. The given key, group, and values will be associated with
- * that slot. If a slot with a matching key and group already exists, this function will only overwrite its
- * associated value. The dictionary can automatically extend the total number of allocated slots to stay under
- * its maximum load factor (default = 0.6).
+ * [Description]
  *
- * @param dict  : Dictionary to interact with
- * @param key   : Key to match
- * @param group : Group to match
- * @param value : Value to associate with the slot
+ * 	Preallocates a set number of slots to prevent multiple automatic reallocations
+ * 	and rehashes when adding new entries.
  *
- * @error CERR_OVERFLOW : The size of the resulting dictionary will be > SIZE_MAX
- * @error CERR_MEMORY   : Failed memory allocation
+ * 	To maintain the dictionary's maximum load factor (default: 0.6), the actual 
+ * 	number of allocated slots will be adjusted as (slots_number / max_load_factor).
+ *
+ * 	This function has no effect if the requested slot number is smaller than the 
+ * 	current allocation or a NULL dictionary is given.
+ *
+ * [Parameters]
+ *
+ * 	dict         - Dictionary to modify.
+ * 	slots_number - Minimum number of slots to preallocate.
+ *
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
  */
-void
-cdict_write(cdict *dict, const char *key, size_t group, size_t value)
-CDICT_NONNULL(1, 2);
+void cdict_prealloc(cdict *dict, size_t slots_number);
+
+/**
+ * [Description]
+ *
+ * 	Sets the dictionary's maximum load factor.
+ * 	To stay under the limit, the dictionary may automatically expand.
+ * 	The default load factor is 0.6.
+ *
+ * 	Values outside the range (0.0, 1.0] are invalid.
+ * 	Calling this function on a NULL dictionary has no effect.
+ *
+ * [Parameters]
+ *
+ * 	dict        - Dictionary to modify.
+ * 	load_factor - New maximum load factor.
+ *
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
+ * 	CERR_PARAM
+ */
+void cdict_set_max_load(cdict *dict, double load_factor);
+
+/**
+ * [Description]
+ *
+ * 	Activates a slot in the dictionary's hashtable, associating it with the given key, 
+ * 	group, and value. If a slot with a matching key and group already exists, its value 
+ * 	will be overwritten.
+ *
+ * 	The dictionary may automatically allocate additional slots to stay within its 
+ * 	maximum load factor (default: 0.6).
+ *
+ * 	Calling this function on a NULL dictionary has no effect.
+ *
+ * [Parameters]
+ *
+ * 	dict  - Dictionary to modify.
+ * 	key   - NUL terminated string key. Can be NULL.
+ * 	group - Group identifier.
+ * 	value - Value to associate with the slot.
+ *
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
+ */
+void cdict_write(cdict *dict, const char *key, size_t group, size_t value);
 
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Gets the error state.
+ * [Description]
  *
- * @param dict : Dictionary to interact with
+ * 	Retrieves the dictionary's current error state.
  *
- * @return : Error value
+ * [Parameters]
+ *
+ * 	dict - Dictionary to inspect.
+ *
+ * [Returns]
+ *
+ * 	The current error code.
+ * 	If the dictionary is NULL, this function always returns CERR_INVALID.
  */
-enum cerr
-cdict_error(const cdict *dict)
-CDICT_NONNULL(1)
-CDICT_PURE;
+[[gnu::pure]] enum cerr cdict_error(const cdict *dict);
 
 /**
- * Tries to find a slot that matches the given key and group. If found, true is returned, and if the optional
- * value parameter is not NULL, the associated value of the found slot will be written into it.
+ * [Description]
  *
- * @param dict  : Dictionary to interact with
- * @param key   : Key to match
- * @param group : Group to match
- * @param value : Optional parameter, value associated to the found slot
+ * 	Searches for a slot that matches the given key and group.
+ * 	If the optional value parameter is not NULL, the associated value will be written to it.
  *
- * @return     : Slot match
- * @return_err : false
+ * [Parameters]
+ *
+ * 	dict  - Dictionary to search.
+ * 	key   - NUL terminated string key to match. Can be NULL.
+ * 	group - Group identifier to match.
+ * 	value - Optional pointer to store the associated value.
+ *
+ * [Returns]
+ *
+ * 	True if a matching slot is found, false otherwhise.
+ * 	If the dictionary is NULL or in a critical error state, this function always returns false.
  */
-bool
-cdict_find(const cdict *dict, const char *key, size_t group, size_t *value)
-CDICT_NONNULL(1, 2);
+bool cdict_find(const cdict *dict, const char *key, size_t group, size_t *value);
 
 /**
- * Gets the number of active slots.
+ * [Description]
  *
- * @param dict : Dictionary to interact with
+ * 	Retrieves the number of active slots in the dictionary.
  *
- * @return     : Number of slots
- * @return_err : 0
+ * [Parameters]
+ *
+ * 	dict - Dictionary to inspect.
+ *
+ * [Returns]
+ *
+ * 	The number of active slots.
+ * 	If the dictionary is NULL or in a critical error state, this function always returns 0.
  */
-size_t
-cdict_load(const cdict *dict)
-CDICT_NONNULL(1)
-CDICT_PURE;
+[[gnu::pure]] size_t cdict_load(const cdict *dict);
 
 /**
- * Gets a ratio of the number of active slots by the number of allocated slots.
+ * [Description]
  *
- * @param dict : Dictionary to interact with
+ * 	Computes the ratio of active slots to allocated slots.
  *
- * @return     : 0.0 to 1.0 ratio
- * @return_err : 0.0
+ * [Parameters]
+ *
+ * 	dict - Dictionary to inspect.
+ *
+ * [Returns]
+ *
+ * 	A floating-point value in the range [0.0, 1.0] representing the load factor.
+ * 	If the dictionary is NULL or in a critical error state, this function always returns 0.0.
  */
-double
-cdict_load_factor(const cdict *dict)
-CDICT_NONNULL(1)
-CDICT_PURE;
+[[gnu::pure]] double cdict_load_factor(const cdict *dict);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

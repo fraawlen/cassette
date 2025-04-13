@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Objects (COBJ) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -32,7 +32,7 @@ static void print_stats (void);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static cbook *book = CBOOK_PLACEHOLDER;
+static cbook *book = nullptr;
 
 /************************************************************************************************************/
 /* MAIN *****************************************************************************************************/
@@ -65,9 +65,6 @@ main(void)
 	cbook_write(book, "test9");
 	cbook_write(book, "test0");
 
-	cbook_rewrite(book, 0, "new");  /* will rewrite "test1"                            */
-	cbook_rewrite(book, 0, "new2"); /* will not rewrite "new" because "new2" is longer */
-
 	print_stats();
 
 	for (size_t i = 0; i < cbook_groups_number(book); i++)
@@ -91,10 +88,10 @@ main(void)
 
 	if (cbook_error(book))
 	{
-		printf("Book errored during operation\n");	
+		printf("Book errored dunring operation (%s)\n", cerr_name(cbook_error(book)));
 	}
 
-	cbook_destroy(book);
+	book = cbook_destroy(book);
 
 	return 0;
 }

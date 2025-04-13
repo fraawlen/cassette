@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Objects (COBJ) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -29,15 +29,23 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Cassette errors. Errors values are represented as a bitfield to allow the stacking of multiple errors.
+ * [Description]
+ *
+ * 	Cassette errors used by COBJ, CCFG and CGUI.
  */
 enum cerr
 {
 	CERR_NONE = 0,
+
+	/* Warnings */
+
+	CERR_PARAM,
+
+	/* Critical */
+
 	CERR_INVALID,
 	CERR_OVERFLOW,
 	CERR_MEMORY,
-	CERR_PARAM,
 	CERR_CONFIG,
 	CERR_XCB,
 	CERR_CAIRO,
@@ -45,6 +53,69 @@ enum cerr
 	CERR_INSTANCE,
 	CERR_MALFORMED,
 };
+
+/************************************************************************************************************/
+/* IMPURE METHODS *******************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ * [Description]
+ *
+ * 	Cleats any warning from the error. Does not clears criticial errors.
+ * 	Calling this function on a NULL error has no effect.
+ *
+ * [Parameters]
+ *
+ * 	err  - Error to update.
+ */
+void cerr_clear_warnings(enum cerr *err);
+
+/** 
+ * [Description]
+ *
+ * 	Sets a new error code to the given err enum, but only if the new error if of higher severity.
+ * 	Calling this function on a NULL error enum has no effect.
+ *
+ * [Parameters]
+ *
+ * 	err  - Error enum to update.
+ * 	code - Error code.
+ */
+void cerr_set(enum cerr *err, enum cerr code);
+
+/************************************************************************************************************/
+/* PURE METHODS *********************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ * [Description]
+ *
+ * 	Converts an error code into a string.
+ *
+ * [Parameters]
+ *
+ * 	code - Error code to get the name of.
+ *
+ * [Returns]
+ *
+ * 	NUL terminated string representing the error code.
+ */
+[[gnu::const]] const char *cerr_name(enum cerr code);
+
+/**
+ * [Description]
+ *
+ * 	Checks the severity of an error.
+ *
+ * [Parameters]
+ *
+ * 	code - Error code to check.
+ *
+ * [Returns]
+ *
+ * 	True if it is critical, false it's a warning or no error was set.
+ */
+[[gnu::const]] bool cerr_critical(enum cerr code);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

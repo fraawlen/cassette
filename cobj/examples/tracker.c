@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Objects (COBJ) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -27,7 +27,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-cref *_refs = CREF_PLACEHOLDER;
+cref *refs = nullptr;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -48,46 +48,46 @@ main(void)
 
 	/* Setup */
 
-	_refs = cref_create();
+	refs = cref_create();
 
 	/* Operation */
 
-	cref_push(_refs, &a);
-	cref_push(_refs, &b);
-	cref_push(_refs, &b);
-	cref_push(_refs, &b);
-	cref_push(_refs, &c);
-	cref_push(_refs, &c);
-	cref_push(_refs, &d);
-	cref_push(_refs, &e);
-	cref_push(_refs, &f);
+	cref_push(refs, &a);
+	cref_push(refs, &b);
+	cref_push(refs, &b);
+	cref_push(refs, &b);
+	cref_push(refs, &c);
+	cref_push(refs, &c);
+	cref_push(refs, &d);
+	cref_push(refs, &e);
+	cref_push(refs, &f);
 
-	if ((n = cref_find(_refs, &b, &i)) > 0)
+	if ((n = cref_find(refs, &b, &i)) > 0)
 	{
 		printf("Ref B was found at index %zu with %u counts\n", i, n);
 	}
 
-	cref_purge(_refs, &b);
-	cref_pull(_refs, &c);
-	cref_pull(_refs, 0);
+	cref_purge(refs, &b);
+	cref_pull(refs, &c);
+	cref_pull(refs, 0);
 
-	CREF_FOR_EACH(_refs, j)
+	CREF_FOR_EACH(refs, j)
 	{
 		printf(
 			"%i / %u refs / %p\n",
-			*(int*)cref_ptr(_refs, j),
-			cref_count(_refs, j),
-			cref_ptr(_refs, j));
+			*(int*)cref_ptr(refs, j),
+			cref_count(refs, j),
+			cref_ptr(refs, j));
 	}
 
 	/* End */
 	
-	if (cref_error(_refs))
+	if (cref_error(refs))
 	{
-		printf("Reference tracker has failed during operation.\n");
+		printf("Reference counter errored dunring operation (%s)\n", cerr_name(cref_error(refs)));
 	}
-	
-	cref_destroy(_refs);
+
+	refs = cref_destroy(refs);
 
 	return 0;
 }

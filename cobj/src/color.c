@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Objects (COBJ) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -19,6 +19,7 @@
 /************************************************************************************************************/
 
 #include <cassette/cobj.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -29,9 +30,9 @@
  
 static void          bind_color  (struct ccolor *);
 static void          bind_double (double *);
-static uint8_t       hex_to_int  (char)                 CCOLOR_CONST; 
-static struct ccolor from_hex    (const char *, bool *) CCOLOR_NONNULL(1);
-static struct ccolor from_ulong  (const char *, bool *) CCOLOR_NONNULL(1);
+static uint8_t       hex_to_int  (char);
+static struct ccolor from_hex    (const char *, bool *);
+static struct ccolor from_ulong  (const char *, bool *);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -52,14 +53,13 @@ ccolor_from_argb_uint(uint32_t argb)
 struct ccolor
 ccolor_from_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
-	struct ccolor color;
-
-	color.a = a / 255.0;
-	color.r = r / 255.0;
-	color.g = g / 255.0;
-	color.b = b / 255.0;
-
-	return color;
+	return (struct ccolor)
+	{
+		.a = a / 255.0,
+		.r = r / 255.0,
+		.g = g / 255.0,
+		.b = b / 255.0,
+	};
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -67,11 +67,13 @@ ccolor_from_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 struct ccolor
 ccolor_from_str(const char *str, bool *err)
 {
-	struct ccolor color;
+	auto color = ccolor_black;
+	bool fail  = !str;
 
-	bool fail = false;
-
-	color = str[0] == '#' ? from_hex(str + 1, &fail) : from_ulong(str, &fail);
+	if (!fail)
+	{
+		color = str[0] == '#' ? from_hex(str + 1, &fail) : from_ulong(str, &fail);
+	}
 	
 	if (err)
 	{
@@ -86,18 +88,17 @@ ccolor_from_str(const char *str, bool *err)
 struct ccolor
 ccolor_interpolate(struct ccolor color_1, struct ccolor color_2, double ratio)
 {
-	struct ccolor color;
-
 	bind_color(&color_1);
 	bind_color(&color_2);
 	bind_double(&ratio);
 
-	color.r = color_2.r * ratio + color_1.r * (1.0 - ratio);
-	color.g = color_2.g * ratio + color_1.g * (1.0 - ratio);
-	color.b = color_2.b * ratio + color_1.b * (1.0 - ratio);
-	color.a = color_2.a * ratio + color_1.a * (1.0 - ratio);
-
-	return color;
+	return (struct ccolor)
+	{
+		.r = color_2.r * ratio + color_1.r * (1.0 - ratio),
+		.g = color_2.g * ratio + color_1.g * (1.0 - ratio),
+		.b = color_2.b * ratio + color_1.b * (1.0 - ratio),
+		.a = color_2.a * ratio + color_1.a * (1.0 - ratio),
+	};
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -105,17 +106,12 @@ ccolor_interpolate(struct ccolor color_1, struct ccolor color_2, double ratio)
 uint32_t
 ccolor_to_argb_uint(struct ccolor color)
 {
-	uint32_t a;
-	uint32_t r;
-	uint32_t g;
-	uint32_t b;
-
 	bind_color(&color);
 
-	a = color.a * 255;
-	r = color.r * 255;
-	g = color.g * 255;
-	b = color.b * 255;
+	uint32_t a = color.a * 255;
+	uint32_t r = color.r * 255;
+	uint32_t g = color.g * 255;
+	uint32_t b = color.b * 255;
 
 	return (a << 24) + (r << 16) + (g << 8) + b;
 }
@@ -142,7 +138,7 @@ bind_double(double *d)
 	{
 		*d = 1.0;
 	}
-	else if (*d < 0.0)
+	else if (*d < 0.0 || isinf(*d) || isnan(*d))
 	{
 		*d = 0.0;
 	}
