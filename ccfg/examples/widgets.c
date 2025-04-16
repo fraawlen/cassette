@@ -108,7 +108,7 @@ main(void)
 		printf("Config errored during operation (%s)\n", cerr_name(ccfg_error(cfg)));
 	}
 
-	cfg = ccfg_destroy(cfg);
+	ccfg_destroy(cfg);
 
 	return 0;
 }

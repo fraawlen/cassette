@@ -91,7 +91,7 @@ main(void)
 		printf("Book errored during operation (%s)\n", cerr_name(cbook_error(book)));
 	}
 
-	book = cbook_destroy(book);
+	cbook_destroy(book);
 
 	return 0;
 }

@@ -67,7 +67,7 @@ typedef struct cinputs cinputs;
  * 	To prevent dangling pointers while keeping the function a one-liner, this function
  * 	conveniently returns nullptr.
  */
-[[nodiscard]] nullptr_t cinputs_destroy(cinputs *inputs);
+nullptr_t cinputs_destroy(cinputs *inputs);
 
 /** 
  * [Description]

@@ -137,9 +137,9 @@ source_parse_root(ccfg *cfg, const char *source, bool internal)
 		munmap((void*)ctx.buffer, ctx.file_size);
 	}
 
-	(void)cbook_destroy(ctx.iteration);
-	(void)cbook_destroy(ctx.vars);
-	(void)cdict_destroy(ctx.keys_vars);
+	cbook_destroy(ctx.iteration);
+	cbook_destroy(ctx.vars);
+	cdict_destroy(ctx.keys_vars);
 }
 
 /************************************************************************************************************/

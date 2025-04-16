@@ -68,7 +68,7 @@ typedef struct cdict cdict;
  * 	To prevent dangling pointers while keeping the function a one-liner, this function
  * 	conveniently returns nullptr.
  */
-[[nodiscard]] nullptr_t cdict_destroy(cdict *dict);
+nullptr_t cdict_destroy(cdict *dict);
 
 /**
  * [Description]

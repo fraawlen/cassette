@@ -83,7 +83,7 @@ main(void)
 		printf("Reference counter errored during operation (%s)\n", cerr_name(cref_error(refs)));
 	}
 
-	refs = cref_destroy(refs);
+	cref_destroy(refs);
 
 	return 0;
 }

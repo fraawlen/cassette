@@ -116,7 +116,7 @@ simulation_thread(void *param)
 
 	/* Simulation end */
 
-	cfg = ccfg_destroy(cfg);
+	ccfg_destroy(cfg);
 
 	pthread_exit(NULL);
 }

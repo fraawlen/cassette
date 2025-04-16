@@ -80,7 +80,7 @@ typedef struct ccfg ccfg;
  * 	To prevent dangling pointers while keeping the function a one-liner, this function
  * 	conveniently returns nullptr.
  */
-[[nodiscard]] nullptr_t ccfg_destroy(ccfg *cfg);
+nullptr_t ccfg_destroy(ccfg *cfg);
 
 /**
  * [Description]

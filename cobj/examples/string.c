@@ -98,8 +98,8 @@ main(void)
 		printf("Wrapped string errored during operation (%s)\n", cerr_name(cstr_error(str_wrap)));
 	}
 
-	str_ref  = cstr_destroy(str_ref);
-	str_wrap = cstr_destroy(str_wrap);
+	cstr_destroy(str_ref);
+	cstr_destroy(str_wrap);
 
 	return 0;
 }

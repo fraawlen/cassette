@@ -75,7 +75,7 @@ typedef struct cstr cstr;
  * 	To prevent dangling pointers while keeping this function a one-liner, this function
  * 	conveniently returns nullptr.
  */
-[[nodiscard]] nullptr_t cstr_destroy(cstr *str);
+nullptr_t cstr_destroy(cstr *str);
 
 /**
  * [Description]

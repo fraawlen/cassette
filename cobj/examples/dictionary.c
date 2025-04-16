@@ -71,7 +71,7 @@ main(void)
 		printf("Dictionary errored during operation (%s)\n", cerr_name(cdict_error(dict)));
 	}
 
-	dict = cdict_destroy(dict);
+	cdict_destroy(dict);
 
 	return 0;
 }

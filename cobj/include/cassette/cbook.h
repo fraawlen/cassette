@@ -70,7 +70,7 @@ typedef struct cbook cbook;
  * 	To prevent dangling pointers while keeping the function a one-liner, this function
  * 	conveniently returns nullptr.
  */
-[[nodiscard]] nullptr_t cbook_destroy(cbook *book);
+nullptr_t cbook_destroy(cbook *book);
 
 /**
  * [Description]

@@ -165,7 +165,7 @@ combine_var(struct context *ctx, enum token type)
 	 || !cdict_find(ctx->keys_vars, token_1, CONTEXT_DICT_VARIABLE, &i)
 	 || (type == TOKEN_VAR_MERGE && !cdict_find(ctx->keys_vars, token_2, CONTEXT_DICT_VARIABLE, &j)))
 	{
-		(void)cstr_destroy(val);
+		cstr_destroy(val);
 		return;
 	}
 
@@ -201,7 +201,7 @@ combine_var(struct context *ctx, enum token type)
 
 	cdict_write(ctx->keys_vars, name, CONTEXT_DICT_VARIABLE, cbook_groups_number(ctx->vars) - 1);
 
-	(void)cstr_destroy(val);
+	cstr_destroy(val);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -400,7 +400,7 @@ include(struct context *ctx)
 		}
 	}
 
-	(void)cstr_destroy(filename);
+	cstr_destroy(filename);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

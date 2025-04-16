@@ -189,12 +189,12 @@ ccfg_destroy(ccfg *cfg)
 {
 	if (cfg)
 	{
-		(void)cbook_destroy(cfg->params);
-		(void)cbook_destroy(cfg->sequences);
-		(void)cbook_destroy(cfg->sources);
-		(void)cdict_destroy(cfg->keys_params);
-		(void)cdict_destroy(cfg->keys_sequences);
-		(void)cdict_destroy(cfg->tokens);
+		cbook_destroy(cfg->params);
+		cbook_destroy(cfg->sequences);
+		cbook_destroy(cfg->sources);
+		cdict_destroy(cfg->keys_params);
+		cdict_destroy(cfg->keys_sequences);
+		cdict_destroy(cfg->tokens);
 		free(cfg);
 	}
 
