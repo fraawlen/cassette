@@ -44,6 +44,19 @@ extern "C" {
 /**
  * [Description]
  *
+ * 	Sort the pointed values so that *d_1 < *d_2.
+ * 	If d_1 or d_2 is NULL, then this function has no effects.
+ *
+ * [Parameters]
+ *
+ * 	d_1 - First value.
+ * 	d_2 - Second value.
+ */
+void cutil_sort_pair(double *d_1, double *d_2);
+
+/**
+ * [Description]
+ *
  * 	Cassette's realloc wrapper for arrays.
  * 	If the function fails, a Cassette error is set.
  * 	The realloc size (n_new * size) should not be 0.
@@ -64,6 +77,48 @@ extern "C" {
  * 	In case of failure, ptr and n_store are not modified.
  */
 bool cutil_realloc(void **ptr, size_t *n_store, size_t n_new, size_t size, enum cerr *err);
+
+/************************************************************************************************************/
+/* PURE METHODS *********************************************************************************************/
+/************************************************************************************************************/
+
+/**
+ * [Description]
+ *
+ * 	Limits the value of a double between two boundaries.
+ * 	Boundaries can be in any order.
+ *
+ * [Parameters]
+ *
+ * 	d     - Value to clamp.
+ * 	lim_1 - First boundary.
+ * 	lim_2 - Second boundary.
+ *
+ * [Returns]
+ *
+ * 	Clamped value.
+ */
+[[gnu::const]] double cutil_clamp(double d, double lim_1, double lim_2);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/**
+ * [Description]
+ *
+ * 	Calculates a new value between two others using linear interpolation.
+ * 	Boundaries can be in any order.
+ *
+ * [Parameters]
+ *
+ * 	d_1   - First boundary.
+ * 	d_2   - Second boundary.
+ * 	ratio - Interpolation ratio between 0.0 and 1.0.
+ *
+ * [Returns]
+ *
+ * 	Interpolated value.
+ */
+[[gnu::const]] double cutil_interpolate(double d_1, double d_2, double ratio);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Configuration (CCFG) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -28,6 +28,5 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-enum token
-substitution_apply(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_result)
-CCFG_HIDDEN;
+[[gnu::visibility("hidden")]] enum token
+substitution_apply(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_result);

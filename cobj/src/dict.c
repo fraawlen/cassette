@@ -66,9 +66,9 @@ struct cdict
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-[[gnu::pure]] static struct slot *find     (const cdict *, uint64_t, enum state);
-[[gnu::pure]] static uint64_t     get_hash (const char *, size_t);
-              static bool         grow     (cdict *, size_t);
+static struct slot *find     (const cdict *, uint64_t, enum state);
+static uint64_t     get_hash (const char *, size_t);
+static bool         grow     (cdict *, size_t);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -291,6 +291,8 @@ cdict_write(cdict *dict, const char *key, size_t group, size_t value)
 {
 	GUARD(dict);
 
+	/* increase dict size if needed */
+
 	size_t n;
 
 	if (dict->n >= dict->n_alloc * dict->max_load)
@@ -305,6 +307,8 @@ cdict_write(cdict *dict, const char *key, size_t group, size_t value)
 			return;
 		}
 	}
+
+	/* write new entry */
 
 	uint64_t     hash = get_hash(key, group);
 	struct slot *slot = find(dict, hash, DELETED);

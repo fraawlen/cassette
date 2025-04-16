@@ -19,6 +19,7 @@
 /************************************************************************************************************/
 
 #include <cassette/cobj.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stdckdint.h>
 #include <stddef.h>
@@ -27,6 +28,26 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
+
+double
+cutil_clamp(double d, double lim_1, double lim_2)
+{
+	cutil_sort_pair(&lim_1, &lim_2);
+
+	return d < lim_1 || isnan(d) ? lim_1 : (d > lim_2 || isinf(d) ? lim_2 : d);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+double
+cutil_interpolate(double d_1, double d_2, double ratio)
+{
+	ratio = cutil_clamp(ratio, 0.0, 1.0);
+
+	return d_2 * ratio + d_1 * (1.0 - ratio);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
 cutil_realloc(void **ptr, size_t *n_store, size_t n_new, size_t size, enum cerr *err)
@@ -65,4 +86,19 @@ cutil_realloc(void **ptr, size_t *n_store, size_t n_new, size_t size, enum cerr 
 	*ptr = tmp;
 
 	return true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cutil_sort_pair(double *d_1, double *d_2)
+{
+	double tmp;
+
+	if (d_1 && d_2 && *d_1 > *d_2)
+	{
+		tmp  = *d_1;
+		*d_1 = *d_2;
+		*d_2 = tmp;
+	}
 }

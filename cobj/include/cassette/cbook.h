@@ -67,7 +67,7 @@ typedef struct cbook cbook;
  *
  * [Returns]
  *
- * 	To prevent dandling pointers while keeping the function a one-liner, this function
+ * 	To prevent dangling pointers while keeping the function a one-liner, this function
  * 	conveniently returns nullptr.
  */
 [[nodiscard]] nullptr_t cbook_destroy(cbook *book);
@@ -76,7 +76,6 @@ typedef struct cbook cbook;
  * [Description]
  *
  * 	Creates a book instance and deep copies the contents of another book into it.
- * 	Calling this function on a NULL book is the same as calling cbook_create().
  *
  * [Parameters]
  *
@@ -85,6 +84,7 @@ typedef struct cbook cbook;
  * [Returns]
  *
  * 	On succes, a pointer to a newly allocated instance. Returns nullptr on failure.
+ * 	If the book is NULL or in a critical error state, this function always returns nullptr.
  * 	The caller is responsible for freeing the returned instance using cbook_destroy().
  */
 [[nodiscard]] [[gnu::malloc(cbook_destroy)]] cbook *cbook_clone(const cbook *book);
@@ -104,34 +104,6 @@ typedef struct cbook cbook;
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
-
-/**
- * [Description]
- *
- * 	Convenience for-loop wrapper.
- * 	The I parameter is the global, not local, word index. Therefore, cbook_word() needs to be used
- * 	inside the loop instead of cbook_word_in_group().
- */
-#define CBOOK_FOR_EACH(BOOK, GROUP, I) \
-	for( \
-		size_t I = cbook_word_index(BOOK, GROUP, 0); \
-		I < cbook_word_index(BOOK, GROUP, 0) + cbook_group_length(BOOK, GROUP); \
-		I++)
-
-/**
- * [Description]
- *
- * 	Convenience inverse for-loop wrapper.
- * 	The I parameter is the global, not local, word index. Therefore, cbook_word() needs to be used
- * 	inside the loop instead of cbook_word_in_group().
- */
-#define CBOOK_FOR_EACH_REV(BOOK, GROUP, I) \
-	for( \
-		size_t I = cbook_group_length(BOOK, GROUP) == 0 ? \
-			SIZE_MAX : \
-			cbook_word_index(BOOK, GROUP, cbook_group_length(BOOK, GROUP) - 1); \
-		I - cbook_word_index(BOOK, GROUP, 0) < SIZE_MAX; \
-		I--)
 
 /**
  * [Description]
@@ -272,6 +244,36 @@ void cbook_zero(cbook *book);
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
 /************************************************************************************************************/
+
+/**
+ * [Description]
+ *
+ * 	Convenience for-loop wrapper.
+ * 	The I parameter is the global, not local, word index. Therefore, cbook_word() needs to be used
+ * 	inside the loop instead of cbook_word_in_group(). This parameter is declared internally, you
+ * 	should only provide the desired identifier.
+ */
+#define CBOOK_FOR_EACH(BOOK, GROUP, I) \
+	for( \
+		size_t I = cbook_word_index(BOOK, GROUP, 0); \
+		I < cbook_word_index(BOOK, GROUP, 0) + cbook_group_length(BOOK, GROUP); \
+		I++)
+
+/**
+ * [Description]
+ *
+ * 	Convenience inverse for-loop wrapper.
+ * 	The I parameter is the global, not local, word index. Therefore, cbook_word() needs to be used
+ * 	inside the loop instead of cbook_word_in_group(). This parameter is declared internally, you
+ * 	should only provide the desired identifier.
+ */
+#define CBOOK_FOR_EACH_REV(BOOK, GROUP, I) \
+	for( \
+		size_t I = cbook_group_length(BOOK, GROUP) == 0 ? \
+			SIZE_MAX : \
+			cbook_word_index(BOOK, GROUP, cbook_group_length(BOOK, GROUP) - 1); \
+		I - cbook_word_index(BOOK, GROUP, 0) < SIZE_MAX; \
+		I--)
 
 /**
  * [Description]

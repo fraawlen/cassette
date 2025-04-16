@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Configuration (CCFG) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -21,6 +21,7 @@
 #include <cassette/ccfg.h>
 #include <cassette/cobj.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -32,32 +33,14 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define SET_ERR(ERR) if (!cfg->err) { cfg->err = ERR; }
+#define GUARD(OBJ, ...) if (!OBJ || cerr_critical(OBJ->err)) { return __VA_OPT__(__VA_ARGS__); }
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static const char * select_source (const ccfg *, size_t *) CCFG_NONNULL_RETURN CCFG_NONNULL(1);
-static enum cerr    update_err    (ccfg *)                                     CCFG_NONNULL(1);
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-ccfg ccfg_placeholder_instance =
-{
-	.params         = CBOOK_PLACEHOLDER,
-	.sequences      = CBOOK_PLACEHOLDER,
-	.sources        = CBOOK_PLACEHOLDER,
-	.keys_params    = CDICT_PLACEHOLDER,
-	.keys_sequences = CDICT_PLACEHOLDER,
-	.tokens         = CDICT_PLACEHOLDER,
-	.it_group       = SIZE_MAX,
-	.it             = SIZE_MAX,
-	.restricted     = false,
-	.err            = CERR_INVALID,
-};
+static const char *select_source (const ccfg *, size_t *);
+static void        update_err    (ccfg *);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -66,10 +49,7 @@ ccfg ccfg_placeholder_instance =
 bool
 ccfg_can_open_sources(const ccfg *cfg, size_t *index)
 {
-	if (cfg->err)
-	{
-		return false;
-	}
+	GUARD(cfg, false);
 
 	return select_source(cfg, index)[0] != '\0';
 }
@@ -79,10 +59,7 @@ ccfg_can_open_sources(const ccfg *cfg, size_t *index)
 void
 ccfg_clear_resources(ccfg *cfg)
 {
-	if (cfg->err)
-	{
-		return;
-	}
+	GUARD(cfg);
 
 	cbook_clear(cfg->sequences);
 	cdict_clear(cfg->keys_sequences);
@@ -93,10 +70,7 @@ ccfg_clear_resources(ccfg *cfg)
 void
 ccfg_clear_params(ccfg *cfg)
 {
-	if (cfg->err)
-	{
-		return;
-	}
+	GUARD(cfg);
 
 	cbook_clear(cfg->params);
 	cdict_clear(cfg->keys_params);
@@ -107,24 +81,39 @@ ccfg_clear_params(ccfg *cfg)
 void
 ccfg_clear_sources(ccfg *cfg)
 {
-	if (cfg->err)
-	{
-		return;
-	}
+	GUARD(cfg);
 
 	cbook_clear(cfg->sources);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void
+ccfg_clear_warnings(ccfg *cfg)
+{
+	GUARD(cfg);
+
+	cerr_clear_warnings(&cfg->err);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-malloc-leak"
+#pragma GCC diagnostic ignored "-Wanalyzer-mismatching-deallocation"
+#pragma GCC diagnostic ignored "-Wanalyzer-use-of-uninitialized-value"
+#pragma GCC diagnostic ignored "-Wmismatched-dealloc"
+
 ccfg *
 ccfg_clone(ccfg *cfg)
 {
+	GUARD(cfg, nullptr);
+
 	ccfg *cfg_new;
 
 	if (!(cfg_new = malloc(sizeof(ccfg))))
 	{
-		return CCFG_PLACEHOLDER;
+		return nullptr;
 	}
 
 	cfg_new->params         = cbook_clone(cfg->params);
@@ -136,18 +125,22 @@ ccfg_clone(ccfg *cfg)
 	cfg_new->it_group       = cfg->it_group;
 	cfg_new->it             = cfg->it;
 	cfg_new->restricted     = cfg->restricted;
-	cfg_new->err            = CERR_NONE;
+	cfg_new->err            = cfg->err;
+	
+	update_err(cfg_new);
 
-	if (update_err(cfg_new))
-	{
-		ccfg_destroy(cfg_new);
-		return CCFG_PLACEHOLDER;
-	}
-
-	return cfg_new;
+	return cerr_critical(cfg_new->err) ? ccfg_destroy(cfg_new) : cfg_new;
 }
 
+#pragma GCC diagnostic pop
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-malloc-leak"
+#pragma GCC diagnostic ignored "-Wanalyzer-mismatching-deallocation"
+#pragma GCC diagnostic ignored "-Wanalyzer-use-of-uninitialized-value"
+#pragma GCC diagnostic ignored "-Wmismatched-dealloc"
 
 ccfg *
 ccfg_create(void)
@@ -156,7 +149,7 @@ ccfg_create(void)
 
 	if (!(cfg = malloc(sizeof(ccfg))))
 	{
-		return CCFG_PLACEHOLDER;
+		return nullptr;
 	}
 
 	cfg->params         = cbook_create();
@@ -170,41 +163,44 @@ ccfg_create(void)
 	cfg->restricted     = false;
 	cfg->err            = CERR_NONE;
 
-	if (update_err(cfg))
-	{
-		ccfg_destroy(cfg);
-		return CCFG_PLACEHOLDER;
-	}
+	update_err(cfg);
 
-	return cfg;
+	return cerr_critical(cfg->err) ? ccfg_destroy(cfg) : cfg;
 }
+
+#pragma GCC diagnostic pop
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-use-of-uninitialized-value"
+#pragma GCC diagnostic ignored "-Wanalyzer-use-after-free"
+
+nullptr_t
 ccfg_destroy(ccfg *cfg)
 {
-	if (cfg == CCFG_PLACEHOLDER)
+	if (cfg)
 	{
-		return;
+		(void)cbook_destroy(cfg->params);
+		(void)cbook_destroy(cfg->sequences);
+		(void)cbook_destroy(cfg->sources);
+		(void)cdict_destroy(cfg->keys_params);
+		(void)cdict_destroy(cfg->keys_sequences);
+		(void)cdict_destroy(cfg->tokens);
+		free(cfg);
 	}
 
-	cbook_destroy(cfg->params);
-	cbook_destroy(cfg->sequences);
-	cbook_destroy(cfg->sources);
-	cdict_destroy(cfg->keys_params);
-	cdict_destroy(cfg->keys_sequences);
-	cdict_destroy(cfg->tokens);
-
-	free(cfg);
+	return nullptr;
 }
+
+#pragma GCC diagnostic pop
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 enum cerr
 ccfg_error(const ccfg *cfg)
 {
-	return cfg->err;
+	return cfg ? cfg->err : CERR_INVALID;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -212,12 +208,9 @@ ccfg_error(const ccfg *cfg)
 void
 ccfg_fetch(ccfg *cfg, const char *namespace, const char *property)
 {
-	size_t i;
+	GUARD(cfg);
 
-	if (cfg->err)
-	{
-		return;
-	}
+	size_t i;
 
 	cfg->it_group = SIZE_MAX;
 	cfg->it       = SIZE_MAX;
@@ -227,6 +220,8 @@ ccfg_fetch(ccfg *cfg, const char *namespace, const char *property)
 	{
 		cfg->it = 0;
 	}
+
+	printf("%zu\n", cfg->it_group);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -234,7 +229,9 @@ ccfg_fetch(ccfg *cfg, const char *namespace, const char *property)
 bool
 ccfg_iterate(ccfg *cfg)
 {
-	if (cfg->err || cfg->it >= cbook_group_length(cfg->sequences, cfg->it_group))
+	GUARD(cfg, false);
+
+	if (cfg->it >= cbook_group_length(cfg->sequences, cfg->it_group))
 	{
 		return false;
 	}
@@ -249,16 +246,10 @@ ccfg_iterate(ccfg *cfg)
 void
 ccfg_load(ccfg *cfg)
 {
-	const char *source;
+	GUARD(cfg);
 
-	if (cfg->err || (source = select_source(cfg, NULL))[0] == '\0')
-	{
-		return;
-	}
-
-	cbook_clear(cfg->sequences);
-	cdict_clear(cfg->keys_sequences);
-	source_parse_root(cfg, source, false);
+	ccfg_clear_resources(cfg);
+	source_parse_root(cfg, select_source(cfg, nullptr), false);
 
 	update_err(cfg);
 }
@@ -268,14 +259,10 @@ ccfg_load(ccfg *cfg)
 void
 ccfg_load_internal(ccfg *cfg, const char *buffer)
 {
-	if (cfg->err)
-	{
-		return;
-	}
+	GUARD(cfg);
 
-	cbook_clear(cfg->sequences);
-	cdict_clear(cfg->keys_sequences);
-	source_parse_root(cfg, buffer, true);
+	ccfg_clear_resources(cfg);
+	source_parse_root(cfg, buffer ? buffer : "", true);
 
 	update_err(cfg);
 }
@@ -309,28 +296,10 @@ ccfg_push_param_long(ccfg *cfg, const char *name, long long l)
 void
 ccfg_push_param_str(ccfg *cfg, const char *name, const char *str)
 {
-	size_t i;
-
-	if (cfg->err)
-	{
-		return;
-	}
-
-	/* try to rewrite param value if it already exists */
-
-	if (cdict_find(cfg->keys_params, name, 0, &i)
-	 && cbook_rewrite(cfg->params, i, str))
-	{
-		return;
-	}
-
-	/* otherwhise create new param */
+	GUARD(cfg);
 
 	cbook_write(cfg->params, str);
-	if (!cbook_error(cfg->params))
-	{
-		cdict_write(cfg->keys_params, name, 0, cbook_words_number(cfg->params) - 1);
-	}
+	cdict_write(cfg->keys_params, name, 0, cbook_words_number(cfg->params) - 1);
 
 	update_err(cfg);
 }
@@ -340,34 +309,9 @@ ccfg_push_param_str(ccfg *cfg, const char *name, const char *str)
 void
 ccfg_push_source(ccfg *cfg, const char *filename)
 {
-	if (cfg->err)
-	{
-		return;
-	}
+	GUARD(cfg);
 
 	cbook_write(cfg->sources, filename);
-
-	update_err(cfg);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-ccfg_repair(ccfg *cfg)
-{
-	if (cfg->err == CERR_INVALID)
-	{
-		return;
-	}
-
-	cbook_repair(cfg->params);
-	cbook_repair(cfg->sequences);
-	cbook_repair(cfg->sources);
-	cdict_repair(cfg->keys_params);
-	cdict_repair(cfg->keys_sequences);
-	cdict_repair(cfg->tokens);
-	
-	cfg->err = CERR_NONE;
 
 	update_err(cfg);
 }
@@ -377,10 +321,7 @@ ccfg_repair(ccfg *cfg)
 const char *
 ccfg_resource(const ccfg *cfg)
 {
-	if (cfg->err)
-	{
-		return "";
-	}
+	GUARD(cfg, "");
 
 	return cbook_word_in_group(cfg->sequences, cfg->it_group, cfg->it - 1);
 }
@@ -390,10 +331,7 @@ ccfg_resource(const ccfg *cfg)
 size_t
 ccfg_resource_length(const ccfg *cfg)
 {
-	if (cfg->err)
-	{
-		return 0;
-	}
+	GUARD(cfg, 0);
 
 	return cbook_group_length(cfg->sequences, cfg->it_group);
 }
@@ -403,10 +341,7 @@ ccfg_resource_length(const ccfg *cfg)
 void
 ccfg_restrict(ccfg *cfg)
 {
-	if (cfg->err)
-	{
-		return;
-	}
+	GUARD(cfg);
 
 	cfg->restricted = true;
 }
@@ -416,10 +351,7 @@ ccfg_restrict(ccfg *cfg)
 void
 ccfg_unrestrict(ccfg *cfg)
 {
-	if (cfg->err)
-	{
-		return;
-	}
+	GUARD(cfg);
 
 	cfg->restricted = false;
 }
@@ -453,15 +385,13 @@ select_source(const ccfg *cfg, size_t *index)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static enum cerr
+void
 update_err(ccfg *cfg)
 {
-	SET_ERR(cbook_error(cfg->params))
-	SET_ERR(cbook_error(cfg->sequences))
-	SET_ERR(cbook_error(cfg->sources))
-	SET_ERR(cdict_error(cfg->keys_params))
-	SET_ERR(cdict_error(cfg->keys_sequences))
-	SET_ERR(cdict_error(cfg->tokens))
-
-	return cfg->err;
+	cerr_set(&cfg->err, cbook_error(cfg->params));
+	cerr_set(&cfg->err, cbook_error(cfg->sequences));
+	cerr_set(&cfg->err, cbook_error(cfg->sources));
+	cerr_set(&cfg->err, cdict_error(cfg->keys_params));
+	cerr_set(&cfg->err, cdict_error(cfg->keys_sequences));
+	cerr_set(&cfg->err, cdict_error(cfg->tokens));
 }

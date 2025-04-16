@@ -104,7 +104,7 @@ static void
 print_stats(void)
 {
 	printf(
-		"%zu groups / %zu words / %zu chars\n",
+		"%zu groups / %zu words / %zu bytes\n",
 		cbook_groups_number(book),
 		cbook_words_number(book),
 		cbook_length(book));

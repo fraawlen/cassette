@@ -73,7 +73,6 @@ typedef struct cref cref;
  * [Description]
  *
  * 	Creates a reference counter and deep copies the contents of another reference counter into it.
- * 	Calling this function on a NULL counter is the same as calling cref_create().
  *
  * [Parameters]
  *
@@ -82,6 +81,7 @@ typedef struct cref cref;
  * [Returns]
  *
  * 	On success, a pointer to a newly allocated instance. Returns nullptr on failure.
+ * 	If the counter is NULL or in a critical error state, this function always returns nullptr.
  * 	The caller is responsible for freeing the returned instance using cref_destroy().
  */
 [[nodiscard]] [[gnu::malloc(cref_destroy)]] cref *cref_clone(const cref *ref);
@@ -101,20 +101,6 @@ typedef struct cref cref;
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
-
-/**
- * [Description]
- *
- * 	Convenience for-loop wrapper.
- */
-#define CREF_FOR_EACH(REF, I) for(size_t I = 0; I < cref_length(REF); I++)
-
-/**
- * [Description]
- *
- * 	Convenience inverse for-loop wrapper.
- */
-#define CREF_FOR_EACH_REV(REF, I) for(size_t I = cref_length(REF) - 1; I < SIZE_MAX; I--)
 
 /**
  * [Description]
@@ -267,6 +253,22 @@ void cref_push(cref *ref, void *ptr);
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
 /************************************************************************************************************/
+
+/**
+ * [Description]
+ *
+ * 	Convenience for-loop wrapper.
+ * 	Parameter I is declared internally, you should only provide the desired identifier.
+ */
+#define CREF_FOR_EACH(REF, I) for(size_t I = 0; I < cref_length(REF); I++)
+
+/**
+ * [Description]
+ *
+ * 	Convenience inverse for-loop wrapper.
+ * 	Parameter I is declared internally, you should only provide the desired identifier.
+ */
+#define CREF_FOR_EACH_REV(REF, I) for(size_t I = cref_length(REF) - 1; I < SIZE_MAX; I--)
 
 /**
  * [Description]

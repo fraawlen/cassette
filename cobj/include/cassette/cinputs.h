@@ -73,7 +73,7 @@ typedef struct cinputs cinputs;
  * [Description]
  *
  * 	Creates an input tracker instance and deep copies the content of another input tracker into
- * 	it. Calling this function on a NULL input tracker is the same as calling cinputs_create().
+ * 	it.
  *
  * [Parameters]
  *
@@ -82,6 +82,8 @@ typedef struct cinputs cinputs;
  * [Returns]
  *
  * 	On success, a pointer to a newly allocated instance. Returns nullptr on failure.
+ * 	If the input tracker is NULL or in a critical error state, this function always returns
+ * 	nullptr.
  * 	The caller is responsible for freeing the returned instance using cinputs_destroy().
  */
 [[nodiscard]] [[gnu::malloc(cinputs_destroy)]] cinputs *cinputs_clone(const cinputs *inputs);
@@ -105,20 +107,6 @@ typedef struct cinputs cinputs;
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
-
-/**
- * [Description]
- *
- * 	Convenience for-loop wrapper.
- */
-#define CINPUTS_FOR_EACH(INPUTS, I) for(size_t I = 0; I < cinputs_load(INPUTS); I++)
-
-/**
- * [Description]
- *
- * 	Convenience inverse for-loop wrapper.
- */
-#define CINPUTS_FOR_EACH_REV(INPUTS, I) for(size_t I = cinputs_load(INPUTS) - 1; I < SIZE_MAX; I--)
 
 /**
  * [Description]
@@ -213,6 +201,22 @@ void cinputs_resize(cinputs *inputs, size_t max_inputs);
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
 /************************************************************************************************************/
+
+/**
+ * [Description]
+ *
+ * 	Convenience for-loop wrapper.
+ * 	Parameter I is declared internally, you should only provide the desired identifier.
+ */
+#define CINPUTS_FOR_EACH(INPUTS, I) for(size_t I = 0; I < cinputs_load(INPUTS); I++)
+
+/**
+ * [Description]
+ *
+ * 	Convenience inverse for-loop wrapper.
+ * 	Parameter I is declared internally, you should only provide the desired identifier.
+ */
+#define CINPUTS_FOR_EACH_REV(INPUTS, I) for(size_t I = cinputs_load(INPUTS) - 1; I < SIZE_MAX; I--)
 
 /** 
  * [Description]

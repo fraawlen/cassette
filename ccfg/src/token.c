@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Configuration (CCFG) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -129,9 +129,7 @@ static const struct slot map[] =
 cdict *
 token_dict_create(void)
 {
-	cdict *dict;
-
-	dict = cdict_create();
+	cdict *dict = cdict_create();
 
 	cdict_prealloc(dict,   sizeof(map) / sizeof(struct slot));
 	for (size_t i = 0; i < sizeof(map) / sizeof(struct slot); i++)

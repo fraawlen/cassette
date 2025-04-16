@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Configuration (CCFG) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -26,7 +26,6 @@
 #include "context.h"
 #include "sequence.h"
 #include "source.h"
-#include "util.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -34,23 +33,23 @@
 
 /* sequences handlers */
 
-static void combine_var      (struct context *, enum token)   CCFG_NONNULL(1);
-static void declare_enum     (struct context *)               CCFG_NONNULL(1);
-static void declare_resource (struct context *, const char *) CCFG_NONNULL(1);
-static void declare_variable (struct context *)               CCFG_NONNULL(1);
-static void include          (struct context *)               CCFG_NONNULL(1);
-static void iterate          (struct context *)               CCFG_NONNULL(1);
-static void print            (struct context *)               CCFG_NONNULL(1);
-static void restrict_mode    (struct context *)               CCFG_NONNULL(1);
-static void section_add      (struct context *)               CCFG_NONNULL(1);
-static void section_begin    (struct context *)               CCFG_NONNULL(1);
-static void section_del      (struct context *)               CCFG_NONNULL(1);
-static void seed             (struct context *)               CCFG_NONNULL(1);
+static void combine_var      (struct context *, enum token);
+static void declare_enum     (struct context *);
+static void declare_resource (struct context *, const char *);
+static void declare_variable (struct context *);
+static void include          (struct context *);
+static void iterate          (struct context *);
+static void print            (struct context *);
+static void restrict_mode    (struct context *);
+static void section_add      (struct context *);
+static void section_begin    (struct context *);
+static void section_del      (struct context *);
+static void seed             (struct context *);
 
 /* iteration sequence preprocessing */
 
-static void   preproc_iter_new  (struct context *, bool *)         CCFG_NONNULL(1);
-static size_t preproc_iter_nest (struct context *, size_t, bool *) CCFG_NONNULL(1);
+static void   preproc_iter_new  (struct context *, bool *);
+static size_t preproc_iter_nest (struct context *, size_t, bool *);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -69,7 +68,7 @@ sequence_parse(struct context *ctx)
 	
 	ctx->depth++;
 
-	if ((type = context_get_token(ctx, token, NULL)) != TOKEN_SECTION_BEGIN && ctx->skip_sequences)
+	if ((type = context_get_token(ctx, token, nullptr)) != TOKEN_SECTION_BEGIN && ctx->skip_sequences)
 	{
 		type = TOKEN_INVALID;
 	}
@@ -160,12 +159,13 @@ combine_var(struct context *ctx, enum token type)
 
 	/* get params */
 
-	if (context_get_token(ctx, name,    NULL) == TOKEN_INVALID
-	 || context_get_token(ctx, token_1, NULL) == TOKEN_INVALID
-	 || context_get_token(ctx, token_2, NULL) == TOKEN_INVALID
+	if (context_get_token(ctx, name,    nullptr) == TOKEN_INVALID
+	 || context_get_token(ctx, token_1, nullptr) == TOKEN_INVALID
+	 || context_get_token(ctx, token_2, nullptr) == TOKEN_INVALID
 	 || !cdict_find(ctx->keys_vars, token_1, CONTEXT_DICT_VARIABLE, &i)
 	 || (type == TOKEN_VAR_MERGE && !cdict_find(ctx->keys_vars, token_2, CONTEXT_DICT_VARIABLE, &j)))
 	{
+		(void)cstr_destroy(val);
 		return;
 	}
 
@@ -194,14 +194,14 @@ combine_var(struct context *ctx, enum token type)
 				break;
 		}
 
-		cbook_write(ctx->vars, cstr_chars(val));
+		cbook_write(ctx->vars, cstr_bytes(val));
 	}
 
 	/* update variable's reference in the variable dict */
 
 	cdict_write(ctx->keys_vars, name, CONTEXT_DICT_VARIABLE, cbook_groups_number(ctx->vars) - 1);
 
-	cstr_destroy(val);
+	(void)cstr_destroy(val);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -225,7 +225,7 @@ declare_enum(struct context *ctx)
 
 	/* get enum name and params, set defaults on missing params */
 
-	n += context_get_token        (ctx, name,  NULL)       != TOKEN_INVALID ? 1 : 0;
+	n += context_get_token        (ctx, name,  nullptr)       != TOKEN_INVALID ? 1 : 0;
 	n += context_get_token_numeral(ctx, token, &min)       != TOKEN_INVALID ? 1 : 0;
 	n += context_get_token_numeral(ctx, token, &max)       != TOKEN_INVALID ? 1 : 0;
 	n += context_get_token_numeral(ctx, token, &steps)     != TOKEN_INVALID ? 1 : 0;
@@ -269,7 +269,7 @@ declare_enum(struct context *ctx)
 	cbook_prepare_new_group(ctx->vars);
 	for (size_t i = 0; i <= steps; i++)
 	{
-		ratio = util_interpolate(min, max, i / steps);
+		ratio = cutil_interpolate(min, max, i / steps);
 		snprintf(token, CCFG_TOKEN_LENGTH, "%.*f", (int)precision, ratio);
 		cbook_write(ctx->vars, token);
 	}
@@ -291,7 +291,7 @@ declare_resource(struct context *ctx, const char *namespace)
 
 	/* get resource's name */
 
-	if (context_get_token(ctx, name, NULL) == TOKEN_INVALID)
+	if (context_get_token(ctx, name, nullptr) == TOKEN_INVALID)
 	{
 		return;
 	}
@@ -299,7 +299,7 @@ declare_resource(struct context *ctx, const char *namespace)
 	/* write resource's values into the sequence book */
 
 	cbook_prepare_new_group(ctx->sequences);
-	while (context_get_token(ctx, value, NULL) != TOKEN_INVALID)
+	while (context_get_token(ctx, value, nullptr) != TOKEN_INVALID)
 	{
 		cbook_write(ctx->sequences, value);
 		n++;
@@ -341,7 +341,7 @@ declare_variable(struct context *ctx)
 
 	/* get variable's name */
 
-	if (context_get_token(ctx, name, NULL) == TOKEN_INVALID)
+	if (context_get_token(ctx, name, nullptr) == TOKEN_INVALID)
 	{
 		return;
 	}
@@ -349,7 +349,7 @@ declare_variable(struct context *ctx)
 	/* write variable's values into the variable book */
 
 	cbook_prepare_new_group(ctx->vars);
-	while (context_get_token(ctx, value, NULL) != TOKEN_INVALID)
+	while (context_get_token(ctx, value, nullptr) != TOKEN_INVALID)
 	{
 		cbook_write(ctx->vars, value);
 		n++;
@@ -381,7 +381,7 @@ include(struct context *ctx)
 
 	filename = cstr_create();
 
-	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
+	while (context_get_token(ctx, token, nullptr) != TOKEN_INVALID)
 	{
 		if (token[0] != '/')
 		{
@@ -391,7 +391,7 @@ include(struct context *ctx)
 				cstr_append(filename, ctx->file_dir);
 				cstr_append(filename, "/");
 				cstr_append(filename, token);
-				source_parse_child(ctx, cstr_chars(filename));
+				source_parse_child(ctx, cstr_bytes(filename));
 			}
 		}
 		else
@@ -400,7 +400,7 @@ include(struct context *ctx)
 		}
 	}
 
-	cstr_destroy(filename);
+	(void)cstr_destroy(filename);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -424,13 +424,13 @@ iterate(struct context *ctx)
 
 	/* get iteration params and detect if it's nested */
 
-	if (context_get_token(ctx, token,  NULL) == TOKEN_INVALID
+	if (context_get_token(ctx, token,  nullptr) == TOKEN_INVALID
 	 || !cdict_find(ctx->keys_vars, token, CONTEXT_DICT_VARIABLE, &i))
 	{
 		return;
 	}
 
-	if (context_get_token(ctx, name, NULL) == TOKEN_INVALID)
+	if (context_get_token(ctx, name, nullptr) == TOKEN_INVALID)
 	{
 		snprintf(name, CCFG_TOKEN_LENGTH, "%s", token);
 	}
@@ -593,7 +593,7 @@ print(struct context *ctx)
 		return;
 	}
 
-	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
+	while (context_get_token(ctx, token, nullptr) != TOKEN_INVALID)
 	{
 		fprintf(stderr, "%s,\t", token);
 	}
@@ -621,7 +621,7 @@ section_add(struct context *ctx)
 		return;
 	}
 
-	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
+	while (context_get_token(ctx, token, nullptr) != TOKEN_INVALID)
 	{
 		cdict_write(ctx->keys_vars, token, CONTEXT_DICT_SECTION, 0);
 	}
@@ -639,9 +639,9 @@ section_begin(struct context *ctx)
 		return;
 	}
 
-	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
+	while (context_get_token(ctx, token, nullptr) != TOKEN_INVALID)
 	{
-		if (!cdict_find(ctx->keys_vars, token, CONTEXT_DICT_SECTION, NULL))
+		if (!cdict_find(ctx->keys_vars, token, CONTEXT_DICT_SECTION, nullptr))
 		{
 			ctx->skip_sequences = true;
 			return;
@@ -663,7 +663,7 @@ section_del(struct context *ctx)
 		return;
 	}
 
-	while (context_get_token(ctx, token, NULL) != TOKEN_INVALID)
+	while (context_get_token(ctx, token, nullptr) != TOKEN_INVALID)
 	{
 		cdict_erase(ctx->keys_vars, token, CONTEXT_DICT_SECTION);
 	}

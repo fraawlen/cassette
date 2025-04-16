@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Configuration (CCFG) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -30,14 +30,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-void
-source_parse_child(struct context *ctx_parent, const char *source)
-CCFG_NONNULL(1, 2)
-CCFG_HIDDEN;
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
+source_parse_child(struct context *ctx_parent, const char *source);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-source_parse_root(ccfg *cfg, const char *source, bool internal)
-CCFG_NONNULL(1, 2)
-CCFG_HIDDEN;
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
+source_parse_root(ccfg *cfg, const char *source, bool internal);

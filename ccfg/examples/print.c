@@ -19,6 +19,7 @@
 /************************************************************************************************************/
 
 #include <cassette/ccfg.h>
+#include <cassette/cobj.h>
 #include <stdio.h>
 
 /************************************************************************************************************/
@@ -31,7 +32,7 @@ static void print_resources (const char *, const char *);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static ccfg *cfg = CCFG_PLACEHOLDER;
+static ccfg *cfg = nullptr;
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -86,8 +87,10 @@ main(void)
 
 	if (ccfg_error(cfg))
 	{
-		printf("Configuration parser failed during operation.\n");
+		printf("Config errored during operation (%s)\n", cerr_name(ccfg_error(cfg)));
 	}
+
+	cfg = ccfg_destroy(cfg);
 
 	return 0;
 }

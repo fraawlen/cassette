@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Config (CCFG) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -22,21 +22,8 @@
 
 #include <cassette/cobj.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdlib.h>
-
-#if __GNUC__ > 4
-	#define CCFG_NONNULL_RETURN __attribute__((returns_nonnull))
-	#define CCFG_NONNULL(...)   __attribute__((nonnull (__VA_ARGS__)))
-	#define CCFG_HIDDEN         __attribute__((visibility ("hidden")))
-	#define CCFG_PURE           __attribute__((pure))
-	#define CCFG_CONST          __attribute__((const))
-#else
-	#define CCFG_NONNULL_RETURN
-	#define CCFG_NONNULL(...)
-	#define CCFG_HIDDEN
-	#define CCFG_PURE
-	#define CCFG_CONST
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,14 +34,19 @@ extern "C" {
 /************************************************************************************************************/
 
 /**
- * Opaque config object that holds all settings like sources and parameters as well as resolved parsed
- * resources. A decision was made to use a parser that saves all resources instead of setting target values
- * as the resources get read and resolved so that on a source file is read, a configuration object can be
- * shared and re-used in software plugins.
+ * [Description]
  *
- * Some methods, upon failure, will set an error that can be checked with ccfg_error(). If any error is set
- * all config methods will exit early with default return values and no side-effects. It's possible to clear
- * errors with ccfg_repair().
+ * 	Opaque configuration parser object that hold settings (sources and parameters) and resolved
+ * 	resources that were parsed previously. CCFG's parser has been designed to store parsed data
+ * 	then use getter functions instead of an event-based architecture to be able to share a
+ * 	configuration in software plugins (and without said plugins needing to hook themselves into
+ * 	the target program before said program main routine starts).
+ *
+ * 	Resources definitions follow the CCFG language specification.
+ *
+ * 	Some methods may fail and set an internal error, which can be checked using ccfg_error().
+ * 	If an error is set, all methods will exit early with default return values and no side
+ * 	effects, leaving only the destruction function available.
  */
 typedef struct ccfg ccfg;
 
@@ -63,63 +55,70 @@ typedef struct ccfg ccfg;
 /************************************************************************************************************/
 
 /**
- * Maximum length of a ccfg token including the NUL terminator.
+ * [Description]
+ *
+ * 	Maximum length of a CCFG token. NUL terminator included.
  */
 #define CCFG_TOKEN_LENGTH 256
-
-/**
- * A macro that gives uninitialized config objects a non-NULL value that is safe to use with the config's
- * related functions. However, any function called with a handle set to this value will return early without
- * any side effects.
- */
-#define CCFG_PLACEHOLDER (&ccfg_placeholder_instance)
-
-/**
- * Global string object instance with the error state set to CERR_INVALID. This instance is only made
- * available to allow the static initialization of string object pointers with the macro CCFG_PLACEHOLDER.
- */
-extern ccfg ccfg_placeholder_instance;
 
 /************************************************************************************************************/
 /* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Creates a config instance and deep copy the contents of another config instance into it.
+ * [Description]
  *
- * @return     : Created config instance
- * @return_err : CCFG_PLACEHOLDER
+ * 	Destroys a parser and frees all associated memory.
+ * 	Calling this function on a NULL parser has no effect.
+ *
+ * [Parameters]
+ *
+ * 	cfg - Parser to destroy.
+ *
+ * [Returns]
+ *
+ * 	To prevent dangling pointers while keeping the function a one-liner, this function
+ * 	conveniently returns nullptr.
  */
-ccfg *
-ccfg_clone(ccfg *cfg)
-CCFG_NONNULL_RETURN
-CCFG_NONNULL(1);
+[[nodiscard]] nullptr_t ccfg_destroy(ccfg *cfg);
 
 /**
- * Creates an empty config instance.
+ * [Description]
  *
- * @return     : Created config instance
- * @return_err : CCFG_PLACEHOLDER
+ * 	Creates a parser instance and deep copies the contents of another parser into it.
+ *
+ * [Parameters]
+ *
+ * 	cfg - Parser to copy.
+ *
+ * [Returns]
+ *
+ * 	On succes, a pointer to a newly allocated instance. Returns nullptr on failure.
+ * 	If the parser is NULL or in a critical error state, this function always returns nullptr.
+ * 	The caller is responsible for freeing the returned instance using ccfg_destroy().
  */
-ccfg *
-ccfg_create(void)
-CCFG_NONNULL_RETURN;
+[[nodiscard]] [[gnu::malloc(ccfg_destroy)]] ccfg *ccfg_clone(ccfg *cfg);
 
 /**
- * Destroys the given config and frees memory.
+ * [Description]
  *
- * @param cfg : Config instance to interact with
+ * 	Creates a new, empty config instance.
+ *
+ * [Returns]
+ *
+ * 	On succes, a pointer to a newly allocated instance. Returns nullptr on failure.
+ * 	The caller is responsible for freeing the returned instance using ccfg_destroy().
  */
-void
-ccfg_destroy(ccfg *cfg)
-CCFG_NONNULL(1);
+[[nodiscard]] [[gnu::malloc(ccfg_destroy)]] ccfg *ccfg_create(void);
 
 /************************************************************************************************************/
 /* IMPURE METHODS *******************************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Convenience generic wrapper for parameter types.
+ * [Description]
+ *
+ * 	Convenience generic wrapper for parameter types.
  */
 #define ccfg_push_param(CFG, NAME, VAL) \
 	_Generic (VAL, \
@@ -131,38 +130,69 @@ CCFG_NONNULL(1);
 	)(CFG, NAME, VAL)
 
 /**
- * Removes all added parameters.
+ * [Description]
  *
- * @param cfg : Config instance to interact with
+ * 	Removes all added parameters.
+ * 	Allocated memory is not freed, use ccfg_destroy() for that.
+ * 	Calling this function on a NULL parser has no effect.
+ *
+ * [Parameters]
+ *
+ * 	cfg - Parser to modify.
  */
-void
-ccfg_clear_params(ccfg *cfg)
-CCFG_NONNULL(1);
+void ccfg_clear_params(ccfg *cfg);
 
 /**
- * Removes all parsed resources.
+ * [Description]
  *
- * @param cfg : Config instance to interact with
+ * 	Removes all parsed resources.
+ * 	Allocated memory is not freed, use ccfg_destroy() for that.
+ * 	Calling this function on a NULL parser has no effect.
+ *
+ * [Parameters]
+ *
+ * 	cfg - Parser to modify.
  */
-void
-ccfg_clear_resources(ccfg *cfg)
-CCFG_NONNULL(1);
+void ccfg_clear_resources(ccfg *cfg);
 
 /**
- * Removes all added sources.
+ * [Description]
  *
- * @param cfg : Config instance to interact with
+ * 	Removes all added sources.
+ * 	Allocated memory is not freed, use ccfg_destroy() for that.
+ * 	Calling this function on a NULL parser has no effect.
+ *
+ * [Parameters]
+ *
+ * 	cfg - Parser to modify.
  */
-void
-ccfg_clear_sources(ccfg *cfg)
-CCFG_NONNULL(1);
+void ccfg_clear_sources(ccfg *cfg);
 
 /**
- * Looks-up a resource by its namespace and property name. If found, its reference is kept around and the
- * resource values will become accessible through ccfg_iterate() and ccfg_resource(). To get the number of
- * values a resource has, use ccfg_resouce_length().
+ * [Description]
  *
- * Usage example :
+ * 	Clears any warning error the parser may have. Does not clears criticial errors.
+ * 	Calling this function on a NULL parser has no effect.
+ *
+ * [Parameters]
+ *
+ * 	cfg - Parser to modify.
+ */
+void ccfg_clear_warnings(ccfg *cfg);
+
+/**
+ * [Description]
+ *
+ * 	Looks-up a resource by its namespace and property name. If found, its reference is kept around
+ * 	and the resource values will become accessible through ccfg_iterate() and ccfg_resource().
+ * 	To get the number of values a resource has, use ccfg_resouce_length().
+ * 	After calling this function, as long as ccfg_iterate() is not called at least once, the
+ * 	associated resource values will not be accessible.
+ *
+ * 	A NULL namespace or property value is equivalent to an empty "" value.
+ * 	Calling this function on a NULL parser has no effect.
+ *
+ * [Example]
  *
  *	ccfg_fetch(cfg, "something", "something");
  *	while (ccfg_iterate(cfg))
@@ -170,205 +200,267 @@ CCFG_NONNULL(1);
  *		printf("%s\n", ccfg_resource(cfg));
  *	}
  *
- * @param cfg       : Config instance to interact with
- * @param namespace : Resource namespace
- * @param property  : Resource property name
+ * [Parameters]
+ *
+ * 	cfg       - Parser to modify.
+ * 	namespace - Resource namespace.
+ * 	property  - Resource property name.
  */
-void
-ccfg_fetch(ccfg *cfg, const char *namespace, const char *property)
-CCFG_NONNULL(1, 2, 3);
+void ccfg_fetch(ccfg *cfg, const char *namespace, const char *property);
 
 /**
- * Increments an internal iterator offset and makes available the next value associated to a resource fetched
- * with ccfg_fetch(). Said value can be accessed with ccfg_resource(). This function exits early and returns
- * false if the iterator cannot be incremented because it has already reached the last resource value or
- * because the config has an error.
+ * [Description]
  *
- * @param cfg : Config instance to interact with
+ * 	Increments an internal iterator offset and makes available the next value associated to with 
+ * 	resource fetched with ccfg_fetch(). This value can be accessed with ccfg_resource().
+ * 	Calling this function on a NULL parser has no effect.
  *
- * @return     : True is the next value could be picked, false otherwhise.
- * @return_err : False
+ * [Parameters]
+ *
+ * 	cfg - Parser to modify.
+ *
+ * [Returns]
+ *
+ * 	After the iterator has been successfully incremented this function returns true.
+ * 	Otherwhise, if the iterator already reached the end and cannot be incremented further, this
+ * 	function returns false.
+ * 	If the parser is NULL or in a critical error state, this function always returns false.
  */
-bool
-ccfg_iterate(ccfg *cfg)
-CCFG_NONNULL(1);
+bool ccfg_iterate(ccfg *cfg);
 
 /**
- * Reads the first source file that can be opened, parses it, and stores the resolved resources. Every time
- * this function is called the previously parsed resources will be cleared first before reading the source.
- * This function has no effects if no source file can be read. It should be noted that not being able to
- * open any source files is not considered to be an error by default. If such a check is needed, use
- * ccfg_can_open_sources().
+ * [Description]
  *
- * @param cfg : Config instance to interact with
+ * 	Reads the first source file that can be opened, parses it, and stores the resolved resources.
+ * 	Every time this function is called the previously parsed resources will be cleared first
+ * 	before reading the source.
  *
- * @error CERR_OVERFLOW
- * @error CERR_MEMORY
+ * 	If not source file can be read, then this function behaves like ccfg_clear_resources().
+ * 	Not being able to open any source files is not considered to be an error. If such a check is
+ * 	needed, use ccfg_can_open_sources().
+ * 	Calling this function on a NULL parser has no effect.
+ *
+ * [Parameters]
+ *
+ * 	cfg - Parser to modify.
+ *
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
  */
-void
-ccfg_load(ccfg *cfg)
-CCFG_NONNULL(1);
+void ccfg_load(ccfg *cfg);
 
 /**
- * Similar to ccfg_load() except that no source file is opened. Instead, the resources will be parsed from
- * the given buffer. The only different behavior from standard parsing is the interpretation of relative 
- * paths when an INCLUDE sequence is processed as these will be ignored if they get declared in the given
- * buffer.
+ * [Description]
  *
- * @param cfg    : Config instance to interact with
- * @param buffer : NUL terminated C-string to parse
+ * 	Similar to ccfg_load() except that no source file is opened. Instead, the resources will be
+ * 	parsed from the passed NUL terminated buffer. Unlike file parsing, INCLUDE sequences (see the
+ * 	CCFG language specification) will be ignored.
  *
- * @error CERR_OVERFLOW
- * @error CERR_MEMORY
+ * 	If the buffer is NULL or empty, then this function behaves like ccfg_clear_resources().
+ * 	Calling this function on a NULL parser has no effect.
+ *
+ * [Parameters]
+ *
+ * 	cfg    - Parser to modify.
+ * 	buffer - Source to parse.
+ *
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
  */
-void
-ccfg_load_internal(ccfg *cfg, const char *buffer)
-CCFG_NONNULL(1, 2);
+void ccfg_load_internal(ccfg *cfg, const char *buffer);
 
 /**
- * Adds a double as a config parameter. This parameter's value can then be accessed from a config source
- * file. Unlike user-defined variables, only one value per parameter can be defined.
+ * [Description]
  *
- * @param cfg  : Config instance to interact with
- * @param name : Name of the parameter to use in the source config
- * @param d    : Value
+ * 	Registers a parameter in the form of a double floating value in the parser.
+ * 	Any parameter resources with the related name will be subtituted with the given value during
+ * 	source parsing. Unlike user-defined variables, only one value per parameter can be defined.
+ * 	See the CCFG language specification for more information.
+ * 	Calling this function on a NULL parser has no effect.
  *
- * @error CERR_OVERFLOW
- * @error CERR_MEMORY
+ * [Parameters]
+ *
+ * 	cfg  - Parser to modify.
+ * 	name - Parameter name.
+ * 	d    - Double value.
+ *
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
  */
-void
-ccfg_push_param_double(ccfg *cfg, const char *name, double d)
-CCFG_NONNULL(1, 2);
+void ccfg_push_param_double(ccfg *cfg, const char *name, double d);
 
 /**
- * Adds a long as a config parameter. This parameter's value can then be accessed from a config source file.
- * Unlike user-defined variables, only one value per parameter can be defined.
+ * [Description]
  *
- * @param cfg  : Config instance to interact with
- * @param name : Name of the parameter to use in the source config
- * @param l    : Value
+ * 	Registers a parameter in the form of a long integer value in the parser.
+ * 	Any parameter resources with the related name will be subtituted with the given value during
+ * 	source parsing. Unlike user-defined variables, only one value per parameter can be defined.
+ * 	See the CCFG language specification for more information.
+ * 	Calling this function on a NULL parser has no effect.
  *
- * @error CERR_OVERFLOW
- * @error CERR_MEMORY
+ * [Parameters]
+ *
+ * 	cfg  - Parser to modify.
+ * 	name - Parameter name.
+ * 	l    - Long value.
+ *
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
  */
-void
-ccfg_push_param_long(ccfg *cfg, const char *name, long long l)
-CCFG_NONNULL(1, 2);
+void ccfg_push_param_long(ccfg *cfg, const char *name, long long l);
 
 /**
- * Adds a C string as a config parameter. This parameter's value can then be accessed from a config source
- * file. Unlike user-defined variables, only one value per parameter can be defined.
+ * [Description]
  *
- * @param cfg  : Config instance to interact with
- * @param name : Name of the parameter to use in the source config
- * @param str  : Value
+ * 	Registers a parameter in the form of a NUL terminated string in the parser.
+ * 	Any parameter resources with the related name will be subtituted with the given value during
+ * 	source parsing. Unlike user-defined variables, only one value per parameter can be defined.
+ * 	See the CCFG language specification for more information.
+ * 	Calling this function on a NULL parser has no effect.
  *
- * @error CERR_OVERFLOW
- * @error CERR_MEMORY
+ * [Parameters]
+ *
+ * 	cfg  - Parser to modify.
+ * 	name - Parameter name.
+ * 	str  - NUL terminated C string.
+ *
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW
+ * 	CERR_MEMORY
  */
-void
-ccfg_push_param_str(ccfg *cfg, const char *name, const char *str)
-CCFG_NONNULL(1, 2, 3);
+void ccfg_push_param_str(ccfg *cfg, const char *name, const char *str);
 
 /**
- * Adds a file as a config source. Only the first source that can be opened will be parsed. The remaining
- * sources act as fallback.
+ * [Description]
  *
- * @param cfg      : Config instance to interact with
- * @param filename : Full path to the source file
+ * 	Registers a new source file.
+ * 	Only the first source that can be opened will be parsed.
+ * 	The remaining sources act as fallback.
  *
- * @error CERR_OVERFLOW 
- * @error CERR_MEMORY
+ * 	A NULL filename is equivalent to an empty "" value.
+ * 	Calling this function on a NULL parser has no effect.
+ *
+ * [Parameters]
+ *
+ * 	cfg      - Parser to modify.
+ * 	filename - Full path to the source file.
+ *
+ * [Errors]
+ *
+ * 	CERR_OVERFLOW 
+ * 	CERR_MEMORY
  */
-void
-ccfg_push_source(ccfg *cfg, const char *filename)
-CCFG_NONNULL(1, 2);
+void ccfg_push_source(ccfg *cfg, const char *filename);
 
 /**
- * Clears errors and puts the config back into an usable state. The only unrecoverable error is CCFG_INVALID.
+ * [Description]
  *
- * @param cfg : Config instance to interact with
+ * 	Enables the restricted parsing mode.
+ * 	See the CCFG language specification for more information.
+ * 	Calling this function on a NULL parser has no effect.
+ *
+ * [Parameters]
+ *
+ * 	cfg - Parser to modify.
  */
-void
-ccfg_repair(ccfg *cfg)
-CCFG_NONNULL(1);
+void ccfg_restrict(ccfg *cfg);
 
 /**
- * Enables the restricted parsing mode.
+ * [Description]
  *
- * @param cfg : Config instance to interact with
- */
-void
-ccfg_restrict(ccfg *cfg)
-CCFG_NONNULL(1);
-
-/**
- * Disables the restricted parsing mode.
+ * 	Disables the restricted parsing mode.
+ * 	See the CCFG language specification for more information.
+ * 	Calling this function on a NULL parser has no effect.
  *
- * @param cfg : Config instance to interact with
+ * [Parameters]
+ *
+ * 	cfg - Parser to modify.
  */
-void
-ccfg_unrestrict(ccfg *cfg)
-CCFG_NONNULL(1);
+void ccfg_unrestrict(ccfg *cfg);
 
 /************************************************************************************************************/
 /* PURE METHODS *********************************************************************************************/
 /************************************************************************************************************/
 
 /**
- * Returns true if any added source file can be opened up and read. Moreover, if the index parameter is
- * provided, this function will write into it the rank of the source file that was opened.
+ * [Description]
  *
- * @param cfg      : Config instance to interact with
- * @param index    : Optional, source rank
+ * 	Checks which source can be opened and read.
+ * 	If the optional index paramter is not NULL, this function will write into it the rank of the
+ * 	first source file that was opened. If no source can be opened, the value this parameter points
+ * 	to will not be modified.
  *
- * @return     : Source availability
- * @return_err : False
+ * [Parameters]
+ *
+ * 	cfg   - Parser to inspect.
+ * 	index - Optional pointer to store the source rank.
+ *
+ * [Returns]
+ *
+ * 	True if any source file can be opened, false otherwhise.
+ * 	If the parser is NULL or in a critical error state, this function always returns false.
  */
-bool
-ccfg_can_open_sources(const ccfg *cfg, size_t *index)
-CCFG_NONNULL(1);
+bool ccfg_can_open_sources(const ccfg *cfg, size_t *index);
 
 /**
- * Gets the error state.
+ * [Description]
  *
- * @param cfg : Config instance to interact with
+ * 	Retrieves the parser's current error state.
  *
- * @return : Error value
+ * [Parameters]
+ *
+ * 	cfg - Parser to inspect.
+ *
+ * [Returns]
+ *
+ * 	The current error code.
+ * 	If the parser is NULL, this function always returns CERR_INVALID.
  */
-enum cerr
-ccfg_error(const ccfg *cfg)
-CCFG_NONNULL(1)
-CCFG_PURE;
+[[gnu::pure]] enum cerr ccfg_error(const ccfg *cfg);
 
 /**
- * Gets the resource value an internal iterator is pointing at. The value is returned as a C string. It's the
- * responsibility of the caller to convert it into the required datatype. If no resource was pre-fetched
- * or the iterator hasn't been incremented once before this function gets called, return_err will be returned.
+ * [Description]
  *
- * @param cfg : Config instance to interact with
+ * 	Retrieves the resource value an internal iterator is pointing at.
+ * 	It's the responsibility of the caller to convert it into the desired datatype.
  *
- * @return     : Resource value
- * @return_err : "\0";
+ * [Parameters]
+ *
+ * 	cfg - Parser to inspect.
+ *
+ * [Returns]
+ *
+ * 	The resource value as a NUL terminated C string.
+ * 	If the resource iterator was not set with ccfg_fetch() and ccfg_iterate(), the parser is
+ * 	NULL, or in a criticial error state, this function always returns an empty "" string.
+ * 	This function never returns nullptr.
  */
-const char *
-ccfg_resource(const ccfg *cfg)
-CCFG_NONNULL_RETURN
-CCFG_NONNULL(1)
-CCFG_PURE;
+[[gnu::pure]] [[gnu::returns_nonnull]] const char *ccfg_resource(const ccfg *cfg);
 
 /**
- * Gets the number of values a pre-fetched resource has.
+ * [Description]
  *
- * @param cfg : Config instance to interact with
+ * 	Retrieves the number of values a pre-fetched resource has.
  *
- * @return     : Number of values
- * @return_err : 0
+ * [Parameters]
+ *
+ * 	cfg - Parser to inspect.
+ *
+ * [Returns]
+ *
+ * 	Number of values if any.
+ * 	If the parser is NULL or in a critical error state, this function always returns 0.
  */
-size_t
-ccfg_resource_length(const ccfg *cfg)
-CCFG_NONNULL(1)
-CCFG_PURE;
+[[gnu::pure]] size_t ccfg_resource_length(const ccfg *cfg);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

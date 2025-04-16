@@ -28,11 +28,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
  
-static void          bind_color  (struct ccolor *);
-static void          bind_double (double *);
-static uint8_t       hex_to_int  (char);
-static struct ccolor from_hex    (const char *, bool *);
-static struct ccolor from_ulong  (const char *, bool *);
+static void          bind_color (struct ccolor *);
+static uint8_t       hex_to_int (char);
+static struct ccolor from_hex   (const char *, bool *);
+static struct ccolor from_ulong (const char *, bool *);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -90,14 +89,13 @@ ccolor_interpolate(struct ccolor color_1, struct ccolor color_2, double ratio)
 {
 	bind_color(&color_1);
 	bind_color(&color_2);
-	bind_double(&ratio);
 
 	return (struct ccolor)
 	{
-		.r = color_2.r * ratio + color_1.r * (1.0 - ratio),
-		.g = color_2.g * ratio + color_1.g * (1.0 - ratio),
-		.b = color_2.b * ratio + color_1.b * (1.0 - ratio),
-		.a = color_2.a * ratio + color_1.a * (1.0 - ratio),
+		.r = cutil_interpolate(color_1.r, color_2.r, ratio),
+		.g = cutil_interpolate(color_1.g, color_2.g, ratio),
+		.b = cutil_interpolate(color_1.b, color_2.b, ratio),
+		.a = cutil_interpolate(color_1.a, color_2.a, ratio),
 	};
 }
 
@@ -123,25 +121,10 @@ ccolor_to_argb_uint(struct ccolor color)
 static void
 bind_color(struct ccolor *color)
 {
-	bind_double(&color->r);
-	bind_double(&color->g);
-	bind_double(&color->b);
-	bind_double(&color->a);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-bind_double(double *d)
-{
-	if (*d > 1.0)
-	{
-		*d = 1.0;
-	}
-	else if (*d < 0.0 || isinf(*d) || isnan(*d))
-	{
-		*d = 0.0;
-	}
+	color->r = cutil_clamp(color->r, 0.0, 1.0);
+	color->g = cutil_clamp(color->g, 0.0, 1.0);
+	color->b = cutil_clamp(color->b, 0.0, 1.0);
+	color->a = cutil_clamp(color->a, 0.0, 1.0);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

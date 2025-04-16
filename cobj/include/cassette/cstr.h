@@ -72,7 +72,7 @@ typedef struct cstr cstr;
  *
  * [Returns]
  *
- * 	To prevent dandling pointers while keeping this function a one-liner, this function
+ * 	To prevent dangling pointers while keeping this function a one-liner, this function
  * 	conveniently returns nullptr.
  */
 [[nodiscard]] nullptr_t cstr_destroy(cstr *str);
@@ -81,7 +81,6 @@ typedef struct cstr cstr;
  * [Description]
  *
  * 	Create a string instance and deep copy the contents of another string instance into it.
- * 	Calling this function on a NULL string is the same as calling cstr_create().
  *
  * [Parameters]
  *
@@ -90,6 +89,7 @@ typedef struct cstr cstr;
  * [Returns]
  *
  * 	On succes, a pointer to a newly allocated instance. Returns nullptr on failure.
+ * 	If the string is NULL or in a critical error state, this function always returns nullptr.
  * 	The caller is responsible for freeing the returned instance using cstr_destroy().
  */
 [[nodiscard]] [[gnu::malloc(cstr_destroy)]] cstr *cstr_clone(const cstr *str);
@@ -97,7 +97,7 @@ typedef struct cstr cstr;
 /**
  * [Description]
  *
- * Creates a new, empty string instance.
+ * 	Creates a new, empty string instance.
  *
  * [Returns]
  *
@@ -195,7 +195,7 @@ void cstr_cut(cstr *str, size_t offset, size_t length);
  * [Parameters]
  *
  * 	str    - String to modify.
- * 	bytes  - Raw C string to get new data from.
+ * 	bytes  - NUL terminated C string to get new data from.
  * 	offset - Codepoint index to insert the new data at.
  *
  * [Errors]
@@ -232,7 +232,7 @@ void cstr_insert_double(cstr *str, double d, size_t offset);
 /**
  * [Description]
  *
- * 	Converts a long into a string then inserts it at a specific offset.
+ * 	Converts a long integer into a string then inserts it at a specific offset.
  * 	The number of digits can be set with cstr_set_double_digits().
  * 	The string will automatically grow if needed to accommodate the inserted data.
  *

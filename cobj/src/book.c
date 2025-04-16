@@ -352,8 +352,8 @@ cbook_write(cbook *book, const char *str)
 
 	size_t ns = strlen(str) + 1;
 	size_t nc = book->n_alloc_bytes;
-	size_t nw = book->n_alloc_words;
-	size_t ng = book->n_alloc_groups;
+	size_t nw = book->n_alloc_words  * (book->n_words  >= book->n_alloc_words  ? 2 : 1);
+	size_t ng = book->n_alloc_groups * (book->n_groups >= book->n_alloc_groups ? 2 : 1);
 
 	while (ns > nc - book->n_bytes)
 	{
@@ -362,13 +362,6 @@ cbook_write(cbook *book, const char *str)
 			cerr_set(&book->err, CERR_OVERFLOW);
 			return;
 		}
-	}
-
-	if (ckd_mul(&nw, nw, book->n_words  >= book->n_alloc_words  ? 2 : 1)
-	 || ckd_mul(&ng, ng, book->n_groups >= book->n_alloc_groups ? 2 : 1))
-	{
-		cerr_set(&book->err, CERR_OVERFLOW);
-		return;
 	}
 
 	if (!grow(book, nc, nw, ng))

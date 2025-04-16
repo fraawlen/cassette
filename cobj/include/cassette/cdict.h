@@ -74,7 +74,6 @@ typedef struct cdict cdict;
  * [Description]
  *
  * 	Creates a dictionary instance and deep copies the content of another dictionary into it.
- * 	Calling this function on a NULL dictionary is the same as calling cdict_create().
  *
  * [Parameters]
  *
@@ -83,6 +82,7 @@ typedef struct cdict cdict;
  * [Returns]
  *
  * 	On success, a pointer to a newly allocated instance. Returns nullptr on failure.
+ * 	If the dict is NULL or in a critical error state, this function always returns nullptr.
  * 	The caller is responsible for freeing the returned instance using cdict_destroy().
  */
 [[nodiscard]] [[gnu::malloc(cdict_destroy)]] cdict *cdict_clone(const cdict *dict);

@@ -46,7 +46,7 @@ static void widget_print  (const struct widget *);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static ccfg *cfg = CCFG_PLACEHOLDER;
+static ccfg *cfg = nullptr;
 
 struct widget label  = {.name = "label",  .border_width = 0, .border_color = {0} , .background_color = {0}};
 struct widget button = {.name = "button", .border_width = 0, .border_color = {0} , .background_color = {0}};
@@ -105,8 +105,10 @@ main(void)
 
 	if (ccfg_error(cfg))
 	{
-		printf("Configuration parser failed during operation.\n");
+		printf("Config errored during operation (%s)\n", cerr_name(ccfg_error(cfg)));
 	}
+
+	cfg = ccfg_destroy(cfg);
 
 	return 0;
 }
@@ -151,13 +153,13 @@ widget_print(const struct widget *w)
 	printf("%s:\n", w->name);
 
 	printf(
-		"\tbackground_color (r,g,b) : %u, %u, %u\n",
+		"\tbackground_color (r,g,b): %u, %u, %u\n",
 		(unsigned int)(w->background_color.r * 255),
 		(unsigned int)(w->background_color.g * 255),
 		(unsigned int)(w->background_color.b * 255));
 
 	printf(
-		"\tbackground_color (r,g,b) : %u, %u, %u\n",
+		"\tborder_color (r,g,b): %u, %u, %u\n",
 		(unsigned int)(w->border_color.r * 255),
 		(unsigned int)(w->border_color.g * 255),
 		(unsigned int)(w->border_color.b * 255));

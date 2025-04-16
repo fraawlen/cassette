@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Configuration (CCFG) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -42,9 +42,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool has_err    (struct context *)                                             CCFG_NONNULL(1);
-static bool map_source (struct context *, const struct context *, const char *, bool) CCFG_NONNULL(1, 3);
-static void parse      (struct context *)                                             CCFG_NONNULL(1);
+static bool has_err    (struct context *);
+static bool map_source (struct context *, const struct context *, const char *, bool);
+static void parse      (struct context *);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -100,7 +100,7 @@ source_parse_root(ccfg *cfg, const char *source, bool internal)
 {
 	struct context ctx;
 
-	if (!map_source(&ctx, NULL, source, internal))
+	if (!map_source(&ctx, nullptr, source, internal))
 	{
 		return;
 	}
@@ -122,7 +122,7 @@ source_parse_root(ccfg *cfg, const char *source, bool internal)
 	ctx.keys_vars      = cdict_create();
 	ctx.tokens         = cfg->tokens;
 	ctx.restricted     = cfg->restricted || getenv("CCFG_RESTRICT");
-	ctx.parent         = NULL;
+	ctx.parent         = nullptr;
 	ctx.rand           = crand_seed(0);
 
 	parse(&ctx);
@@ -137,9 +137,9 @@ source_parse_root(ccfg *cfg, const char *source, bool internal)
 		munmap((void*)ctx.buffer, ctx.file_size);
 	}
 
-	cbook_destroy(ctx.iteration);
-	cbook_destroy(ctx.vars);
-	cdict_destroy(ctx.keys_vars);
+	(void)cbook_destroy(ctx.iteration);
+	(void)cbook_destroy(ctx.vars);
+	(void)cdict_destroy(ctx.keys_vars);
 }
 
 /************************************************************************************************************/

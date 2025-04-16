@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Configuration (CCFG) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -30,23 +30,22 @@
 #include "context.h"
 #include "substitution.h"
 #include "token.h"
-#include "util.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
 static enum token comment       (void);
-static enum token condition     (struct context *, char [static CCFG_TOKEN_LENGTH], double *, enum token)         CCFG_NONNULL(1);
-static enum token eof           (struct context *)                                                                CCFG_NONNULL(1);
-static enum token escape        (struct context *, char [static CCFG_TOKEN_LENGTH])                               CCFG_NONNULL(1);
-static enum token filler        (struct context *, char [static CCFG_TOKEN_LENGTH], double *)                     CCFG_NONNULL(1);
-static enum token join          (struct context *, char [static CCFG_TOKEN_LENGTH])                               CCFG_NONNULL(1);
-static enum token math          (struct context *, char [static CCFG_TOKEN_LENGTH], double *, enum token, size_t) CCFG_NONNULL(1);
-static enum token math_cl       (struct context *, char [static CCFG_TOKEN_LENGTH], double *, enum token, size_t) CCFG_NONNULL(1);
-static enum token param         (struct context *, char [static CCFG_TOKEN_LENGTH])                               CCFG_NONNULL(1);
-static enum token variable      (struct context *, char [static CCFG_TOKEN_LENGTH], double *)                     CCFG_NONNULL(1);
-static enum token variable_iter (struct context *, char [static CCFG_TOKEN_LENGTH])                               CCFG_NONNULL(1);
+static enum token condition     (struct context *, char [static CCFG_TOKEN_LENGTH], double *, enum token);
+static enum token eof           (struct context *);
+static enum token escape        (struct context *, char [static CCFG_TOKEN_LENGTH]);
+static enum token filler        (struct context *, char [static CCFG_TOKEN_LENGTH], double *);
+static enum token join          (struct context *, char [static CCFG_TOKEN_LENGTH]);
+static enum token math          (struct context *, char [static CCFG_TOKEN_LENGTH], double *, enum token, size_t);
+static enum token math_cl       (struct context *, char [static CCFG_TOKEN_LENGTH], double *, enum token, size_t);
+static enum token param         (struct context *, char [static CCFG_TOKEN_LENGTH]);
+static enum token variable      (struct context *, char [static CCFG_TOKEN_LENGTH], double *);
+static enum token variable_iter (struct context *, char [static CCFG_TOKEN_LENGTH]);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -246,7 +245,7 @@ condition(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *mat
 
 	if (result)
 	{
-		context_get_token(ctx, token_2, NULL);
+		context_get_token(ctx, token_2, nullptr);
 		return type;
 	}
 	else
@@ -292,8 +291,8 @@ join(struct context *ctx, char token[static CCFG_TOKEN_LENGTH])
 	char token_a[CCFG_TOKEN_LENGTH];
 	char token_b[CCFG_TOKEN_LENGTH];
 
-	if (context_get_token(ctx, token_a, NULL) == TOKEN_INVALID
-	 || context_get_token(ctx, token_b, NULL) == TOKEN_INVALID
+	if (context_get_token(ctx, token_a, nullptr) == TOKEN_INVALID
+	 || context_get_token(ctx, token_b, nullptr) == TOKEN_INVALID
 	 || snprintf(token, CCFG_TOKEN_LENGTH, "%s%s", token_a, token_b) < 0)
 	{
 		return TOKEN_INVALID;
@@ -327,7 +326,7 @@ math(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_res
 		/* 0 parameters */
 
 		case TOKEN_TIMESTAMP:
-			result = time(NULL);
+			result = time(nullptr);
 			break;
 
 		case TOKEN_CONST_PI:
@@ -457,11 +456,11 @@ math(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_res
 		/* 3 parameters */
 
 		case TOKEN_OP_INTERPOLATE:
-			result = util_interpolate(d[0], d[1], d[2]);
+			result = cutil_interpolate(d[0], d[1], d[2]);
 			break;
 
 		case TOKEN_OP_LIMIT:
-			result = util_limit(d[0], d[1], d[2]);
+			result = cutil_clamp(d[0], d[1], d[2]);
 			break;
 
 		/* other */
@@ -552,7 +551,7 @@ param(struct context *ctx, char token[static CCFG_TOKEN_LENGTH])
 {
 	size_t i; 
 
-	if (context_get_token(ctx, token, NULL) == TOKEN_INVALID
+	if (context_get_token(ctx, token, nullptr) == TOKEN_INVALID
 	 || !cdict_find(ctx->keys_params, token, 0, &i))
 	{
 		return TOKEN_INVALID;
@@ -568,7 +567,7 @@ param(struct context *ctx, char token[static CCFG_TOKEN_LENGTH])
 static enum token
 variable(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_result)
 {
-	if (context_get_token(ctx, token, NULL) == TOKEN_INVALID
+	if (context_get_token(ctx, token, nullptr) == TOKEN_INVALID
 	 || !cdict_find(ctx->keys_vars, token, CONTEXT_DICT_VARIABLE, &ctx->var_group))
 	{
 		return TOKEN_INVALID;
@@ -586,7 +585,7 @@ variable_iter(struct context *ctx, char token[static CCFG_TOKEN_LENGTH])
 {
 	size_t i;
 
-	if (context_get_token(ctx, token, NULL) == TOKEN_INVALID
+	if (context_get_token(ctx, token, nullptr) == TOKEN_INVALID
 	 || !cdict_find(ctx->keys_vars, token, CONTEXT_DICT_ITERATION, &i))
 	{
 		return TOKEN_INVALID;

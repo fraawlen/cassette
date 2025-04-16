@@ -1,7 +1,7 @@
 /**
- * Copyright © 2024 Fraawlen <fraawlen@posteo.net>
+ * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
  *
- * This file is part of the Cassette Configuration (CCFG) library.
+ * This file is part of the Cassette library.
  *
  * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
@@ -34,9 +34,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static char read_char    (struct context *)                              CCFG_NONNULL(1);
-static bool read_word    (struct context *, char [static CCFG_TOKEN_LENGTH]) CCFG_NONNULL(1);
-static void update_state (struct context *, char)                        CCFG_NONNULL(1);
+static char read_char    (struct context *);
+static bool read_word    (struct context *, char [static CCFG_TOKEN_LENGTH]);
+static void update_state (struct context *, char);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -72,7 +72,7 @@ context_get_token_numeral(struct context *ctx, char token[static CCFG_TOKEN_LENG
 			}
 			else
 			{
-				*math_result = strtod(token, NULL);
+				*math_result = strtod(token, nullptr);
 			}
 			if (!err)
 			{
@@ -135,10 +135,8 @@ read_char(struct context *ctx)
 static bool
 read_word(struct context *ctx, char token[static CCFG_TOKEN_LENGTH])
 {
-	size_t i = 0;
-	bool quotes_1 = false;
-	bool quotes_2 = false;
 	char c;
+	size_t i = 0;
 
 	if (ctx->eol_reached)
 	{
@@ -166,6 +164,9 @@ read_word(struct context *ctx, char token[static CCFG_TOKEN_LENGTH])
 exit_lead:
 
 	/* read word */
+
+	bool quotes_1 = false;
+	bool quotes_2 = false;
 
 	for (;; c = read_char(ctx))
 	{
