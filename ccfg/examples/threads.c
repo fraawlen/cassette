@@ -100,10 +100,9 @@ simulation_thread(void *param)
 	ccfg_push_param(cfg, "sim_id", id);
 	ccfg_load_internal(cfg, data);
 
-	ccfg_fetch(cfg, "sim", "coordinates");
-	for (unsigned int i = 0; i < 3 && ccfg_iterate(cfg); i++)
+	CCFG_RESOURCES(cfg, "sim", "coordinates", value, i, 3)
 	{
-		coords[i] = strtoul(ccfg_resource(cfg), NULL, 0);
+		coords[i] = strtoul(value, NULL, 0);
 	}
 
 	/* Simulator algorithm */

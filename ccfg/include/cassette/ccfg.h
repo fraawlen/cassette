@@ -133,6 +133,39 @@ typedef struct ccfg ccfg;
 /**
  * [Description]
  *
+ * 	Convenience wrapper that fetches and loop throught resources.
+ * 	Parameters VALUE and I are declared internally, and their scope is contained inside the 
+ * 	macro, you should only provide the desired identifier. N limits the number of loops.
+ *
+ * [Notes]
+ *
+ * 	Two for loops are used in this macro to declare two scoped variables (VALUE and I).
+ *
+ * [Example]
+ *
+ * 	Instead of:
+ *
+ * 	ccfg_fetch(cfg, "name", "prop");
+ * 	for (size_t i = 0; i < 3 && ccfg_iterate(cfg); i++)
+ * 	{
+ * 		target[i] = convertion_function(ccfg_resource(cfg));
+ * 	}
+ *
+ * 	You can do:
+ *
+ * 	CCFG_RESOURCES(cfg, "name", "prop", val, i, 3)
+ * 	{
+ * 		target[i] = convertion_function(val);
+ * 	}
+ */
+#define CCFG_RESOURCES(CFG, NAME, PROP, VALUE, I, N) \
+	ccfg_fetch(CFG, NAME, PROP); \
+	for (size_t I = 0; I == 0;) \
+	for (const char *VALUE; ccfg_iterate(CFG) && I < N && (VALUE = ccfg_resource(CFG)); I++)
+
+/**
+ * [Description]
+ *
  * 	Removes all added parameters.
  * 	Allocated memory is not freed, use ccfg_destroy() for that.
  * 	Calling this function on a NULL parser has no effect.

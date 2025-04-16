@@ -122,24 +122,21 @@ widget_config(struct widget *w)
 {
 	/* background color */
 
-	ccfg_fetch(cfg, w->name, "background_color");
-	if (ccfg_iterate(cfg))
+	CCFG_RESOURCES(cfg, w->name, "background_color", value, i, 1)
 	{
-		w->background_color = ccolor_from_str(ccfg_resource(cfg), NULL);
+		w->background_color = ccolor_from_str(value, NULL);
 	}
 
 	/* border color */
 
-	ccfg_fetch(cfg, w->name, "border_color");
-	if (ccfg_iterate(cfg))
+	CCFG_RESOURCES(cfg, w->name, "border_color", value, i, 1)
 	{
 		w->border_color = ccolor_from_str(ccfg_resource(cfg), NULL);
 	}
 
 	/* border width */
 	
-	ccfg_fetch(cfg, w->name, "border_width");
-	if (ccfg_iterate(cfg))
+	CCFG_RESOURCES(cfg, w->name, "border_width", value, i, 1)
 	{
 		w->border_width = strtoul(ccfg_resource(cfg), NULL, 0);
 	}

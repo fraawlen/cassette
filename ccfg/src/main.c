@@ -228,8 +228,6 @@ ccfg_fetch(ccfg *cfg, const char *namespace, const char *property)
 	{
 		cfg->it = 0;
 	}
-
-	printf("%zu\n", cfg->it_group);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
