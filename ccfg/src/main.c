@@ -94,6 +94,14 @@ ccfg_clear_warnings(ccfg *cfg)
 	GUARD(cfg);
 
 	cerr_clear_warnings(&cfg->err);
+	cbook_clear_warnings(cfg->params);
+	cbook_clear_warnings(cfg->sequences);
+	cbook_clear_warnings(cfg->sources);
+	cdict_clear_warnings(cfg->keys_params);
+	cdict_clear_warnings(cfg->keys_sequences);
+	cdict_clear_warnings(cfg->tokens);
+	
+	update_err(cfg);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

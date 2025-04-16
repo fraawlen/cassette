@@ -163,7 +163,7 @@ from_hex(const char *str, bool *err)
 struct ccolor
 from_ulong(const char *str, bool *err)
 {
-	char *endptr = NULL;
+	char *endptr = nullptr;
 	uint32_t u = 0;
 
 	u = strtoul(str, &endptr, 0);

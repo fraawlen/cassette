@@ -120,6 +120,7 @@ typedef struct cstr cstr;
 		cstr *       : cstr_insert_str,    \
 		char *       : cstr_insert_bytes,  \
 		const char * : cstr_insert_bytes,  \
+		nullptr_t    : cstr_insert_bytes,  \
 		float        : cstr_insert_double, \
 		double       : cstr_insert_double, \
 		default      : cstr_insert_long    \

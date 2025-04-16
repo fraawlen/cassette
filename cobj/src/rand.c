@@ -37,6 +37,11 @@
 double
 crand_next(crand *rand, double lim_1, double lim_2)
 {
+	if (!rand)
+	{
+		return 0.0;
+	}
+
 	*rand = (A * (*rand) + C) % M;
 
 	return lim_1 + (*rand) / MAX * (lim_2 - lim_1);

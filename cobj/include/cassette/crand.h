@@ -74,6 +74,7 @@ typedef unsigned long crand;
  * [Returns]
  *
  * 	Generated random value.
+ * 	If rand is NULL, this function always returns 0.0.
  */
 double crand_next(crand *rand, double lim_1, double lim_2);
 

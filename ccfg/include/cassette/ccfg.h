@@ -124,6 +124,7 @@ typedef struct ccfg ccfg;
 	_Generic (VAL, \
 		char *       : ccfg_push_param_str,    \
 		const char * : ccfg_push_param_str,    \
+		nullptr_t    : ccfg_push_param_str,    \
 		float        : ccfg_push_param_double, \
 		double       : ccfg_push_param_double, \
 		default      : ccfg_push_param_long    \

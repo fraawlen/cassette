@@ -345,7 +345,7 @@ cstr_insert_bytes(cstr *str, const char *bytes, size_t offset)
 	
 	/* detect overlapping memory areas */
 
-	char *tmp = NULL;
+	char *tmp = nullptr;
 
 	if (bytes >= str->bytes && bytes <= str->bytes + str->n_alloc)
 	{
