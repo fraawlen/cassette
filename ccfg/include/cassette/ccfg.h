@@ -160,7 +160,7 @@ typedef struct ccfg ccfg;
  */
 #define CCFG_RESOURCES(CFG, NAME, PROP, VALUE, I, N) \
 	ccfg_fetch(CFG, NAME, PROP); \
-	for (size_t I = 0; I == 0;) \
+	for (size_t I = 0; I == 0; I = 1) \
 	for (const char *VALUE; ccfg_iterate(CFG) && I < N && (VALUE = ccfg_resource(CFG)); I++)
 
 /**

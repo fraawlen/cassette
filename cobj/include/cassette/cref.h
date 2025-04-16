@@ -258,17 +258,49 @@ void cref_push(cref *ref, void *ptr);
  * [Description]
  *
  * 	Convenience for-loop wrapper.
- * 	Parameter I is declared internally, you should only provide the desired identifier.
+ * 	VALUE and I are declared internally, and their scope is contained inside the macro,
+ * 	you should only provide the desired identifier. VALUE is automatically cast to the given 
+ * 	TYPE. TYPE should not include dereference operator.
+ *
+ * [Notes]
+ *
+ * 	Two for loops are used in this macro to declare two scoped variables (VALUE and I).
+ *
+ * [Example]
+ *
+ * 	Instead of:
+ *
+ * 	for (size_t i = 0; i < cref_length(refs); i++)
+ * 	{
+ * 		object_t *tmp = (object_t*)cref_ptr(refs, i);
+ * 
+ * 		object_function_1(tmp);
+ * 		object_function_2(tmp);
+ * 		object_function_3(tmp);
+ * 	}
+ *
+ * 	You can do:
+ *
+ * 	CREF_FOR_EACH(refs, object_t, ptr, i)
+ * 	{
+ * 		object_function_1(ptr);
+ * 		object_function_2(ptr);
+ * 		object_function_3(ptr);
+ * 	}
  */
-#define CREF_FOR_EACH(REF, I) for(size_t I = 0; I < cref_length(REF); I++)
+#define CREF_FOR_EACH(REF, TYPE, VALUE, I) \
+	for (size_t I = 0; I == 0; I = 1) \
+	for (TYPE *VALUE; I < cref_length(REF) && (VALUE = (TYPE*)cref_ptr(REF, I)); I++)
 
 /**
  * [Description]
  *
  * 	Convenience inverse for-loop wrapper.
- * 	Parameter I is declared internally, you should only provide the desired identifier.
+ * 	See CREF_FOR_EACH macro for more details.
  */
-#define CREF_FOR_EACH_REV(REF, I) for(size_t I = cref_length(REF) - 1; I < SIZE_MAX; I--)
+#define CREF_FOR_EACH_REV(REF, TYPE, VALUE, I) \
+	for (size_t I = cref_length(REF) - 1; I == cref_length(REF) - 1; I = cref_length(REF)) \
+	for (TYPE *VALUE; I < SIZE_MAX && (VALUE = (TYPE*)cref_ptr(REF, I)); I--)
 
 /**
  * [Description]
