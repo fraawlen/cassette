@@ -100,7 +100,20 @@ bool cutil_realloc(void **ptr, size_t *n_store, size_t n_new, size_t size, enum 
  */
 [[gnu::const]] double cutil_clamp(double d, double lim_1, double lim_2);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+/**
+ * [Description]
+ *
+ * 	Checks if an environment variable exists and its value is not empty.
+ *
+ * [Parameters]
+ *
+ * 	name - Environment variable to check.
+ *
+ * [Returns]
+ *
+ * 	True if the variable is set and not empty, false otherwhise.
+ */
+bool cutil_env_exists(const char *name);
 
 /**
  * [Description]
@@ -119,6 +132,102 @@ bool cutil_realloc(void **ptr, size_t *n_store, size_t n_new, size_t size, enum 
  * 	Interpolated value.
  */
 [[gnu::const]] double cutil_interpolate(double d_1, double d_2, double ratio);
+
+/**
+ * [Description]
+ *
+ * 	Checks if a given 2D point is inside a rectangular area.
+ * 	The rectangle is defined like so:
+ *
+ * 	x,y --------------> width (invert if < 0.0)
+ * 	 |
+ * 	 |
+ * 	 v
+ * 	height (invert if < 0.0)
+ *
+ * [Parameters]
+ *
+ * 	x_check - X coordinate of the point.
+ * 	y_check - Y coordinate of the point.
+ * 	x       - X origin of the rectangle.
+ * 	y       - Y origin of the rectangle.
+ * 	width   - Width  of the rectangle, can be negative.
+ * 	height  - Height of the rectangle, can be negative.
+ *
+ * [Returns]
+ *
+ * 	True if the point is inside (including borders), false otherwise.
+ */
+[[gnu::const]] bool cutil_point_inside(double x_check, double y_check, double x, double y, double width, double height);
+
+/**
+ * [Description]
+ * 
+ * 	After clampling the given double between two boudaries, calculate the progression % of that
+ * 	double within the boundaries.
+ * 	Boundaries can be in any order.
+ *
+ * [Parameters]
+ *
+ * 	d     - Value to convert to ratio.
+ * 	lim_1 - First boundary.
+ * 	lim_2 - Second boundary.
+ *
+ * [Returns]
+ *
+ * 	Progression ratio between the two boundary as a double between 0.0 and 1.0.
+ */
+[[gnu::const]] double cutil_ratio(double d, double lim_1, double lim_2);
+
+/**
+ * [Description]
+ *
+ * 	Converts a NUL terminated C string into a double floating value clamped between
+ * 	lim_1 and lim_2.
+ * 	Boundaries can be in any order.
+ *
+ * [Parameters]
+ *
+ * 	str   - String to convert.
+ * 	lim_1 - First boundary.
+ * 	lim_2 - Second boundary.
+ *
+ * [Returns]
+ *
+ * 	Converted value.
+ * 	If str is NULL, this function always return lim_1.
+ */
+[[gnu::pure]] double cutil_str_to_double(const char *str, double lim_1, double lim_2);
+
+/**
+ * [Description]
+ *
+ * 	Converts a NUL terminated C string into a long integer clamped between lim_1 and lim_2.
+ * 	Boundaries can be in any order.
+ *
+ * [Parameters]
+ *
+ * 	str   - String to convert.
+ * 	lim_1 - First boundary.
+ * 	lim_2 - Second boundary.
+ *
+ * [Returns]
+ *
+ * 	Converted value.
+ * 	If str is NULL, this function always return lim_1.
+ */
+[[gnu::pure]] long cutil_str_to_long(const char *str, long lim_1, long lim_2);
+
+/**
+ * [Description]
+ *
+ * 	Retrieves the current Unix monotonic time.
+ *
+ * [Returns]
+ *
+ * 	Unix timestamp in microseconds.
+ */
+unsigned long cutil_time(void);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

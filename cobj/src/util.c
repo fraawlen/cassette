@@ -19,15 +19,27 @@
 /************************************************************************************************************/
 
 #include <cassette/cobj.h>
+#include <float.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdckdint.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <time.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
+
+bool
+cutil_env_exists(const char *name)
+{
+	char *val;
+
+	return name && (val = getenv(name)) && val[0] != '\0';
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 double
 cutil_clamp(double d, double lim_1, double lim_2)
@@ -45,6 +57,36 @@ cutil_interpolate(double d_1, double d_2, double ratio)
 	ratio = cutil_clamp(ratio, 0.0, 1.0);
 
 	return d_2 * ratio + d_1 * (1.0 - ratio);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+cutil_point_inside(double x_check, double y_check, double x, double y, double width, double height)
+{
+	if (width < 0.0)
+	{
+		width *= -1;
+		x -= width;
+	}
+
+	if (height < 0.0)
+	{
+		height *= -1;
+		y -= height;
+	}
+
+	return !(x_check < x || x_check > x + width || y_check < y || y_check > y + height);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+double
+cutil_ratio(double d, double lim_1, double lim_2)
+{
+	cutil_sort_pair(&lim_1, &lim_2);
+
+	return lim_2 - lim_1 < DBL_EPSILON ? 1.0 : (cutil_clamp(d, lim_1, lim_2) - lim_1) / (lim_2 - lim_1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -101,4 +143,32 @@ cutil_sort_pair(double *d_1, double *d_2)
 		*d_1 = *d_2;
 		*d_2 = tmp;
 	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+double
+cutil_str_to_double(const char *str, double lim_1, double lim_2)
+{
+	return str ? cutil_clamp(strtod(str, NULL), lim_1, lim_2) : lim_1;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+long
+cutil_str_to_long(const char *str, long lim_1, long lim_2)
+{
+	return str ? cutil_clamp(strtoul(str, NULL, 0), lim_1, lim_2) : lim_1;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+unsigned long
+cutil_time(void)
+{
+	struct timespec ts = {0};
+
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+
+	return ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
 }
