@@ -41,6 +41,7 @@ struct cgui_box
 	enum cgui_corner cn_type[4];
 
 	double pad;
+	double gap;
 	double margin;
 	double cn_size[4];
 	double ol_size;

@@ -52,8 +52,9 @@
 	.bd_size     = BD_SIZE, \
 	.pad         = PAD, \
 	.margin      = MARGIN, \
-	.sd_offset_x =  0.0, \
-	.sd_offset_y =  0.0, \
+	.gap         = 0.0, \
+	.sd_offset_x = 0.0, \
+	.sd_offset_y = 0.0, \
 	.ol_cl       = COLOR(OL_CL), \
 	.bd_cl       = COLOR(BD_CL), \
 	.bg_cl       = COLOR(BG_CL), \

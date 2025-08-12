@@ -61,6 +61,7 @@
 	{ NAMESPACE, "corner_size",     CORNER_SIZE,  TARGET.cn_size     }, \
 	{ NAMESPACE, "outline_size",    LENGTH,      &TARGET.ol_size     }, \
 	{ NAMESPACE, "border_size",     LENGTH,      &TARGET.bd_size     }, \
+	{ NAMESPACE, "gap",             LENGTH,      &TARGET.gap         }, \
 	{ NAMESPACE, "pad",             OFFSET,      &TARGET.pad         }, \
 	{ NAMESPACE, "margin",          OFFSET,      &TARGET.margin      }, \
 	{ NAMESPACE, "shadow_x_offset", OFFSET,      &TARGET.sd_offset_x }, \
