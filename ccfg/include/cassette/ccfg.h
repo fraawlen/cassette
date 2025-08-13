@@ -22,6 +22,7 @@
 
 #include <cassette/cobj.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #if __GNUC__ > 4
@@ -57,6 +58,12 @@ extern "C" {
  * errors with ccfg_repair().
  */
 typedef struct ccfg ccfg;
+
+/**
+ * Opaque cursor value in which the current fetch state and iteration is saved by ccfg_snap() and restored
+ * with ccfg_restore().
+ */
+typedef struct { uintptr_t data[4]; } ccfg_cursor;
 
 /************************************************************************************************************/
 /* GLOBALS **************************************************************************************************/
@@ -293,6 +300,17 @@ void
 ccfg_repair(ccfg *cfg)
 CCFG_NONNULL(1);
 
+/*
+ * Restores the resource fetch and iteration states obtained with ccfg_snap().
+ * If the cursor is not valid, this function has no effect.
+ *
+ * @param cfg    : Config instance to interact with
+ * @param cursor : Cursor instance to apply
+ */
+void
+ccfg_restore(ccfg *cfg, const ccfg_cursor cursor)
+CCFG_NONNULL(1);
+
 /**
  * Enables the restricted parsing mode.
  *
@@ -369,6 +387,34 @@ size_t
 ccfg_resource_length(const ccfg *cfg)
 CCFG_NONNULL(1)
 CCFG_PURE;
+
+/**
+ * Gets the internal cursor position state of the current resource fetch/iteration.
+ * If no resource is currently fetched or if the config has errored, then an invalid, but safe to use,
+ * cursor is returned. To check if its valid use ccfg_valid_cursor().
+ *
+ * @param cfg : Config instance to interact with
+ *
+ * @return : Opaque cursor state
+ */
+ccfg_cursor
+ccfg_snap(const ccfg *cfg)
+CCFG_NONNULL(1)
+CCFG_PURE;
+
+/**
+ * Checks whether the given cursor is valid for a specific config object.
+ *
+ * @param cfg    : Config instance to interact with
+ * @param cursor : Cursor instance to check
+ *
+ * @return : True is the cursor is valid, False otherwhise.
+ */
+bool
+ccfg_valid_cursor(const ccfg *cfg, const ccfg_cursor cursor)
+CCFG_NONNULL(1)
+CCFG_CONST;
+
 
 /************************************************************************************************************/
 /************************************************************************************************************/

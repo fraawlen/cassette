@@ -39,4 +39,5 @@ struct ccfg
 	size_t it;
 	bool restricted;
 	enum cerr err;
+	size_t loads;
 };

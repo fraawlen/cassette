@@ -21,6 +21,7 @@
 #include <cassette/ccfg.h>
 #include <cassette/cobj.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -55,6 +56,7 @@ ccfg ccfg_placeholder_instance =
 	.tokens         = CDICT_PLACEHOLDER,
 	.it_group       = SIZE_MAX,
 	.it             = SIZE_MAX,
+	.loads          = 0,
 	.restricted     = false,
 	.err            = CERR_INVALID,
 };
@@ -137,6 +139,7 @@ ccfg_clone(ccfg *cfg)
 	cfg_new->it             = cfg->it;
 	cfg_new->restricted     = cfg->restricted;
 	cfg_new->err            = CERR_NONE;
+	cfg_new->loads          = cfg->loads;
 
 	if (update_err(cfg_new))
 	{
@@ -169,6 +172,7 @@ ccfg_create(void)
 	cfg->it             = SIZE_MAX;
 	cfg->restricted     = false;
 	cfg->err            = CERR_NONE;
+	cfg->loads          = 0;
 
 	if (update_err(cfg))
 	{
@@ -259,6 +263,7 @@ ccfg_load(ccfg *cfg)
 	cbook_clear(cfg->sequences);
 	cdict_clear(cfg->keys_sequences);
 	source_parse_root(cfg, source, false);
+	cfg->loads++;
 
 	update_err(cfg);
 }
@@ -276,6 +281,7 @@ ccfg_load_internal(ccfg *cfg, const char *buffer)
 	cbook_clear(cfg->sequences);
 	cdict_clear(cfg->keys_sequences);
 	source_parse_root(cfg, buffer, true);
+	cfg->loads++;
 
 	update_err(cfg);
 }
@@ -401,6 +407,20 @@ ccfg_resource_length(const ccfg *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+ccfg_restore(ccfg *cfg, const ccfg_cursor cursor)
+{
+	if (!ccfg_valid_cursor(cfg, cursor))
+	{
+		return;
+	}
+
+	cfg->it_group = (size_t)cursor.data[2];
+	cfg->it       = (size_t)cursor.data[3];
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 ccfg_restrict(ccfg *cfg)
 {
 	if (cfg->err)
@@ -409,6 +429,19 @@ ccfg_restrict(ccfg *cfg)
 	}
 
 	cfg->restricted = true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+ccfg_cursor
+ccfg_snap(const ccfg *cfg)
+{
+	if (cfg->err)
+	{
+		return (ccfg_cursor){.data = {(uintptr_t)CCFG_PLACEHOLDER, SIZE_MAX, SIZE_MAX, SIZE_MAX}};
+	}
+
+	return (ccfg_cursor){.data = {(uintptr_t)cfg, cfg->loads, cfg->it_group, cfg->it}};
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -422,6 +455,18 @@ ccfg_unrestrict(ccfg *cfg)
 	}
 
 	cfg->restricted = false;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+ccfg_valid_cursor(const ccfg *cfg, const ccfg_cursor cursor)
+{
+	return !cfg->err
+		&& (ccfg *)cursor.data[0] == cfg
+		&& (size_t)cursor.data[1] == cfg->loads
+		&& (size_t)cursor.data[2] < cbook_groups_number(cfg->sequences)
+		&& (size_t)cursor.data[3] < cbook_group_length(cfg->sequences, (size_t)cursor.data[2]);
 }
 
 /************************************************************************************************************/
