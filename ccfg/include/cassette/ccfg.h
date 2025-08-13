@@ -50,6 +50,13 @@ extern "C" {
  */
 typedef struct ccfg ccfg;
 
+/**
+ * [Description]
+ *
+ * 	Opaque cursor value that holds active fetch and iteration states.
+ */
+typedef struct { uintptr_t data[4]; } ccfg_cursor;
+
 /************************************************************************************************************/
 /* GLOBALS **************************************************************************************************/
 /************************************************************************************************************/
@@ -398,6 +405,19 @@ void ccfg_push_source(ccfg *cfg, const char *filename);
 /**
  * [Description]
  *
+ * 	Restores the fetched resources and iterator progress snapshoted with ccfg_snap().
+ * 	Calling this function on a NULL parser, or invalid cursor has no effect.
+ *
+ * [Parameters]
+ *
+ * 	cfg    - Parser to modify.
+ * 	cursor - State snapshot.
+ */
+void ccfg_restore(ccfg *cfg, const ccfg_cursor cursor);
+
+/**
+ * [Description]
+ *
  * 	Enables the restricted parsing mode.
  * 	See the CCFG language specification for more information.
  * 	Calling this function on a NULL parser has no effect.
@@ -495,6 +515,42 @@ bool ccfg_can_open_sources(const ccfg *cfg, size_t *index);
  * 	If the parser is NULL or in a critical error state, this function always returns 0.
  */
 [[gnu::pure]] size_t ccfg_resource_length(const ccfg *cfg);
+
+/**
+ * [Description]
+ *
+ * 	Snapshots into an opaque struct the current fetched resource and iterator state.
+ *
+ * [Parameters]
+ *
+ * 	cfg - Parser to snapshot.
+ *
+ * [Returns]
+ *
+ * 	Parser iterator snapshot.
+ * 	If no resource is fetched or if the parser is in a critical error state, then the returned snapshot
+ * 	is invalid (but safe to use).
+ */
+[[gnu::pure]] ccfg_cursor ccfg_snap(const ccfg *cfg);
+
+/**
+ * [Description]
+ *
+ * 	Checks the validity of a given cursor against a parser.
+ * 	For the cursor to be valid, the given parser instance and load should match the cursor's when it was
+ * 	snapshoted, and a ressource has to have been fetched.
+ *
+ * [Parameters]
+ *
+ * 	cfg    - Parser to inspect.
+ * 	cursor - Cursor snapshot to check.
+ *
+ * [Returns]
+ *
+ * 	Validity of the cursor.
+ * 	If the parser is NULL or in a critical error state, this function always returns 0.
+ */
+[[gnu::const]] bool ccfg_valid_cursor(const ccfg *cfg, const ccfg_cursor cursor);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

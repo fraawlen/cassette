@@ -132,6 +132,7 @@ ccfg_clone(ccfg *cfg)
 	cfg_new->tokens         = cdict_clone(cfg->tokens);
 	cfg_new->it_group       = cfg->it_group;
 	cfg_new->it             = cfg->it;
+	cfg_new->loads          = cfg->loads;
 	cfg_new->restricted     = cfg->restricted;
 	cfg_new->err            = cfg->err;
 	
@@ -168,6 +169,7 @@ ccfg_create(void)
 	cfg->tokens         = token_dict_create();
 	cfg->it_group       = SIZE_MAX;
 	cfg->it             = SIZE_MAX;
+	cfg->loads          = 0;
 	cfg->restricted     = false;
 	cfg->err            = CERR_NONE;
 
@@ -256,6 +258,7 @@ ccfg_load(ccfg *cfg)
 
 	ccfg_clear_resources(cfg);
 	source_parse_root(cfg, select_source(cfg, nullptr), false);
+	cfg->loads++;
 
 	update_err(cfg);
 }
@@ -269,6 +272,7 @@ ccfg_load_internal(ccfg *cfg, const char *buffer)
 
 	ccfg_clear_resources(cfg);
 	source_parse_root(cfg, buffer ? buffer : "", true);
+	cfg->loads++;
 
 	update_err(cfg);
 }
@@ -345,11 +349,47 @@ ccfg_resource_length(const ccfg *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+ccfg_restore(ccfg *cfg, const ccfg_cursor cursor)
+{
+	if (!ccfg_valid_cursor(cfg, cursor))
+	{
+		return;
+	}
+
+	cfg->it_group = (size_t)cursor.data[2];
+	cfg->it       = (size_t)cursor.data[3];
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 ccfg_restrict(ccfg *cfg)
 {
 	GUARD(cfg);
 
 	cfg->restricted = true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+ccfg_cursor
+ccfg_snap(const ccfg *cfg)
+{
+	ccfg_cursor cursor;
+
+	cursor.data[0] = 0;
+	cursor.data[1] = SIZE_MAX;
+	cursor.data[2] = SIZE_MAX;
+	cursor.data[3] = SIZE_MAX;
+
+	GUARD(cfg, cursor);
+
+	cursor.data[0] = (uintptr_t)cfg;
+	cursor.data[1] = cfg->loads;
+	cursor.data[2] = cfg->it_group;
+	cursor.data[3] = cfg->it;
+
+	return cursor;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -360,6 +400,19 @@ ccfg_unrestrict(ccfg *cfg)
 	GUARD(cfg);
 
 	cfg->restricted = false;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+ccfg_valid_cursor(const ccfg *cfg, const ccfg_cursor cursor)
+{
+	GUARD(cfg, false);
+
+	return (ccfg *)cursor.data[0] == cfg
+	    && (size_t)cursor.data[1] == cfg->loads
+	    && (size_t)cursor.data[2] < cbook_groups_number(cfg->sequences)
+	    && (size_t)cursor.data[3] < cbook_group_length(cfg->sequences, (size_t)cursor.data[2]);
 }
 
 /************************************************************************************************************/

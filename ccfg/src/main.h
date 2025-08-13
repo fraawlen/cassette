@@ -22,6 +22,7 @@
 
 #include <cassette/cobj.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -37,6 +38,7 @@ struct ccfg
 	cdict *tokens;
 	size_t it_group;
 	size_t it;
+	size_t loads;
 	bool restricted;
 	enum cerr err;
 };
