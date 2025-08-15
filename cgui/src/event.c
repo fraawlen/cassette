@@ -394,7 +394,7 @@ focus_cell(uint8_t type, cgui_window *window)
 		{
 			window_focus(window, GRID_AREA_NONE);
 		}
-		else if (window->type == CGUI_WINDOW_POPUP)
+		if (window->type == CGUI_WINDOW_POPUP)
 		{
 			cgui_window_deactivate(window);
 		}
