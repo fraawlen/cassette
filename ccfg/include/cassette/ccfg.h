@@ -550,7 +550,7 @@ bool ccfg_can_open_sources(const ccfg *cfg, size_t *index);
  * 	Validity of the cursor.
  * 	If the parser is NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::const]] bool ccfg_valid_cursor(const ccfg *cfg, const ccfg_cursor cursor);
+[[gnu::pure]] bool ccfg_valid_cursor(const ccfg *cfg, const ccfg_cursor cursor);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
