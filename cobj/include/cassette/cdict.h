@@ -69,7 +69,7 @@ nullptr_t cdict_destroy(cdict *dict);
  * 	If the dict is NULL or in a critical error state, this function always returns nullptr.
  * 	The caller is responsible for freeing the returned instance using cdict_destroy().
  */
-[[nodiscard]] [[gnu::malloc(cdict_destroy)]] cdict *cdict_clone(const cdict *dict);
+[[nodiscard]] cdict *cdict_clone(const cdict *dict);
 
 /**
  * [Description]
@@ -81,7 +81,7 @@ nullptr_t cdict_destroy(cdict *dict);
  * 	On success, a pointer to a newly allocated instance. Returns nullptr on failure.
  * 	The caller is responsible for freeing the returned instance using cdict_destroy().
  */
-[[nodiscard]] [[gnu::malloc(cdict_destroy)]] cdict *cdict_create(void);
+[[nodiscard]] cdict *cdict_create(void);
 
 /************************************************************************************************************/
 /* MUTATION *************************************************************************************************/
@@ -98,7 +98,7 @@ nullptr_t cdict_destroy(cdict *dict);
  *
  * 	dict - Dictionary to modify.
  */
-void cdict_clear(cdict *dict);
+void cdict_clear(cdict *dict) [[reproducible]];
 
 /**
  * [Description]
@@ -112,7 +112,7 @@ void cdict_clear(cdict *dict);
  * 	dict  - Dictionary to modify.
  * 	group - Group identifier to clear.
  */
-void cdict_clear_group(cdict *dict, size_t group);
+void cdict_clear_group(cdict *dict, size_t group) [[reproducible]];
 
 /**
  * [Description]
@@ -124,7 +124,7 @@ void cdict_clear_group(cdict *dict, size_t group);
  *
  * 	dict - Dictionary to modify.
  */
-void cdict_clear_warnings(cdict *dict);
+void cdict_clear_warnings(cdict *dict) [[reproducible]];
 
 /**
  * [Description]
@@ -140,7 +140,7 @@ void cdict_clear_warnings(cdict *dict);
  * 	key   - NUL terminated string key to match. Can be NULL.
  * 	group - Group identifier to match.
  */
-void cdict_erase(cdict *dict, const char *key, size_t group);
+void cdict_erase(cdict *dict, const char *key, size_t group) [[reproducible]];
 
 /**
  * [Description]
@@ -233,7 +233,7 @@ void cdict_write(cdict *dict, const char *key, size_t group, size_t value);
  * 	The current error code.
  * 	If the dictionary is NULL, this function always returns CERR_INVALID.
  */
-[[gnu::pure]] enum cerr cdict_error(const cdict *dict);
+enum cerr cdict_error(const cdict *dict) [[reproducible]];
 
 /**
  * [Description]
@@ -254,7 +254,7 @@ void cdict_write(cdict *dict, const char *key, size_t group, size_t value);
  * 	True if a matching slot is found, false otherwhise.
  * 	If the dictionary is NULL or in a critical error state, this function always returns false.
  */
-bool cdict_find(const cdict *dict, const char *key, size_t group, size_t *value);
+bool cdict_find(const cdict *dict, const char *key, size_t group, size_t *value) [[reproducible]];
 
 /**
  * [Description]
@@ -270,7 +270,7 @@ bool cdict_find(const cdict *dict, const char *key, size_t group, size_t *value)
  * 	The number of active slots.
  * 	If the dictionary is NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::pure]] size_t cdict_load(const cdict *dict);
+size_t cdict_load(const cdict *dict) [[reproducible]];
 
 /**
  * [Description]
@@ -286,7 +286,7 @@ bool cdict_find(const cdict *dict, const char *key, size_t group, size_t *value)
  * 	A floating-point value in the range [0.0, 1.0] representing the load factor.
  * 	If the dictionary is NULL or in a critical error state, this function always returns 0.0.
  */
-[[gnu::pure]] double cdict_load_factor(const cdict *dict);
+double cdict_load_factor(const cdict *dict) [[reproducible]];
 
 /************************************************************************************************************/
 /************************************************************************************************************/

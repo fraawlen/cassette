@@ -36,7 +36,7 @@ typedef unsigned long crand;
  *
  * 	Value
  */
-[[nodiscard]] crand crand_seed(unsigned long seed);
+[[nodiscard]] crand crand_seed(unsigned long seed) [[unsequenced]];
 
 /************************************************************************************************************/
 /* MUTATION *************************************************************************************************/

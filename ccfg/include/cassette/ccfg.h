@@ -88,7 +88,7 @@ nullptr_t ccfg_destroy(ccfg *cfg);
  * 	If the parser is NULL or in a critical error state, this function always returns nullptr.
  * 	The caller is responsible for freeing the returned instance using ccfg_destroy().
  */
-[[nodiscard]] [[gnu::malloc(ccfg_destroy)]] ccfg *ccfg_clone(ccfg *cfg);
+[[nodiscard]] ccfg *ccfg_clone(ccfg *cfg);
 
 /**
  * [Description]
@@ -100,7 +100,7 @@ nullptr_t ccfg_destroy(ccfg *cfg);
  * 	On succes, a pointer to a newly allocated instance. Returns nullptr on failure.
  * 	The caller is responsible for freeing the returned instance using ccfg_destroy().
  */
-[[nodiscard]] [[gnu::malloc(ccfg_destroy)]] ccfg *ccfg_create(void);
+[[nodiscard]] ccfg *ccfg_create(void);
 
 /************************************************************************************************************/
 /* MUTATION *************************************************************************************************/
@@ -165,7 +165,7 @@ nullptr_t ccfg_destroy(ccfg *cfg);
  *
  * 	cfg - Parser to modify.
  */
-void ccfg_clear_params(ccfg *cfg);
+void ccfg_clear_params(ccfg *cfg) [[reproducible]];
 
 /**
  * [Description]
@@ -178,7 +178,7 @@ void ccfg_clear_params(ccfg *cfg);
  *
  * 	cfg - Parser to modify.
  */
-void ccfg_clear_resources(ccfg *cfg);
+void ccfg_clear_resources(ccfg *cfg) [[reproducible]];
 
 /**
  * [Description]
@@ -191,7 +191,7 @@ void ccfg_clear_resources(ccfg *cfg);
  *
  * 	cfg - Parser to modify.
  */
-void ccfg_clear_sources(ccfg *cfg);
+void ccfg_clear_sources(ccfg *cfg) [[reproducible]];
 
 /**
  * [Description]
@@ -203,7 +203,7 @@ void ccfg_clear_sources(ccfg *cfg);
  *
  * 	cfg - Parser to modify.
  */
-void ccfg_clear_warnings(ccfg *cfg);
+void ccfg_clear_warnings(ccfg *cfg) [[reproducible]];
 
 /**
  * [Description]
@@ -231,7 +231,7 @@ void ccfg_clear_warnings(ccfg *cfg);
  * 	namespace - Resource namespace.
  * 	property  - Resource property name.
  */
-void ccfg_fetch(ccfg *cfg, const char *namespace, const char *property);
+void ccfg_fetch(ccfg *cfg, const char *namespace, const char *property) [[reproducible]];
 
 /**
  * [Description]
@@ -318,7 +318,7 @@ void ccfg_load_internal(ccfg *cfg, const char *buffer);
  * 	CERR_OVERFLOW
  * 	CERR_MEMORY
  */
-void ccfg_push_param_double(ccfg *cfg, const char *name, double d);
+void ccfg_push_param_double(ccfg *cfg, const char *name, double d) [[reproducible]];
 
 /**
  * [Description]
@@ -340,7 +340,7 @@ void ccfg_push_param_double(ccfg *cfg, const char *name, double d);
  * 	CERR_OVERFLOW
  * 	CERR_MEMORY
  */
-void ccfg_push_param_long(ccfg *cfg, const char *name, long long l);
+void ccfg_push_param_long(ccfg *cfg, const char *name, long long l) [[reproducible]];
 
 /**
  * [Description]
@@ -362,7 +362,7 @@ void ccfg_push_param_long(ccfg *cfg, const char *name, long long l);
  * 	CERR_OVERFLOW
  * 	CERR_MEMORY
  */
-void ccfg_push_param_str(ccfg *cfg, const char *name, const char *str);
+void ccfg_push_param_str(ccfg *cfg, const char *name, const char *str) [[reproducible]];
 
 /**
  * [Description]
@@ -384,7 +384,7 @@ void ccfg_push_param_str(ccfg *cfg, const char *name, const char *str);
  * 	CERR_OVERFLOW 
  * 	CERR_MEMORY
  */
-void ccfg_push_source(ccfg *cfg, const char *filename);
+void ccfg_push_source(ccfg *cfg, const char *filename) [[reproducible]];
 
 /**
  * [Description]
@@ -397,7 +397,7 @@ void ccfg_push_source(ccfg *cfg, const char *filename);
  * 	cfg    - Parser to modify.
  * 	cursor - State snapshot.
  */
-void ccfg_restore(ccfg *cfg, const ccfg_cursor cursor);
+void ccfg_restore(ccfg *cfg, const ccfg_cursor cursor) [[reproducible]];
 
 /**
  * [Description]
@@ -410,7 +410,7 @@ void ccfg_restore(ccfg *cfg, const ccfg_cursor cursor);
  *
  * 	cfg - Parser to modify.
  */
-void ccfg_restrict(ccfg *cfg);
+void ccfg_restrict(ccfg *cfg) [[reproducible]];
 
 /**
  * [Description]
@@ -423,7 +423,7 @@ void ccfg_restrict(ccfg *cfg);
  *
  * 	cfg - Parser to modify.
  */
-void ccfg_unrestrict(ccfg *cfg);
+void ccfg_unrestrict(ccfg *cfg) [[reproducible]];
 
 /************************************************************************************************************/
 /* ACCESS ***************************************************************************************************/
@@ -463,7 +463,7 @@ bool ccfg_can_open_sources(const ccfg *cfg, size_t *index);
  * 	The current error code.
  * 	If the parser is NULL, this function always returns CERR_INVALID.
  */
-[[gnu::pure]] enum cerr ccfg_error(const ccfg *cfg);
+enum cerr ccfg_error(const ccfg *cfg) [[reproducible]];
 
 /**
  * [Description]
@@ -482,7 +482,7 @@ bool ccfg_can_open_sources(const ccfg *cfg, size_t *index);
  * 	NULL, or in a criticial error state, this function always returns an empty "" string.
  * 	This function never returns nullptr.
  */
-[[gnu::pure]] [[gnu::returns_nonnull]] const char *ccfg_resource(const ccfg *cfg);
+[[gnu::returns_nonnull]] const char *ccfg_resource(const ccfg *cfg) [[reproducible]];
 
 /**
  * [Description]
@@ -498,7 +498,7 @@ bool ccfg_can_open_sources(const ccfg *cfg, size_t *index);
  * 	Number of values if any.
  * 	If the parser is NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::pure]] size_t ccfg_resource_length(const ccfg *cfg);
+size_t ccfg_resource_length(const ccfg *cfg) [[reproducible]];
 
 /**
  * [Description]
@@ -515,7 +515,7 @@ bool ccfg_can_open_sources(const ccfg *cfg, size_t *index);
  * 	If no resource is fetched or if the parser is in a critical error state, then the returned snapshot
  * 	is invalid (but safe to use).
  */
-[[gnu::pure]] ccfg_cursor ccfg_snap(const ccfg *cfg);
+ccfg_cursor ccfg_snap(const ccfg *cfg) [[reproducible]];
 
 /**
  * [Description]
@@ -534,7 +534,7 @@ bool ccfg_can_open_sources(const ccfg *cfg, size_t *index);
  * 	Validity of the cursor.
  * 	If the parser is NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::pure]] bool ccfg_valid_cursor(const ccfg *cfg, const ccfg_cursor cursor);
+bool ccfg_valid_cursor(const ccfg *cfg, const ccfg_cursor cursor) [[reproducible]];
 
 /************************************************************************************************************/
 /************************************************************************************************************/

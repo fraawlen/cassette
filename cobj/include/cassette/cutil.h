@@ -36,7 +36,7 @@ extern "C" {
  * 	d_1 - First value.
  * 	d_2 - Second value.
  */
-void cutil_sort_pair(double *d_1, double *d_2);
+void cutil_sort_pair(double *d_1, double *d_2) [[reproducible]];
 
 /**
  * [Description]
@@ -82,7 +82,7 @@ bool cutil_realloc(void **ptr, size_t *n_store, size_t n_new, size_t size, enum 
  *
  * 	Clamped value.
  */
-[[gnu::const]] double cutil_clamp(double d, double lim_1, double lim_2);
+double cutil_clamp(double d, double lim_1, double lim_2) [[unsequenced]];
 
 /**
  * [Description]
@@ -115,7 +115,7 @@ bool cutil_env_exists(const char *name);
  *
  * 	Interpolated value.
  */
-[[gnu::const]] double cutil_interpolate(double d_1, double d_2, double ratio);
+double cutil_interpolate(double d_1, double d_2, double ratio) [[unsequenced]];
 
 /**
  * [Description]
@@ -142,7 +142,7 @@ bool cutil_env_exists(const char *name);
  *
  * 	True if the point is inside (including borders), false otherwise.
  */
-[[gnu::const]] bool cutil_point_inside(double x_check, double y_check, double x, double y, double width, double height);
+bool cutil_point_inside(double x_check, double y_check, double x, double y, double width, double height) [[unsequenced]];
 
 /**
  * [Description]
@@ -161,7 +161,7 @@ bool cutil_env_exists(const char *name);
  *
  * 	Progression ratio between the two boundary as a double between 0.0 and 1.0.
  */
-[[gnu::const]] double cutil_ratio(double d, double lim_1, double lim_2);
+double cutil_ratio(double d, double lim_1, double lim_2) [[unsequenced]];
 
 /**
  * [Description]
@@ -181,7 +181,7 @@ bool cutil_env_exists(const char *name);
  * 	Converted value.
  * 	If str is NULL, this function always return lim_1.
  */
-[[gnu::pure]] double cutil_str_to_double(const char *str, double lim_1, double lim_2);
+double cutil_str_to_double(const char *str, double lim_1, double lim_2) [[reproducible]];
 
 /**
  * [Description]
@@ -200,7 +200,7 @@ bool cutil_env_exists(const char *name);
  * 	Converted value.
  * 	If str is NULL, this function always return lim_1.
  */
-[[gnu::pure]] long cutil_str_to_long(const char *str, long lim_1, long lim_2);
+long cutil_str_to_long(const char *str, long lim_1, long lim_2) [[reproducible]];
 
 /**
  * [Description]

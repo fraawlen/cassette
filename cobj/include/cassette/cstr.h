@@ -76,7 +76,7 @@ nullptr_t cstr_destroy(cstr *str);
  * 	If the string is NULL or in a critical error state, this function always returns nullptr.
  * 	The caller is responsible for freeing the returned instance using cstr_destroy().
  */
-[[nodiscard]] [[gnu::malloc(cstr_destroy)]] cstr *cstr_clone(const cstr *str);
+[[nodiscard]] cstr *cstr_clone(const cstr *str);
 
 /**
  * [Description]
@@ -88,7 +88,7 @@ nullptr_t cstr_destroy(cstr *str);
  * 	On succes, a pointer to a newly allocated instance. Returns nullptr on failure.
  * 	The caller is responsible for freeing the returned instance using cstr_destroy().
  */
-[[nodiscard]] [[gnu::malloc(cstr_destroy)]] cstr *cstr_create(void);
+[[nodiscard]] cstr *cstr_create(void);
 
 /************************************************************************************************************/
 /* MUTATION *************************************************************************************************/
@@ -135,7 +135,7 @@ nullptr_t cstr_destroy(cstr *str);
  *
  * 	str - String to modify.
  */
-void cstr_clear(cstr *str);
+void cstr_clear(cstr *str) [[reproducible]];
 
 /**
  * [Description]
@@ -147,7 +147,7 @@ void cstr_clear(cstr *str);
  *
  * 	str - string to modify.
  */
-void cstr_clear_warnings(cstr *str);
+void cstr_clear_warnings(cstr *str) [[reproducible]];
 
 /**
  * [Description]
@@ -329,7 +329,7 @@ void cstr_prealloc(cstr *str, size_t bytes_number);
  * 	str    - String to modify.
  * 	digits - Number of decimal digits.
  */
-void cstr_set_precision(cstr *str, int digits);
+void cstr_set_precision(cstr *str, int digits) [[reproducible]];
 
 /**
  * [Description]
@@ -355,7 +355,7 @@ void cstr_slice(cstr *str, size_t offset, size_t length);
  *
  * 	str - String to modify.
  */
-void cstr_trim(cstr *str);
+void cstr_trim(cstr *str) [[reproducible]];
 
 /**
  * [Description]
@@ -378,7 +378,7 @@ void cstr_trim(cstr *str);
  * 	CERR_OVERFLOW
  * 	CERR_MEMORY
  */
-void cstr_wrap(cstr *str, size_t width);
+void cstr_wrap(cstr *str, size_t width) [[reproducible]];
 
 /**
  * [Description]
@@ -391,7 +391,7 @@ void cstr_wrap(cstr *str, size_t width);
  *
  * 	str - String to modify.
  */
-void cstr_zero(cstr *str);
+void cstr_zero(cstr *str) [[reproducible]];
 
 /************************************************************************************************************/
 /* ACCESS ***************************************************************************************************/
@@ -411,7 +411,7 @@ void cstr_zero(cstr *str);
  * 	The number of bytes.
  * 	If the string is NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::pure]] size_t cstr_byte_length(const cstr *str);
+size_t cstr_byte_length(const cstr *str) [[reproducible]];
 
 /**
  * [Description]
@@ -430,7 +430,7 @@ void cstr_zero(cstr *str);
  * 	The converted codepoint offset in bytes.
  * 	If the string is NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::pure]] size_t cstr_byte_offset(const cstr *str, size_t offset);
+size_t cstr_byte_offset(const cstr *str, size_t offset) [[reproducible]];
 
 /**
  * [Description]
@@ -447,7 +447,7 @@ void cstr_zero(cstr *str);
  * 	If the string is NULL or in a critical error state, this function always returns '\0'.
  * 	This function never returns nullptr.
  */
-[[gnu::pure]] [[gnu::returns_nonnull]] const char *cstr_bytes(const cstr *str);
+const char *cstr_bytes(const cstr *str) [[reproducible]];
 
 /**
  * [Description]
@@ -468,7 +468,7 @@ void cstr_zero(cstr *str);
  * 	If the string is NULL or in a critical error state, this function always returns '\0'.
  * 	This function never returns nullptr.
  */
-[[gnu::pure]] [[gnu::returns_nonnull]] const char *cstr_bytes_at_coords(const cstr *str, size_t row, size_t col);
+const char *cstr_bytes_at_coords(const cstr *str, size_t row, size_t col) [[reproducible]];
 
 /**
  * [Description]
@@ -488,7 +488,7 @@ void cstr_zero(cstr *str);
  * 	If the string is NULL or in a critical error state, this function always returns '\0'.
  * 	This function never returns nullptr.
  */
-[[gnu::pure]] [[gnu::returns_nonnull]] const char *cstr_bytes_at_offset(const cstr *str, size_t offset);
+const char *cstr_bytes_at_offset(const cstr *str, size_t offset) [[reproducible]];
 
 /**
  * [Description]
@@ -508,7 +508,7 @@ void cstr_zero(cstr *str);
  * 	The converted 2D coordinates into a codepoint offset.
  * 	If the string is NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::pure]] size_t cstr_coords_offset(const cstr *str, size_t row, size_t col);
+size_t cstr_coords_offset(const cstr *str, size_t row, size_t col) [[reproducible]];
 
 /**
  * [Description]
@@ -524,7 +524,7 @@ void cstr_zero(cstr *str);
  * 	The current error code.
  * 	If the string is NULL, this function always returns CERR_INVALID.
  */
-[[gnu::pure]] enum cerr cstr_error(const cstr *str);
+enum cerr cstr_error(const cstr *str) [[reproducible]];
 
 /**
  * [Description]
@@ -541,7 +541,7 @@ void cstr_zero(cstr *str);
  * 	Total number of rows.
  * 	If the string is NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::pure]] size_t cstr_height(const cstr *str);
+size_t cstr_height(const cstr *str) [[reproducible]];
 
 /**
  * [Description]
@@ -558,7 +558,7 @@ void cstr_zero(cstr *str);
  * 	Total number of codepoints.
  * 	If the string is NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::pure]] size_t cstr_length(const cstr *str);
+size_t cstr_length(const cstr *str) [[reproducible]];
 
 /**
  * [Description]
@@ -577,8 +577,8 @@ void cstr_zero(cstr *str);
  * 	Total number of columns.
  * 	If the string is NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::pure]] size_t cstr_row_width(const cstr *str, size_t row);
-
+size_t cstr_row_width(const cstr *str, size_t row) [[reproducible]];
+ 
 /**
  * [Description]
  *
@@ -599,7 +599,7 @@ void cstr_zero(cstr *str);
  * 	If the string is NULL, in a critical error state, or the illegal width value 0 is passed,
  * 	then this function always returns 0.
  */
-[[gnu::pure]] size_t cstr_test_wrap(const cstr *str, size_t width);
+size_t cstr_test_wrap(const cstr *str, size_t width) [[reproducible]];
 
 /**
  * [Description]
@@ -652,7 +652,7 @@ void cstr_zero(cstr *str);
  * 	The converted codepoint offset.
  * 	If the str or str_wrap are NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::pure]] size_t cstr_unwrapped_offset(const cstr *str, const cstr *str_wrap, size_t offset);
+size_t cstr_unwrapped_offset(const cstr *str, const cstr *str_wrap, size_t offset) [[reproducible]];
 
 /**
  * [Description]
@@ -669,7 +669,7 @@ void cstr_zero(cstr *str);
  * 	Total number of columns.
  * 	If the string is NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::pure]] size_t cstr_width(const cstr *str);
+size_t cstr_width(const cstr *str) [[reproducible]];
 
 /************************************************************************************************************/
 /* EXTRAS ***************************************************************************************************/
@@ -690,7 +690,7 @@ void cstr_zero(cstr *str);
  * 	Pointer to the start of the next codepoint.
  * 	This function never returns nullptr.
  */
-[[gnu::pure]] [[gnu::nonnull(1)]] [[gnu::returns_nonnull]] const char *cstr_next_codepoint(const char *byte);
+const char *cstr_next_codepoint(const char *byte) [[reproducible]];
 
 /**
  * [Description]
@@ -710,7 +710,7 @@ void cstr_zero(cstr *str);
  * 	Pointer to the start of the next row.
  * 	This function never returns nullptr.
  */
-[[gnu::pure]] [[gnu::nonnull(1)]] [[gnu::returns_nonnull]] const char *cstr_next_row(const char *byte, size_t *width);
+const char *cstr_next_row(const char *byte, size_t *width) [[reproducible]];
 
 /************************************************************************************************************/
 /************************************************************************************************************/

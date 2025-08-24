@@ -70,7 +70,7 @@ nullptr_t cinputs_destroy(cinputs *inputs);
  * 	nullptr.
  * 	The caller is responsible for freeing the returned instance using cinputs_destroy().
  */
-[[nodiscard]] [[gnu::malloc(cinputs_destroy)]] cinputs *cinputs_clone(const cinputs *inputs);
+[[nodiscard]] cinputs *cinputs_clone(const cinputs *inputs);
 
 /** 
  * [Description]
@@ -86,7 +86,7 @@ nullptr_t cinputs_destroy(cinputs *inputs);
  * 	On success, a pointer to a newly allocated instance. Returns nullptr on failure.
  * 	The caller is responsible for freeing the returned instance using cinputs_destroy().
  */
-[[nodiscard]] [[gnu::malloc(cinputs_destroy)]] cinputs *cinputs_create(size_t max_inputs);
+[[nodiscard]] cinputs *cinputs_create(size_t max_inputs);
 
 /************************************************************************************************************/
 /* MUTATION *************************************************************************************************/
@@ -103,7 +103,7 @@ nullptr_t cinputs_destroy(cinputs *inputs);
  *
  * 	inputs - Input tracker to modify.
  */
-void cinputs_clear(cinputs *inputs);
+void cinputs_clear(cinputs *inputs) [[reproducible]];
 
 /**
  * [Description]
@@ -115,7 +115,7 @@ void cinputs_clear(cinputs *inputs);
  *
  * 	inputs - Input tracker to modify.
  */
-void cinputs_clear_warnings(cinputs *inputs);
+void cinputs_clear_warnings(cinputs *inputs) [[reproducible]];
 
 /**
  * [Description]
@@ -129,7 +129,7 @@ void cinputs_clear_warnings(cinputs *inputs);
  * 	inputs - Input tracker to modify.
  * 	id     - Identifier to match.
  */
-void cinputs_pull_id(cinputs *inputs, unsigned int id);
+void cinputs_pull_id(cinputs *inputs, unsigned int id) [[reproducible]];
 
 /** 
  * [Description]
@@ -143,7 +143,7 @@ void cinputs_pull_id(cinputs *inputs, unsigned int id);
  * 	inputs - Input tracker to modify.
  * 	index  - Index within the array.
  */
-void cinputs_pull_index(cinputs *inputs, size_t index);
+void cinputs_pull_index(cinputs *inputs, size_t index) [[reproducible]];
 
 /**
  * [Description]
@@ -160,7 +160,7 @@ void cinputs_pull_index(cinputs *inputs, size_t index);
  * 	y      - Y coordinate.
  * 	ptr    - Arbitrary pointer to something related to the input. Can be NULL.
  */
-void cinputs_push(cinputs *inputs, unsigned int id, int x, int y, void *ptr);
+void cinputs_push(cinputs *inputs, unsigned int id, int x, int y, void *ptr) [[reproducible]];
 
 /**
  * [Description]
@@ -216,7 +216,7 @@ void cinputs_resize(cinputs *inputs, size_t max_inputs);
  * 	The current error code.
  * 	If the input tracker is NULL, this function always returns CERR_INVALID.
  */
-[[gnu::pure]] enum cerr cinputs_error(const cinputs *inputs);
+enum cerr cinputs_error(const cinputs *inputs) [[reproducible]];
 
 /** 
  * [Description]
@@ -236,7 +236,7 @@ void cinputs_resize(cinputs *inputs, size_t max_inputs);
  * 	True if a matching input is found, false otherwhise.
  * 	If the input tracker is NULL or in a critical error state, this function always return false.
  */
-bool cinputs_find(const cinputs *inputs, unsigned int id, size_t *index);
+bool cinputs_find(const cinputs *inputs, unsigned int id, size_t *index) [[reproducible]];
 
 /** 
  * [Description]
@@ -254,7 +254,7 @@ bool cinputs_find(const cinputs *inputs, unsigned int id, size_t *index);
  * 	If the input tracker is NULL, in a criticial error state, or the index is out of bounds, this
  * 	function always return 0.
  */
-[[gnu::pure]] unsigned int cinputs_id(const cinputs *inputs, size_t index);
+unsigned int cinputs_id(const cinputs *inputs, size_t index) [[reproducible]];
 
 /** 
  * [Description]
@@ -270,7 +270,7 @@ bool cinputs_find(const cinputs *inputs, unsigned int id, size_t *index);
  * 	Number of unique inputs tracked.
  * 	If the input tracker is NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::pure]] size_t cinputs_load(const cinputs *inputs);
+size_t cinputs_load(const cinputs *inputs) [[reproducible]];
 
 /** 
  * [Description]
@@ -288,7 +288,7 @@ bool cinputs_find(const cinputs *inputs, unsigned int id, size_t *index);
  * 	If the input tracker is NULL, in a criticial error state, or the index is out of bounds,
  * 	this function always return nullptr.
  */
-[[gnu::pure]] void *cinputs_ptr(const cinputs *inputs, size_t index);
+void *cinputs_ptr(const cinputs *inputs, size_t index) [[reproducible]];
 
 /** 
  * [Description]
@@ -306,7 +306,7 @@ bool cinputs_find(const cinputs *inputs, unsigned int id, size_t *index);
  * 	If the input tracker is NULL, in a criticial error state, or the index is out of bounds,
  * 	this function always return 0.
  */
-[[gnu::pure]] int16_t cinputs_x(const cinputs *inputs, size_t index);
+int16_t cinputs_x(const cinputs *inputs, size_t index) [[reproducible]];
 
 /** 
  * [Description]
@@ -324,7 +324,7 @@ bool cinputs_find(const cinputs *inputs, unsigned int id, size_t *index);
  * 	If the input tracker is NULL, in a criticial error state, or the index is out of bounds,
  * 	this function always return 0.
  */
-[[gnu::pure]] int16_t cinputs_y(const cinputs *inputs, size_t index);
+int16_t cinputs_y(const cinputs *inputs, size_t index) [[reproducible]];
 
 /************************************************************************************************************/
 /************************************************************************************************************/

@@ -68,7 +68,7 @@ nullptr_t cref_destroy(cref *ref);
  * 	If the counter is NULL or in a critical error state, this function always returns nullptr.
  * 	The caller is responsible for freeing the returned instance using cref_destroy().
  */
-[[nodiscard]] [[gnu::malloc(cref_destroy)]] cref *cref_clone(const cref *ref);
+[[nodiscard]] cref *cref_clone(const cref *ref);
 
 /**
  * [Description]
@@ -80,7 +80,7 @@ nullptr_t cref_destroy(cref *ref);
  * 	On success, a pointer to a newly allocated instance. Returns nullptr on failure.
  * 	The caller is responsible for freeing the returned instance using cref_destroy().
  */
-[[nodiscard]] [[gnu::malloc(cref_destroy)]] cref *cref_create(void);
+[[nodiscard]] cref *cref_create(void);
 
 /************************************************************************************************************/
 /* MUTATION *************************************************************************************************/
@@ -121,7 +121,7 @@ nullptr_t cref_destroy(cref *ref);
  *
  * 	ref - Reference counter to modify.
  */
-void cref_clear(cref *ref);
+void cref_clear(cref *ref) [[reproducible]];
 
 /**
  * [Description]
@@ -133,7 +133,7 @@ void cref_clear(cref *ref);
  *
  * 	ref - Reference counter to modify.
  */
-void cref_clear_warnings(cref *ref);
+void cref_clear_warnings(cref *ref) [[reproducible]];
 
 /**
  * [Description]
@@ -198,7 +198,7 @@ void cref_pull_ptr(cref *ref, void *ptr);
  * 	ref   - Reference counter to modify.
  * 	index - Index within the array.
  */
-void cref_purge_index(cref *ref, size_t index);
+void cref_purge_index(cref *ref, size_t index) [[reproducible]];
 
 /**
  * [Description]
@@ -212,7 +212,7 @@ void cref_purge_index(cref *ref, size_t index);
  * 	ref - Reference counter to modify.
  * 	ptr - Pointer.
  */
-void cref_purge_ptr(cref *ref, void *ptr);
+void cref_purge_ptr(cref *ref, void *ptr) [[reproducible]];
 
 /**
  * [Description]
@@ -302,7 +302,7 @@ void cref_push(cref *ref, void *ptr);
  * 	If the reference counter is NULL, in a critical error state, or the index is out of bounds, 
  * 	this function always returns 0.
  */
-[[gnu::pure]] unsigned int cref_count(const cref *ref, size_t index);
+unsigned int cref_count(const cref *ref, size_t index) [[reproducible]];
 
 /**
  * [Description]
@@ -318,7 +318,7 @@ void cref_push(cref *ref, void *ptr);
  * 	The current error code.
  * 	If the dictionary is NULL, this function always returns CERR_INVALID.
  */
-[[gnu::pure]] enum cerr cref_error(const cref *ref);
+enum cerr cref_error(const cref *ref) [[reproducible]];
 
 /**
  * [Description]
@@ -339,7 +339,7 @@ void cref_push(cref *ref, void *ptr);
  * 	If the reference counter is NULL, in a critical error state, or the pointer value is NULL,
  * 	this function always returns 0.
  */
-unsigned int cref_find(const cref *ref, void *ptr, size_t *index);
+unsigned int cref_find(const cref *ref, void *ptr, size_t *index) [[reproducible]];
 
 /**
  * [Description]
@@ -355,7 +355,7 @@ unsigned int cref_find(const cref *ref, void *ptr, size_t *index);
  * 	Number of unique values stored.
  * 	If the reference counter is NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::pure]] size_t cref_length(const cref *ref);
+size_t cref_length(const cref *ref) [[reproducible]];
 
 /**
  * [Description]
@@ -373,7 +373,7 @@ unsigned int cref_find(const cref *ref, void *ptr, size_t *index);
  * 	If the reference counter is NULL, in a critical error state, or the index is out of bounds,
  * 	this function always returns nullptr.
  */
-[[gnu::pure]] void *cref_ptr(const cref *ref, size_t index);
+void *cref_ptr(const cref *ref, size_t index) [[reproducible]];
 
 /************************************************************************************************************/
 /************************************************************************************************************/

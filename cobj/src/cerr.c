@@ -61,8 +61,8 @@ cerr_name(enum cerr code)
 		case CERR_CONFIG:
 			return "CERR_CONFIG";
 
-		case CERR_XCB:
-			return "CERR_XCB";
+		case CERR_BACKEND:
+			return "CERR_BACKEND";
 
 		case CERR_CAIRO:
 			return "CERR_CAIRO";

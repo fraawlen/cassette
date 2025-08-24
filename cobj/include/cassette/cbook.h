@@ -71,7 +71,7 @@ nullptr_t cbook_destroy(cbook *book);
  * 	If the book is NULL or in a critical error state, this function always returns nullptr.
  * 	The caller is responsible for freeing the returned instance using cbook_destroy().
  */
-[[nodiscard]] [[gnu::malloc(cbook_destroy)]] cbook *cbook_clone(const cbook *book);
+[[nodiscard]] cbook *cbook_clone(const cbook *book);
 
 /**
  * [Description]
@@ -83,7 +83,7 @@ nullptr_t cbook_destroy(cbook *book);
  * 	On succes, a pointer to a newly allocated instance. Returns nullptr on failure.
  * 	The caller is responsible for freeing the returned instance using cbook_destroy().
  */
-[[nodiscard]] [[gnu::malloc(cbook_destroy)]] cbook *cbook_create(void);
+[[nodiscard]] cbook *cbook_create(void);
 
 /************************************************************************************************************/
 /* MUTATION *************************************************************************************************/
@@ -100,7 +100,7 @@ nullptr_t cbook_destroy(cbook *book);
  *
  * 	book : Book to modify.
  */
-void cbook_clear(cbook *book);
+void cbook_clear(cbook *book) [[reproducible]];
 
 /**
  * [Description]
@@ -112,7 +112,7 @@ void cbook_clear(cbook *book);
  *
  * 	book - Book to modify.
  */
-void cbook_clear_warnings(cbook *book);
+void cbook_clear_warnings(cbook *book) [[reproducible]];
 
 /**
  * [Description]
@@ -175,7 +175,7 @@ void cbook_prealloc(cbook *book, size_t bytes_number, size_t words_number, size_
  *
  * 	book - Book to modify.
  */
-void cbook_prepare_new_group(cbook *book);
+void cbook_prepare_new_group(cbook *book) [[reproducible]];
 
 /**
  * [Description]
@@ -187,7 +187,7 @@ void cbook_prepare_new_group(cbook *book);
  *
  * 	book - Book to modify.
  */
-void cbook_undo_new_group(cbook *book);
+void cbook_undo_new_group(cbook *book) [[reproducible]];
 
 /**
  * [Description]
@@ -223,7 +223,7 @@ void cbook_write(cbook *book, const char *str);
  *
  * 	book - Book to modify.
  */
-void cbook_zero(cbook *book);
+void cbook_zero(cbook *book) [[reproducible]];
 
 /************************************************************************************************************/
 /* ACCESS ***************************************************************************************************/
@@ -273,7 +273,7 @@ void cbook_zero(cbook *book);
  * 	The current error code.
  * 	If the book is NULL, this function always returns CERR_INVALID.
  */
-[[gnu::pure]] enum cerr cbook_error(const cbook *book);
+enum cerr cbook_error(const cbook *book) [[reproducible]];
 
 /**
  * [Description]
@@ -291,7 +291,7 @@ void cbook_zero(cbook *book);
  * 	If the book is NULL, in a critical error state, or the index is out of bounds, this function
  * 	always returns 0.
  */
-[[gnu::pure]] size_t cbook_group_length(const cbook *book, size_t group_index);
+size_t cbook_group_length(const cbook *book, size_t group_index) [[reproducible]];
 
 /**
  * [Description]
@@ -307,7 +307,7 @@ void cbook_zero(cbook *book);
  * 	The number of groups.
  * 	If the book is NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::pure]] size_t cbook_groups_number(const cbook *book);
+size_t cbook_groups_number(const cbook *book) [[reproducible]];
 
 /**
  * [Description]
@@ -323,7 +323,7 @@ void cbook_zero(cbook *book);
  * 	The total number of bytes.
  * 	If the book is NULL or in a critical error state, this function always returns 0.
  */
-[[gnu::pure]] size_t cbook_length(const cbook *book);
+size_t cbook_length(const cbook *book) [[reproducible]];
 
 /**
  * [Description]
@@ -341,7 +341,7 @@ void cbook_zero(cbook *book);
  * 	If the book is NULL, in a critical error state, or the index is out of bounds, this function
  * 	always returns '\0'. This function never returns nullptr.
  */
-[[gnu::pure]] [[gnu::returns_nonnull]] const char  *cbook_word(const cbook *book, size_t word_index);
+const char  *cbook_word(const cbook *book, size_t word_index) [[reproducible]];
 
 /**
  * [Description]
@@ -360,7 +360,7 @@ void cbook_zero(cbook *book);
  * 	If the book is NULL, in a critical error state, or the indexes are out of bounds, this
  * 	function always returns "\0". This function never returns nullptr.
  */
-[[gnu::pure]] [[gnu::returns_nonnull]] const char *cbook_word_in_group(const cbook *book, size_t group_index, size_t word_local_index);
+const char *cbook_word_in_group(const cbook *book, size_t group_index, size_t word_local_index) [[reproducible]];
 
 /**
  * [Description]
@@ -379,7 +379,7 @@ void cbook_zero(cbook *book);
  * 	If the book is NULL, in a critical error state, or the indexes are out of bounds, this
  * 	function always returns "\0". This function never returns nullptr.
  */
-[[gnu::pure]] size_t cbook_word_index(const cbook *book, size_t group_index, size_t word_local_index);
+size_t cbook_word_index(const cbook *book, size_t group_index, size_t word_local_index) [[reproducible]];
 
 /**
  * [Description]
@@ -395,7 +395,7 @@ void cbook_zero(cbook *book);
  * 	The total number of words across all groups.
  * 	If the book is NULL or in a critical error state, this funciton always returns 0.
  */
-[[gnu::pure]] size_t cbook_words_number(const cbook *book);
+size_t cbook_words_number(const cbook *book) [[reproducible]];
 
 /************************************************************************************************************/
 /************************************************************************************************************/

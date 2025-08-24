@@ -52,6 +52,7 @@ CFLAGS  := \
 	-Wstrict-prototypes \
 	-Wundef \
 	-Wunreachable-code \
+	-Wno-attributes \
 	-fanalyzer
 
 #############################################################################################################

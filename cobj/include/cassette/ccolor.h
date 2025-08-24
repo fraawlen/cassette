@@ -72,7 +72,7 @@ constexpr struct ccolor ccolor_cyan        = {0.000, 1.000, 1.000, 1.000};
  *
  * 	Color object
  */
-[[gnu::const]] struct ccolor ccolor_from_argb_uint(uint32_t argb);
+struct ccolor ccolor_from_argb_uint(uint32_t argb) [[unsequenced]];
 
 /**
  * [Description]
@@ -91,7 +91,7 @@ constexpr struct ccolor ccolor_cyan        = {0.000, 1.000, 1.000, 1.000};
  *
  * 	Color object
  */
-[[gnu::const]] struct ccolor ccolor_from_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+struct ccolor ccolor_from_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a) [[unsequenced]];
 
 /**
  * [Description]
@@ -132,7 +132,7 @@ struct ccolor ccolor_from_str(const char *str, bool *err);
  *
  * 	interpolated color
  */
-[[gnu::const]] struct ccolor ccolor_interpolate(struct ccolor color_1, struct ccolor color_2, double ratio);
+struct ccolor ccolor_interpolate(struct ccolor color_1, struct ccolor color_2, double ratio) [[unsequenced]];
 
 /*
  * [Description]
@@ -148,7 +148,7 @@ struct ccolor ccolor_from_str(const char *str, bool *err);
  *
  * 	32-bit argb color value
  */
-[[gnu::const]] uint32_t ccolor_to_argb_uint(struct ccolor color);
+uint32_t ccolor_to_argb_uint(struct ccolor color) [[unsequenced]];
 
 /************************************************************************************************************/
 /************************************************************************************************************/

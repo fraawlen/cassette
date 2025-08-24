@@ -31,7 +31,7 @@ enum cerr
 	CERR_OVERFLOW,
 	CERR_MEMORY,
 	CERR_CONFIG,
-	CERR_XCB,
+	CERR_BACKEND,
 	CERR_CAIRO,
 	CERR_MUTEX,
 	CERR_INSTANCE,
@@ -52,7 +52,7 @@ enum cerr
  *
  * 	err  - Error to update.
  */
-void cerr_clear_warnings(enum cerr *err);
+void cerr_clear_warnings(enum cerr *err) [[reproducible]];
 
 /** 
  * [Description]
@@ -65,7 +65,7 @@ void cerr_clear_warnings(enum cerr *err);
  * 	err  - Error enum to update.
  * 	code - Error code.
  */
-void cerr_set(enum cerr *err, enum cerr code);
+void cerr_set(enum cerr *err, enum cerr code) [[reproducible]];
 
 /************************************************************************************************************/
 /* ACCESS ***************************************************************************************************/
@@ -84,7 +84,7 @@ void cerr_set(enum cerr *err, enum cerr code);
  *
  * 	NUL terminated string representing the error code.
  */
-[[gnu::const]] const char *cerr_name(enum cerr code);
+const char *cerr_name(enum cerr code) [[unsequenced]];
 
 /**
  * [Description]
@@ -99,7 +99,7 @@ void cerr_set(enum cerr *err, enum cerr code);
  *
  * 	True if it is critical, false it's a warning or no error was set.
  */
-[[gnu::const]] bool cerr_critical(enum cerr code);
+bool cerr_critical(enum cerr code) [[unsequenced]];
 
 /************************************************************************************************************/
 /************************************************************************************************************/
