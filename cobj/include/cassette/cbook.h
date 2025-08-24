@@ -30,8 +30,8 @@ extern "C" {
  * 	group index.
  *
  * 	Some methods may fail and set an internal error, which can be checked using cbook_error().
- * 	If an error is set, all methods will exit early with default return values and no side
- * 	effects, leaving only the destruction function available.
+ * 	If a critical error is set, all methods will exit early with default return values and no
+ * 	side effects, leaving only the destruction function available.
  */
 typedef struct cbook cbook;
 

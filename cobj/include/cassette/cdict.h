@@ -28,8 +28,8 @@ extern "C" {
  * 	Values are retrieved using both a NUL-terminated string key and a group value.
  *
  * 	Some methods may fail and set an internal error, which can be checked using cdict_error().
- * 	If an error is set, all methods will exit early with default return values and no side
- * 	effects, leaving only the destruction function available.
+ * 	If a critical error is set, all methods will exit early with default return values and no
+ * 	side effects, leaving only the destruction function available.
  */
 typedef struct cdict cdict;
 
