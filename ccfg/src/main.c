@@ -200,7 +200,7 @@ ccfg_error(const ccfg *cfg)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-ccfg_fetch(ccfg *cfg, const char *namespace, const char *property)
+ccfg_fetch(ccfg *cfg, const char *group, const char *property)
 {
 	GUARD(cfg);
 
@@ -209,8 +209,8 @@ ccfg_fetch(ccfg *cfg, const char *namespace, const char *property)
 	cfg->it_group = SIZE_MAX;
 	cfg->it       = SIZE_MAX;
 
-	if (cdict_find(cfg->keys_sequences, namespace, 0, &i)
-	 && cdict_find(cfg->keys_sequences, property,  i, &cfg->it_group))
+	if (cdict_find(cfg->keys_sequences, group,    0, &i)
+	 && cdict_find(cfg->keys_sequences, property, i, &cfg->it_group))
 	{
 		cfg->it = 0;
 	}

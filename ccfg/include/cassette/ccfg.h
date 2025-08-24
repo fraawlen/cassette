@@ -208,13 +208,13 @@ void ccfg_clear_warnings(ccfg *cfg) [[reproducible]];
 /**
  * [Description]
  *
- * 	Looks-up a resource by its namespace and property name. If found, its reference is kept around
- * 	and the resource values will become accessible through ccfg_iterate() and ccfg_resource().
+ * 	Looks-up a resource by its namespace (group) and property name. If found, its reference is kept
+ * 	around and the resource values will become accessible through ccfg_iterate() and ccfg_resource().
  * 	To get the number of values a resource has, use ccfg_resouce_length().
  * 	After calling this function, as long as ccfg_iterate() is not called at least once, the
  * 	associated resource values will not be accessible.
  *
- * 	A NULL namespace or property value is equivalent to an empty "" value.
+ * 	A NULL namespace (group) or property value is equivalent to an empty "" value.
  * 	Calling this function on a NULL parser has no effect.
  *
  * [Example]
@@ -227,11 +227,11 @@ void ccfg_clear_warnings(ccfg *cfg) [[reproducible]];
  *
  * [Parameters]
  *
- * 	cfg       - Parser to modify.
- * 	namespace - Resource namespace.
- * 	property  - Resource property name.
+ * 	cfg      - Parser to modify.
+ * 	group    - Resource namespace.
+ * 	property - Resource property name.
  */
-void ccfg_fetch(ccfg *cfg, const char *namespace, const char *property) [[reproducible]];
+void ccfg_fetch(ccfg *cfg, const char *group, const char *property) [[reproducible]];
 
 /**
  * [Description]
