@@ -468,7 +468,7 @@ That gets resolved into :
 ### 3.9. Seed Override <a name="seed"></a>
 
 ```
-SEED_OVERRIDE [seed_value]
+SEED [seed_value]
 ```
 
 Resets and sets the seed of the parser's random number LCG. Can be used to shuffle the values returned by [`RAND`](#rand). 
