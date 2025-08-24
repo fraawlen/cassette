@@ -1,21 +1,5 @@
-/**
- * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
- *
- * This file is part of the Cassette library.
- *
- * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
- * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
- * License or (at your option) any later version.
- *
- * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * See the LGPL for the specific language governing rights and limitations.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this program. If not,
- * see <http://www.gnu.org/licenses/>.
- */
-
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* PRELUDE **************************************************************************************************/
 /************************************************************************************************************/
 
 #pragma once
@@ -50,7 +34,7 @@ extern "C" {
 typedef struct cdict cdict;
 
 /************************************************************************************************************/
-/* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
+/* LIFECYCLE ************************************************************************************************/
 /************************************************************************************************************/
 
 /**
@@ -100,7 +84,7 @@ nullptr_t cdict_destroy(cdict *dict);
 [[nodiscard]] [[gnu::malloc(cdict_destroy)]] cdict *cdict_create(void);
 
 /************************************************************************************************************/
-/* IMPURE METHODS *******************************************************************************************/
+/* MUTATION *************************************************************************************************/
 /************************************************************************************************************/
 
 /**
@@ -232,7 +216,7 @@ void cdict_set_max_load(cdict *dict, double load_factor);
 void cdict_write(cdict *dict, const char *key, size_t group, size_t value);
 
 /************************************************************************************************************/
-/* PURE METHODS *********************************************************************************************/
+/* ACCESS ***************************************************************************************************/
 /************************************************************************************************************/
 
 /**

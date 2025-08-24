@@ -1,21 +1,5 @@
-/**
- * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
- *
- * This file is part of the Cassette library.
- *
- * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
- * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
- * License or (at your option) any later version.
- *
- * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * See the LGPL for the specific language governing rights and limitations.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this program. If not,
- * see <http://www.gnu.org/licenses/>.
- */
-
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* PRELUDE **************************************************************************************************/
 /************************************************************************************************************/
 
 #pragma once
@@ -49,7 +33,7 @@ extern "C" {
 typedef struct cinputs cinputs;
 
 /************************************************************************************************************/
-/* CONSTRUCTORS / DESTRUCTORS *******************************************************************************/
+/* LIFECYCLE ************************************************************************************************/
 /************************************************************************************************************/
 
 /** 
@@ -105,7 +89,7 @@ nullptr_t cinputs_destroy(cinputs *inputs);
 [[nodiscard]] [[gnu::malloc(cinputs_destroy)]] cinputs *cinputs_create(size_t max_inputs);
 
 /************************************************************************************************************/
-/* IMPURE METHODS *******************************************************************************************/
+/* MUTATION *************************************************************************************************/
 /************************************************************************************************************/
 
 /**
@@ -199,7 +183,7 @@ void cinputs_push(cinputs *inputs, unsigned int id, int x, int y, void *ptr);
 void cinputs_resize(cinputs *inputs, size_t max_inputs);
 
 /************************************************************************************************************/
-/* PURE METHODS *********************************************************************************************/
+/* ACCESS ***************************************************************************************************/
 /************************************************************************************************************/
 
 /**

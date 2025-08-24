@@ -1,21 +1,5 @@
-/**
- * Copyright © 2024-2025 Fraawlen <fraawlen@posteo.net>
- *
- * This file is part of the Cassette library.
- *
- * This library is free software; you can redistribute it and/or modify it either under the terms of the GNU
- * Lesser General Public License as published by the Free Software Foundation; either version 3.0 of the
- * License or (at your option) any later version.
- *
- * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * See the LGPL for the specific language governing rights and limitations.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this program. If not,
- * see <http://www.gnu.org/licenses/>.
- */
-
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* INCLUDES *************************************************************************************************/
 /************************************************************************************************************/
 
 #include <cassette/cobj.h>
@@ -27,7 +11,7 @@
 #include <string.h>
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* TYPES & MACROS *******************************************************************************************/
 /************************************************************************************************************/
 
 #define GUARD(OBJ, ...) if (!OBJ || cerr_critical(OBJ->err)) { return __VA_OPT__(__VA_ARGS__); }
@@ -63,7 +47,7 @@ struct cdict
 };
 
 /************************************************************************************************************/
-/************************************************************************************************************/
+/* PROTOTYPES ***********************************************************************************************/
 /************************************************************************************************************/
 
 static struct slot *find     (const cdict *, uint64_t, enum state);
