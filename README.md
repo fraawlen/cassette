@@ -29,10 +29,6 @@ A configuration language and parser library featuring array based values and sho
 
 A collection of self-contained data structures and utilities shared by both CCFG and CGUI. Notably, it includes a versatile 2D UTF-8 string object with associated methods, designed for easy manipulation of strings in monospace text displays.
 
-#### [Bindings](bindings/ada)
-
-COBJ and CCFG Thick bindings for Ada 2012 are provided. CGUI bindings coming soon.
-
 ## Status <a name="status"></a>
 
 > [!Warning]
