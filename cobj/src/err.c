@@ -29,6 +29,7 @@ cerr_critical(enum cerr code)
 	{
 		case CERR_NONE:
 		case CERR_PARAM:
+		case CERR_CALL:
 			return false;
 
 		default:
@@ -48,6 +49,9 @@ cerr_name(enum cerr code)
 
 		case CERR_PARAM:
 			return "CERR_PARAM";
+
+		case CERR_CALL:
+			return "CERR_CALL";
 
 		case CERR_INVALID:
 			return "CERR_INVALID";
@@ -75,6 +79,9 @@ cerr_name(enum cerr code)
 
 		case CERR_MALFORMED:
 			return "CERR_MALFORMED";
+
+		case CERR_THREAD:
+			return "CERR_THREAD";
 
 		default:
 			return "UNKNOWN";

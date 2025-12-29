@@ -24,6 +24,7 @@ enum cerr
 	/* Warnings */
 
 	CERR_PARAM,
+	CERR_CALL,
 
 	/* Critical */
 
@@ -36,6 +37,7 @@ enum cerr
 	CERR_MUTEX,
 	CERR_INSTANCE,
 	CERR_MALFORMED,
+	CERR_THREAD,
 };
 
 /************************************************************************************************************/
