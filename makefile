@@ -78,7 +78,7 @@ export CFLAGS
 build:
 	$(MAKE) -C cobj build
 	$(MAKE) -C ccfg build
-#	$(MAKE) -C cgui build
+	$(MAKE) -C cgui build
 	
 install:
 	$(MAKE) -C cobj install
