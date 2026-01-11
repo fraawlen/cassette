@@ -1,0 +1,50 @@
+= cshell(3)
+:doctype:   manpage
+:manmanual: Cassette Application Framework
+:mansource: Cassette
+
+== Name
+
+cshell_invoke - schedule a callback to execute on the shell UI thread
+
+== Library
+
+CGUI Library (__libcgui__, __-lcgui__)
+
+== Synopsis
+
+[source,c]
+----
+#include <cassette/cgui.h>
+
+void cshell_invoke(cshell *sh, void (*fn)(cshell *, void *), void *data);
+----
+
+== Description
+
+The *cshell_invoke*() function schedules a callback function __fn__ to be executed on the UI thread of the shell __sh__. The callback is invoked with the shell __sh__ and the user-supplied pointer __data__ as arguments. This function provides safe access to UI components from worker threads after the shell has been opened with *cshell_open*(3).
+
+Callback execution is asynchronous. This function returns after the callback has been queued, and only blocks if the internal communication channel is temporarily full, in which case it waits until space becomes available and the request can be queued.
+
+The value of __data__ is arbitrary. It is the responsibility of the caller to ensure that the object referenced by __data__ remains valid when the callback is executed.
+
+This function also requires the shell to be open and must not be called from the shell’s own UI thread. If either condition is violated, a *CERR_CALL* warning is recorded and the callback is not queued. If the callback cannot be delivered to the UI thread due to an internal failure, a critical *CERR_THREAD* error is recorded. If __fn__ is __nullptr__, the function performs no observable action.
+
+== Errors
+
+*CERR_CALL*:: The shell is not open, or the function was called from the shell’s own UI thread.
+
+*CERR_THREAD*:: An internal failure occurred while communicating with the UI thread.
+
+== Notes
+
+This function is thread-safe.
+
+== See Also
+
+*cshell*(3),
+*cshell_close*(3), 
+*cshell_error*(3), 
+*cshell_open*(3), 
+*cshell_opened*(3), 
+*cshell_self*(3), 

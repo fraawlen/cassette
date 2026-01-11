@@ -1,0 +1,45 @@
+= cshell(3)
+:doctype:   manpage
+:manmanual: Cassette Application Framework
+:mansource: Cassette
+
+== Name
+
+cshell_destroy - destroy a shell and release resources
+
+== Library
+
+CGUI Library (__libcgui__, __-lcgui__)
+
+== Synopsis
+
+[source,c]
+----
+#include <cassette/cgui.h>
+
+nullptr_t *cshell_destroy(cshell *sh);
+----
+
+== Description
+
+The *cshell_destroy*() function destroys the shell __sh__ and releases all associated resources. If __sh__ is __nullptr__, the function has no effect.
+
+The shell must be in the closed state when this function is called. If the shell is not closed, a *CERR_CALL* warning is raised and the function returns without freeing any other side-effects. To wait until a shell has fully closed, use *cshell_join*(3).
+
+This function is the only operation that remains valid after a shell has entered a critical error state and performs a best-effort attempt to release allocated resources.
+
+== Return Value
+
+To discourage accidental reuse of destroyed objects while allowing one-line cleanup idioms, *cshell_destroy*() returns __nullptr__.
+
+== Errors
+
+*CERR_CALL*:: The shell is not closed.
+
+== See Also
+
+*cshell*(3),
+*cshell_close*(3), 
+*cshell_create*(3), 
+*cshell_error*(3), 
+*cshell_join*(3), 

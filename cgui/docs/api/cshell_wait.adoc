@@ -1,0 +1,46 @@
+= cshell(3)
+:doctype:   manpage
+:manmanual: Cassette Application Framework
+:mansource: Cassette
+
+== Name
+
+cshell_wait - wait for a shell to open
+
+== Library
+
+CGUI Library (__libcgui__, __-lcgui__)
+
+== Synopsis
+
+[source,c]
+----
+#include <cassette/cgui.h>
+
+void cshell_open(cshell *sh);
+----
+
+== Description
+
+The *cshell_wait*() function blocks the calling thread until the shell __sh__ has completed at least one open attempt via *cshell_open*(3). This includes both successful openings and failures due to critical errors. If the shell has already been opened once or has already failed to open when this function is called, it returns immediately.
+
+This function is intended to act as a synchronisation point for scenarios in which multiple worker threads are created before the shell is opened. After this function returns, the caller can rely on the fact that either a background UI thread exists and calling *cshell_invoke*(3) is valid or the shell has entered a critical error state, in which case subsequent operations will fail without effect.
+
+This function must not be called from the shell’s own UI thread. If it is, a *CERR_CALL* warning is recorded and the function returns without blocking.
+
+== Notes
+
+This function is thread-safe.
+
+== Errors
+
+*CERR_CALL*:: The function was called from the shell’s own UI thread.
+
+== See Also
+
+*cshell*(3),
+*cshell_error*(3), 
+*cshell_join*(3), 
+*cshell_open*(3), 
+*cshell_opened*(3), 
+*cshell_self*(3), 

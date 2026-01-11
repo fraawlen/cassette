@@ -1,0 +1,45 @@
+= cshell(3)
+:doctype:   manpage
+:manmanual: Cassette Application Framework
+:mansource: Cassette
+
+== Name
+
+cshell_opened - retrieve the shell state
+
+== Library
+
+CGUI Library (__libcgui__, __-lcgui__)
+
+== Synopsis
+
+[source,c]
+----
+#include <cassette/cgui.h>
+
+bool cshell_opened(const cshell *sh);
+----
+
+== Description
+
+The *cshell_opened*() function reports whether the shell __sh__ is open and ready to accept backend events and invocations submitted via *cshell_invoke*(3).
+
+== Return Value
+
+Returns __true__ if the shell is open. Otherwise, returns __false__, including when __sh__ is __nullptr__, when the shell is in a transitional state (opening or closing), or when the shell is in a critical error state.
+
+== Notes
+
+This function is thread-safe.
+
+== See Also
+
+*cshell*(3),
+*cshell_close*(3), 
+*cshell_error*(3), 
+*cshell_join*(3), 
+*cshell_on_close*(3), 
+*cshell_on_open*(3), 
+*cshell_open*(3), 
+*cshell_self*(3), 
+*cshell_wait*(3), 

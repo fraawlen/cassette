@@ -1,0 +1,45 @@
+= cshell(3)
+:doctype:   manpage
+:manmanual: Cassette Application Framework
+:mansource: Cassette
+
+== Name
+
+cshell_self - test whether the calling thread is the shell UI thread
+
+== Library
+
+CGUI Library (__libcgui__, __-lcgui__)
+
+== Synopsis
+
+[source,c]
+----
+#include <cassette/cgui.h>
+
+bool cshell_self(const cshell *sh);
+----
+
+== Description
+
+The *cshell_self*() function tests whether the calling thread is the background UI thread associated with the shell __sh__. This may be used to guard code paths that must only execute inside or outside the UI thread.
+
+== Return Value
+
+Returns __true__ if the calling thread is the shell’s UI thread. Otherwise, returns __false__, including when __sh__ is __nullptr__ or when the shell is in a critical error state.
+
+== Notes
+
+This function is thread-safe.
+
+This function may return __true__ while *cshell_opened*(3) returns __false__ if a closure request, initiated by *cshell_close*(3) or by a backend event, has already been processed and the UI thread is currently flushing queued invocations submitted via *cshell_invoke*(3) and executing the callback registered with *cshell_on_close*(3).
+
+== See Also
+
+*cshell*(3),
+*cshell_close*(3),
+*cshell_invoke*(3), 
+*cshell_join*(3), 
+*cshell_open*(3), 
+*cshell_opened*(3), 
+*cshell_wait*(3), 

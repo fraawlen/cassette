@@ -1,0 +1,42 @@
+= cshell(3)
+:doctype:   manpage
+:manmanual: Cassette Application Framework
+:mansource: Cassette
+
+== Name
+
+cshell_error - retrieve the last registered error
+
+== Library
+
+CGUI Library (__libcgui__, __-lcgui__)
+
+== Synopsis
+
+[source,c]
+----
+#include <cassette/cgui.h>
+
+enum cerr cshell_error(const cshell *sh);
+----
+
+== Description
+
+The *cshell_error*() function returns the current error state associated with the shell __sh__.
+
+Non-critical errors (warnings) may be cleared by calling *cshell_clear_warnings*(3). Critical errors cannot be cleared and place the shell into a permanently failed state, in which most operations return immediately without side effects, with the exception of *cshell_destroy*(3).
+
+== Return Value
+
+Returns the current error code of the shell. If __sh__ is __nullptr__, this function exclusively returns *CERR_INVALID*.
+
+== Notes
+
+This function is thread-safe.
+
+== See Also
+
+*cerr*(3),
+*cshell*(3),
+*cshell_clear_warnings*(3), 
+*cshell_destroy*(3), 

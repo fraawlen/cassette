@@ -1,0 +1,74 @@
+= cshell(3)
+:doctype:   manpage
+:manmanual: Cassette Application Framework
+:mansource: Cassette
+
+== Name
+
+cshell - top-level UI window
+
+== Library
+
+CGUI Library (__libcgui__, __-lcgui__)
+
+== Synopsis
+
+[source,c]
+----
+#include <cassette/cgui.h>
+
+typedef struct cshell cshell;
+----
+
+== Description
+
+A __cshell__ is an opaque handle representing a top-level window displayed on the end-user’s screen. It abstracts the underlying display server backend (X11 or Wayland) and provides a uniform interface for constructing and controlling GUI applications.
+
+Each shell spins a dedicated UI thread and a backend connection to process display events. The application’s main thread therefore acts as a worker thread. As a result, shells are inherently multithreaded. Since most of the Cassette API is not thread-safe, only the following shell functions are guaranteed to be thread-safe and may be called from non-UI threads: *cshell_close*(3), *cshell_invoke*(3), *cshell_join*(3), *cshell_open*(3), *cshell_wait*(3), *cshell_error*(3), *cshell_opened*(3), and *cshell_self*(3). 
+
+During a shell's lifecycle, the UI thread is created only after the shell is opened, and is terminated only after the shell has closed, at which point the backend connection is also closed. While the shell is open, all thread-unsafe operations on the shell and its child elements must be performed on the UI thread. To do so, worker threads may schedule such operations by using *cshell_invoke*(3). Likewise, all callback functions registered via *cshell_on_*() methods are always executed on the UI thread.
+
+When the shell is not open, no background UI thread exists, and all operations are executed in the calling thread. If multiple worker threads need to access the shell while it is closed, the shell owner is then responsible for synchronising all accesses.
+
+If, during the lifetime of a shell, a function fails with a critical error (reported by *cshell_error*(3)), all subsequent function calls on that shell return immediately without side effects, with the exception of *cshell_destroy*(3), which performs a best-effort attempt to tear down the shell and release allocated resources.
+
+== Examples
+
+[source,c]
+----
+#include <cassette/cgui.h>
+
+int
+main(void)
+{
+	cshell *sh = cshell_create();
+
+		/* single-threaded environment */
+
+	cshell_open(sh);
+	
+		/* multi-threaded environment */
+
+	cshell_join(sh);
+
+		/* single-threaded environment */
+
+	cshell_destroy(sh);
+}
+----
+
+== See Also
+
+*cshell_clear_warnings*(3), 
+*cshell_close*(3), 
+*cshell_create*(3), 
+*cshell_destroy*(3), 
+*cshell_error*(3), 
+*cshell_invoke*(3), 
+*cshell_join*(3), 
+*cshell_on_close*(3), 
+*cshell_on_open*(3), 
+*cshell_open*(3), 
+*cshell_opened*(3), 
+*cshell_self*(3), 
+*cshell_wait*(3), 

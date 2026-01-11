@@ -1,0 +1,37 @@
+= cshell(3)
+:doctype:   manpage
+:manmanual: Cassette Application Framework
+:mansource: Cassette
+
+== Name
+
+cshell_create - create a new shell
+
+== Library
+
+CGUI Library (__libcgui__, __-lcgui__)
+
+== Synopsis
+
+[source,c]
+----
+#include <cassette/cgui.h>
+
+[[nodiscard]] cshell *cshell_create(void);
+----
+
+== Description
+
+The *cshell_create*() function initialises and returns a new, blank __cshell__ object. The shell is created in an initially closed state and has no associated backend connection or UI thread until it is opened with *cshell_open*(3).
+
+== Return Value
+
+On success, *cshell_create*() returns a pointer to a newly allocated __cshell__ instance. On failure, it returns __nullptr__. The caller is responsible for releasing the created object by calling *cshell_destroy*(3).
+
+== See Also
+
+*cshell*(3),
+*cshell_close*(3),
+*cshell_destroy*(3),
+*cshell_error*(3),
+*cshell_open*(3), 

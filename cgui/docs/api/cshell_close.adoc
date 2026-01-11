@@ -1,0 +1,46 @@
+= cshell(3)
+:doctype:   manpage
+:manmanual: Cassette Application Framework
+:mansource: Cassette
+
+== Name
+
+cshell_close - request shutdown of a shell and its UI thread
+
+== Library
+
+CGUI Library (__libcgui__, __-lcgui__)
+
+== Synopsis
+
+[source,c]
+----
+#include <cassette/cgui.h>
+
+void cshell_close(cshell *sh);
+----
+
+== Description
+
+The *cshell_close*() function requests shutdown of the shell __sh__. It signals the shell’s UI thread to stop processing backend events, flush any remaining queued invocations, begin teardown of backend resources, and finally transition the shell to the closed state.
+
+Shutdown is asynchronous. This function only requests closure and returns immediately. To wait until the shell has fully closed and all backend-related resources have been released, use *cshell_join*(3).
+
+This function expects the shell to be open when called. If the shell is not open, a *CERR_CALL* warning is recorded and the shell state is not changed.
+
+== Errors
+
+*CERR_CALL*:: The shell is not open.
+
+== Notes
+
+This function is thread-safe and may be called from any thread, including the shell’s own UI thread.
+
+== See Also
+
+*cshell*(3),
+*cshell_error*(3),
+*cshell_join*(3), 
+*cshell_on_close*(3), 
+*cshell_open*(3),
+*cshell_opened*(3),

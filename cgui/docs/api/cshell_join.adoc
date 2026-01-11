@@ -1,0 +1,49 @@
+= cshell(3)
+:doctype:   manpage
+:manmanual: Cassette Application Framework
+:mansource: Cassette
+
+== Name
+
+cshell_join - wait for a shell to close
+
+== Library
+
+CGUI Library (__libcgui__, __-lcgui__)
+
+== Synopsis
+
+[source,c]
+----
+#include <cassette/cgui.h>
+
+void cshell_join(cshell *sh);
+----
+
+== Description
+
+The *cshell_join*() function blocks the calling thread until the shell __sh__ has fully closed and the UI thread has terminated. This includes completion of backend teardown and execution of any remaining callbacks registered via *cshell_on_close*(3) or *cshell_invoke*(3). If the shell is already closed when this function is called, it returns immediately.
+
+This function is intended to act as a synchronisation point after which exclusive access to the shell and its child components is returned to the caller. After this point, non-thread-safe operations may be performed safely.
+
+This function must not be called from the shell’s own UI thread. If it is, a *CERR_CALL* warning is recorded and the function returns without blocking.
+
+== Notes
+
+This function is thread-safe.
+
+This function is analogous to *pthread_join*(3) as defined by POSIX, the main difference being that multiple threads may join the same shell.
+
+== Errors
+
+*CERR_CALL*:: The function was called from the shell’s own UI thread.
+
+== See Also
+
+*cshell*(3),
+*cshell_close*(3), 
+*cshell_destroy*(3), 
+*cshell_error*(3), 
+*cshell_invoke*(3), 
+*cshell_on_close*(3), 
+*cshell_opened*(3), 

@@ -1,0 +1,37 @@
+= cshell(3)
+:doctype:   manpage
+:manmanual: Cassette Application Framework
+:mansource: Cassette
+
+== Name
+
+cshell_on_close - register a shell callback
+
+== Library
+
+CGUI Library (__libcgui__, __-lcgui__)
+
+== Synopsis
+
+[source,c]
+----
+#include <cassette/cgui.h>
+
+void cshell_on_close(cshell *sh, void (*fn)(cshell *, void *), void *data);
+----
+
+== Description
+
+The *cshell_on_close*() function registers a callback function __fn__ to be executed on the shell __sh__ UI thread after a closure request has been received and after all remaining queued invocations have been flushed, right before the UI thread is torn down. The callback is invoked with the shell __sh__ and the user-supplied pointer __data__ as arguments.
+
+The value of __data__ is arbitrary. It is the responsibility of the caller to ensure that the object referenced by __data__ remains valid when the callback is executed.
+
+Calling this function with __fn__ set to __nullptr__ removes any previously registered close callback.
+
+== See Also
+
+*cshell*(3),
+*cshell_close*(3), 
+*cshell_invoke*(3), 
+*cshell_join*(3), 
+*cshell_on_open*(3), 

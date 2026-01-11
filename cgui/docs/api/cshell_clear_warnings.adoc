@@ -1,0 +1,38 @@
+= cshell(3)
+:doctype:   manpage
+:manmanual: Cassette Application Framework
+:mansource: Cassette
+
+== Name
+
+cshell_clear_warnings - clear non-critical error conditions
+
+== Library
+
+CGUI Library (__libcgui__, __-lcgui__)
+
+== Synopsis
+
+[source,c]
+----
+#include <cassette/cgui.h>
+
+void cshell_clear_warnings(cshell *sh);
+----
+
+== Description
+
+The *cshell_clear_warnings*() function removes any non-critical error conditions recorded during the lifetime of the shell __sh__ and resets the error state reported by *cshell_error*(3) to *CERR_NONE*.
+
+Critical errors cannot be cleared however. If a critical error has occurred, the shell can only be cleaned-up with *cshell_destroy*(3).
+
+== Notes
+
+This function is thread-safe.
+
+== See Also
+
+*cerr*(3),
+*cshell*(3),
+*cshell_destroy*(3), 
+*cshell_error*(3), 

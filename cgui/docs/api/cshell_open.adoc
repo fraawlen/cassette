@@ -1,0 +1,53 @@
+= cshell(3)
+:doctype:   manpage
+:manmanual: Cassette Application Framework
+:mansource: Cassette
+
+== Name
+
+cshell_open - open a backend window and start the UI thread
+
+== Library
+
+CGUI Library (__libcgui__, __-lcgui__)
+
+== Synopsis
+
+[source,c]
+----
+#include <cassette/cgui.h>
+
+void cshell_open(cshell *sh);
+----
+
+== Description
+
+The *cshell_open*() function connects the shell __sh__ to the display server, creates and maps a window on the screen, loads the GUI configuration and theme, then starts a dedicated UI thread with all of the required communication infrastructure for multithreaded operation. After all internal initialisation steps have completed successfully, the shell is in an open state and begins processing backend events and queued invocations.
+
+This function requires the shell to be closed when called. If the shell is already open, opening, or closing, a *CERR_CALL* warning is recorded and the function returns without changing the shell's state.
+
+If a failure occurs while opening the shell, a critical *CERR_THREAD* error is recorded and the function returns after making a best-effort attempt to tear down any backend resources that were already initialised.
+
+When the UI thread has been fully initialised and the internal state flipped to open, the callback registered via *cshell_on_open*(3), if any, is invoked on the UI thread before any backend events or queued invocations are processed.
+
+After it has been opened, and until it is closed, all non-thread-safe operations on the shell and its child components must be performed on the UI thread. Worker threads may schedule such operations asynchronously using *cshell_invoke*(3).
+
+== Errors
+
+*CERR_CALL*:: The shell is not closed, or the function was called from the shell’s own UI thread.
+
+*CERR_THREAD*:: An internal failure occurred while creating communication channels or the UI thread.
+
+== Notes
+
+This function is thread-safe.
+
+== See Also
+
+*cshell*(3),
+*cshell_close*(3), 
+*cshell_error*(3), 
+*cshell_invoke*(3), 
+*cshell_on_open*(3), 
+*cshell_opened*(3), 
+*cshell_wait*(3), 
