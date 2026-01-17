@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <cassette/cobj.h>
 #include <cassette/cgui.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -14,12 +13,15 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] bool
+x11_init(struct cx11 *x, int *fd);
+
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-shell_set_error(cshell *sh, enum cerr code);
+x11_kill(struct cx11 *x);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] enum cerr
-shell_error(const cshell *sh);
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] struct cevent
+x11_event(struct cx11 *x);

@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "display.h"
 #include "shell.h"
 
 /************************************************************************************************************/
@@ -50,20 +51,19 @@ struct cshell
 
 	/* callbacks functions */
 
-	void (*fn_destroy)(cshell *, void *);
 	void (*fn_close)(cshell *, void *);
 	void (*fn_open)(cshell *, void *);
 
 	/* callbacks data */
 
-	void *data_destroy;
 	void *data_close;
 	void *data_open;
 
 	/* contents */
 
+	cdisplay dp;
+
 	// TODO config
-	// TODO backend
 	// TODO layouts
 };
 
@@ -79,11 +79,12 @@ struct call
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void  dispatch (cshell *);
-static void  dummy    (cshell *, void *);
-static bool  flush    (cshell *);
-static bool  run      (cshell *);
-static void *thread   (void   *);
+static void  dispatch_event  (cshell *);
+static void  dispatch_invoke (cshell *);
+static void  dummy           (cshell *, void *);
+static bool  flush           (cshell *);
+static bool  run             (cshell *);
+static void *thread          (void   *);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -158,12 +159,11 @@ cshell_create(void)
 	atomic_init(&sh->err, CERR_NONE);
 	atomic_init(&sh->state, INIT);
 
-	sh->data_destroy = nullptr;
-	sh->data_close   = nullptr;
-	sh->data_open    = nullptr;
-	sh->fn_destroy   = dummy;
-	sh->fn_close     = dummy;
-	sh->fn_open      = dummy;
+	sh->data_close = nullptr;
+	sh->data_open  = nullptr;
+	sh->fn_close   = dummy;
+	sh->fn_open    = dummy;
+	sh->dp         = display_none;
 
 	return sh;
 
@@ -187,7 +187,6 @@ cshell_destroy(cshell *sh)
 		if (atomic_load(&sh->state) == CLOSED 
 		 || atomic_load(&sh->state) == INIT)
 		{
-			sh->fn_destroy(sh, sh->data_destroy);
 			pthread_mutex_destroy(&sh->mutex);
 			pthread_cond_destroy(&sh->cond);
 			free(sh);
@@ -199,6 +198,16 @@ cshell_destroy(cshell *sh)
 	}
 
 	return nullptr;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+const cdisplay *
+cshell_display(const cshell *sh)
+{
+	GUARD(sh, &display_none);
+
+	return &sh->dp;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -278,17 +287,6 @@ cshell_on_close(cshell *sh, void (*fn)(cshell *, void *), void *data)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cshell_on_destroy(cshell *sh, void (*fn)(cshell *, void *), void *data)
-{
-	GUARD(sh);
-
-	sh->fn_destroy   = fn ? fn   : dummy;
-	sh->data_destroy = fn ? data : nullptr;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
 cshell_on_open(cshell *sh, void (*fn)(cshell *, void *), void *data)
 {
 	GUARD(sh);
@@ -315,6 +313,11 @@ cshell_open(cshell *sh)
 		goto fail_open;
 	}
 
+	if (!display_init(&sh->dp, CDISPLAY_ANY))
+	{
+		goto fail_disp;
+	}
+
 	if (pipe(sh->fd_call) != 0)
 	{
 		goto fail_pipe;
@@ -339,7 +342,7 @@ cshell_open(cshell *sh)
 	}
 
 	/* error cleanup */
-
+	
 fail_flags:
 	close(sh->fd_poke[0]);
 	close(sh->fd_poke[1]);
@@ -347,8 +350,11 @@ fail_pipe2:
 	close(sh->fd_call[0]);
 	close(sh->fd_call[1]);
 fail_pipe:
-	atomic_store(&sh->state, CLOSED);
 	shell_set_error(sh, CERR_THREAD);
+	display_kill(&sh->dp);
+fail_disp:
+	shell_set_error(sh, CERR_DISPLAY);
+	atomic_store(&sh->state, CLOSED);
 fail_open:
 	shell_set_error(sh, CERR_CALL);
 
@@ -389,7 +395,7 @@ cshell_wait(cshell *sh)
 
 	pthread_mutex_lock(&sh->mutex);
 
-	while (atomic_load(&sh->state) == INIT && !cerr_critical(shell_error(sh)))
+	while (atomic_load(&sh->state) == INIT)
 	{
 		pthread_cond_wait(&sh->cond, &sh->mutex);
 	}
@@ -428,8 +434,44 @@ shell_set_error(cshell *sh, enum cerr code)
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
+void
+dispatch_event(cshell *sh)
+{
+	struct cevent ev;
+
+	switch ((ev = display_event(&sh->dp)).type)
+	{
+		case CEVENT_FAIL:
+			printf("display connection lost\n");
+			shell_set_error(sh, CERR_DISPLAY);
+			break;
+
+		case CEVENT_BUTTON_PRESS:
+			printf("shell clicked (id = %i, x = %i, y = %i)\n", ev.button_id, ev.button_x, ev.button_y);
+			break;
+
+		case CEVENT_BUTTON_RELEASE:
+			printf("shell release (id = %i, x = %i, y = %i)\n", ev.button_id, ev.button_x, ev.button_y);
+			break;
+
+		case CEVENT_REDRAW:
+			printf("shell redrawn\n");
+			break;
+
+		case CEVENT_UNKNOWN:
+			printf("unhandled display event\n");
+			break;
+
+		case CEVENT_NONE:
+		default:
+			break;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 static void
-dispatch(cshell *sh)
+dispatch_invoke(cshell *sh)
 {
 	struct call cl;
 
@@ -482,15 +524,15 @@ flush(cshell *sh)
 		default:
 			if (pfd.revents & POLLIN)
 			{
-				dispatch(sh);
-			}
+				dispatch_invoke(sh);
+				return true;
+			}	
 			else
 			{
+				shell_set_error(sh, CERR_THREAD);
 				return false;
 			}
 	}
-
-	return !cerr_critical(shell_error(sh));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -498,15 +540,16 @@ flush(cshell *sh)
 static bool
 run(cshell *sh)
 {
-	struct pollfd pfd[2] = 
+	struct pollfd pfd[3] = 
 	{
 		{ sh->fd_poke[0], POLLIN, 0 },
 		{ sh->fd_call[0], POLLIN, 0 },
+		{ sh->dp.fd,      POLLIN, 0 },
 	};
 
 	/* poll events */
 
-	if (poll(pfd, 2, -1) < 0)
+	if (poll(pfd, 3, -1) < 0)
 	{
 		if (errno != EINTR)
 		{
@@ -525,14 +568,22 @@ run(cshell *sh)
 
 	else if (pfd[1].revents & POLLIN)
 	{
-		dispatch(sh);
+		dispatch_invoke(sh);
 	}
 
-	/* backend events */
+	/* display events */
 
-	// TODO
+	else if (pfd[2].revents & POLLIN)
+	{
+		dispatch_event(sh);
+	}
 
 	/* end */
+
+	else
+	{
+		shell_set_error(sh, CERR_THREAD);
+	}
 
 	return !cerr_critical(shell_error(sh));	
 }
@@ -571,6 +622,7 @@ thread(void *arg)
 	close(sh->fd_call[1]);
 	close(sh->fd_poke[0]);
 	close(sh->fd_poke[1]);
+	display_kill(&sh->dp);
 	atomic_store(&sh->state, CLOSED);
 	pthread_cond_broadcast(&sh->cond);
 	pthread_mutex_unlock(&sh->mutex);

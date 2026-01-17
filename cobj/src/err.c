@@ -62,26 +62,14 @@ cerr_name(enum cerr code)
 		case CERR_MEMORY:
 			return "CERR_MEMORY";
 
-		case CERR_CONFIG:
-			return "CERR_CONFIG";
-
-		case CERR_BACKEND:
-			return "CERR_BACKEND";
-
-		case CERR_CAIRO:
-			return "CERR_CAIRO";
-
-		case CERR_MUTEX:
-			return "CERR_MUTEX";
-
-		case CERR_INSTANCE:
-			return "CERR_INSTANCE";
-
-		case CERR_MALFORMED:
-			return "CERR_MALFORMED";
-
 		case CERR_THREAD:
 			return "CERR_THREAD";
+
+		case CERR_DISPLAY:
+			return "CERR_DISPLAY";
+
+		case CERR_CONFIG:
+			return "CERR_CONFIG";
 
 		default:
 			return "UNKNOWN";

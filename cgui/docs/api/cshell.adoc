@@ -53,7 +53,7 @@ main(void)
 
 		/* single-threaded environment */
 
-	cshell_destroy(sh);
+	sh = cshell_destroy(sh);
 }
 ----
 

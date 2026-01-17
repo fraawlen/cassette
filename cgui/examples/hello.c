@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdio.h>
+#include <unistd.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -15,6 +16,7 @@
 static void  task   (cshell *, void *);
 static void  task2  (cshell *, void *);
 static void  task3  (cshell *, void *);
+static void  task4  (cshell *, void *);
 static void *thread (void   *);
 
 /************************************************************************************************************/
@@ -27,9 +29,9 @@ static sem_t sem;
 /* MAIN *****************************************************************************************************/
 /************************************************************************************************************/
 
- int
- main(int argc, char **argv)
- {
+int
+main(int argc, char **argv)
+{
 	pthread_t tr;
 	cshell *sh;
 
@@ -45,7 +47,7 @@ static sem_t sem;
 	/* Setup */
 
 	cshell_on_close(sh, task2, nullptr);
-	cshell_on_open(sh,  task2, nullptr);
+	cshell_on_open(sh,  task4, nullptr);
 	cshell_open(sh);
 
 	/* Task */
@@ -54,13 +56,16 @@ static sem_t sem;
 	{
 		sem_init(&sem, 0, 0);
 		cshell_invoke(sh, task, &i);
-		sem_wait(&sem);
-		sem_destroy(&sem);
+		if (cshell_error(sh) == CERR_NONE)
+		{
+			sem_wait(&sem);
+			sem_destroy(&sem);
+		}
 	}
 
 	/* End & cleanup */
 
-	cshell_close(sh);
+
 	cshell_join(sh);
 	pthread_join(tr, nullptr);
 
@@ -72,7 +77,7 @@ static sem_t sem;
 	cshell_destroy(sh);
 
 	return 0;
- }
+}
 
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
@@ -94,8 +99,9 @@ static void
 task2(cshell *sh, void *data)
 {
 	(void)data;
+	(void)sh;
 
-	printf("shell %s\n", cshell_opened(sh) ? "opened" : "closed");
+	printf("shell closed\n");
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -107,6 +113,16 @@ task3(cshell *sh, void *data)
 	(void)sh;
 
 	printf("executed special task\n");
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+task4(cshell *sh, void *data)
+{
+	(void)data;
+
+	printf("opened shell on %s\n", cdisplay_server(cshell_display(sh)) == CDISPLAY_X11 ? "x11" : "wayland");
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -123,7 +139,6 @@ thread(void *arg)
 	cshell_invoke(sh, task3, nullptr);
 	cshell_invoke(sh, task3, nullptr);
 	cshell_join(sh);
-	cshell_invoke(sh, task3, nullptr); /* will not work and cause a CERR_CALL warning */
 
 	printf("exiting secondary work thread\n");
 

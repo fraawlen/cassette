@@ -32,6 +32,15 @@ This function is the only operation that remains valid after a shell has entered
 
 To discourage accidental reuse of destroyed objects while allowing one-line cleanup idioms, *cshell_destroy*() returns __nullptr__.
 
+== Examples
+
+[source,c]
+----
+cshell *sh = cshell_create();
+
+sh = cshell_destroy(sh);
+----
+
 == Errors
 
 *CERR_CALL*:: The shell is not closed.
