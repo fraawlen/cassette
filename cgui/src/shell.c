@@ -79,7 +79,7 @@ struct call
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void  dispatch_event  (cshell *);
+static bool  dispatch_event  (cshell *);
 static void  dispatch_invoke (cshell *);
 static void  dummy           (cshell *, void *);
 static bool  flush           (cshell *);
@@ -434,18 +434,13 @@ shell_set_error(cshell *sh, enum cerr code)
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-void
+static bool
 dispatch_event(cshell *sh)
 {
 	struct cevent ev;
-
+	
 	switch ((ev = display_event(&sh->dp)).type)
 	{
-		case CEVENT_FAIL:
-			printf("display connection lost\n");
-			shell_set_error(sh, CERR_DISPLAY);
-			break;
-
 		case CEVENT_BUTTON_PRESS:
 			printf("shell clicked (id = %i, x = %i, y = %i)\n", ev.button_id, ev.button_x, ev.button_y);
 			break;
@@ -459,13 +454,26 @@ dispatch_event(cshell *sh)
 			break;
 
 		case CEVENT_UNKNOWN:
-			printf("unhandled display event\n");
+			//printf("unhandled display event\n");
 			break;
 
+		case CEVENT_CLOSE:
+			cshell_close(sh);
+			break;
+
+		case CEVENT_FAIL:
+			printf("display connection lost\n");
+			shell_set_error(sh, CERR_DISPLAY);
+			return false;
+
 		case CEVENT_NONE:
+			return false;
+
 		default:
 			break;
 	}
+
+	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -575,7 +583,7 @@ run(cshell *sh)
 
 	else if (pfd[2].revents & POLLIN)
 	{
-		dispatch_event(sh);
+		while (dispatch_event(sh)) {};
 	}
 
 	/* end */

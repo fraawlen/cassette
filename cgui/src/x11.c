@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <xcb/xcb.h>
 
 #include "x11.h"
@@ -15,7 +16,16 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static bool xfail (struct cx11 *, xcb_void_cookie_t);
+static struct cevent ev_button  (xcb_button_press_event_t   *, bool);
+static struct cevent ev_expose  (xcb_expose_event_t         *);
+static struct cevent ev_message (xcb_client_message_event_t *, struct cx11 *);
+static struct cevent ev_unknown (xcb_generic_event_t        *);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static xcb_atom_t atom     (struct cx11 *, const char *);
+static bool       fail     (struct cx11 *, xcb_void_cookie_t);
+static bool       prop_set (struct cx11 *, xcb_atom_t, xcb_atom_t, uint32_t, const void *, bool);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -24,39 +34,42 @@ static bool xfail (struct cx11 *, xcb_void_cookie_t);
 struct cevent
 x11_event(struct cx11 *x)
 {
-	struct cevent cev = cevent_blank;
 	xcb_generic_event_t *xev; 
+	struct cevent cev;
+
+	/* grab new event */
 
 	if (!(xev = xcb_poll_for_event(x->connection)))
 	{
-		cev.type = CEVENT_FAIL;
-		return cev;
+		return xcb_connection_has_error(x->connection) ? cevent_error : cevent_blank;
 	}
+
+	/* dispatch event */
 
 	switch (xev->response_type & ~0x80)
 	{
 		case XCB_BUTTON_PRESS:
-			cev.type      = CEVENT_BUTTON_PRESS;
-			cev.button_x  = ((xcb_button_press_event_t*)xev)->event_x;
-			cev.button_y  = ((xcb_button_press_event_t*)xev)->event_y;
-			cev.button_id = ((xcb_button_press_event_t*)xev)->detail;
+			cev = ev_button((xcb_button_press_event_t*)xev, true);
 			break;
 
 		case XCB_BUTTON_RELEASE:
-			cev.type      = CEVENT_BUTTON_RELEASE;
-			cev.button_x  = ((xcb_button_press_event_t*)xev)->event_x;
-			cev.button_y  = ((xcb_button_press_event_t*)xev)->event_y;
-			cev.button_id = ((xcb_button_press_event_t*)xev)->detail;
+			cev = ev_button((xcb_button_press_event_t*)xev, false);
+			break;
+
+		case XCB_CLIENT_MESSAGE:
+			cev = ev_message((xcb_client_message_event_t*)xev, x);
 			break;
 
 		case XCB_EXPOSE:
-			cev.type = CEVENT_REDRAW;
+			cev = ev_expose((xcb_expose_event_t*)xev);
 			break;
 
 		default:
-			cev.type = CEVENT_UNKNOWN;
+			cev = ev_unknown(xev);
 			break;
 	}
+
+	/* end */
 
 	xcb_flush(x->connection);
 	free(xev);
@@ -84,12 +97,14 @@ x11_init(struct cx11 *x, int *fd)
 		  XCB_GRAVITY_NORTH_WEST,
 		  XCB_EVENT_MASK_EXPOSURE
 		| XCB_EVENT_MASK_BUTTON_PRESS
-		| XCB_EVENT_MASK_BUTTON_RELEASE,
+		| XCB_EVENT_MASK_BUTTON_RELEASE
+		| XCB_EVENT_MASK_PROPERTY_CHANGE
+		| XCB_EVENT_MASK_STRUCTURE_NOTIFY,
 	};
 
-	/* setup */
+	/* base setup */
 
-	if (!(x->connection = xcb_connect(nullptr, nullptr)))
+	if (xcb_connection_has_error(x->connection = xcb_connect(nullptr, nullptr)))
 	{
 		goto fail_con;
 	}
@@ -98,6 +113,8 @@ x11_init(struct cx11 *x, int *fd)
 	{
 		goto fail_win;
 	}
+
+	/* window setup */
 
 	x->window = xcb_generate_id(x->connection),
 	ck = xcb_create_window_checked(
@@ -111,18 +128,30 @@ x11_init(struct cx11 *x, int *fd)
 		mask_opt,
 		mask_val);
 
-	if (xfail(x, ck))
+	if (fail(x, ck))
 	{
 		goto fail_win;
 	}
 
-	ck = xcb_map_window_checked(x->connection, x->window);
-	if (xfail(x, ck))
+	/* ICCCM setup */
+
+	x->atom_utf8     = atom(x, "UTF8_STRING");
+	x->atom_time     = atom(x, "TIMESTAMP");
+	x->atom_protocol = atom(x, "WM_PROTOCOLS");
+	x->atom_close    = atom(x, "WM_DELETE_WINDOW");
+	x->atom_focus    = atom(x, "WM_TAKE_FOCUS");
+	x->atom_ping     = atom(x, "_NET_WM_PING");
+
+	prop_set(x, x->atom_protocol, XCB_ATOM_ATOM, 1, &x->atom_close, true);
+	prop_set(x, x->atom_protocol, XCB_ATOM_ATOM, 1, &x->atom_focus, false);
+	prop_set(x, x->atom_protocol, XCB_ATOM_ATOM, 1, &x->atom_ping,  false);
+
+	/* end */
+
+	if (fail(x, xcb_map_window_checked(x->connection, x->window)))
 	{
 		goto fail_map;
 	}
-
-	/* end */
 
 	xcb_flush(x->connection);
 
@@ -154,8 +183,98 @@ x11_kill(struct cx11 *x)
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
+static xcb_atom_t
+atom(struct cx11 *x, const char *name)
+{
+	xcb_intern_atom_cookie_t ck;
+	xcb_intern_atom_reply_t *rp;
+	xcb_atom_t at;
+
+	ck = xcb_intern_atom(x->connection, 0, strlen(name), name);
+	rp = xcb_intern_atom_reply(x->connection, ck, nullptr);
+	if (!rp)
+	{
+		return 0;
+	}
+
+	at = rp->atom;
+	free(rp);
+
+	return at;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static struct cevent
+ev_button(xcb_button_press_event_t *xev, bool press)
+{
+	struct cevent cev =
+	{
+		.type      = press ? CEVENT_BUTTON_PRESS : CEVENT_BUTTON_RELEASE,
+		.button_x  = xev->event_x,
+		.button_y  = xev->event_y,
+		.button_id = xev->detail,
+	};
+
+	return cev;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static struct cevent
+ev_expose(xcb_expose_event_t *xev)
+{
+	(void)xev;
+
+	struct cevent cev = { .type = CEVENT_REDRAW };
+
+	return cev;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static struct cevent
+ev_message(xcb_client_message_event_t *xev, struct cx11 *x)
+{
+	xcb_atom_t msg = xev->data.data32[0];
+	struct cevent cev = cevent_unknown;
+
+	if (xev->type != x->atom_protocol)
+	{
+		return cev;
+	}
+	
+	if (msg == x->atom_close)
+	{
+		cev.type = CEVENT_CLOSE;
+	}
+	else if (msg == x->atom_focus)
+	{
+		xcb_set_input_focus(x->connection, XCB_INPUT_FOCUS_PARENT, xev->window, XCB_CURRENT_TIME);
+	}
+	else if (msg == x->atom_ping)
+	{
+		xev->window = x->screen->root;
+		xcb_send_event(x->connection, 0, x->screen->root, XCB_EVENT_MASK_NO_EVENT, (char*)xev);
+	}
+
+	return cev;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static struct cevent
+ev_unknown(xcb_generic_event_t *xev)
+{
+	(void)xev;
+
+	return cevent_unknown;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 static bool
-xfail(struct cx11 *x, xcb_void_cookie_t ck)
+fail(struct cx11 *x, xcb_void_cookie_t ck)
 {
 	xcb_generic_error_t *err;
 
@@ -166,4 +285,21 @@ xfail(struct cx11 *x, xcb_void_cookie_t ck)
 	}
 
 	return false;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static bool
+prop_set(struct cx11 *x, xcb_atom_t prop, xcb_atom_t type, uint32_t n, const void *data, bool head)
+{
+	return fail(x,
+		xcb_change_property_checked(
+			x->connection,
+			head ? XCB_PROP_MODE_REPLACE : XCB_PROP_MODE_APPEND,
+			x->window,
+			prop,
+			type,
+			type == x->atom_utf8 || type == x->atom_time || type == XCB_ATOM_STRING ? 8 : 32,
+			n,
+			data));
 }

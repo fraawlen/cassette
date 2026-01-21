@@ -21,6 +21,7 @@ enum cevent_type
 {
 	CEVENT_NONE = 0,
 	CEVENT_FAIL,
+	CEVENT_CLOSE,
 	CEVENT_REDRAW,
 	CEVENT_BUTTON_PRESS,
 	CEVENT_BUTTON_RELEASE,
@@ -43,7 +44,8 @@ struct cevent
 		};
 
 		/* CEVENT_NONE    */
-		/* CEVENT KILL    */
+		/* CEVENT_FAIL    */
+		/* CEVENT_CLOSE   */
 		/* CEVENT_REDRAW  */
 		/* CEVENT_UNKNOWN */
 
@@ -55,7 +57,9 @@ struct cevent
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-constexpr struct cevent cevent_blank = {.type = CEVENT_NONE};
+constexpr struct cevent cevent_blank   = { .type = CEVENT_NONE    };
+constexpr struct cevent cevent_error   = { .type = CEVENT_FAIL    };
+constexpr struct cevent cevent_unknown = { .type = CEVENT_UNKNOWN };
 
 /************************************************************************************************************/
 /************************************************************************************************************/

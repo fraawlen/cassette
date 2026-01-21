@@ -19,6 +19,13 @@ struct cx11
 	xcb_connection_t *connection;
 	xcb_screen_t *screen;
 	xcb_window_t window;
+
+	xcb_atom_t atom_protocol;
+	xcb_atom_t atom_close;
+	xcb_atom_t atom_focus;
+	xcb_atom_t atom_ping;
+	xcb_atom_t atom_utf8;
+	xcb_atom_t atom_time;
 };
 
 /************************************************************************************************************/

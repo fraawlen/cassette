@@ -16,6 +16,7 @@ DIR_VIM_FTDETECT := /usr/share/vim/vimfiles/ftdetect
 DIR_DEMOS := examples
 DIR_SRC   := src
 DIR_INC   := include
+DIR_API   := docs/api
 
 #############################################################################################################
 # BUILD DIRS ################################################################################################
@@ -25,6 +26,7 @@ DIR_BUILD := build
 DIR_LIB   := $(DIR_BUILD)/lib
 DIR_OBJ   := $(DIR_BUILD)/obj
 DIR_BIN   := $(DIR_BUILD)/bin
+DIR_DOC   := $(DIR_BUILD)/doc
 
 #############################################################################################################
 # PARAMS ####################################################################################################
@@ -68,6 +70,8 @@ export DIR_INC
 export DIR_LIB
 export DIR_OBJ
 export DIR_BIN
+export DIR_DOC
+export DIR_API
 export LDFLAGS
 export CFLAGS
 
