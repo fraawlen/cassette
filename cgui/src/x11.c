@@ -5,11 +5,11 @@
 #include <cassette/cgui.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <xcb/xcb.h>
 
+#include "shell.h"
 #include "x11.h"
 
 /************************************************************************************************************/
@@ -18,21 +18,21 @@
 
 static struct cevent ev_button  (xcb_button_press_event_t   *, bool);
 static struct cevent ev_expose  (xcb_expose_event_t         *);
-static struct cevent ev_message (xcb_client_message_event_t *, struct cx11 *);
+static struct cevent ev_message (xcb_client_message_event_t *, struct x11 *);
 static struct cevent ev_unknown (xcb_generic_event_t        *);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static xcb_atom_t atom     (struct cx11 *, const char *);
-static bool       fail     (struct cx11 *, xcb_void_cookie_t);
-static bool       prop_set (struct cx11 *, xcb_atom_t, xcb_atom_t, uint32_t, const void *, bool);
+static xcb_atom_t atom     (struct x11 *, const char *);
+static bool       fail     (struct x11 *, xcb_void_cookie_t);
+static bool       prop_set (struct x11 *, xcb_atom_t, xcb_atom_t, uint32_t, const void *, bool);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
-struct cevent
-x11_event(struct cx11 *x)
+void
+x11_dispatch(struct x11 *x, cshell *sh)
 {
 	xcb_generic_event_t *xev; 
 	struct cevent cev;
@@ -41,7 +41,8 @@ x11_event(struct cx11 *x)
 
 	if (!(xev = xcb_poll_for_event(x->connection)))
 	{
-		return xcb_connection_has_error(x->connection) ? cevent_error : cevent_blank;
+		cev = xcb_connection_has_error(x->connection) ? cevent_error : cevent_blank;
+		goto skip;
 	}
 
 	/* dispatch event */
@@ -71,16 +72,17 @@ x11_event(struct cx11 *x)
 
 	/* end */
 
+skip:
+
+	shell_dispatch_event(sh, cev);
 	xcb_flush(x->connection);
 	free(xev);
-
-	return cev;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-x11_init(struct cx11 *x, int *fd)
+x11_init(struct x11 *x, int *fd)
 {
 	xcb_void_cookie_t ck;
 
@@ -97,12 +99,12 @@ x11_init(struct cx11 *x, int *fd)
 		  XCB_GRAVITY_NORTH_WEST,
 		  XCB_EVENT_MASK_EXPOSURE
 		| XCB_EVENT_MASK_BUTTON_PRESS
-		| XCB_EVENT_MASK_BUTTON_RELEASE
-		| XCB_EVENT_MASK_PROPERTY_CHANGE
-		| XCB_EVENT_MASK_STRUCTURE_NOTIFY,
+		| XCB_EVENT_MASK_BUTTON_RELEASE,
 	};
 
 	/* base setup */
+
+	*x = (struct x11){0};
 
 	if (xcb_connection_has_error(x->connection = xcb_connect(nullptr, nullptr)))
 	{
@@ -172,11 +174,21 @@ fail_con:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_kill(struct cx11 *x)
+x11_kill(struct x11 *x)
 {
 	xcb_unmap_window(x->connection, x->window);
 	xcb_destroy_window(x->connection, x->window);
 	xcb_disconnect(x->connection);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_redraw(struct x11 *x)
+{
+	(void)x;
+
+	// TODO
 }
 
 /************************************************************************************************************/
@@ -184,7 +196,7 @@ x11_kill(struct cx11 *x)
 /************************************************************************************************************/
 
 static xcb_atom_t
-atom(struct cx11 *x, const char *name)
+atom(struct x11 *x, const char *name)
 {
 	xcb_intern_atom_cookie_t ck;
 	xcb_intern_atom_reply_t *rp;
@@ -234,7 +246,7 @@ ev_expose(xcb_expose_event_t *xev)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static struct cevent
-ev_message(xcb_client_message_event_t *xev, struct cx11 *x)
+ev_message(xcb_client_message_event_t *xev, struct x11 *x)
 {
 	xcb_atom_t msg = xev->data.data32[0];
 	struct cevent cev = cevent_unknown;
@@ -274,7 +286,7 @@ ev_unknown(xcb_generic_event_t *xev)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-fail(struct cx11 *x, xcb_void_cookie_t ck)
+fail(struct x11 *x, xcb_void_cookie_t ck)
 {
 	xcb_generic_error_t *err;
 
@@ -290,7 +302,7 @@ fail(struct cx11 *x, xcb_void_cookie_t ck)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-prop_set(struct cx11 *x, xcb_atom_t prop, xcb_atom_t type, uint32_t n, const void *data, bool head)
+prop_set(struct x11 *x, xcb_atom_t prop, xcb_atom_t type, uint32_t n, const void *data, bool head)
 {
 	return fail(x,
 		xcb_change_property_checked(

@@ -7,32 +7,61 @@
 #include <cassette/cgui.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
-#include <xcb/xcb.h>
+#include <wayland-client.h>
+
+#include "event.h"
+#include "xdg-decoration-unstable-v1.h"
+#include "xdg-shell.h"
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-struct x11
+#define WAYLAND_BUFFER_N 3
+
+struct wayland_buffer
 {
+	struct wl_buffer *handle;
+	uint32_t *pixels;
+	size_t height;
+	size_t width;
+	bool busy;
+};
+
+struct wayland
+{
+	event_stack *queue;
+
 	/* core components */
 
-	xcb_connection_t *connection;
-	xcb_screen_t *screen;
+	struct wl_display *display;
+	struct wl_registry *registry;
+
+	/* interfaces */
+
+	struct wl_compositor *compositor;
+	struct wl_shm *shm;
+	struct wl_seat *seat;
+	struct xdg_wm_base *xdg;
+	struct zxdg_decoration_manager_v1 *decor;
 
 	/* toplevel components */
 
-	xcb_window_t window;
+	struct wl_surface *surface;
+	struct xdg_surface *shell;
+	struct xdg_toplevel *toplevel;
+	struct zxdg_toplevel_decoration_v1 *ssd;
+	struct wayland_buffer buffers[WAYLAND_BUFFER_N];
 
-	/* atoms */
+	/* states */
 
-	xcb_atom_t atom_protocol;
-	xcb_atom_t atom_close;
-	xcb_atom_t atom_focus;
-	xcb_atom_t atom_ping;
-	xcb_atom_t atom_utf8;
-	xcb_atom_t atom_time;
+	bool init;
+	bool commit;
+	bool redraw;
+	size_t height;
+	size_t width;
 };
 
 /************************************************************************************************************/
@@ -40,13 +69,13 @@ struct x11
 /************************************************************************************************************/
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
-x11_dispatch(struct x11 *x, cshell *sh);
+wayland_dispatch(struct wayland *wl, cshell *sh);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] bool
-x11_init(struct x11 *x, int *fd);
+wayland_init(struct wayland *wl, int *fd);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-x11_kill(struct x11 *x);
+wayland_kill(struct wayland *wl);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-x11_redraw(struct x11 *x);
+wayland_redraw(struct wayland *wl);

@@ -8,8 +8,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#include "cx11.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -33,8 +31,6 @@ enum cdisplay_server
 /************************************************************************************************************/
 
 enum cdisplay_server cdisplay_server(const cdisplay *dp) [[reproducible]];
-
-struct cx11 cdisplay_x11(const cdisplay *dp) [[reproducible]];
 
 /************************************************************************************************************/
 /************************************************************************************************************/

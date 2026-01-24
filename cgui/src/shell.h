@@ -15,6 +15,9 @@
 /************************************************************************************************************/
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
+shell_dispatch_event(cshell *sh, struct cevent ev);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
 shell_set_error(cshell *sh, enum cerr code);
 
 /************************************************************************************************************/

@@ -9,42 +9,38 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#include "wayland.h"
-#include "x11.h"
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+typedef struct event_stack event_stack;
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-struct cdisplay
-{
-	int fd;
-	enum cdisplay_server server;
-	union
-	{
-		struct wayland wl;
-		struct x11 x;
-	};
-};
+[[gnu::visibility("hidden")]] [[nodiscard]] event_stack *
+event_stack_create(void);
+
+[[gnu::visibility("hidden")]] nullptr_t 
+event_stack_destroy(event_stack *evs);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-constexpr cdisplay display_none = {.server = CDISPLAY_NONE};
+[[gnu::visibility("hidden")]] void
+event_stack_push(event_stack *evs, struct cevent ev);
+
+[[gnu::visibility("hidden")]] struct cevent
+event_stack_pop(event_stack *evs);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
-display_dispatch(cdisplay *dp, cshell *sh);
+[[gnu::visibility("hidden")]] enum cerr
+event_stack_error(event_stack *evs);
 
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] bool
-display_init(cdisplay *dp, enum cdisplay_server server);
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-display_kill(cdisplay *dp);
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-display_redraw(cdisplay *dp);
+[[gnu::visibility("hidden")]] size_t
+event_stack_length(event_stack *evs);
