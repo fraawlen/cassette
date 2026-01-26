@@ -423,6 +423,10 @@ shell_dispatch_event(cshell *sh, struct cevent ev)
 			printf("shell redrawn\n");
 			break;
 
+		case CEVENT_TRANSFORM:
+			display_redraw(&sh->dp);
+			break;
+
 		case CEVENT_UNKNOWN:
 			//printf("unhandled display event\n");
 			break;
@@ -610,7 +614,10 @@ thread(void *arg)
 	/* operation */
 
 	sh->fn_open(sh, sh->data_open);
-	while (run(sh)) {}
+	while (run(sh))
+	{
+		display_commit(&sh->dp, sh);
+	}
 
 	/* exiting */
 

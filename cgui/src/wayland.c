@@ -54,6 +54,8 @@ static void cl_seat_name         (void *, struct wl_seat      *, const char *);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+
+static void buffer_attach      (struct wayland *, size_t);
 static void buffer_free        (struct wayland *, size_t);
 static void buffer_paint       (struct wayland *, size_t, uint8_t);
 static bool buffer_update      (struct wayland *, size_t);
@@ -128,6 +130,66 @@ static atomic_uint file_id = 0;
 /************************************************************************************************************/
 
 void
+wayland_commit(struct wayland *wl, cshell *sh)
+{
+	struct cevent ev = {.type = CEVENT_REDRAW};
+	struct wl_callback *cl;
+
+	/* redraw */
+
+	if (!wl->redraw || wl->wait)
+	{
+		goto skip_redraw;
+	}
+
+	for (size_t i = 0; i < WAYLAND_BUFFER_N; i++)
+	{
+		if (!wl->buffers[i].busy)
+		{
+			if (buffer_update(wl, i))
+			{
+				buffer_attach(wl, i);
+				buffer_paint(wl, i, 0x80);
+				event_stack_push(wl->queue, ev);
+			}
+			break;
+		}
+	}
+
+	wl->redraw = false;
+	wl->commit = true;
+	wl->wait   = true;
+
+	/* gate next redraw */
+
+	if ((cl = wl_surface_frame(wl->surface)))
+	{
+		wl_callback_add_listener(cl, &ear_frame, wl);
+	}
+	else
+	{
+		event_stack_push(wl->queue, cevent_error);
+	}
+
+skip_redraw:
+
+	/* commit */
+
+	if (wl->commit)
+	{
+		wl_surface_commit(wl->surface);
+		wl->commit = false;
+	}
+
+	/* end */
+
+	shell_set_error(sh, event_stack_error(wl->queue));
+	flush(wl);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 wayland_dispatch(struct wayland *wl, cshell *sh)
 {
 	if (dispatch_nonblock(wl))
@@ -141,15 +203,6 @@ wayland_dispatch(struct wayland *wl, cshell *sh)
 	{
 		shell_dispatch_event(sh, cevent_error);
 	}
-
-	if (wl->commit)
-	{
-		wl_surface_commit(wl->surface);
-		wl->commit = false;
-	}
-
-	shell_set_error(sh, event_stack_error(wl->queue));
-	flush(wl);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -241,8 +294,9 @@ skip_decor:
 
 	wl->width  = 500;
 	wl->height = 300;
+	wl->redraw = false; 
 	wl->commit = false;
-	wl->redraw = false;
+	wl->wait   = false;
 	wl->init   = false;
 
 	wl_surface_commit(wl->surface);
@@ -296,23 +350,7 @@ wayland_kill(struct wayland *wl)
 void
 wayland_redraw(struct wayland *wl)
 {
-	struct wl_callback *cl;
-
-	if (wl->redraw || !wl->init)
-	{
-		return;
-	}
-
-	if ((cl = wl_surface_frame(wl->surface)))
-	{
-		wl_callback_add_listener(cl, &ear_frame, wl);
-		wl->redraw = true;
-		wl->commit = true;
-	}
-	else
-	{
-		event_stack_push(wl->queue, cevent_error);
-	}
+	wl->redraw = true;
 }
 
 /************************************************************************************************************/
@@ -327,8 +365,7 @@ buffer_attach(struct wayland *wl, size_t id)
 	wl_surface_attach(wl->surface, buf->handle, 0, 0);
 	wl_surface_damage_buffer(wl->surface, 0, 0, buf->width, buf->height);
 
-	buf->busy  = true;
-	wl->commit = true;
+	buf->busy = true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -484,31 +521,17 @@ cl_close(void *data, struct xdg_toplevel *top)
 static void
 cl_conf_shell(void *data, struct xdg_surface *shell, uint32_t serial)
 {
-	struct cevent ev = {.type = CEVENT_REDRAW};
+	(void)data;
 
 	CAST_WL_DATA(wl, data);
 
 	xdg_surface_ack_configure(shell, serial);
 
-	/* initial configure */
-
-	if (wl->init)
+	if (!wl->init)
 	{
-		return;
+		wl->redraw = true;
+		wl->init   = true;
 	}
-
-	for (int i = 0; i < WAYLAND_BUFFER_N; i++)
-	{
-		if (!buffer_update(wl, i))
-		{
-			return;
-		}
-	}
-
-	buffer_attach(wl, 0);	
-	buffer_paint(wl, 0, 0xFF);
-	event_stack_push(wl->queue, ev);
-	wl->init = true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -519,13 +542,22 @@ cl_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 	(void)top;
 	(void)arr;
 
+	struct cevent ev = {0};
+
 	CAST_WL_DATA(wl, data);
 
-	if (w > 0 && h > 0 && (wl->width != (size_t)w || wl->height != (size_t)h))
+	if (w > 0 && h > 0)
 	{
+		ev.type = CEVENT_TRANSFORM;
+		ev.transform_w = w;
+		ev.transform_h = h;
+		ev.transform_x = 0;
+		ev.transform_y = 0;
+
 		wl->width  = w;
 		wl->height = h;
-		wayland_redraw(wl);
+
+		event_stack_push(wl->queue, ev);
 	}
 }
 
@@ -536,33 +568,9 @@ cl_frame(void *data, struct wl_callback *cl, uint32_t time)
 {
 	(void)time;
 
-	struct cevent ev = {.type = CEVENT_REDRAW};
-
-	CAST_WL_DATA(wl, data);
-
 	wl_callback_destroy(cl);
 
-	wl->redraw = false;
-
-	/* grab first free buffer to draw into */
-
-	for (size_t i = 0; i < WAYLAND_BUFFER_N; i++)
-	{
-		if (!wl->buffers[i].busy)
-		{
-			if (buffer_update(wl, i))
-			{
-				buffer_attach(wl, i);
-				buffer_paint(wl, i, 0x80);
-				event_stack_push(wl->queue, ev);
-			}
-			return;
-		}
-	}
-
-	/* all buffers busy, skip this frame and retry */
-
-	wayland_redraw(wl);
+	((struct wayland *)data)->wait = true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

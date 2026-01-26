@@ -38,6 +38,9 @@ constexpr cdisplay display_none = {.server = CDISPLAY_NONE};
 /************************************************************************************************************/
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
+display_commit(cdisplay *dp, cshell *sh);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
 display_dispatch(cdisplay *dp, cshell *sh);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] bool

@@ -58,6 +58,7 @@ struct wayland
 	/* states */
 
 	bool init;
+	bool wait;
 	bool commit;
 	bool redraw;
 	size_t height;
@@ -67,6 +68,8 @@ struct wayland
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
+wayland_commit(struct wayland *wl, cshell *sh);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
 wayland_dispatch(struct wayland *wl, cshell *sh);

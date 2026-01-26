@@ -16,10 +16,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static struct cevent ev_button  (xcb_button_press_event_t   *, bool);
-static struct cevent ev_expose  (xcb_expose_event_t         *);
-static struct cevent ev_message (xcb_client_message_event_t *, struct x11 *);
-static struct cevent ev_unknown (xcb_generic_event_t        *);
+static struct cevent ev_button  (xcb_button_press_event_t     *, bool);
+static struct cevent ev_conf    (xcb_configure_notify_event_t *);
+static struct cevent ev_expose  (xcb_expose_event_t           *, struct x11 *);
+static struct cevent ev_message (xcb_client_message_event_t   *, struct x11 *);
+static struct cevent ev_unknown (xcb_generic_event_t          *);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -30,6 +31,20 @@ static bool       prop_set (struct x11 *, xcb_atom_t, xcb_atom_t, uint32_t, cons
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
+
+void
+x11_commit(struct x11 *x, cshell *sh)
+{
+	struct cevent ev = {.type = CEVENT_REDRAW};
+
+	if (x->redraw)
+	{
+		shell_dispatch_event(sh, ev);
+		x->redraw = true;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 x11_dispatch(struct x11 *x, cshell *sh)
@@ -50,19 +65,23 @@ x11_dispatch(struct x11 *x, cshell *sh)
 	switch (xev->response_type & ~0x80)
 	{
 		case XCB_BUTTON_PRESS:
-			cev = ev_button((xcb_button_press_event_t*)xev, true);
+			cev = ev_button((xcb_button_press_event_t *)xev, true);
 			break;
 
 		case XCB_BUTTON_RELEASE:
-			cev = ev_button((xcb_button_press_event_t*)xev, false);
+			cev = ev_button((xcb_button_press_event_t *)xev, false);
 			break;
 
 		case XCB_CLIENT_MESSAGE:
-			cev = ev_message((xcb_client_message_event_t*)xev, x);
+			cev = ev_message((xcb_client_message_event_t *)xev, x);
+			break;
+
+		case XCB_CONFIGURE_NOTIFY:
+			cev = ev_conf((xcb_configure_notify_event_t *)xev);
 			break;
 
 		case XCB_EXPOSE:
-			cev = ev_expose((xcb_expose_event_t*)xev);
+			cev = ev_expose((xcb_expose_event_t *)xev, x);
 			break;
 
 		default:
@@ -98,6 +117,7 @@ x11_init(struct x11 *x, int *fd)
 		  0x00000000,
 		  XCB_GRAVITY_NORTH_WEST,
 		  XCB_EVENT_MASK_EXPOSURE
+		| XCB_EVENT_MASK_STRUCTURE_NOTIFY
 		| XCB_EVENT_MASK_BUTTON_PRESS
 		| XCB_EVENT_MASK_BUTTON_RELEASE,
 	};
@@ -186,9 +206,7 @@ x11_kill(struct x11 *x)
 void
 x11_redraw(struct x11 *x)
 {
-	(void)x;
-
-	// TODO
+	x->redraw = true;
 }
 
 /************************************************************************************************************/
@@ -234,13 +252,30 @@ ev_button(xcb_button_press_event_t *xev, bool press)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static struct cevent
-ev_expose(xcb_expose_event_t *xev)
+ev_conf(xcb_configure_notify_event_t *xev)
+{
+	struct cevent cev =
+	{
+		.type = CEVENT_TRANSFORM,
+		.transform_w = xev->width,
+		.transform_h = xev->height,
+		.transform_x = xev->x,
+		.transform_y = xev->y,
+	};
+
+	return cev;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static struct cevent
+ev_expose(xcb_expose_event_t *xev, struct x11 *x)
 {
 	(void)xev;
 
-	struct cevent cev = { .type = CEVENT_REDRAW };
+	x->redraw = true;
 
-	return cev;
+	return cevent_blank;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

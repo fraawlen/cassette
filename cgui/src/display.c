@@ -44,6 +44,14 @@ cdisplay_server(const cdisplay *dp)
 /************************************************************************************************************/
 
 void
+display_commit(cdisplay *dp, cshell *sh)
+{
+	ROUTE(dp, commit, sh);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 display_dispatch(cdisplay *dp, cshell *sh)
 {
 	ROUTE(dp, dispatch, sh);
