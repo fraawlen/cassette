@@ -2,6 +2,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <cairo/cairo.h>
+#include <cairo/cairo-xcb.h>
 #include <cassette/cgui.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -17,7 +19,7 @@
 /************************************************************************************************************/
 
 static struct cevent ev_button  (xcb_button_press_event_t     *, bool);
-static struct cevent ev_conf    (xcb_configure_notify_event_t *);
+static struct cevent ev_conf    (xcb_configure_notify_event_t *, struct x11 *, uint32_t, uint32_t);
 static struct cevent ev_expose  (xcb_expose_event_t           *, struct x11 *);
 static struct cevent ev_message (xcb_client_message_event_t   *, struct x11 *);
 static struct cevent ev_unknown (xcb_generic_event_t          *);
@@ -40,7 +42,7 @@ x11_commit(struct x11 *x, cshell *sh)
 	if (x->redraw)
 	{
 		shell_dispatch_event(sh, ev);
-		x->redraw = true;
+		x->redraw = false;
 	}
 }
 
@@ -77,7 +79,7 @@ x11_dispatch(struct x11 *x, cshell *sh)
 			break;
 
 		case XCB_CONFIGURE_NOTIFY:
-			cev = ev_conf((xcb_configure_notify_event_t *)xev);
+			cev = ev_conf((xcb_configure_notify_event_t *)xev, x, shell_w(sh), shell_h(sh));
 			break;
 
 		case XCB_EXPOSE:
@@ -101,9 +103,25 @@ skip:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-x11_init(struct x11 *x, int *fd)
+x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
 {
 	xcb_void_cookie_t ck;
+
+	/* base setup */
+
+	*x = (struct x11){0};
+
+	if (xcb_connection_has_error(x->connection = xcb_connect(nullptr, nullptr)))
+	{
+		goto fail_con;
+	}
+
+	if (!(x->screen = xcb_setup_roots_iterator(xcb_get_setup(x->connection)).data))
+	{
+		goto fail_win;
+	}
+
+	/* window setup */
 
 	const uint32_t mask_opt = 
 		  XCB_CW_BACK_PIXEL
@@ -122,29 +140,15 @@ x11_init(struct x11 *x, int *fd)
 		| XCB_EVENT_MASK_BUTTON_RELEASE,
 	};
 
-	/* base setup */
-
-	*x = (struct x11){0};
-
-	if (xcb_connection_has_error(x->connection = xcb_connect(nullptr, nullptr)))
-	{
-		goto fail_con;
-	}
-
-	if (!(x->screen = xcb_setup_roots_iterator(xcb_get_setup(x->connection)).data))
-	{
-		goto fail_win;
-	}
-
-	/* window setup */
-
 	x->window = xcb_generate_id(x->connection),
 	ck = xcb_create_window_checked(
 		x->connection,
 		XCB_COPY_FROM_PARENT,
 		x->window,
 		x->screen->root,
-		0, 0, 500, 300, 0,
+		0, 0,
+		w, h,
+		0,
 		XCB_WINDOW_CLASS_INPUT_OUTPUT,
 		x->screen->root_visual,
 		mask_opt,
@@ -154,6 +158,27 @@ x11_init(struct x11 *x, int *fd)
 	{
 		goto fail_win;
 	}
+
+	/* cairo setup */
+
+/*
+	cairo_surface_t *sfc;
+	cairo_t *ctx;
+
+	sfc = cairo_xcb_surface_create(x->connection, x->window, x->visual
+	if (cairo_surface_status(sfc) != CAIRO_STATUS_SUCCESS)
+	{
+		goto fail_sfc;
+	}
+
+	ctx = cairo_create(sfc);
+	if (cairo_status(ctx) != CAIRO_STATUS_SUCCESS)
+	{
+		goto fail_ctx;
+	}
+
+	cairo_surface_destroy(sfc);
+*/
 
 	/* ICCCM setup */
 
@@ -170,6 +195,9 @@ x11_init(struct x11 *x, int *fd)
 
 	/* end */
 
+	x->redraw = false;
+//	x->cairo  = ctx;
+
 	if (fail(x, xcb_map_window_checked(x->connection, x->window)))
 	{
 		goto fail_map;
@@ -183,7 +211,12 @@ x11_init(struct x11 *x, int *fd)
 
 	/* errors */
 
+
 fail_map:
+//	cairo_destroy(ctx);
+//fail_ctx:
+//	cairo_surface_destroy(sfc);
+//fail_sfc:
 	xcb_destroy_window(x->connection, x->window);
 fail_win:
 	xcb_disconnect(x->connection);
@@ -252,7 +285,7 @@ ev_button(xcb_button_press_event_t *xev, bool press)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static struct cevent
-ev_conf(xcb_configure_notify_event_t *xev)
+ev_conf(xcb_configure_notify_event_t *xev, struct x11 *x, uint32_t w, uint32_t h)
 {
 	struct cevent cev =
 	{
@@ -262,6 +295,8 @@ ev_conf(xcb_configure_notify_event_t *xev)
 		.transform_x = xev->x,
 		.transform_y = xev->y,
 	};
+
+	x->redraw = xev->width < w || xev->height < h;
 
 	return cev;
 }

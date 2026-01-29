@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cairo/cairo.h>
 #include <cassette/cgui.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -24,6 +25,8 @@
 struct wayland_buffer
 {
 	struct wl_buffer *handle;
+	cairo_surface_t *surface;
+	cairo_t *cairo;
 	uint32_t *pixels;
 	size_t height;
 	size_t width;
@@ -61,13 +64,12 @@ struct wayland
 	bool wait;
 	bool commit;
 	bool redraw;
-	size_t height;
-	size_t width;
 };
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
+
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
 wayland_commit(struct wayland *wl, cshell *sh);
 
@@ -75,7 +77,7 @@ wayland_commit(struct wayland *wl, cshell *sh);
 wayland_dispatch(struct wayland *wl, cshell *sh);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] bool
-wayland_init(struct wayland *wl, int *fd);
+wayland_init(struct wayland *wl, int *fd, uint32_t w, uint32_t h);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
 wayland_kill(struct wayland *wl);

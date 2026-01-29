@@ -60,13 +60,13 @@ display_dispatch(cdisplay *dp, cshell *sh)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-display_init(cdisplay *dp, enum cdisplay_server server)
+display_init(cdisplay *dp, enum cdisplay_server server, uint32_t w, uint32_t h)
 {
-	if (server & CDISPLAY_WAYLAND && wayland_init(&dp->wl, &dp->fd))
+	if (server & CDISPLAY_WAYLAND && wayland_init(&dp->wl, &dp->fd, w, h))
 	{
 		dp->server = CDISPLAY_WAYLAND;
 	}
-	else if (server & CDISPLAY_X11 && x11_init(&dp->x, &dp->fd))
+	else if (server & CDISPLAY_X11 && x11_init(&dp->x, &dp->fd, w, h))
 	{
 		dp->server = CDISPLAY_X11;
 	}

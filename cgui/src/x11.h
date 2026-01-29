@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cairo/cairo.h>
 #include <cassette/cgui.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -24,6 +25,7 @@ struct x11
 	/* toplevel components */
 
 	xcb_window_t window;
+	cairo_t *cairo;
 
 	/* atoms */
 
@@ -50,7 +52,7 @@ x11_commit(struct x11 *x, cshell *sh);
 x11_dispatch(struct x11 *x, cshell *sh);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] bool
-x11_init(struct x11 *x, int *fd);
+x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
 x11_kill(struct x11 *x);

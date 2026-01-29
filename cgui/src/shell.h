@@ -26,3 +26,9 @@ shell_set_error(cshell *sh, enum cerr code);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] enum cerr
 shell_error(const cshell *sh);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] uint32_t
+shell_h(const cshell *sh);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] uint32_t
+shell_w(const cshell *sh);

@@ -44,7 +44,7 @@ display_commit(cdisplay *dp, cshell *sh);
 display_dispatch(cdisplay *dp, cshell *sh);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] bool
-display_init(cdisplay *dp, enum cdisplay_server server);
+display_init(cdisplay *dp, enum cdisplay_server server, uint32_t w, uint32_t h);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
 display_kill(cdisplay *dp);

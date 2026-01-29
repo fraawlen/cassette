@@ -2,6 +2,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <cairo/cairo.h>
 #include <cassette/cgui.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -54,11 +55,8 @@ static void cl_seat_name         (void *, struct wl_seat      *, const char *);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-
-static void buffer_attach      (struct wayland *, size_t);
 static void buffer_free        (struct wayland *, size_t);
-static void buffer_paint       (struct wayland *, size_t, uint8_t);
-static bool buffer_update      (struct wayland *, size_t);
+static bool buffer_update      (struct wayland *, size_t, uint32_t, uint32_t);
 static void destroy_interfaces (struct wayland *);
 static bool dispatch_nonblock  (struct wayland *);
 static void flush              (struct wayland *);
@@ -133,45 +131,39 @@ void
 wayland_commit(struct wayland *wl, cshell *sh)
 {
 	struct cevent ev = {.type = CEVENT_REDRAW};
+	struct wayland_buffer *buf;
 	struct wl_callback *cl;
 
 	/* redraw */
 
-	if (!wl->redraw || wl->wait)
+	if (wl->redraw && !wl->wait)
 	{
-		goto skip_redraw;
-	}
-
-	for (size_t i = 0; i < WAYLAND_BUFFER_N; i++)
-	{
-		if (!wl->buffers[i].busy)
+		for (size_t i = 0; i < WAYLAND_BUFFER_N; i++)
 		{
-			if (buffer_update(wl, i))
+			if (!(buf = wl->buffers + i)->busy)
 			{
-				buffer_attach(wl, i);
-				buffer_paint(wl, i, 0x80);
-				event_stack_push(wl->queue, ev);
+				if (buffer_update(wl, i, shell_w(sh), shell_h(sh))
+				&& (cl = wl_surface_frame(wl->surface)))
+				{
+					ev.redraw_ctx = buf->cairo;
+					shell_dispatch_event(sh, ev);
+					cairo_surface_flush(buf->surface);
+					wl_callback_add_listener(cl, &ear_frame, wl);
+					wl_surface_attach(wl->surface, buf->handle, 0, 0);
+					wl_surface_damage_buffer(wl->surface, 0, 0, buf->width, buf->height);
+					wl->redraw = false;
+					wl->commit = true;
+					wl->wait   = true;
+					buf->busy  = true;
+				}
+				else
+				{
+					shell_dispatch_event(sh, cevent_error);
+				}
+				break;
 			}
-			break;
 		}
 	}
-
-	wl->redraw = false;
-	wl->commit = true;
-	wl->wait   = true;
-
-	/* gate next redraw */
-
-	if ((cl = wl_surface_frame(wl->surface)))
-	{
-		wl_callback_add_listener(cl, &ear_frame, wl);
-	}
-	else
-	{
-		event_stack_push(wl->queue, cevent_error);
-	}
-
-skip_redraw:
 
 	/* commit */
 
@@ -208,8 +200,11 @@ wayland_dispatch(struct wayland *wl, cshell *sh)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-wayland_init(struct wayland *wl, int *fd)
+wayland_init(struct wayland *wl, int *fd, uint32_t w, uint32_t h)
 {
+	(void)w;
+	(void)h;
+
 	*wl = (struct wayland){0};
 
 	/* core components */
@@ -292,8 +287,6 @@ skip_decor:
 		wl->buffers[i] = (struct wayland_buffer){0};
 	}
 
-	wl->width  = 500;
-	wl->height = 300;
 	wl->redraw = false; 
 	wl->commit = false;
 	wl->wait   = false;
@@ -358,19 +351,6 @@ wayland_redraw(struct wayland *wl)
 /************************************************************************************************************/
 
 static void
-buffer_attach(struct wayland *wl, size_t id)
-{
-	struct wayland_buffer *buf = wl->buffers + id;
-
-	wl_surface_attach(wl->surface, buf->handle, 0, 0);
-	wl_surface_damage_buffer(wl->surface, 0, 0, buf->width, buf->height);
-
-	buf->busy = true;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
 buffer_free(struct wayland *wl, size_t id)
 {
 	struct wayland_buffer *buf = wl->buffers + id;
@@ -381,22 +361,17 @@ buffer_free(struct wayland *wl, size_t id)
 		munmap(buf->pixels, buf->width * buf->height * 4);
 	}
 
+	cairo_destroy(buf->cairo);
+	cairo_surface_destroy(buf->surface);
+
 	buf->handle = nullptr;
 	buf->pixels = nullptr;
-}	
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-buffer_paint(struct wayland *wl, size_t id, uint8_t value)
-{
-	memset(wl->buffers[id].pixels, value, wl->buffers[id].width * wl->buffers[id].height * 4);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-buffer_update(struct wayland *wl, size_t id)
+buffer_update(struct wayland *wl, size_t id, uint32_t w, uint32_t h)
 {
 	struct wayland_buffer *buf = wl->buffers + id;
 	char name[128];
@@ -406,13 +381,12 @@ buffer_update(struct wayland *wl, size_t id)
 
 	/* checks */
 
-	if (buf->width == wl->width && buf->height == wl->height)
+	if (buf->width == w && buf->height == h)
 	{
 		return true;
 	}
 
-	if (ckd_mul(&stride, wl->width,  4)
-	 || ckd_mul(&size,   wl->height, stride))
+	if (ckd_mul(&stride, w, 4) || ckd_mul(&size, h, stride))
 	{
 		goto fail_open;
 	}
@@ -452,7 +426,7 @@ buffer_update(struct wayland *wl, size_t id)
 		goto fail_file;
 	}
 
-	if (!(buf2 = wl_shm_pool_create_buffer(pool, 0, wl->width, wl->height, stride, WL_SHM_FORMAT_ARGB8888)))
+	if (!(buf2 = wl_shm_pool_create_buffer(pool, 0, w, h, stride, WL_SHM_FORMAT_ARGB8888)))
 	{
 		goto fail_buff;
 	}
@@ -461,24 +435,50 @@ buffer_update(struct wayland *wl, size_t id)
 	{
 		goto fail_mmap;
 	}
+	
+	wl_buffer_add_listener(buf2, &ear_buffer, buf);
+
+	/* prepare cairo components */
+
+	cairo_surface_t *sfc;
+	cairo_t *ctx;
+
+	sfc = cairo_image_surface_create_for_data(data, CAIRO_FORMAT_ARGB32, w, h, stride);
+	if (cairo_surface_status(sfc) != CAIRO_STATUS_SUCCESS)
+	{
+		goto fail_sfc;
+	}
+
+	ctx = cairo_create(sfc);
+	if (cairo_status(ctx) != CAIRO_STATUS_SUCCESS)
+	{
+		goto fail_ctx;
+	}
+
+	/* cleanup */
 
 	buffer_free(wl, id);
-	wl_buffer_add_listener(buf2, &ear_buffer, buf);
 	wl_shm_pool_destroy(pool);
 	close(fd);
 
 	/* end */
 
-	buf->handle = buf2;
-	buf->pixels = data;
-	buf->width  = wl->width;
-	buf->height = wl->height;
-	buf->busy   = false;
+	buf->handle  = buf2;
+	buf->pixels  = data;
+	buf->surface = sfc;
+	buf->cairo   = ctx;
+	buf->width   = w;
+	buf->height  = h;
+	buf->busy    = false;
 
 	return true;
 
 	/* errors */
 
+fail_ctx:
+	cairo_surface_destroy(sfc);
+fail_sfc:
+	munmap(data, size);
 fail_mmap:
 	wl_buffer_destroy(buf2);
 fail_buff:
@@ -554,9 +554,6 @@ cl_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 		ev.transform_x = 0;
 		ev.transform_y = 0;
 
-		wl->width  = w;
-		wl->height = h;
-
 		event_stack_push(wl->queue, ev);
 	}
 }
@@ -570,7 +567,7 @@ cl_frame(void *data, struct wl_callback *cl, uint32_t time)
 
 	wl_callback_destroy(cl);
 
-	((struct wayland *)data)->wait = true;
+	((struct wayland *)data)->wait = false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

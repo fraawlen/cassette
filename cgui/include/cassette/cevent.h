@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cairo/cairo.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -54,10 +55,16 @@ struct cevent
 			uint32_t transform_h;
 		};
 
+		/* CEVENT_REDRAW  */
+
+		struct
+		{
+			cairo_t *redraw_ctx;
+		};
+
 		/* CEVENT_NONE    */
 		/* CEVENT_FAIL    */
 		/* CEVENT_CLOSE   */
-		/* CEVENT_REDRAW  */
 		/* CEVENT_UNKNOWN */
 
 		/* no fields for these events */

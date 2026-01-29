@@ -2,6 +2,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <cairo/cairo.h>
 #include <cassette/cgui.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -65,6 +66,11 @@ struct cshell
 
 	// TODO config
 	// TODO layouts
+
+	/* states */
+
+	uint32_t w;
+	uint32_t h;
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -163,6 +169,8 @@ cshell_create(void)
 	sh->fn_close   = dummy;
 	sh->fn_open    = dummy;
 	sh->dp         = display_none;
+	sh->w          = 500;
+	sh->h          = 300;
 
 	return sh;
 
@@ -312,7 +320,7 @@ cshell_open(cshell *sh)
 		goto fail_open;
 	}
 
-	if (!display_init(&sh->dp, CDISPLAY_ANY))
+	if (!display_init(&sh->dp, CDISPLAY_ANY, sh->w, sh->h))
 	{
 		goto fail_disp;
 	}
@@ -421,10 +429,18 @@ shell_dispatch_event(cshell *sh, struct cevent ev)
 
 		case CEVENT_REDRAW:
 			printf("shell redrawn\n");
+//			cairo_set_source_rgba(ev.redraw_ctx, 1.0, 0.0, 0.0, 1.0);
+//			cairo_paint(ev.redraw_ctx);
 			break;
 
 		case CEVENT_TRANSFORM:
-			display_redraw(&sh->dp);
+			if (sh->w != ev.transform_w || sh->h != ev.transform_h)
+			{
+				sh->w = ev.transform_w;
+				sh->h = ev.transform_h;
+				display_redraw(&sh->dp);
+				printf("shell resized\n");
+			}
 			break;
 
 		case CEVENT_UNKNOWN:
@@ -458,6 +474,14 @@ shell_error(const cshell *sh)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+uint32_t
+shell_h(const cshell *sh)
+{
+	return sh->h;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
 shell_set_error(cshell *sh, enum cerr code)
 {
@@ -471,6 +495,14 @@ shell_set_error(cshell *sh, enum cerr code)
 		cerr_set(&tmp, code);
 	}
 	while (!atomic_compare_exchange_strong(&sh->err, &err, tmp));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint32_t
+shell_w(const cshell *sh)
+{
+	return sh->w;
 }
 
 /************************************************************************************************************/
