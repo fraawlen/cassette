@@ -26,7 +26,8 @@ WL_LIB := $(patsubst $(WL_DIR)/%.xml, $(WL_OUT)/%.o, $(WL_XML))
 NAME := cgui
 INCS := -I../cobj/$(DIR_INC) -I../ccfg/$(DIR_INC) -I$(DIR_INC) -I$(WL_OUT)
 DEPS := -L../cobj/$(DIR_LIB) -L../ccfg/$(DIR_LIB) -lcobj -lccfg -lm -lpthread -lcairo -lfontconfig \
-        -lxcb -lxcb-keysyms -lxcb-present -lxcb-randr -lxcb-xinput -lxkbcommon -lwayland-client
+        -lxcb -lxcb-keysyms -lxcb-present -lxcb-randr -lxcb-xinput -lxkbcommon -lxcb-render \
+	  -lxcb-render-util -lwayland-client
 
 #############################################################################################################
 # PUBLIC TARGETS ############################################################################################

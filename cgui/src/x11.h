@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <xcb/xcb.h>
+#include <xcb/xcb_renderutil.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -21,11 +22,22 @@ struct x11
 
 	xcb_connection_t *connection;
 	xcb_screen_t *screen;
+	xcb_colormap_t colormap;
+	xcb_render_pictforminfo_t format;
+	xcb_visualid_t visual;
+	uint8_t depth;
 
 	/* toplevel components */
 
 	xcb_window_t window;
+	xcb_pixmap_t buffer;
+	cairo_surface_t *surface;
 	cairo_t *cairo;
+
+	/* extensions opcodes */
+
+	uint8_t opcode_present;
+	uint8_t opcode_render;
 
 	/* atoms */
 
@@ -38,7 +50,13 @@ struct x11
 
 	/* states */
 
+	uint32_t buffer_w;
+	uint32_t buffer_h;
+	uint32_t serial;
+	bool present;
 	bool redraw;
+	bool wait;
+	bool busy;
 };
 
 /************************************************************************************************************/

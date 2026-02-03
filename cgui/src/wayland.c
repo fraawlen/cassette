@@ -362,6 +362,7 @@ buffer_free(struct wayland *wl, size_t id)
 	}
 
 	cairo_destroy(buf->cairo);
+	cairo_surface_finish(buf->surface);
 	cairo_surface_destroy(buf->surface);
 
 	buf->handle = nullptr;

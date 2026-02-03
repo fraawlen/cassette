@@ -429,8 +429,12 @@ shell_dispatch_event(cshell *sh, struct cevent ev)
 
 		case CEVENT_REDRAW:
 			printf("shell redrawn\n");
-//			cairo_set_source_rgba(ev.redraw_ctx, 1.0, 0.0, 0.0, 1.0);
-//			cairo_paint(ev.redraw_ctx);
+			cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
+			cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
+			cairo_paint(ev.redraw_ctx);
+			cairo_set_source_rgba(ev.redraw_ctx, 1.0, 0.0, 0.0, 0.5);
+			cairo_rectangle(ev.redraw_ctx, 20, 20, sh->w - 40, sh->h - 40);
+			cairo_fill(ev.redraw_ctx);
 			break;
 
 		case CEVENT_TRANSFORM:
@@ -646,6 +650,7 @@ thread(void *arg)
 	/* operation */
 
 	sh->fn_open(sh, sh->data_open);
+	display_dispatch(&sh->dp, sh);
 	while (run(sh))
 	{
 		display_commit(&sh->dp, sh);
