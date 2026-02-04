@@ -585,7 +585,7 @@ flush(cshell *sh)
 static bool
 run(cshell *sh)
 {
-	bool quit = false;
+	const int poll_err = POLLERR | POLLHUP | POLLNVAL;
 	struct pollfd pfd[3] = 
 	{
 		{ sh->fd_poke[0], POLLIN, 0 },
@@ -601,37 +601,43 @@ run(cshell *sh)
 		{
 			shell_set_error(sh, CERR_THREAD);
 		}
+		else
+		{
+			return true;
+		}
 	}
 
 	/* shutdown signals */
 
-	else if (pfd[0].revents & POLLIN)
+	if (pfd[0].revents & POLLIN)
 	{
-		quit = true;
+		return false;
 	}
 
 	/* invocations */
 
-	else if (pfd[1].revents & POLLIN)
+	if (pfd[1].revents & POLLIN)
 	{
 		dispatch_invoke(sh);
 	}
 
 	/* display events */
 
-	else if (pfd[2].revents & POLLIN)
+	if (pfd[2].revents & POLLIN)
 	{
 		display_dispatch(&sh->dp, sh);
 	}
 
 	/* end */
 
-	else
+	if (pfd[0].revents & poll_err
+	 || pfd[1].revents & poll_err
+	 || pfd[2].revents & poll_err)
 	{
 		shell_set_error(sh, CERR_THREAD);
 	}
 
-	return !quit && !cerr_critical(shell_error(sh));	
+	return !cerr_critical(shell_error(sh));	
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
