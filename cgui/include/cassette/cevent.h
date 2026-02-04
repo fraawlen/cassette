@@ -40,9 +40,7 @@ struct cevent
 
 		struct
 		{
-			int32_t button_x;
-			int32_t button_y;
-			int     button_id;
+			int button_id;
 		};
 
 		/* CEVENT_TRANSFORM */

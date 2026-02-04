@@ -22,22 +22,17 @@ struct x11
 
 	xcb_connection_t *connection;
 	xcb_screen_t *screen;
+	xcb_visualtype_t *visual;
 	xcb_colormap_t colormap;
-	xcb_render_pictforminfo_t format;
-	xcb_visualid_t visual;
 	uint8_t depth;
 
 	/* toplevel components */
 
 	xcb_window_t window;
 	xcb_pixmap_t buffer;
+	xcb_gcontext_t gc;
 	cairo_surface_t *surface;
 	cairo_t *cairo;
-
-	/* extensions opcodes */
-
-	uint8_t opcode_present;
-	uint8_t opcode_render;
 
 	/* atoms */
 
@@ -47,6 +42,12 @@ struct x11
 	xcb_atom_t atom_ping;
 	xcb_atom_t atom_utf8;
 	xcb_atom_t atom_time;
+
+	/* extensions */
+
+	uint8_t opcode_present;
+	uint8_t opcode_render;
+	uint8_t opcode_xinput;
 
 	/* states */
 

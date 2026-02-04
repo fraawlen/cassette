@@ -27,7 +27,7 @@ NAME := cgui
 INCS := -I../cobj/$(DIR_INC) -I../ccfg/$(DIR_INC) -I$(DIR_INC) -I$(WL_OUT)
 DEPS := -L../cobj/$(DIR_LIB) -L../ccfg/$(DIR_LIB) -lcobj -lccfg -lm -lpthread -lcairo -lfontconfig \
         -lxcb -lxcb-keysyms -lxcb-present -lxcb-randr -lxcb-xinput -lxkbcommon -lxcb-render \
-	  -lxcb-render-util -lwayland-client
+	  -lxcb-util -lwayland-client
 
 #############################################################################################################
 # PUBLIC TARGETS ############################################################################################

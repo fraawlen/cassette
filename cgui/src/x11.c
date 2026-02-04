@@ -12,7 +12,7 @@
 #include <xcb/present.h>
 #include <xcb/render.h>
 #include <xcb/xcb.h>
-#include <xcb/xcb_renderutil.h>
+#include <xcb/xcb_aux.h>
 #include <xcb/xfixes.h>
 
 #include "shell.h"
@@ -42,7 +42,6 @@ static bool       setup_image (struct x11 *);
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
-#include <stdio.h>
 void
 x11_commit(struct x11 *x, cshell *sh)
 {
@@ -70,6 +69,7 @@ x11_commit(struct x11 *x, cshell *sh)
 		x->buffer_h = h;
 		x->buffer   = xcb_generate_id(x->connection);
 		xcb_create_pixmap(x->connection, x->depth, x->buffer, x->window, w, h);
+		cairo_surface_flush(x->surface);
 		cairo_xcb_surface_set_drawable(x->surface, x->buffer, w, h);
 	}
 
@@ -79,32 +79,38 @@ x11_commit(struct x11 *x, cshell *sh)
 	{
 		x->redraw = false;
 		shell_dispatch_event(sh, ev);
+		cairo_surface_flush(x->surface);
 	}
 
 	if (x->present && !x->wait)
 	{
-		printf("PRESENT\n");
-		x->busy    = true;
-		x->wait    = true;
-		x->present = false;
-		xcb_present_pixmap(
-			x->connection,
-			x->window,
-			x->buffer,
-			++x->serial,
-			XCB_XFIXES_REGION_NONE,
-			XCB_XFIXES_REGION_NONE,
-			0, 0, 0, 0, 0,
-			XCB_PRESENT_OPTION_COPY,
-			0, 1, 0, 0,
-			nullptr);
+		if (x->opcode_present != 0)
+		{
+			x->busy    = true;
+			x->wait    = true;
+			x->present = false;
+			xcb_present_pixmap(
+				x->connection,
+				x->window,
+				x->buffer,
+				++x->serial,
+				XCB_XFIXES_REGION_NONE,
+				XCB_XFIXES_REGION_NONE,
+				0, 0, 0, 0, 0,
+				XCB_PRESENT_OPTION_COPY,
+				0, 1, 0, 0,
+				nullptr);
+		}
+		else /* fallback */
+		{
+			x->present = false;
+			xcb_copy_area(x->connection, x->buffer, x->window, x->gc, 0, 0, 0, 0, w, h);
+		}
 	}
 
 	/* end */
 
-	cairo_surface_flush(x->surface);
 	xcb_flush(x->connection);
-
 	if (xcb_connection_has_error(x->connection))
 	{
 		shell_dispatch_event(sh, cevent_error);
@@ -153,7 +159,6 @@ x11_dispatch(struct x11 *x, cshell *sh)
 		}
 
 		shell_dispatch_event(sh, cev);
-		xcb_flush(x->connection);
 		free(xev);
 	}
 }
@@ -176,17 +181,20 @@ x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
 
 	if (!(x->screen = xcb_setup_roots_iterator(xcb_get_setup(x->connection)).data))
 	{
-		goto fail_color;
+		goto fail_screen;
 	}
+
+	/* extension check */
+
+	x->opcode_present = opcode(x, "Present");
+	x->opcode_render  = opcode(x, "RENDER");
+	x->opcode_xinput  = opcode(x, "XInputExtension");
+
+	/* select format, visual and depth (xrender default, screen root fallback) */
 
 	if (!setup_image(x))
 	{
-		goto fail_color;
-	}
-
-	if ((x->opcode_present = opcode(x, "Present")) == 0)
-	{
-		goto fail_color;
+		goto fail_screen;
 	}
 
 	/* colormap setup */
@@ -197,23 +205,23 @@ x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
 		XCB_COLORMAP_ALLOC_NONE,
 		x->colormap,
 		x->screen->root,
-		x->visual);
+		x->visual->visual_id);
 
 	if (fail(x, ck))
 	{
-		goto fail_color;
+		goto fail_screen;
 	}
 
 	/* window setup */
 
-	const uint32_t mask_opt = 
+	const uint32_t win_opt = 
 		  XCB_CW_BACK_PIXMAP
 		| XCB_CW_BORDER_PIXEL
 		| XCB_CW_BIT_GRAVITY
 		| XCB_CW_EVENT_MASK
 		| XCB_CW_COLORMAP;
 
-	const uint32_t mask_val[] =
+	const uint32_t win_val[] =
 	{
 		  XCB_BACK_PIXMAP_NONE,
 		  0x00000000,
@@ -233,9 +241,9 @@ x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
 		x->screen->root,
 		0, 0, w, h, 0,
 		XCB_WINDOW_CLASS_INPUT_OUTPUT,
-		x->visual,
-		mask_opt,
-		mask_val);
+		x->visual->visual_id,
+		win_opt,
+		win_val);
 
 	if (fail(x, ck))
 	{
@@ -257,36 +265,48 @@ x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
 		goto fail_buf;
 	}
 
+	/* gc setup for present extension fallback */
+
+	const uint32_t gc_opt   = XCB_GC_FOREGROUND;
+	const uint32_t gc_val[] = {0x00000000};
+
+	x->gc = xcb_generate_id(x->connection);
+	ck = xcb_create_gc_checked(x->connection, x->gc, x->buffer, gc_opt, gc_val);
+
+	if (fail(x, ck))
+	{
+		goto fail_gc;
+	}
+
 	/* cairo setup */
 
-	x->surface = cairo_xcb_surface_create_with_xrender_format(
-		x->connection,
-		x->screen,
-		x->buffer,
-		&x->format,
-		w, h);
-
+	x->surface = cairo_xcb_surface_create(x->connection, x->buffer, x->visual, w, h);
 	if (cairo_surface_status(x->surface) != CAIRO_STATUS_SUCCESS)
 	{
 		goto fail_sfc;
 	}
 
-	if (cairo_status(x->cairo = cairo_create(x->surface)) != CAIRO_STATUS_SUCCESS)
+	x->cairo = cairo_create(x->surface);
+	if (cairo_status(x->cairo) != CAIRO_STATUS_SUCCESS)
 	{
 		goto fail_ctx;
 	}
 
 	/* register window to extension events */
 
-	ck = xcb_present_select_input_checked(
-		x->connection,
-		xcb_generate_id(x->connection),
-		x->window, 
-		XCB_PRESENT_EVENT_MASK_IDLE_NOTIFY | XCB_PRESENT_EVENT_MASK_COMPLETE_NOTIFY);
-
-	if (fail(x, ck))
+	if (x->opcode_present != 0)
 	{
-		goto fail_ev;
+		ck = xcb_present_select_input_checked(
+			  x->connection,
+			  xcb_generate_id(x->connection),
+			  x->window, 
+			  XCB_PRESENT_EVENT_MASK_IDLE_NOTIFY
+			| XCB_PRESENT_EVENT_MASK_COMPLETE_NOTIFY);
+
+		if (fail(x, ck))
+		{
+			goto fail_ev;
+		}
 	}
 
 	/* ICCCM setup */
@@ -330,12 +350,14 @@ fail_ev:
 fail_ctx:
 	cairo_surface_destroy(x->surface);
 fail_sfc:
+	xcb_free_gc(x->connection, x->gc);
+fail_gc:
 	xcb_free_pixmap(x->connection, x->buffer);
 fail_buf:
 	xcb_destroy_window(x->connection, x->window);
 fail_win:
 	xcb_free_colormap(x->connection, x->colormap);
-fail_color:
+fail_screen:
 	xcb_disconnect(x->connection);
 fail_con:
 	return false;
@@ -349,6 +371,7 @@ x11_kill(struct x11 *x)
 	cairo_destroy(x->cairo);
 	cairo_surface_finish(x->surface);
 	cairo_surface_destroy(x->surface);
+	xcb_free_gc(x->connection, x->gc);
 	xcb_free_colormap(x->connection, x->colormap);
 	xcb_free_pixmap(x->connection, x->buffer);
 	xcb_unmap_window(x->connection, x->window);
@@ -396,8 +419,6 @@ ev_button(xcb_button_press_event_t *xev, bool press)
 	struct cevent cev =
 	{
 		.type      = press ? CEVENT_BUTTON_PRESS : CEVENT_BUTTON_RELEASE,
-		.button_x  = xev->event_x,
-		.button_y  = xev->event_y,
 		.button_id = xev->detail,
 	};
 
@@ -567,20 +588,32 @@ prop_set(struct x11 *x, xcb_atom_t prop, xcb_atom_t type, uint32_t n, const void
 static bool
 setup_image(struct x11 *x)
 {
+	xcb_render_query_pict_formats_reply_t *rp = nullptr;
+	xcb_visualid_t id = x->screen->root_visual;
+
+	/* fallback visual */
+
+	if (x->opcode_render == 0)
+	{
+		goto done;
+	}
+
+	/* xrender visual with alpha */
+
 	xcb_render_query_pict_formats_cookie_t ck;
-	xcb_render_query_pict_formats_reply_t *rp;
 	xcb_render_pictscreen_iterator_t it_screen;
 	xcb_render_pictdepth_iterator_t it_depth;
 	xcb_render_pictvisual_iterator_t it_visual;
+	xcb_render_pictforminfo_t *format;
 
 	ck = xcb_render_query_pict_formats(x->connection);
-	if (!(rp = xcb_render_query_pict_formats_reply(x->connection, ck, nullptr)))
+	if (!(rp = xcb_render_query_pict_formats_reply(x->connection, ck, nullptr))
+	 || !(format = xcb_render_util_find_standard_format(rp, XCB_PICT_STANDARD_ARGB_32)))
 	{
-		return false;
+		goto done;
 	}
 
-	x->format = *xcb_render_util_find_standard_format(rp, XCB_PICT_STANDARD_ARGB_32);
-	it_screen =  xcb_render_query_pict_formats_screens_iterator(rp);
+	it_screen = xcb_render_query_pict_formats_screens_iterator(rp);
 	for (; it_screen.rem; xcb_render_pictscreen_next(&it_screen))
 	{
 		it_depth = xcb_render_pictscreen_depths_iterator(it_screen.data);
@@ -589,17 +622,19 @@ setup_image(struct x11 *x)
 			it_visual = xcb_render_pictdepth_visuals_iterator(it_depth.data);
 			for (; it_visual.rem; xcb_render_pictvisual_next(&it_visual))
 			{
-				if (it_visual.data->format == x->format.id)
+				if (it_visual.data->format == format->id)
 				{
-					x->visual = it_visual.data->visual;
-					x->depth  = it_depth.data->depth;
-					free(rp);
-					return true;
+					id = it_visual.data->visual;
+					goto done;
 				}
 			}
 		}
 	}
 
+	/* end */
+
+done:
 	free(rp);
-	return false;
+	return (x->depth  = xcb_aux_get_depth_of_visual(x->screen, id)) != 0
+	    && (x->visual = xcb_aux_find_visual_by_id(x->screen, id));
 }
