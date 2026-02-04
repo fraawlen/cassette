@@ -28,9 +28,9 @@ struct wayland_buffer
 	cairo_surface_t *surface;
 	cairo_t *cairo;
 	uint32_t *pixels;
-	size_t height;
-	size_t width;
 	bool busy;
+	size_t h;
+	size_t w;
 };
 
 struct wayland
@@ -53,6 +53,7 @@ struct wayland
 	/* toplevel components */
 
 	struct wl_surface *surface;
+	struct wl_pointer *pointer;
 	struct xdg_surface *shell;
 	struct xdg_toplevel *toplevel;
 	struct zxdg_toplevel_decoration_v1 *ssd;

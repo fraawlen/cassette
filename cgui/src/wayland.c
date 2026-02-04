@@ -31,32 +31,33 @@
 
 #define CAST_WL_DATA(WL, DATA) struct wayland *WL = (struct wayland *)DATA;
 #define FREE(INT, FN) if (INT) {FN(INT);}
-#define BIND(REG, ID, NAME, VER, INT, SRC) \
-	if (strcmp(NAME, SRC.name) == 0) \
-		{INT = wl_registry_bind(REG, ID, &SRC, (int)VER > SRC.version ? SRC.version : (int)VER); return;}
+#define BIND(REG, ID, NAME, VER, TARGET, FACE) \
+	if (!strcmp(NAME, FACE.name)) {TARGET = wl_registry_bind(REG, ID, &FACE, VER); return;}
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void cl_capabilities_seat (void *, struct wl_seat      *, uint32_t);
-static void cl_close             (void *, struct xdg_toplevel *);
-static void cl_conf_shell        (void *, struct xdg_surface  *, uint32_t);
-static void cl_conf_top          (void *, struct xdg_toplevel *, int, int, struct wl_array *);
-static void cl_frame             (void *, struct wl_callback  *, uint32_t);
-static void cl_interface_add     (void *, struct wl_registry  *, uint32_t, const char *, uint32_t);
-static void cl_ping              (void *, struct xdg_wm_base  *, uint32_t);
-static void cl_release           (void *, struct wl_buffer    *);
+static void cl_bind       (void *, struct wl_registry  *, uint32_t, const char *, uint32_t);
+static void cl_button     (void *, struct wl_pointer   *, uint32_t, uint32_t, uint32_t, uint32_t);
+static void cl_close      (void *, struct xdg_toplevel *);
+static void cl_conf_shell (void *, struct xdg_surface  *, uint32_t);
+static void cl_conf_top   (void *, struct xdg_toplevel *, int, int, struct wl_array *);
+static void cl_frame      (void *, struct wl_callback  *, uint32_t);
+static void cl_ping       (void *, struct xdg_wm_base  *, uint32_t);
+static void cl_release    (void *, struct wl_buffer    *);
+static void cl_seat       (void *, struct wl_seat      *, uint32_t);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void cl_capabilities_top  (void *, struct xdg_toplevel *, struct wl_array *);
-static void cl_conf_bounds       (void *, struct xdg_toplevel *, int, int);
-static void cl_interface_del     (void *, struct wl_registry  *, uint32_t);
-static void cl_seat_name         (void *, struct wl_seat      *, const char *);
+static void cl_axis   (void *, struct wl_pointer   *, uint32_t, uint32_t, wl_fixed_t);
+static void cl_enter  (void *, struct wl_pointer   *, uint32_t, struct wl_surface *, wl_fixed_t, wl_fixed_t);
+static void cl_leave  (void *, struct wl_pointer   *, uint32_t, struct wl_surface *);
+static void cl_motion (void *, struct wl_pointer   *, uint32_t, wl_fixed_t, wl_fixed_t);
+static void cl_unbind (void *, struct wl_registry  *, uint32_t);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void buffer_free        (struct wayland *, size_t);
-static bool buffer_update      (struct wayland *, size_t, uint32_t, uint32_t);
+static void buffer_free        (struct wayland_buffer *);
+static bool buffer_resize      (struct wayland_buffer *, struct wayland *, uint32_t, uint32_t);
 static void destroy_interfaces (struct wayland *);
 static bool dispatch_nonblock  (struct wayland *);
 static void flush              (struct wayland *);
@@ -67,16 +68,26 @@ static void flush              (struct wayland *);
 
 static const struct wl_registry_listener ear_reg =
 {
-	.global        = cl_interface_add,
-	.global_remove = cl_interface_del,
+	.global        = cl_bind,
+	.global_remove = cl_unbind,
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static const struct wl_seat_listener ear_seat =
 {
-	.capabilities = cl_capabilities_seat,
-	.name         = cl_seat_name,
+	.capabilities = cl_seat,
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static const struct wl_pointer_listener ear_pointer =
+{
+	.enter  = cl_enter,
+	.leave  = cl_leave,
+	.motion = cl_motion,
+	.button = cl_button,
+	.axis   = cl_axis,
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -104,10 +115,8 @@ static const struct xdg_surface_listener ear_shell =
 
 static const struct xdg_toplevel_listener ear_toplevel =
 {
-	.close            = cl_close,
-	.configure        = cl_conf_top,
-	.configure_bounds = cl_conf_bounds,
-	.wm_capabilities  = cl_capabilities_top,
+	.close     = cl_close,
+	.configure = cl_conf_top,
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -131,10 +140,10 @@ void
 wayland_commit(struct wayland *wl, cshell *sh)
 {
 	struct cevent ev = {.type = CEVENT_REDRAW};
-	struct wayland_buffer *buf;
+	struct wayland_buffer *buf = nullptr;
 	struct wl_callback *cl;
 
-	/* redraw */
+	/* grab free buffer to update */
 
 	if (wl->redraw && !wl->wait)
 	{
@@ -142,26 +151,34 @@ wayland_commit(struct wayland *wl, cshell *sh)
 		{
 			if (!(buf = wl->buffers + i)->busy)
 			{
-				if (buffer_update(wl, i, shell_w(sh), shell_h(sh))
-				&& (cl = wl_surface_frame(wl->surface)))
-				{
-					ev.redraw_ctx = buf->cairo;
-					shell_dispatch_event(sh, ev);
-					cairo_surface_flush(buf->surface);
-					wl_callback_add_listener(cl, &ear_frame, wl);
-					wl_surface_attach(wl->surface, buf->handle, 0, 0);
-					wl_surface_damage_buffer(wl->surface, 0, 0, buf->width, buf->height);
-					wl->redraw = false;
-					wl->commit = true;
-					wl->wait   = true;
-					buf->busy  = true;
-				}
-				else
-				{
-					shell_dispatch_event(sh, cevent_error);
-				}
 				break;
 			}
+		}
+	}
+
+	/* update selected buffer */
+
+	if (buf && !buf->busy)
+	{
+		if (buffer_resize(buf, wl, shell_w(sh), shell_h(sh))
+		&& (cl = wl_surface_frame(wl->surface)))
+		{
+			wl->redraw = false;
+			wl->commit = true;
+			wl->wait   = true;
+			buf->busy  = true;
+
+			ev.redraw_ctx = buf->cairo;
+			shell_dispatch_event(sh, ev);
+			cairo_surface_flush(buf->surface);
+
+			wl_callback_add_listener(cl, &ear_frame, wl);
+			wl_surface_attach(wl->surface, buf->handle, 0, 0);
+			wl_surface_damage_buffer(wl->surface, 0, 0, buf->w, buf->h);
+		}
+		else
+		{
+			shell_dispatch_event(sh, cevent_error);
 		}
 	}
 
@@ -175,7 +192,11 @@ wayland_commit(struct wayland *wl, cshell *sh)
 
 	/* end */
 
-	shell_set_error(sh, event_stack_error(wl->queue));
+	if (event_stack_error(wl->queue))
+	{
+		shell_dispatch_event(sh, cevent_error);
+	}
+
 	flush(wl);
 }
 
@@ -259,19 +280,14 @@ wayland_init(struct wayland *wl, int *fd, uint32_t w, uint32_t h)
 
 	/* decorations */
 
-	if (!wl->decor)
+	if (wl->decor)
 	{
-		goto skip_decor;
+		if (!(wl->ssd = zxdg_decoration_manager_v1_get_toplevel_decoration(wl->decor, wl->toplevel)))
+		{
+			goto fail_decor;
+		}
+		zxdg_toplevel_decoration_v1_set_mode(wl->ssd, ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
 	}
-
-	if (!(wl->ssd = zxdg_decoration_manager_v1_get_toplevel_decoration(wl->decor, wl->toplevel)))
-	{
-		goto fail_decor;
-	}
-
-	zxdg_toplevel_decoration_v1_set_mode(wl->ssd, ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
-
-skip_decor:
 
 	/* setup listeners */
 
@@ -324,18 +340,17 @@ wayland_kill(struct wayland *wl)
 {
 	for (int i = 0; i < WAYLAND_BUFFER_N; i++)
 	{
-		buffer_free(wl, i);
+		buffer_free(wl->buffers + i);
 	}
 	
-	FREE(wl->ssd,      zxdg_toplevel_decoration_v1_destroy);
+	FREE(wl->ssd, zxdg_toplevel_decoration_v1_destroy);
 	FREE(wl->toplevel, xdg_toplevel_destroy);
-	FREE(wl->shell,    xdg_surface_destroy);
-	FREE(wl->surface,  wl_surface_destroy);
+	FREE(wl->shell, xdg_surface_destroy);
+	FREE(wl->surface, wl_surface_destroy);
 
 	destroy_interfaces(wl);
-
-	FREE(wl->display,  wl_display_disconnect);
-	FREE(wl->queue,    event_stack_destroy);
+	event_stack_destroy(wl->queue);
+	wl_display_disconnect(wl->display);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -351,14 +366,12 @@ wayland_redraw(struct wayland *wl)
 /************************************************************************************************************/
 
 static void
-buffer_free(struct wayland *wl, size_t id)
+buffer_free(struct wayland_buffer *buf)
 {
-	struct wayland_buffer *buf = wl->buffers + id;
-	
 	FREE(buf->handle, wl_buffer_destroy);
 	if (buf->pixels)
 	{
-		munmap(buf->pixels, buf->width * buf->height * 4);
+		munmap(buf->pixels, buf->w * buf->h * 4);
 	}
 
 	cairo_destroy(buf->cairo);
@@ -372,9 +385,10 @@ buffer_free(struct wayland *wl, size_t id)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-buffer_update(struct wayland *wl, size_t id, uint32_t w, uint32_t h)
+buffer_resize(struct wayland_buffer *buf, struct wayland *wl, uint32_t w, uint32_t h)
 {
-	struct wayland_buffer *buf = wl->buffers + id;
+	cairo_surface_t *sfc;
+	cairo_t *ctx;
 	char name[128];
 	size_t stride;
 	size_t size;
@@ -382,7 +396,7 @@ buffer_update(struct wayland *wl, size_t id, uint32_t w, uint32_t h)
 
 	/* checks */
 
-	if (buf->width == w && buf->height == h)
+	if (buf->w == w && buf->h == h)
 	{
 		return true;
 	}
@@ -441,9 +455,6 @@ buffer_update(struct wayland *wl, size_t id, uint32_t w, uint32_t h)
 
 	/* prepare cairo components */
 
-	cairo_surface_t *sfc;
-	cairo_t *ctx;
-
 	sfc = cairo_image_surface_create_for_data(data, CAIRO_FORMAT_ARGB32, w, h, stride);
 	if (cairo_surface_status(sfc) != CAIRO_STATUS_SUCCESS)
 	{
@@ -458,7 +469,7 @@ buffer_update(struct wayland *wl, size_t id, uint32_t w, uint32_t h)
 
 	/* cleanup */
 
-	buffer_free(wl, id);
+	buffer_free(buf);
 	wl_shm_pool_destroy(pool);
 	close(fd);
 
@@ -468,8 +479,8 @@ buffer_update(struct wayland *wl, size_t id, uint32_t w, uint32_t h)
 	buf->pixels  = data;
 	buf->surface = sfc;
 	buf->cairo   = ctx;
-	buf->width   = w;
-	buf->height  = h;
+	buf->w       = w;
+	buf->h       = h;
 	buf->busy    = false;
 
 	return true;
@@ -487,20 +498,57 @@ fail_buff:
 fail_file:
 	close(fd);
 fail_open:
-	event_stack_push(wl->queue, cevent_error);
 	return false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-cl_capabilities_seat(void *data, struct wl_seat *seat, uint32_t capabilities)
+cl_bind(void *data, struct wl_registry *reg, uint32_t id, const char *name, uint32_t ver)
 {
-	(void)data;
-	(void)seat;
-	(void)capabilities;
+	(void)ver;
 
-	// TODO
+	CAST_WL_DATA(wl, data);
+
+	BIND(reg, id, name, 4, wl->compositor, wl_compositor_interface);
+	BIND(reg, id, name, 1, wl->seat, wl_seat_interface);
+	BIND(reg, id, name, 1, wl->shm, wl_shm_interface);
+	BIND(reg, id, name, 1, wl->xdg, xdg_wm_base_interface);
+	BIND(reg, id, name, 1, wl->decor, zxdg_decoration_manager_v1_interface);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+cl_button(void *data, struct wl_pointer *pt, uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
+{
+	(void)pt;
+	(void)serial;
+	(void)time;
+
+	CAST_WL_DATA(wl, data);
+
+	struct cevent ev =
+	{
+		.type = state == WL_POINTER_BUTTON_STATE_PRESSED ? CEVENT_BUTTON_PRESS : CEVENT_BUTTON_RELEASE,
+	};
+
+	switch (button)
+	{
+		case 0x110:
+			ev.button_id = 1;
+			break;
+
+		case 0x112:
+			ev.button_id = 2;
+			break;
+
+		case 0x111:
+			ev.button_id = 3;
+			break;
+	}
+
+	event_stack_push(wl->queue, ev);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -574,20 +622,6 @@ cl_frame(void *data, struct wl_callback *cl, uint32_t time)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-cl_interface_add(void *data, struct wl_registry *reg, uint32_t id, const char *name, uint32_t ver)
-{
-	CAST_WL_DATA(wl, data);
-
-	BIND( reg, id, name, ver, wl->compositor, wl_compositor_interface              );
-	BIND( reg, id, name, ver, wl->seat,       wl_seat_interface                    );
-	BIND( reg, id, name, ver, wl->shm,        wl_shm_interface                     );
-	BIND( reg, id, name, ver, wl->xdg,        xdg_wm_base_interface                );
-	BIND( reg, id, name, ver, wl->decor,      zxdg_decoration_manager_v1_interface );
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
 cl_ping(void *data, struct xdg_wm_base *xdg, uint32_t serial)
 {
 	(void)data;
@@ -608,14 +642,28 @@ cl_release(void *data, struct wl_buffer *buf)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
+cl_seat(void *data, struct wl_seat *seat, uint32_t capabilities)
+{
+	CAST_WL_DATA(wl, data);
+
+	if (capabilities & WL_SEAT_CAPABILITY_POINTER)
+	{
+		wl->pointer = wl_seat_get_pointer(seat);
+		wl_pointer_add_listener(wl->pointer, &ear_pointer, wl);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 destroy_interfaces(struct wayland *wl)
 {
-	FREE( wl->decor,      zxdg_decoration_manager_v1_destroy );
-	FREE( wl->xdg,        xdg_wm_base_destroy                );
-	FREE( wl->shm,        wl_shm_destroy                     );
-	FREE( wl->seat,       wl_seat_destroy                    );
-	FREE( wl->compositor, wl_compositor_destroy              );
-	FREE( wl->registry,   wl_registry_destroy                );
+	FREE(wl->decor, zxdg_decoration_manager_v1_destroy);
+	FREE(wl->xdg, xdg_wm_base_destroy);
+	FREE(wl->shm, wl_shm_destroy);
+	FREE(wl->seat, wl_seat_destroy);
+	FREE(wl->compositor, wl_compositor_destroy);
+	FREE(wl->registry, wl_registry_destroy);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -681,48 +729,67 @@ flush(struct wayland *wl)
 /************************************************************************************************************/
 
 static void
-cl_capabilities_top(void *data, struct xdg_toplevel *top, struct wl_array *arr)
+cl_axis(void *data, struct wl_pointer *pt, uint32_t time, uint32_t axis, wl_fixed_t value)
 {
 	(void)data;
-	(void)top;
-	(void)arr;
+	(void)pt;
+	(void)time;
+	(void)axis;
+	(void)value;
 
-	/* nothing */
+	// TODO
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-cl_conf_bounds(void *data, struct xdg_toplevel *top, int w, int h)
+cl_enter(void *data, struct wl_pointer *pt, uint32_t serial, struct wl_surface *sfc, wl_fixed_t x, wl_fixed_t y)
 {
 	(void)data;
-	(void)top;
-	(void)w;
-	(void)h;
+	(void)pt;
+	(void)serial;
+	(void)sfc;
+	(void)x;
+	(void)y;
 
-	/* nothing */
+	// TODO
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-cl_interface_del(void *data, struct wl_registry *reg, uint32_t id)
+cl_leave(void *data, struct wl_pointer *pt, uint32_t serial, struct wl_surface *sfc)
+{
+	(void)data;
+	(void)pt;
+	(void)serial;
+	(void)sfc;
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+cl_motion(void *data, struct wl_pointer *pt, uint32_t time, wl_fixed_t x, wl_fixed_t y)
+{
+	(void)data;
+	(void)pt;
+	(void)time;
+	(void)x;
+	(void)y;
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+cl_unbind(void *data, struct wl_registry *reg, uint32_t id)
 {
 	(void)data;
 	(void)reg;
 	(void)id;
-
-	/* nothing */
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-cl_seat_name(void *data, struct wl_seat *seat, const char *name)
-{
-	(void)data;
-	(void)seat;
-	(void)name;
 
 	/* nothing */
 }

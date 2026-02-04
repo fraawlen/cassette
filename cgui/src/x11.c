@@ -67,7 +67,7 @@ x11_commit(struct x11 *x, cshell *sh)
 		xcb_free_pixmap(x->connection, x->buffer);
 		x->buffer_w = w;
 		x->buffer_h = h;
-		x->buffer   = xcb_generate_id(x->connection);
+		x->buffer = xcb_generate_id(x->connection);
 		xcb_create_pixmap(x->connection, x->depth, x->buffer, x->window, w, h);
 		cairo_surface_flush(x->surface);
 		cairo_xcb_surface_set_drawable(x->surface, x->buffer, w, h);
