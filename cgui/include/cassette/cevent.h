@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cairo/cairo.h>
+#include <cassette/cobj.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -38,10 +39,7 @@ struct cevent
 		/* CEVENT_BUTTON_PRESS   */
 		/* CEVENT_BUTTON_RELEASE */
 
-		struct
-		{
-			int button_id;
-		};
+		int button;
 
 		/* CEVENT_TRANSFORM */
 
@@ -55,10 +53,7 @@ struct cevent
 
 		/* CEVENT_REDRAW  */
 
-		struct
-		{
-			cairo_t *redraw_ctx;
-		};
+		cairo_t *redraw_ctx;
 
 		/* CEVENT_NONE    */
 		/* CEVENT_FAIL    */

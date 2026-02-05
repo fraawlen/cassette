@@ -91,7 +91,7 @@ event_stack_length(event_stack *evs)
 struct cevent
 event_stack_pop(event_stack *evs)
 {
-	GUARD(evs, cevent_error);
+	GUARD(evs, cevent_blank);
 
 	return evs->n > 0 ? evs->slots[--evs->n] : cevent_blank;
 }

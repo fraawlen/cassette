@@ -179,7 +179,7 @@ wayland_commit(struct wayland *wl, cshell *sh)
 		else
 		{
 			shell_dispatch_event(sh, cevent_error);
-		}
+		}		
 	}
 
 	/* commit */
@@ -192,11 +192,6 @@ wayland_commit(struct wayland *wl, cshell *sh)
 
 	/* end */
 
-	if (event_stack_error(wl->queue))
-	{
-		shell_dispatch_event(sh, cevent_error);
-	}
-
 	flush(wl);
 }
 
@@ -205,7 +200,7 @@ wayland_commit(struct wayland *wl, cshell *sh)
 void
 wayland_dispatch(struct wayland *wl, cshell *sh)
 {
-	if (dispatch_nonblock(wl))
+	if (dispatch_nonblock(wl) && event_stack_error(wl->queue) == CERR_NONE)
 	{
 		while (event_stack_length(wl->queue) > 0)
 		{
@@ -536,15 +531,15 @@ cl_button(void *data, struct wl_pointer *pt, uint32_t serial, uint32_t time, uin
 	switch (button)
 	{
 		case 0x110:
-			ev.button_id = 1;
+			ev.button = 1;
 			break;
 
 		case 0x112:
-			ev.button_id = 2;
+			ev.button = 2;
 			break;
 
 		case 0x111:
-			ev.button_id = 3;
+			ev.button = 3;
 			break;
 	}
 

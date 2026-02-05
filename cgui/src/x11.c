@@ -13,6 +13,7 @@
 #include <xcb/render.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_aux.h>
+#include <xcb/xcb_renderutil.h>
 #include <xcb/xfixes.h>
 
 #include "shell.h"
@@ -56,8 +57,7 @@ x11_commit(struct x11 *x, cshell *sh)
 
 	if (x->busy)
 	{
-		xcb_flush(x->connection);
-		return;
+		goto end;
 	}
 
 	/* update buffer size */
@@ -109,6 +109,8 @@ x11_commit(struct x11 *x, cshell *sh)
 	}
 
 	/* end */
+
+end:
 
 	xcb_flush(x->connection);
 	if (xcb_connection_has_error(x->connection))
@@ -418,8 +420,8 @@ ev_button(xcb_button_press_event_t *xev, bool press)
 {
 	struct cevent cev =
 	{
-		.type      = press ? CEVENT_BUTTON_PRESS : CEVENT_BUTTON_RELEASE,
-		.button_id = xev->detail,
+		.type   = press ? CEVENT_BUTTON_PRESS : CEVENT_BUTTON_RELEASE,
+		.button = xev->detail,
 	};
 
 	return cev;

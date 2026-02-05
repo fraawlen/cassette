@@ -420,11 +420,11 @@ shell_dispatch_event(cshell *sh, struct cevent ev)
 	switch (ev.type)
 	{
 		case CEVENT_BUTTON_PRESS:
-			printf("shell clicked (id = %i)\n", ev.button_id);
+			printf("shell clicked (id = %i)\n", ev.button);
 			break;
 
 		case CEVENT_BUTTON_RELEASE:
-			printf("shell release (id = %i)\n", ev.button_id);
+			printf("shell release (id = %i)\n", ev.button);
 			break;
 
 		case CEVENT_REDRAW:
