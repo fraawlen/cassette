@@ -7,10 +7,13 @@
 #include <cassette/cgui.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <xcb/present.h>
 #include <xcb/render.h>
+#include <xcb/sync.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_aux.h>
 #include <xcb/xcb_renderutil.h>
@@ -38,6 +41,7 @@ static bool       fail        (struct x11 *, xcb_void_cookie_t);
 static uint8_t    opcode      (struct x11 *, const char *);
 static bool       prop_set    (struct x11 *, xcb_atom_t, xcb_atom_t, uint32_t, const void *, bool);
 static bool       setup_image (struct x11 *);
+static bool       setup_sync  (struct x11 *);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -106,12 +110,17 @@ x11_commit(struct x11 *x, cshell *sh)
 			x->present = false;
 			xcb_copy_area(x->connection, x->buffer, x->window, x->gc, 0, 0, 0, 0, w, h);
 		}
+
+		if (x->opcode_sync != 0 && x->sync)
+		{
+			x->sync = false;
+			xcb_sync_set_counter(x->connection, x->sync_count, x->sync_val);
+		}
 	}
 
 	/* end */
 
 end:
-
 	xcb_flush(x->connection);
 	if (xcb_connection_has_error(x->connection))
 	{
@@ -170,6 +179,10 @@ x11_dispatch(struct x11 *x, cshell *sh)
 bool
 x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
 {
+	const char *name  = "shell"; // TODO set as arg
+	const char *class = "cgui";  // TODO set as arg
+	const char *tag   = "tag";   // TODO set as arg
+
 	xcb_void_cookie_t ck;
 
 	/* base setup */
@@ -191,10 +204,18 @@ x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
 	x->opcode_present = opcode(x, "Present");
 	x->opcode_render  = opcode(x, "RENDER");
 	x->opcode_xinput  = opcode(x, "XInputExtension");
+	x->opcode_sync    = opcode(x, "SYNC");
 
 	/* select format, visual and depth (xrender default, screen root fallback) */
 
 	if (!setup_image(x))
+	{
+		goto fail_screen;
+	}
+
+	/* setup EWMH sync facilities */
+
+	if (!setup_sync(x))
 	{
 		goto fail_screen;
 	}
@@ -211,7 +232,7 @@ x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
 
 	if (fail(x, ck))
 	{
-		goto fail_screen;
+		goto fail_color;
 	}
 
 	/* window setup */
@@ -311,18 +332,73 @@ x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
 		}
 	}
 
-	/* ICCCM setup */
+	/* setup atoms */
 
+	x->atom_clip     = atom(x, "CLIPBOARD");
+	x->atom_multiple = atom(x, "MULTIPLE");
+	x->atom_target   = atom(x, "TARGETS");
 	x->atom_utf8     = atom(x, "UTF8_STRING");
 	x->atom_time     = atom(x, "TIMESTAMP");
+
 	x->atom_protocol = atom(x, "WM_PROTOCOLS");
 	x->atom_close    = atom(x, "WM_DELETE_WINDOW");
 	x->atom_focus    = atom(x, "WM_TAKE_FOCUS");
+	x->atom_name     = atom(x, "WM_NAME");
+	x->atom_icon     = atom(x, "WM_ICON_NAME");
+	x->atom_class    = atom(x, "WM_CLASS");
+	x->atom_cmd      = atom(x, "WM_COMMAND");
+	x->atom_host     = atom(x, "WM_CLIENT_MACHINE");
+	x->atom_lead     = atom(x, "WM_CLIENT_LEADER");
+
 	x->atom_ping     = atom(x, "_NET_WM_PING");
+	x->atom_pid      = atom(x, "_NET_WM_PID");
+	x->atom_name2    = atom(x, "_NET_WM_NAME");
+	x->atom_icon2    = atom(x, "_NET_WM_ICON_NAME");
+	x->atom_type     = atom(x, "_NET_WM_WINDOW_TYPE");
+	x->atom_shell    = atom(x, "_NET_WM_WINDOW_TYPE_NORMAL");
+	x->atom_dock     = atom(x, "_NET_WM_WINDOW_TYPE_DOCK");
+	x->atom_menu     = atom(x, "_NET_WM_WINDOW_TYPE_POPUP_MENU");
+	x->atom_sync     = atom(x, "_NET_WM_SYNC_REQUEST");
+	x->atom_sync2    = atom(x, "_NET_WM_SYNC_REQUEST_COUNTER");
+	
+	/* ICCCM and EWMH properties setup */
+
+	char host[256] = "";
+	uint32_t pid;
+	size_t tag_n;
+	size_t name_n;
+	size_t host_n;
+	size_t class_n;
+
+	gethostname(host, 256);
+
+	class_n = strlen(class) + 1;
+	tag_n   = strlen(tag)   + 1;
+	host_n  = strlen(host);
+	name_n  = strlen(name);
+	pid     = getpid();
 
 	prop_set(x, x->atom_protocol, XCB_ATOM_ATOM, 1, &x->atom_close, true);
 	prop_set(x, x->atom_protocol, XCB_ATOM_ATOM, 1, &x->atom_focus, false);
 	prop_set(x, x->atom_protocol, XCB_ATOM_ATOM, 1, &x->atom_ping,  false);
+
+	prop_set(x, x->atom_name2, x->atom_utf8,    name_n,  name,  true);
+	prop_set(x, x->atom_icon2, x->atom_utf8,    name_n,  name,  true);
+	prop_set(x, x->atom_name,  XCB_ATOM_STRING, name_n,  name,  true);
+	prop_set(x, x->atom_icon,  XCB_ATOM_STRING, name_n,  name,  true);
+	prop_set(x, x->atom_class, XCB_ATOM_STRING, tag_n,   tag,   true);
+	prop_set(x, x->atom_class, XCB_ATOM_STRING, class_n, class, false);
+
+	prop_set(x, x->atom_type,  XCB_ATOM_ATOM,     1,      &x->atom_shell, true);
+	prop_set(x, x->atom_lead,  XCB_ATOM_WINDOW,   1,      &x->window,     true);
+	prop_set(x, x->atom_pid,   XCB_ATOM_CARDINAL, 1,      &pid,           true);
+	prop_set(x, x->atom_host,  XCB_ATOM_STRING,   host_n, host,           true);
+	
+	if (x->opcode_sync != 0)
+	{
+		prop_set(x, x->atom_protocol, XCB_ATOM_ATOM,     1, &x->atom_sync,  false);
+		prop_set(x, x->atom_sync2,    XCB_ATOM_CARDINAL, 1, &x->sync_count, true);
+	}
 
 	/* end */
 
@@ -338,6 +414,7 @@ x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
 	x->present  = false;
 	x->busy     = false;
 	x->wait     = false;
+	x->sync     = false;
 
 	xcb_flush(x->connection);
 
@@ -359,6 +436,8 @@ fail_buf:
 	xcb_destroy_window(x->connection, x->window);
 fail_win:
 	xcb_free_colormap(x->connection, x->colormap);
+fail_color:
+	xcb_sync_destroy_counter(x->connection, x->sync_count);
 fail_screen:
 	xcb_disconnect(x->connection);
 fail_con:
@@ -378,6 +457,7 @@ x11_kill(struct x11 *x)
 	xcb_free_pixmap(x->connection, x->buffer);
 	xcb_unmap_window(x->connection, x->window);
 	xcb_destroy_window(x->connection, x->window);
+	xcb_sync_destroy_counter(x->connection, x->sync_count);
 	xcb_disconnect(x->connection);
 }
 
@@ -474,12 +554,13 @@ ev_extension(xcb_ge_generic_event_t *xev, struct x11 *x)
 static struct cevent
 ev_message(xcb_client_message_event_t *xev, struct x11 *x)
 {
+	uint32_t ev_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
 	xcb_atom_t msg = xev->data.data32[0];
-	struct cevent cev = cevent_unknown;
+	struct cevent cev = cevent_blank;
 
-	if (xev->type != x->atom_protocol)
+	if (xev->format != 32 || xev->type != x->atom_protocol)
 	{
-		return cev;
+		cev.type = CEVENT_UNKNOWN;
 	}
 	else if (msg == x->atom_close)
 	{
@@ -487,12 +568,22 @@ ev_message(xcb_client_message_event_t *xev, struct x11 *x)
 	}
 	else if (msg == x->atom_focus)
 	{
-		xcb_set_input_focus(x->connection, XCB_INPUT_FOCUS_PARENT, xev->window, XCB_CURRENT_TIME);
+		xcb_set_input_focus(x->connection, XCB_INPUT_FOCUS_PARENT, xev->window, xev->data.data32[1]);
 	}
 	else if (msg == x->atom_ping)
 	{
 		xev->window = x->screen->root;
-		xcb_send_event(x->connection, 0, x->screen->root, XCB_EVENT_MASK_NO_EVENT, (char*)xev);
+		xcb_send_event(x->connection, 0, x->screen->root, ev_mask, (char*)xev);
+	}
+	else if (msg == x->atom_sync)
+	{
+		x->sync_val.lo = xev->data.data32[2];
+		x->sync_val.hi = xev->data.data32[3];
+		x->sync = true;
+	}
+	else
+	{
+		cev.type = CEVENT_UNKNOWN;
 	}
 
 	return cev;
@@ -639,4 +730,33 @@ done:
 	free(rp);
 	return (x->depth  = xcb_aux_get_depth_of_visual(x->screen, id)) != 0
 	    && (x->visual = xcb_aux_find_visual_by_id(x->screen, id));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static bool
+setup_sync(struct x11 *x)
+{
+	xcb_sync_initialize_cookie_t ck;
+	xcb_sync_initialize_reply_t *rp;
+
+	if (x->opcode_sync == 0)
+	{
+		return true;
+	}
+
+	ck = xcb_sync_initialize(x->connection, 3, 1);
+	if (!(rp = xcb_sync_initialize_reply(x->connection, ck, nullptr)))
+	{
+		x->opcode_sync = 0;
+		return true;
+	}
+
+	free(rp);
+
+	x->sync_val.hi = 0;
+	x->sync_val.lo = 0;
+	x->sync_count  = xcb_generate_id(x->connection);
+
+	return !fail(x, xcb_sync_create_counter_checked(x->connection, x->sync_count, x->sync_val));
 }
