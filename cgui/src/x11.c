@@ -130,6 +130,7 @@ end:
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+#include <stdio.h>
 void
 x11_dispatch(struct x11 *x, cshell *sh)
 {
@@ -168,7 +169,7 @@ x11_dispatch(struct x11 *x, cshell *sh)
 				cev = ev_unknown(xev);
 				break;
 		}
-
+		
 		shell_dispatch_event(sh, cev);
 		free(xev);
 	}

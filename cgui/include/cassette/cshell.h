@@ -9,8 +9,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#include "cdisplay.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -20,6 +18,14 @@ extern "C" {
 /************************************************************************************************************/
 
 typedef struct cshell cshell;
+
+enum cshell_backend
+{
+	CSHELL_NONE    = 0b00,
+	CSHELL_X11     = 0b01,
+	CSHELL_WAYLAND = 0b10,
+	CSHELL_ANY     = 0b11,
+};
 
 /************************************************************************************************************/
 /* LIFECYCLE ************************************************************************************************/
@@ -53,7 +59,7 @@ void cshell_wait(cshell *sh);
 /* ACCESS ***************************************************************************************************/
 /************************************************************************************************************/
 
-const cdisplay *cshell_display(const cshell *sh);
+enum cshell_backend cshell_backend(const cshell *sh);
 
 enum cerr cshell_error(const cshell *sh);
 

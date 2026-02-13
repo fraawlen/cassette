@@ -30,13 +30,10 @@ static sem_t sem;
 /************************************************************************************************************/
 
 int
-main(int argc, char **argv)
+main(void)
 {
 	pthread_t tr;
 	cshell *sh;
-
- 	(void)argc;
-	(void)argv;
 
 	/* Instantiation */
 
@@ -64,7 +61,6 @@ main(int argc, char **argv)
 	}
 
 	/* End & cleanup */
-
 
 	cshell_join(sh);
 	pthread_join(tr, nullptr);
@@ -122,7 +118,7 @@ task4(cshell *sh, void *data)
 {
 	(void)data;
 
-	printf("opened shell on %s\n", cdisplay_server(cshell_display(sh)) == CDISPLAY_X11 ? "x11" : "wayland");
+	printf("opened shell on %s\n", cshell_backend(sh) == CSHELL_X11 ? "x11" : "wayland");
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
