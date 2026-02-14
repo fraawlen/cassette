@@ -17,6 +17,33 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+struct x11_window
+{
+	/* toplevel components */
+
+	xcb_sync_counter_t sync_count;
+	xcb_window_t window;
+	xcb_pixmap_t buffer;
+	xcb_gcontext_t gc;
+	cairo_surface_t *surface;
+	cairo_t *cairo;
+
+	/* states */
+
+	xcb_sync_int64_t sync_val;
+	uint32_t buffer_w;
+	uint32_t buffer_h;
+	uint32_t serial;
+	bool present;
+	bool active;
+	bool redraw;
+	bool wait;
+	bool busy;
+	bool sync;
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 struct x11
 {
 	/* core components */
@@ -27,16 +54,14 @@ struct x11
 	xcb_colormap_t colormap;
 	uint8_t depth;
 
-	/* toplevel components */
+	/* extensions */
 
-	xcb_sync_counter_t sync_count;
-	xcb_window_t window;
-	xcb_pixmap_t buffer;
-	xcb_gcontext_t gc;
-	cairo_surface_t *surface;
-	cairo_t *cairo;
+	uint8_t opcode_present;
+	uint8_t opcode_render;
+	uint8_t opcode_xinput;
+	uint8_t opcode_sync;
 
-	/* atoms */
+	/* ICCCM & EWMH atoms */
 
 	xcb_atom_t atom_protocol;
 	xcb_atom_t atom_close;
@@ -63,42 +88,46 @@ struct x11
 	xcb_atom_t atom_sync;
 	xcb_atom_t atom_sync2;
 
-	/* extensions */
+	/* surfaces */
 
-	xcb_sync_int64_t sync_val;
-
-	uint8_t opcode_present;
-	uint8_t opcode_render;
-	uint8_t opcode_xinput;
-	uint8_t opcode_sync;
-
-	/* states */
-
-	uint32_t buffer_w;
-	uint32_t buffer_h;
-	uint32_t serial;
-	bool present;
-	bool redraw;
-	bool wait;
-	bool busy;
-	bool sync;
+	struct x11_window shell;
+	struct x11_window menu;
 };
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
-x11_commit(struct x11 *x, cshell *sh);
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
+x11_menu_close(struct x11 *x);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] bool
+x11_menu_open(struct x11 *x, uint32_t w, uint32_t h);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
+x11_menu_redraw(struct x11 *x);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
+x11_shell_close(struct x11 *x);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] bool
+x11_shell_open(struct x11 *x, uint32_t w, uint32_t h);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
+x11_shell_redraw(struct x11 *x);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
-x11_dispatch(struct x11 *x, cshell *sh);
+x11_server_commit(struct x11 *x, cshell *sh);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
+x11_server_dispatch(struct x11 *x, cshell *sh);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] bool
-x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h);
+x11_server_init(struct x11 *x, int *fd);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-x11_kill(struct x11 *x);
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-x11_redraw(struct x11 *x);
+x11_server_kill(struct x11 *x);

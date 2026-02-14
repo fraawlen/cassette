@@ -104,15 +104,20 @@ struct call
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void  backend_commit   (cshell *);
-static void  backend_dispatch (cshell *);
-static bool  backend_init     (cshell *, enum cshell_backend);
-static void  backend_kill     (cshell *);
-static void  backend_redraw   (cshell *);
-static void  dispatch_invoke  (cshell *);
-static void  dummy            (cshell *, void *);
-static bool  run              (cshell *);
-static void *thread           (void   *);
+static void  backend_server_commit   (cshell *);
+static void  backend_server_dispatch (cshell *);
+static bool  backend_server_init     (cshell *, enum cshell_backend);
+static void  backend_server_kill     (cshell *);
+static void  backend_shell_close     (cshell *);
+static bool  backend_shell_open      (cshell *, uint32_t, uint32_t);
+static void  backend_shell_redraw    (cshell *);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void  dispatch_invoke (cshell *);
+static void  dummy           (cshell *, void *);
+static bool  run             (cshell *);
+static void *thread          (void   *);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -202,8 +207,6 @@ cshell_create(void)
 	sh->data_open  = nullptr;
 	sh->fn_close   = dummy;
 	sh->fn_open    = dummy;
-	sh->w          = 500;
-	sh->h          = 300;
 
 	return sh;
 
@@ -357,9 +360,14 @@ cshell_open(cshell *sh)
 		goto fail_open;
 	}
 
-	if (!backend_init(sh, CSHELL_ANY))
+	if (!backend_server_init(sh, CSHELL_ANY))
 	{
 		goto fail_back;
+	}
+
+	if (!backend_shell_open(sh, 500, 300))
+	{
+		goto fail_win;
 	}
 
 	if (pipe(sh->fd_call) != 0)
@@ -378,14 +386,25 @@ cshell_open(cshell *sh)
 		goto fail_flags;
 	}
 	
-	if (pthread_create(&sh->thread, nullptr, thread, sh) == 0)
+	if (pthread_create(&sh->thread, nullptr, thread, sh) != 0)
 	{
-		atomic_store(&sh->state, OPEN);
-		goto done;
+		goto fail_thread;
 	}
 
+	/* end */
+
+	sh->w = 500;
+	sh->h = 300;
+
+	atomic_store(&sh->state, OPEN);
+	pthread_cond_broadcast(&sh->cond);
+	pthread_mutex_unlock(&sh->mutex);
+
+	return;
+
 	/* error cleanup */
-	
+
+fail_thread:
 fail_flags:
 	close(sh->fd_poke[0]);
 	close(sh->fd_poke[1]);
@@ -394,16 +413,13 @@ fail_pipe2:
 	close(sh->fd_call[1]);
 fail_pipe:
 	shell_set_error(sh, CERR_THREAD);
-	backend_kill(sh);
+fail_win:
+	backend_server_kill(sh);
 fail_back:
 	shell_set_error(sh, CERR_DISPLAY);
 	atomic_store(&sh->state, CLOSED);
 fail_open:
 	shell_set_error(sh, CERR_CALL);
-
-	/* end */
-
-done:
 	pthread_cond_broadcast(&sh->cond);
 	pthread_mutex_unlock(&sh->mutex);
 }
@@ -464,7 +480,7 @@ shell_dispatch_event(cshell *sh, struct cevent ev)
 			break;
 
 		case CEVENT_REDRAW:
-			printf("shell redrawn\n");
+//			printf("shell redrawn\n");
 			cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
 			cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
 			cairo_paint(ev.redraw_ctx);
@@ -478,8 +494,8 @@ shell_dispatch_event(cshell *sh, struct cevent ev)
 			{
 				sh->w = ev.transform_w;
 				sh->h = ev.transform_h;
-				backend_redraw(sh);
-				printf("shell resized\n");
+				backend_shell_redraw(sh);
+//				printf("shell resized\n");
 			}
 			break;
 
@@ -550,29 +566,29 @@ shell_w(const cshell *sh)
 /************************************************************************************************************/
 
 static void
-backend_commit(cshell *sh)
+backend_server_commit(cshell *sh)
 {
-	ROUTE(sh, commit, sh);
+	ROUTE(sh, server_commit, sh);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-backend_dispatch(cshell *sh)
+backend_server_dispatch(cshell *sh)
 {
-	ROUTE(sh, dispatch, sh);
+	ROUTE(sh, server_dispatch, sh);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-backend_init(cshell *sh, enum cshell_backend backend)
+backend_server_init(cshell *sh, enum cshell_backend backend)
 {
-	if (backend & CSHELL_WAYLAND && wayland_init(&sh->wl, &sh->fd_backend, sh->w, sh->h))
+	if (backend & CSHELL_WAYLAND && wayland_server_init(&sh->wl, &sh->fd_backend))
 	{
 		atomic_store(&sh->backend, CSHELL_WAYLAND);
 	}
-	else if (backend & CSHELL_X11 && x11_init(&sh->x, &sh->fd_backend, sh->w, sh->h))
+	else if (backend & CSHELL_X11 && x11_server_init(&sh->x, &sh->fd_backend))
 	{
 		atomic_store(&sh->backend, CSHELL_X11);
 	}
@@ -591,17 +607,43 @@ backend_init(cshell *sh, enum cshell_backend backend)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-backend_redraw(cshell *sh)
+backend_server_kill(cshell *sh)
 {
-	ROUTE(sh, redraw);
+	ROUTE(sh, server_kill);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-backend_kill(cshell *sh)
+backend_shell_close(cshell *sh)
 {
-	ROUTE(sh, kill);
+	ROUTE(sh, shell_close);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static bool
+backend_shell_open(cshell *sh, uint32_t w, uint32_t h)
+{
+	switch(atomic_load(&sh->backend))
+	{
+		case CSHELL_X11:
+			return x11_shell_open(&sh->x, w, h);
+
+		case CSHELL_WAYLAND:
+			return wayland_shell_open(&sh->wl, w, h);
+
+		default:
+			return true;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+backend_shell_redraw(cshell *sh)
+{
+	ROUTE(sh, shell_redraw);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -630,17 +672,6 @@ dispatch_invoke(cshell *sh)
 	pthread_cond_broadcast(&sh->cond);
 	pthread_mutex_unlock(&sh->mutex);
 	cl.fn(sh, cl.data);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-dummy(cshell *sh, void *data)
-{
-	(void)sh;
-	(void)data;
-
-	/* nothing */
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -683,7 +714,7 @@ run(cshell *sh)
 
 	if (pfd[1].revents & POLLIN)
 	{
-		backend_dispatch(sh);
+		backend_server_dispatch(sh);
 	}
 
 	/* shutdown signals */
@@ -729,7 +760,7 @@ thread(void *arg)
 	sh->fn_open(sh, sh->data_open);
 	while (run(sh))
 	{
-		backend_commit(sh);
+		backend_server_commit(sh);
 	}
 	sh->fn_close(sh, sh->data_close);
 
@@ -740,10 +771,24 @@ thread(void *arg)
 	close(sh->fd_call[1]);
 	close(sh->fd_poke[0]);
 	close(sh->fd_poke[1]);
-	backend_kill(sh);
+	backend_shell_close(sh);
+	backend_server_kill(sh);
 	atomic_store(&sh->state, CLOSED);
 	pthread_cond_broadcast(&sh->cond);
 	pthread_mutex_unlock(&sh->mutex);
 
 	pthread_exit(nullptr);
+}
+
+/************************************************************************************************************/
+/* STATIC - NOOP ********************************************************************************************/
+/************************************************************************************************************/
+
+static void
+dummy(cshell *sh, void *data)
+{
+	(void)sh;
+	(void)data;
+
+	/* nothing */
 }

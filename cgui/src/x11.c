@@ -36,91 +36,56 @@ static struct cevent ev_unknown   (xcb_generic_event_t          *);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static xcb_atom_t atom        (struct x11 *, const char *);
-static bool       fail        (struct x11 *, xcb_void_cookie_t);
-static uint8_t    opcode      (struct x11 *, const char *);
-static bool       prop_set    (struct x11 *, xcb_atom_t, xcb_atom_t, uint32_t, const void *, bool);
-static bool       setup_image (struct x11 *);
-static bool       setup_sync  (struct x11 *);
+static xcb_atom_t atom           (struct x11 *, const char *);
+static bool       fail           (struct x11 *, xcb_void_cookie_t);
+static uint8_t    opcode         (struct x11 *, const char *);
+static bool       prop_set       (struct x11 *, struct x11_window *, xcb_atom_t, xcb_atom_t, uint32_t, const void *, bool);
+static bool       setup_image    (struct x11 *);
+static void       setup_sync     (struct x11 *);
+static void       window_commit  (struct x11_window *, struct x11 *, cshell *);
+static void       window_destroy (struct x11_window *, struct x11 *);
+static bool       window_init    (struct x11_window *, struct x11 *, uint32_t, uint32_t);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
 void
-x11_commit(struct x11 *x, cshell *sh)
+x11_menu_close(struct x11 *x)
 {
-	uint32_t w = shell_w(sh);
-	uint32_t h = shell_h(sh);
+	window_destroy(&x->menu, x);
+}
 
-	struct cevent ev =
-	{
-		.type       = CEVENT_REDRAW,
-		.redraw_ctx = x->cairo,
-	};
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-	if (x->busy)
-	{
-		goto end;
-	}
+bool
+x11_menu_open(struct x11 *x, uint32_t w, uint32_t h)
+{
+	(void)x;
+	(void)w;
+	(void)h;
 
-	/* update buffer size */
+	// TODO
 
-	if (x->buffer_w < w || x->buffer_h < h)
-	{	
-		xcb_free_pixmap(x->connection, x->buffer);
-		x->buffer_w = w;
-		x->buffer_h = h;
-		x->buffer = xcb_generate_id(x->connection);
-		xcb_create_pixmap(x->connection, x->depth, x->buffer, x->window, w, h);
-		cairo_surface_flush(x->surface);
-		cairo_xcb_surface_set_drawable(x->surface, x->buffer, w, h);
-	}
+	return true;
+}
 
-	/* rendering */
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-	if (x->redraw)
-	{
-		x->redraw = false;
-		shell_dispatch_event(sh, ev);
-		cairo_surface_flush(x->surface);
-	}
+void
+x11_menu_redraw(struct x11 *x)
+{
+	x->menu.redraw = true;
+}
 
-	if (x->present && !x->wait)
-	{
-		if (x->opcode_present != 0)
-		{
-			x->busy    = true;
-			x->wait    = true;
-			x->present = false;
-			xcb_present_pixmap(
-				x->connection,
-				x->window,
-				x->buffer,
-				++x->serial,
-				XCB_XFIXES_REGION_NONE,
-				XCB_XFIXES_REGION_NONE,
-				0, 0, 0, 0, 0,
-				XCB_PRESENT_OPTION_COPY,
-				0, 1, 0, 0,
-				nullptr);
-		}
-		else /* fallback */
-		{
-			x->present = false;
-			xcb_copy_area(x->connection, x->buffer, x->window, x->gc, 0, 0, 0, 0, w, h);
-		}
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-		if (x->opcode_sync != 0 && x->sync)
-		{
-			x->sync = false;
-			xcb_sync_set_counter(x->connection, x->sync_count, x->sync_val);
-		}
-	}
+void
+x11_server_commit(struct x11 *x, cshell *sh)
+{
+	window_commit(&x->shell, x, sh);
+	window_commit(&x->menu,  x, sh);
 
-	/* end */
-
-end:
 	xcb_flush(x->connection);
 	if (xcb_connection_has_error(x->connection))
 	{
@@ -130,9 +95,8 @@ end:
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-#include <stdio.h>
 void
-x11_dispatch(struct x11 *x, cshell *sh)
+x11_server_dispatch(struct x11 *x, cshell *sh)
 {
 	xcb_generic_event_t *xev; 
 	struct cevent cev;
@@ -178,17 +142,13 @@ x11_dispatch(struct x11 *x, cshell *sh)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 bool
-x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
+x11_server_init(struct x11 *x, int *fd)
 {
-	const char *name  = "shell"; // TODO set as arg
-	const char *class = "cgui";  // TODO set as arg
-	const char *tag   = "tag";   // TODO set as arg
-
 	xcb_void_cookie_t ck;
 
-	/* base setup */
-
 	*x = (struct x11){0};
+
+	/* base setup */
 
 	if (xcb_connection_has_error(x->connection = xcb_connect(nullptr, nullptr)))
 	{
@@ -207,18 +167,13 @@ x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
 	x->opcode_xinput  = opcode(x, "XInputExtension");
 	x->opcode_sync    = opcode(x, "SYNC");
 
+	setup_sync(x);
+
 	/* select format, visual and depth (xrender default, screen root fallback) */
 
 	if (!setup_image(x))
 	{
-		goto fail_screen;
-	}
-
-	/* setup EWMH sync facilities */
-
-	if (!setup_sync(x))
-	{
-		goto fail_screen;
+		goto fail_image;
 	}
 
 	/* colormap setup */
@@ -236,103 +191,6 @@ x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
 		goto fail_color;
 	}
 
-	/* window setup */
-
-	const uint32_t win_opt = 
-		  XCB_CW_BACK_PIXMAP
-		| XCB_CW_BORDER_PIXEL
-		| XCB_CW_BIT_GRAVITY
-		| XCB_CW_EVENT_MASK
-		| XCB_CW_COLORMAP;
-
-	const uint32_t win_val[] =
-	{
-		  XCB_BACK_PIXMAP_NONE,
-		  0x00000000,
-		  XCB_GRAVITY_NORTH_WEST,
-		  XCB_EVENT_MASK_EXPOSURE
-		| XCB_EVENT_MASK_STRUCTURE_NOTIFY
-		| XCB_EVENT_MASK_BUTTON_PRESS
-		| XCB_EVENT_MASK_BUTTON_RELEASE,
-		  x->colormap,
-	};
-
-	x->window = xcb_generate_id(x->connection);
-	ck = xcb_create_window_checked(
-		x->connection,
-		x->depth,
-		x->window,
-		x->screen->root,
-		0, 0, w, h, 0,
-		XCB_WINDOW_CLASS_INPUT_OUTPUT,
-		x->visual->visual_id,
-		win_opt,
-		win_val);
-
-	if (fail(x, ck))
-	{
-		goto fail_win;
-	}
-
-	/* buffer setup */
-
-	x->buffer = xcb_generate_id(x->connection);
-	ck = xcb_create_pixmap_checked(
-		x->connection,
-		x->depth,
-		x->buffer,
-		x->window,
-		w, h);
-
-	if (fail(x, ck))
-	{
-		goto fail_buf;
-	}
-
-	/* gc setup for present extension fallback */
-
-	const uint32_t gc_opt   = XCB_GC_FOREGROUND;
-	const uint32_t gc_val[] = {0x00000000};
-
-	x->gc = xcb_generate_id(x->connection);
-	ck = xcb_create_gc_checked(x->connection, x->gc, x->buffer, gc_opt, gc_val);
-
-	if (fail(x, ck))
-	{
-		goto fail_gc;
-	}
-
-	/* cairo setup */
-
-	x->surface = cairo_xcb_surface_create(x->connection, x->buffer, x->visual, w, h);
-	if (cairo_surface_status(x->surface) != CAIRO_STATUS_SUCCESS)
-	{
-		goto fail_sfc;
-	}
-
-	x->cairo = cairo_create(x->surface);
-	if (cairo_status(x->cairo) != CAIRO_STATUS_SUCCESS)
-	{
-		goto fail_ctx;
-	}
-
-	/* register window to extension events */
-
-	if (x->opcode_present != 0)
-	{
-		ck = xcb_present_select_input_checked(
-			  x->connection,
-			  xcb_generate_id(x->connection),
-			  x->window, 
-			  XCB_PRESENT_EVENT_MASK_IDLE_NOTIFY
-			| XCB_PRESENT_EVENT_MASK_COMPLETE_NOTIFY);
-
-		if (fail(x, ck))
-		{
-			goto fail_ev;
-		}
-	}
-
 	/* setup atoms */
 
 	x->atom_clip     = atom(x, "CLIPBOARD");
@@ -340,7 +198,6 @@ x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
 	x->atom_target   = atom(x, "TARGETS");
 	x->atom_utf8     = atom(x, "UTF8_STRING");
 	x->atom_time     = atom(x, "TIMESTAMP");
-
 	x->atom_protocol = atom(x, "WM_PROTOCOLS");
 	x->atom_close    = atom(x, "WM_DELETE_WINDOW");
 	x->atom_focus    = atom(x, "WM_TAKE_FOCUS");
@@ -350,7 +207,6 @@ x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
 	x->atom_cmd      = atom(x, "WM_COMMAND");
 	x->atom_host     = atom(x, "WM_CLIENT_MACHINE");
 	x->atom_lead     = atom(x, "WM_CLIENT_LEADER");
-
 	x->atom_ping     = atom(x, "_NET_WM_PING");
 	x->atom_pid      = atom(x, "_NET_WM_PID");
 	x->atom_name2    = atom(x, "_NET_WM_NAME");
@@ -361,84 +217,18 @@ x11_init(struct x11 *x, int *fd, uint32_t w, uint32_t h)
 	x->atom_menu     = atom(x, "_NET_WM_WINDOW_TYPE_POPUP_MENU");
 	x->atom_sync     = atom(x, "_NET_WM_SYNC_REQUEST");
 	x->atom_sync2    = atom(x, "_NET_WM_SYNC_REQUEST_COUNTER");
-	
-	/* ICCCM and EWMH properties setup */
-
-	char host[256] = "";
-	uint32_t pid;
-	size_t tag_n;
-	size_t name_n;
-	size_t host_n;
-	size_t class_n;
-
-	gethostname(host, 256);
-
-	class_n = strlen(class) + 1;
-	tag_n   = strlen(tag)   + 1;
-	host_n  = strlen(host);
-	name_n  = strlen(name);
-	pid     = getpid();
-
-	prop_set(x, x->atom_protocol, XCB_ATOM_ATOM, 1, &x->atom_close, true);
-	prop_set(x, x->atom_protocol, XCB_ATOM_ATOM, 1, &x->atom_focus, false);
-	prop_set(x, x->atom_protocol, XCB_ATOM_ATOM, 1, &x->atom_ping,  false);
-
-	prop_set(x, x->atom_name2, x->atom_utf8,    name_n,  name,  true);
-	prop_set(x, x->atom_icon2, x->atom_utf8,    name_n,  name,  true);
-	prop_set(x, x->atom_name,  XCB_ATOM_STRING, name_n,  name,  true);
-	prop_set(x, x->atom_icon,  XCB_ATOM_STRING, name_n,  name,  true);
-	prop_set(x, x->atom_class, XCB_ATOM_STRING, tag_n,   tag,   true);
-	prop_set(x, x->atom_class, XCB_ATOM_STRING, class_n, class, false);
-
-	prop_set(x, x->atom_type,  XCB_ATOM_ATOM,     1,      &x->atom_shell, true);
-	prop_set(x, x->atom_lead,  XCB_ATOM_WINDOW,   1,      &x->window,     true);
-	prop_set(x, x->atom_pid,   XCB_ATOM_CARDINAL, 1,      &pid,           true);
-	prop_set(x, x->atom_host,  XCB_ATOM_STRING,   host_n, host,           true);
-	
-	if (x->opcode_sync != 0)
-	{
-		prop_set(x, x->atom_protocol, XCB_ATOM_ATOM,     1, &x->atom_sync,  false);
-		prop_set(x, x->atom_sync2,    XCB_ATOM_CARDINAL, 1, &x->sync_count, true);
-	}
 
 	/* end */
 
-	if (fail(x, xcb_map_window_checked(x->connection, x->window)))
-	{
-		goto fail_ev;
-	}
-
-	x->buffer_w = w;
-	x->buffer_h = h;
-	x->serial   = 0;
-	x->redraw   = true;
-	x->present  = false;
-	x->busy     = false;
-	x->wait     = false;
-	x->sync     = false;
-
-	xcb_flush(x->connection);
-
 	*fd = xcb_get_file_descriptor(x->connection);
+	xcb_flush(x->connection);
 
 	return true;
 
 	/* errors */
 
-fail_ev:
-	cairo_destroy(x->cairo);
-fail_ctx:
-	cairo_surface_destroy(x->surface);
-fail_sfc:
-	xcb_free_gc(x->connection, x->gc);
-fail_gc:
-	xcb_free_pixmap(x->connection, x->buffer);
-fail_buf:
-	xcb_destroy_window(x->connection, x->window);
-fail_win:
-	xcb_free_colormap(x->connection, x->colormap);
 fail_color:
-	xcb_sync_destroy_counter(x->connection, x->sync_count);
+fail_image:
 fail_screen:
 	xcb_disconnect(x->connection);
 fail_con:
@@ -448,26 +238,34 @@ fail_con:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_kill(struct x11 *x)
+x11_server_kill(struct x11 *x)
 {
-	cairo_destroy(x->cairo);
-	cairo_surface_finish(x->surface);
-	cairo_surface_destroy(x->surface);
-	xcb_free_gc(x->connection, x->gc);
-	xcb_free_colormap(x->connection, x->colormap);
-	xcb_free_pixmap(x->connection, x->buffer);
-	xcb_unmap_window(x->connection, x->window);
-	xcb_destroy_window(x->connection, x->window);
-	xcb_sync_destroy_counter(x->connection, x->sync_count);
+	xcb_free_gc(x->connection, x->shell.gc);
 	xcb_disconnect(x->connection);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_redraw(struct x11 *x)
+x11_shell_close(struct x11 *x)
 {
-	x->redraw = true;
+	window_destroy(&x->shell, x);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+x11_shell_open(struct x11 *x, uint32_t w, uint32_t h)
+{
+	return window_init(&x->shell, x, w, h);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_shell_redraw(struct x11 *x)
+{
+	x->shell.redraw = true;
 }
 
 /************************************************************************************************************/
@@ -522,7 +320,7 @@ ev_conf(xcb_configure_notify_event_t *xev, struct x11 *x, uint32_t w, uint32_t h
 		.transform_y = xev->y,
 	};
 
-	x->present |= xev->width < w || xev->height < h;
+	x->shell.present |= xev->width < w || xev->height < h;
 
 	return cev;
 }
@@ -532,7 +330,7 @@ ev_conf(xcb_configure_notify_event_t *xev, struct x11 *x, uint32_t w, uint32_t h
 static struct cevent
 ev_expose(xcb_expose_event_t *xev, struct x11 *x)
 {
-	x->present |= xev->count == 0;
+	x->shell.present |= xev->count == 0;
 
 	return cevent_blank;
 }
@@ -578,9 +376,9 @@ ev_message(xcb_client_message_event_t *xev, struct x11 *x)
 	}
 	else if (msg == x->atom_sync)
 	{
-		x->sync_val.lo = xev->data.data32[2];
-		x->sync_val.hi = xev->data.data32[3];
-		x->sync = true;
+		x->shell.sync_val.lo = xev->data.data32[2];
+		x->shell.sync_val.hi = xev->data.data32[3];
+		x->shell.sync = true;
 	}
 	else
 	{
@@ -601,11 +399,12 @@ ev_present(xcb_present_generic_event_t *xev, struct x11 *x)
 	switch (xev->evtype)
 	{
 		case XCB_PRESENT_EVENT_COMPLETE_NOTIFY:
-			x->wait &= cev->serial != x->serial || cev->kind != XCB_PRESENT_COMPLETE_KIND_PIXMAP;
+			x->shell.wait &= cev->serial != x->shell.serial
+			              || cev->kind   != XCB_PRESENT_COMPLETE_KIND_PIXMAP;
 			break;
 
 		case XCB_PRESENT_EVENT_IDLE_NOTIFY:
-			x->busy &= iev->pixmap != x->buffer;
+			x->shell.busy &= iev->pixmap != x->shell.buffer;
 			break;
 
 		default:
@@ -663,13 +462,13 @@ opcode(struct x11 *x, const char *name)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-prop_set(struct x11 *x, xcb_atom_t prop, xcb_atom_t type, uint32_t n, const void *data, bool head)
+prop_set(struct x11 *x, struct x11_window *win, xcb_atom_t prop, xcb_atom_t type, uint32_t n, const void *data, bool head)
 {
 	return fail(x,
 		xcb_change_property_checked(
 			x->connection,
 			head ? XCB_PROP_MODE_REPLACE : XCB_PROP_MODE_APPEND,
-			x->window,
+			win->window,
 			prop,
 			type,
 			type == x->atom_utf8 || type == x->atom_time || type == XCB_ATOM_STRING ? 8 : 32,
@@ -735,7 +534,7 @@ done:
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static bool
+static void
 setup_sync(struct x11 *x)
 {
 	xcb_sync_initialize_cookie_t ck;
@@ -743,21 +542,303 @@ setup_sync(struct x11 *x)
 
 	if (x->opcode_sync == 0)
 	{
-		return true;
+		return;
 	}
 
 	ck = xcb_sync_initialize(x->connection, 3, 1);
 	if (!(rp = xcb_sync_initialize_reply(x->connection, ck, nullptr)))
 	{
 		x->opcode_sync = 0;
-		return true;
 	}
 
 	free(rp);
+}
 
-	x->sync_val.hi = 0;
-	x->sync_val.lo = 0;
-	x->sync_count  = xcb_generate_id(x->connection);
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-	return !fail(x, xcb_sync_create_counter_checked(x->connection, x->sync_count, x->sync_val));
+void
+window_commit(struct x11_window *win, struct x11 *x, cshell *sh)
+{
+	uint32_t w = shell_w(sh);
+	uint32_t h = shell_h(sh);
+
+	struct cevent ev =
+	{
+		.type       = CEVENT_REDRAW,
+		.redraw_ctx = win->cairo,
+	};
+
+	if (!win->active || win->busy)
+	{
+		return;
+	}
+
+	/* update buffer size */
+
+	if (win->buffer_w < w || win->buffer_h < h)
+	{	
+		xcb_free_pixmap(x->connection, win->buffer);
+		win->buffer_w = w;
+		win->buffer_h = h;
+		win->buffer = xcb_generate_id(x->connection);
+		xcb_create_pixmap(x->connection, x->depth, win->buffer, win->window, w, h);
+		cairo_surface_flush(win->surface);
+		cairo_xcb_surface_set_drawable(win->surface, win->buffer, w, h);
+	}
+
+	/* rendering */
+
+	if (win->redraw)
+	{
+		win->redraw = false;
+		shell_dispatch_event(sh, ev);
+		cairo_surface_flush(win->surface);
+	}
+
+	if (win->present && !win->wait)
+	{
+		if (x->opcode_present != 0)
+		{
+			win->busy    = true;
+			win->wait    = true;
+			win->present = false;
+			xcb_present_pixmap(
+				x->connection,
+				win->window,
+				win->buffer,
+				++win->serial,
+				XCB_XFIXES_REGION_NONE,
+				XCB_XFIXES_REGION_NONE,
+				0, 0, 0, 0, 0,
+				XCB_PRESENT_OPTION_COPY,
+				0, 1, 0, 0,
+				nullptr);
+		}
+		else /* fallback */
+		{
+			win->present = false;
+			xcb_copy_area(x->connection, win->buffer, win->window, win->gc, 0, 0, 0, 0, w, h);
+		}
+
+		if (x->opcode_sync != 0 && win->sync)
+		{
+			win->sync = false;
+			xcb_sync_set_counter(x->connection, win->sync_count, win->sync_val);
+		}
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+window_destroy(struct x11_window *win, struct x11 *x)
+{
+	if (win->active)
+	{
+		cairo_destroy(win->cairo);
+		cairo_surface_finish(win->surface);
+		cairo_surface_destroy(win->surface);
+		xcb_free_gc(x->connection, win->gc);
+		xcb_free_pixmap(x->connection, win->buffer);
+		xcb_unmap_window(x->connection, win->window);
+		xcb_destroy_window(x->connection, win->window);
+		xcb_sync_destroy_counter(x->connection, win->sync_count);
+		win->active = false;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static bool
+window_init(struct x11_window *win, struct x11 *x, uint32_t w, uint32_t h)
+{
+	xcb_void_cookie_t ck;
+
+	/* window setup */
+
+	const uint32_t win_opt = 
+		  XCB_CW_BACK_PIXMAP
+		| XCB_CW_BORDER_PIXEL
+		| XCB_CW_BIT_GRAVITY
+		| XCB_CW_EVENT_MASK
+		| XCB_CW_COLORMAP;
+
+	const uint32_t win_val[] =
+	{
+		  XCB_BACK_PIXMAP_NONE,
+		  0x00000000,
+		  XCB_GRAVITY_NORTH_WEST,
+		  XCB_EVENT_MASK_EXPOSURE
+		| XCB_EVENT_MASK_STRUCTURE_NOTIFY
+		| XCB_EVENT_MASK_BUTTON_PRESS
+		| XCB_EVENT_MASK_BUTTON_RELEASE,
+		  x->colormap,
+	};
+
+	win->window = xcb_generate_id(x->connection);
+	ck = xcb_create_window_checked(
+		x->connection,
+		x->depth,
+		win->window,
+		x->screen->root,
+		0, 0, w, h, 0,
+		XCB_WINDOW_CLASS_INPUT_OUTPUT,
+		x->visual->visual_id,
+		win_opt,
+		win_val);
+
+	if (fail(x, ck))
+	{
+		goto fail_win;
+	}
+
+	/* sync setup */
+
+	win->sync_count = xcb_generate_id(x->connection);
+	ck = xcb_sync_create_counter_checked(x->connection, win->sync_count, win->sync_val);
+
+	if (fail(x, ck))
+	{
+		goto fail_sync;
+	}
+
+	/* buffer setup */
+
+	win->buffer = xcb_generate_id(x->connection);
+	ck = xcb_create_pixmap_checked(
+		x->connection,
+		x->depth,
+		win->buffer,
+		win->window,
+		w, h);
+
+	if (fail(x, ck))
+	{
+		goto fail_buf;
+	}
+
+	/* gc setup for present extension fallback */
+
+	const uint32_t gc_opt   = XCB_GC_FOREGROUND;
+	const uint32_t gc_val[] = {0x00000000};
+
+	win->gc = xcb_generate_id(x->connection);
+	ck = xcb_create_gc_checked(x->connection, win->gc, win->buffer, gc_opt, gc_val);
+
+	if (fail(x, ck))
+	{
+		goto fail_gc;
+	}
+
+	/* cairo setup */
+
+	win->surface = cairo_xcb_surface_create(x->connection, win->buffer, x->visual, w, h);
+	if (cairo_surface_status(win->surface) != CAIRO_STATUS_SUCCESS)
+	{
+		goto fail_sfc;
+	}
+
+	win->cairo = cairo_create(win->surface);
+	if (cairo_status(win->cairo) != CAIRO_STATUS_SUCCESS)
+	{
+		goto fail_ctx;
+	}
+
+	/* register window to extension events */
+
+	if (x->opcode_present != 0)
+	{
+		ck = xcb_present_select_input_checked(
+			  x->connection,
+			  xcb_generate_id(x->connection),
+			  win->window, 
+			  XCB_PRESENT_EVENT_MASK_IDLE_NOTIFY
+			| XCB_PRESENT_EVENT_MASK_COMPLETE_NOTIFY);
+
+		if (fail(x, ck))
+		{
+			goto fail_ev;
+		}
+	}
+	
+	/* ICCCM and EWMH properties setup */
+
+	const char *name  = "shell"; // TODO set as arg
+	const char *class = "cgui";  // TODO set as arg
+	const char *tag   = "tag";   // TODO set as arg
+
+	char host[256] = "";
+	uint32_t pid;
+	size_t tag_n;
+	size_t name_n;
+	size_t host_n;
+	size_t class_n;
+
+	gethostname(host, 256);
+
+	class_n = strlen(class) + 1;
+	tag_n   = strlen(tag)   + 1;
+	host_n  = strlen(host);
+	name_n  = strlen(name);
+	pid     = getpid();
+
+	prop_set(x, win, x->atom_protocol, XCB_ATOM_ATOM,     1,       &x->atom_close, true);
+	prop_set(x, win, x->atom_protocol, XCB_ATOM_ATOM,     1,       &x->atom_focus, false);
+	prop_set(x, win, x->atom_protocol, XCB_ATOM_ATOM,     1,       &x->atom_ping,  false);
+	prop_set(x, win, x->atom_name2,    x->atom_utf8,      name_n,  name,           true);
+	prop_set(x, win, x->atom_icon2,    x->atom_utf8,      name_n,  name,           true);
+	prop_set(x, win, x->atom_name,     XCB_ATOM_STRING,   name_n,  name,           true);
+	prop_set(x, win, x->atom_icon,     XCB_ATOM_STRING,   name_n,  name,           true);
+	prop_set(x, win, x->atom_class,    XCB_ATOM_STRING,   tag_n,   tag,            true);
+	prop_set(x, win, x->atom_class,    XCB_ATOM_STRING,   class_n, class,          false);
+	prop_set(x, win, x->atom_type,     XCB_ATOM_ATOM,     1,       &x->atom_shell, true);
+	prop_set(x, win, x->atom_lead,     XCB_ATOM_WINDOW,   1,       &win->window,   true);
+	prop_set(x, win, x->atom_pid,      XCB_ATOM_CARDINAL, 1,       &pid,           true);
+	prop_set(x, win, x->atom_host,     XCB_ATOM_STRING,   host_n,  host,           true);
+
+	if (x->opcode_sync != 0)
+	{
+		prop_set(x, win, x->atom_protocol, XCB_ATOM_ATOM,     1, &x->atom_sync,    false);
+		prop_set(x, win, x->atom_sync2,    XCB_ATOM_CARDINAL, 1, &win->sync_count, true);
+	}
+
+	/* end */
+
+	if (fail(x, xcb_map_window_checked(x->connection, win->window)))
+	{
+		goto fail_ev;
+	}
+
+	win->sync_val.hi = 0;
+	win->sync_val.lo = 0;
+	win->buffer_w    = w;
+	win->buffer_h    = h;
+	win->serial      = 0;
+	win->redraw      = true;
+	win->present     = false;
+	win->busy        = false;
+	win->wait        = false;
+	win->sync        = false;
+	win->active      = true;
+
+	xcb_flush(x->connection);
+
+	return true;
+
+	/* errors */
+
+fail_ev:
+	cairo_destroy(win->cairo);
+fail_ctx:
+	cairo_surface_destroy(win->surface);
+fail_sfc:
+	xcb_free_gc(x->connection, win->gc);
+fail_gc:
+	xcb_free_pixmap(x->connection, win->buffer);
+fail_buf:
+	xcb_sync_destroy_counter(x->connection, win->sync_count);
+fail_sync:
+	xcb_destroy_window(x->connection, win->window);
+fail_win:
+	return false;
 }

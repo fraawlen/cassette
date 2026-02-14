@@ -97,7 +97,6 @@ event_stack_pop(event_stack *evs)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-#include <stdio.h>
 void
 event_stack_push(event_stack *evs, struct cevent ev)
 {
