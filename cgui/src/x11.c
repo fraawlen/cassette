@@ -38,13 +38,17 @@ static struct cevent ev_unknown   (xcb_generic_event_t          *);
 
 static xcb_atom_t atom           (struct x11 *, const char *);
 static bool       fail           (struct x11 *, xcb_void_cookie_t);
+static bool       inputs_grab    (struct x11 *);
+static void       inputs_ungrab  (struct x11 *);
 static uint8_t    opcode         (struct x11 *, const char *);
+static void       position_popup (struct x11 *, uint32_t, uint32_t, int32_t *, int32_t *);
 static bool       prop_set       (struct x11 *, struct x11_window *, xcb_atom_t, xcb_atom_t, uint32_t, const void *, bool);
 static bool       setup_image    (struct x11 *);
 static void       setup_sync     (struct x11 *);
-static void       window_commit  (struct x11_window *, struct x11 *, cshell *);
+static struct x11_window *window (struct x11 *, xcb_window_t);
+static void       window_commit  (struct x11_window *, struct x11 *, cshell *, uint32_t, uint32_t);
 static void       window_destroy (struct x11_window *, struct x11 *);
-static bool       window_init    (struct x11_window *, struct x11 *, uint32_t, uint32_t);
+static bool       window_init    (struct x11_window *, struct x11 *, uint32_t, uint32_t, bool);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -54,6 +58,7 @@ void
 x11_menu_close(struct x11 *x)
 {
 	window_destroy(&x->menu, x);
+	inputs_ungrab(x);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -61,13 +66,7 @@ x11_menu_close(struct x11 *x)
 bool
 x11_menu_open(struct x11 *x, uint32_t w, uint32_t h)
 {
-	(void)x;
-	(void)w;
-	(void)h;
-
-	// TODO
-
-	return true;
+	return inputs_grab(x) && window_init(&x->menu, x, w, h, true);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -83,8 +82,8 @@ x11_menu_redraw(struct x11 *x)
 void
 x11_server_commit(struct x11 *x, cshell *sh)
 {
-	window_commit(&x->shell, x, sh);
-	window_commit(&x->menu,  x, sh);
+	window_commit(&x->shell, x, sh, shell_w(sh), shell_h(sh));
+	window_commit(&x->menu,  x, sh, x->menu.buffer_w, x->menu.buffer_h);
 
 	xcb_flush(x->connection);
 	if (xcb_connection_has_error(x->connection))
@@ -165,6 +164,7 @@ x11_server_init(struct x11 *x, int *fd)
 	x->opcode_present = opcode(x, "Present");
 	x->opcode_render  = opcode(x, "RENDER");
 	x->opcode_xinput  = opcode(x, "XInputExtension");
+	x->opcode_randr   = opcode(x, "RANDR");
 	x->opcode_sync    = opcode(x, "SYNC");
 
 	setup_sync(x);
@@ -257,7 +257,7 @@ x11_shell_close(struct x11 *x)
 bool
 x11_shell_open(struct x11 *x, uint32_t w, uint32_t h)
 {
-	return window_init(&x->shell, x, w, h);
+	return window_init(&x->shell, x, w, h, false);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -320,9 +320,13 @@ ev_conf(xcb_configure_notify_event_t *xev, struct x11 *x, uint32_t w, uint32_t h
 		.transform_y = xev->y,
 	};
 
-	x->shell.present |= xev->width < w || xev->height < h;
+	if (window(x, xev->window) == &x->shell)
+	{
+		x->shell.present |= xev->width < w || xev->height < h;
+		return cev;
+	}
 
-	return cev;
+	return cevent_blank;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -330,7 +334,7 @@ ev_conf(xcb_configure_notify_event_t *xev, struct x11 *x, uint32_t w, uint32_t h
 static struct cevent
 ev_expose(xcb_expose_event_t *xev, struct x11 *x)
 {
-	x->shell.present |= xev->count == 0;
+	window(x, xev->window)->present |= xev->count == 0;
 
 	return cevent_blank;
 }
@@ -354,8 +358,9 @@ static struct cevent
 ev_message(xcb_client_message_event_t *xev, struct x11 *x)
 {
 	uint32_t ev_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
-	xcb_atom_t msg = xev->data.data32[0];
+	struct x11_window *win = window(x, xev->window);
 	struct cevent cev = cevent_blank;
+	xcb_atom_t msg = xev->data.data32[0];
 
 	if (xev->format != 32 || xev->type != x->atom_protocol)
 	{
@@ -376,9 +381,9 @@ ev_message(xcb_client_message_event_t *xev, struct x11 *x)
 	}
 	else if (msg == x->atom_sync)
 	{
-		x->shell.sync_val.lo = xev->data.data32[2];
-		x->shell.sync_val.hi = xev->data.data32[3];
-		x->shell.sync = true;
+		win->sync_val.lo = xev->data.data32[2];
+		win->sync_val.hi = xev->data.data32[3];
+		win->sync = true;
 	}
 	else
 	{
@@ -395,16 +400,18 @@ ev_present(xcb_present_generic_event_t *xev, struct x11 *x)
 {
 	xcb_present_complete_notify_event_t *cev = (xcb_present_complete_notify_event_t *)xev;
 	xcb_present_idle_notify_event_t     *iev = (xcb_present_idle_notify_event_t     *)xev;
+	struct x11_window *win;
 
 	switch (xev->evtype)
 	{
 		case XCB_PRESENT_EVENT_COMPLETE_NOTIFY:
-			x->shell.wait &= cev->serial != x->shell.serial
-			              || cev->kind   != XCB_PRESENT_COMPLETE_KIND_PIXMAP;
+			win = window(x, cev->window);
+			win->wait &= cev->serial != win->serial || cev->kind != XCB_PRESENT_COMPLETE_KIND_PIXMAP;
 			break;
 
 		case XCB_PRESENT_EVENT_IDLE_NOTIFY:
-			x->shell.busy &= iev->pixmap != x->shell.buffer;
+			win = window(x, iev->window);
+			win->busy &= iev->pixmap != win->buffer;
 			break;
 
 		default:
@@ -442,6 +449,59 @@ fail(struct x11 *x, xcb_void_cookie_t ck)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+bool
+inputs_grab(struct x11 *x)
+{
+	xcb_grab_keyboard_reply_t *rp1 = nullptr;
+	xcb_grab_pointer_reply_t  *rp2 = nullptr;
+	xcb_grab_keyboard_cookie_t ck1;
+	xcb_grab_pointer_cookie_t  ck2;
+	bool fail;
+
+	ck1 = xcb_grab_keyboard(
+		x->connection,
+		0,
+		x->screen->root,
+		XCB_CURRENT_TIME,
+		XCB_GRAB_MODE_ASYNC,
+		XCB_GRAB_MODE_ASYNC);
+
+	ck2 = xcb_grab_pointer(
+		x->connection,
+		0,
+		x->screen->root,
+		XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE | XCB_EVENT_MASK_POINTER_MOTION,
+		XCB_GRAB_MODE_ASYNC,
+		XCB_GRAB_MODE_ASYNC,
+		XCB_NONE,
+		XCB_NONE,
+		XCB_CURRENT_TIME);
+
+	rp1 = xcb_grab_keyboard_reply(x->connection, ck1, nullptr);
+	rp2 = xcb_grab_pointer_reply(x->connection,  ck2, nullptr);
+
+	if ((fail = !rp1 || !rp2))
+	{
+		inputs_ungrab(x);
+	}
+
+	free(rp1);
+	free(rp2);
+
+	return !fail;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+inputs_ungrab(struct x11 *x)
+{
+	xcb_ungrab_keyboard(x->connection, XCB_CURRENT_TIME);
+	xcb_ungrab_pointer (x->connection, XCB_CURRENT_TIME);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 static uint8_t
 opcode(struct x11 *x, const char *name)
 {
@@ -453,10 +513,76 @@ opcode(struct x11 *x, const char *name)
 	if ((rp = xcb_query_extension_reply(x->connection, ck, nullptr)))
 	{
 		opcode = rp->major_opcode;
+		free(rp);
 	}
 
-	free(rp);
 	return opcode;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+position_popup(struct x11 *x, uint32_t w, uint32_t h, int32_t *px, int32_t *py)
+{
+	uint32_t dw1 = w;
+	uint32_t dw2 = w;
+	uint32_t dh1 = h;
+	uint32_t dh2 = h;
+
+	/* get pointer position */
+
+	xcb_query_pointer_cookie_t ck1;
+	xcb_query_pointer_reply_t *rp1;
+
+	ck1 = xcb_query_pointer(x->connection, x->screen->root);
+	if (!(rp1 = xcb_query_pointer_reply(x->connection, ck1, nullptr)))
+	{
+		return;
+	}
+
+	*px = rp1->root_x;
+	*py = rp1->root_y;
+	free(rp1);
+
+	/* stop here if extension is missing */
+
+	if (x->opcode_randr == 0)
+	{
+		return;
+	}
+
+	/* locate the monitor the pointer is on */
+
+	xcb_randr_get_monitors_cookie_t ck2;
+	xcb_randr_get_monitors_reply_t *rp2;
+	xcb_randr_monitor_info_iterator_t it;
+
+	ck2 = xcb_randr_get_monitors(x->connection, x->screen->root, 1);
+	if (!(rp2 = xcb_randr_get_monitors_reply(x->connection, ck2, nullptr)))
+	{
+		return;
+	}
+
+	it = xcb_randr_get_monitors_monitors_iterator(rp2);
+	for (; it.rem; xcb_randr_monitor_info_next(&it))
+	{
+		if (*px > it.data->x && *px < it.data->x + it.data->width
+		 && *py > it.data->y && *py < it.data->y + it.data->height)
+		{
+			dw1 = it.data->x + it.data->width  - *px;
+			dh1 = it.data->y + it.data->height - *py;
+			dw2 = *px - it.data->x;
+			dh2 = *py - it.data->y;
+			break;
+		}
+	}
+
+	free(rp2);
+
+	/* adjust popup position to fit on monitor */
+
+	*px -= dw1 >= w ? 0 : w - (dw2 >= w ? 0 : dw1);
+	*py -= dh1 >= h ? 0 : h - (dh2 >= h ? 0 : dh1);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -556,16 +682,22 @@ setup_sync(struct x11 *x)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-window_commit(struct x11_window *win, struct x11 *x, cshell *sh)
+static struct x11_window *
+window(struct x11 *x, xcb_window_t xwin)
 {
-	uint32_t w = shell_w(sh);
-	uint32_t h = shell_h(sh);
+	return xwin == x->shell.window ? &x->shell : &x->menu;
+}
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+window_commit(struct x11_window *win, struct x11 *x, cshell *sh, uint32_t w, uint32_t h)
+{
 	struct cevent ev =
 	{
-		.type       = CEVENT_REDRAW,
+		.type = CEVENT_REDRAW,
 		.redraw_ctx = win->cairo,
+		.redraw_shell = win == &x->shell,
 	};
 
 	if (!win->active || win->busy)
@@ -650,16 +782,25 @@ window_destroy(struct x11_window *win, struct x11 *x)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-window_init(struct x11_window *win, struct x11 *x, uint32_t w, uint32_t h)
+window_init(struct x11_window *win, struct x11 *x, uint32_t w, uint32_t h, bool popup)
 {
 	xcb_void_cookie_t ck;
 
+	if (win->active)
+	{
+		return false;
+	}
+
 	/* window setup */
+
+	int32_t px = 0;
+	int32_t py = 0;
 
 	const uint32_t win_opt = 
 		  XCB_CW_BACK_PIXMAP
 		| XCB_CW_BORDER_PIXEL
 		| XCB_CW_BIT_GRAVITY
+		| XCB_CW_OVERRIDE_REDIRECT
 		| XCB_CW_EVENT_MASK
 		| XCB_CW_COLORMAP;
 
@@ -668,6 +809,7 @@ window_init(struct x11_window *win, struct x11 *x, uint32_t w, uint32_t h)
 		  XCB_BACK_PIXMAP_NONE,
 		  0x00000000,
 		  XCB_GRAVITY_NORTH_WEST,
+		  popup,
 		  XCB_EVENT_MASK_EXPOSURE
 		| XCB_EVENT_MASK_STRUCTURE_NOTIFY
 		| XCB_EVENT_MASK_BUTTON_PRESS
@@ -675,13 +817,18 @@ window_init(struct x11_window *win, struct x11 *x, uint32_t w, uint32_t h)
 		  x->colormap,
 	};
 
+	if (popup)
+	{
+		position_popup(x, w, h, &px, &py);
+	}
+
 	win->window = xcb_generate_id(x->connection);
 	ck = xcb_create_window_checked(
 		x->connection,
 		x->depth,
 		win->window,
 		x->screen->root,
-		0, 0, w, h, 0,
+		px, py, w, h, 0,
 		XCB_WINDOW_CLASS_INPUT_OUTPUT,
 		x->visual->visual_id,
 		win_opt,
@@ -767,6 +914,7 @@ window_init(struct x11_window *win, struct x11 *x, uint32_t w, uint32_t h)
 	const char *class = "cgui";  // TODO set as arg
 	const char *tag   = "tag";   // TODO set as arg
 
+	xcb_atom_t atom_type = popup ? x->atom_shell : x->atom_menu;
 	char host[256] = "";
 	uint32_t pid;
 	size_t tag_n;
@@ -791,7 +939,7 @@ window_init(struct x11_window *win, struct x11 *x, uint32_t w, uint32_t h)
 	prop_set(x, win, x->atom_icon,     XCB_ATOM_STRING,   name_n,  name,           true);
 	prop_set(x, win, x->atom_class,    XCB_ATOM_STRING,   tag_n,   tag,            true);
 	prop_set(x, win, x->atom_class,    XCB_ATOM_STRING,   class_n, class,          false);
-	prop_set(x, win, x->atom_type,     XCB_ATOM_ATOM,     1,       &x->atom_shell, true);
+	prop_set(x, win, x->atom_type,     XCB_ATOM_ATOM,     1,       &atom_type,     true);
 	prop_set(x, win, x->atom_lead,     XCB_ATOM_WINDOW,   1,       &win->window,   true);
 	prop_set(x, win, x->atom_pid,      XCB_ATOM_CARDINAL, 1,       &pid,           true);
 	prop_set(x, win, x->atom_host,     XCB_ATOM_STRING,   host_n,  host,           true);

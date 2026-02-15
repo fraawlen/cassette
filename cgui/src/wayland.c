@@ -39,9 +39,12 @@ static void cl_bind      (void *, struct wl_registry  *, uint32_t, const char *,
 static void cl_button    (void *, struct wl_pointer   *, uint32_t, uint32_t, uint32_t, uint32_t);
 static void cl_close     (void *, struct xdg_toplevel *);
 static void cl_conf_base (void *, struct xdg_surface  *, uint32_t);
+static void cl_conf_pop  (void *, struct xdg_popup    *, int, int, int, int);
 static void cl_conf_top  (void *, struct xdg_toplevel *, int, int, struct wl_array *);
 static void cl_frame     (void *, struct wl_callback  *, uint32_t);
+static void cl_motion    (void *, struct wl_pointer   *, uint32_t, wl_fixed_t, wl_fixed_t);
 static void cl_ping      (void *, struct xdg_wm_base  *, uint32_t);
+static void cl_popout    (void *, struct xdg_popup    *);
 static void cl_release   (void *, struct wl_buffer    *);
 static void cl_seat      (void *, struct wl_seat      *, uint32_t);
 
@@ -50,7 +53,6 @@ static void cl_seat      (void *, struct wl_seat      *, uint32_t);
 static void cl_axis   (void *, struct wl_pointer   *, uint32_t, uint32_t, wl_fixed_t);
 static void cl_enter  (void *, struct wl_pointer   *, uint32_t, struct wl_surface *, wl_fixed_t, wl_fixed_t);
 static void cl_leave  (void *, struct wl_pointer   *, uint32_t, struct wl_surface *);
-static void cl_motion (void *, struct wl_pointer   *, uint32_t, wl_fixed_t, wl_fixed_t);
 static void cl_unbind (void *, struct wl_registry  *, uint32_t);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -59,7 +61,7 @@ static void buffer_free        (struct wayland_buffer *);
 static bool buffer_resize      (struct wayland_buffer *, struct wayland *, uint32_t, uint32_t);
 static void window_commit      (struct wayland_window *, struct wayland *, cshell *);
 static void window_destroy     (struct wayland_window *);
-static bool window_init        (struct wayland_window *, struct wayland *);
+static bool window_init_base   (struct wayland_window *, struct wayland *, uint32_t, uint32_t);
 static void destroy_interfaces (struct wayland *);
 static bool dispatch_nonblock  (struct wayland *);
 static void flush              (struct wayland *);
@@ -115,6 +117,14 @@ static const struct xdg_surface_listener ear_base =
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+static const struct xdg_popup_listener ear_pop =
+{
+	.configure = cl_conf_pop,
+	.popup_done = cl_popout,
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 static const struct xdg_toplevel_listener ear_top =
 {
 	.close     = cl_close,
@@ -149,13 +159,59 @@ wayland_menu_close(struct wayland *wl)
 bool
 wayland_menu_open(struct wayland *wl, uint32_t w, uint32_t h)
 {
-	(void)wl;
-	(void)w;
-	(void)h;
+	struct wayland_window *win = &wl->menu;
+	struct xdg_positioner *pos;
 
-	// TODO
+	/* setup popup position */
+
+	if (!(pos = xdg_wm_base_create_positioner(wl->xdg)))
+	{
+		goto fail_pos;
+	}
+
+	xdg_positioner_set_size(pos, w, h);
+	xdg_positioner_set_offset(pos, 0, 0);
+	xdg_positioner_set_anchor_rect(pos, wl->px, wl->py, 1, 1);
+	xdg_positioner_set_anchor(pos, XDG_POSITIONER_ANCHOR_TOP_LEFT);
+	xdg_positioner_set_gravity(pos, XDG_POSITIONER_GRAVITY_BOTTOM_RIGHT);
+	xdg_positioner_set_constraint_adjustment(pos, 
+		  XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_X
+		| XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_SLIDE_Y
+		| XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_FLIP_X
+		| XDG_POSITIONER_CONSTRAINT_ADJUSTMENT_FLIP_Y);
+
+	/* setup popup */
+
+	if (!window_init_base(win, wl, w, h))
+	{
+		goto fail_base;
+	}
+
+	if (!(win->pop = xdg_surface_get_popup(win->base, wl->shell.base, pos)))
+	{
+		goto fail_role;
+	}
+
+	/* end */
+
+	win->active = true;
+	xdg_positioner_destroy(pos);
+	xdg_popup_grab(win->pop, wl->seat, wl->serial);
+	xdg_popup_add_listener(win->pop, &ear_pop, wl);
+	wl_surface_commit(win->surface);
+	flush(wl);
 
 	return true;
+
+	/* errors */
+
+fail_role:
+	xdg_surface_destroy(win->base);
+	wl_surface_destroy(win->surface);
+fail_base:
+	xdg_positioner_destroy(pos);
+fail_pos:
+	return false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -280,7 +336,52 @@ wayland_shell_open(struct wayland *wl, uint32_t w, uint32_t h)
 	(void)w;
 	(void)h;
 
-	return window_init(&wl->shell, wl);
+	struct wayland_window *win = &wl->shell;
+
+	if (!window_init_base(win, wl, w, h))
+	{
+		goto fail_base;
+	}
+
+	if (!(win->top = xdg_surface_get_toplevel(win->base)))
+	{
+		goto fail_role;
+	}
+
+	/* decorations */
+
+	if (!wl->decor)
+	{
+		goto skip_decor;
+	}
+
+	if (!(win->ssd = zxdg_decoration_manager_v1_get_toplevel_decoration(wl->decor, win->top)))
+	{
+		goto fail_decor;
+	}
+
+	zxdg_toplevel_decoration_v1_set_mode(win->ssd, ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
+
+skip_decor:
+
+	/* end */
+
+	win->active = true;
+	xdg_toplevel_add_listener(win->top, &ear_top, wl);
+	wl_surface_commit(win->surface);
+	flush(wl);
+
+	return true;
+
+	/* errors */
+
+fail_decor:
+	xdg_toplevel_destroy(win->top);
+fail_role:
+	xdg_surface_destroy(win->base);
+	wl_surface_destroy(win->surface);
+fail_base:
+	return false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -453,7 +554,6 @@ static void
 cl_button(void *data, struct wl_pointer *pt, uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
 {
 	(void)pt;
-	(void)serial;
 	(void)time;
 
 	struct wayland *wl = data;
@@ -477,6 +577,7 @@ cl_button(void *data, struct wl_pointer *pt, uint32_t serial, uint32_t time, uin
 			break;
 	}
 
+	wl->serial = serial;
 	event_stack_push(wl->queue, ev);
 }
 
@@ -511,6 +612,21 @@ cl_conf_base(void *data, struct xdg_surface *base, uint32_t serial)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
+cl_conf_pop(void *data, struct xdg_popup *pop, int x, int y, int w, int h)
+{
+	(void)pop;
+	(void)x;
+	(void)y;
+
+	struct wayland *wl = data;
+
+	wl->menu.w = w;
+	wl->menu.h = h;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 cl_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array *arr)
 {
 	(void)top;
@@ -526,6 +642,8 @@ cl_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 		ev.transform_h = h;
 		ev.transform_x = 0;
 		ev.transform_y = 0;
+		wl->shell.w = w;
+		wl->shell.h = h;
 		event_stack_push(wl->queue, ev);
 	}
 }
@@ -545,11 +663,35 @@ cl_frame(void *data, struct wl_callback *cl, uint32_t time)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
+cl_motion(void *data, struct wl_pointer *pt, uint32_t time, wl_fixed_t x, wl_fixed_t y)
+{
+	(void)time;
+	(void)pt;
+
+	struct wayland *wl = data;
+
+	wl->px = wl_fixed_to_int(x);
+	wl->py = wl_fixed_to_int(y);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 cl_ping(void *data, struct xdg_wm_base *xdg, uint32_t serial)
 {
 	(void)data;
 
 	xdg_wm_base_pong(xdg, serial);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+cl_popout(void *data, struct xdg_popup *pop)
+{
+	(void)pop;
+
+	window_destroy(&((struct wayland *)data)->menu);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -652,9 +794,13 @@ flush(struct wayland *wl)
 static void
 window_commit(struct wayland_window *win, struct wayland *wl, cshell *sh)
 {
-	struct cevent ev = {.type = CEVENT_REDRAW};
-	struct wayland_buffer *buf = nullptr;
 	struct wl_callback *cl;
+	struct wayland_buffer *buf = nullptr;
+	struct cevent ev =
+	{
+		.type = CEVENT_REDRAW,
+		.redraw_shell = win == &wl->shell,
+	};
 
 	if (!win->active)
 	{
@@ -678,7 +824,7 @@ window_commit(struct wayland_window *win, struct wayland *wl, cshell *sh)
 
 	if (buf && !buf->busy)
 	{
-		if (buffer_resize(buf, wl, shell_w(sh), shell_h(sh))
+		if (buffer_resize(buf, wl, win->w, win->h)
 		&& (cl = wl_surface_frame(win->surface)))
 		{
 			win->redraw = false;
@@ -693,6 +839,7 @@ window_commit(struct wayland_window *win, struct wayland *wl, cshell *sh)
 			wl_callback_add_listener(cl, &ear_frame, win);
 			wl_surface_attach(win->surface, buf->handle, 0, 0);
 			wl_surface_damage_buffer(win->surface, 0, 0, buf->w, buf->h);
+			xdg_surface_set_window_geometry(win->base, 0, 0, win->w, win->h);
 		}
 		else
 		{
@@ -723,6 +870,7 @@ window_destroy(struct wayland_window *win)
 
 		FREE(win->ssd, zxdg_toplevel_decoration_v1_destroy);
 		FREE(win->top, xdg_toplevel_destroy);
+		FREE(win->pop, xdg_popup_destroy);
 		FREE(win->base, xdg_surface_destroy);
 		FREE(win->surface, wl_surface_destroy);
 		win->active = false;
@@ -732,77 +880,34 @@ window_destroy(struct wayland_window *win)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static bool
-window_init(struct wayland_window *win, struct wayland *wl)
+window_init_base(struct wayland_window *win, struct wayland *wl, uint32_t w, uint32_t h)
 {
-	if (win->active)
+	if (win->active || !(win->surface = wl_compositor_create_surface(wl->compositor)))
 	{
-		return true;
-	}
-
-	/* base components */
-
-	if (!(win->surface = wl_compositor_create_surface(wl->compositor)))
-	{
-		goto fail_interfaces;
+		return false;
 	}
 
 	if (!(win->base = xdg_wm_base_get_xdg_surface(wl->xdg, win->surface)))
 	{
-		goto fail_base;
+		wl_surface_destroy(win->surface);
+		return false;
 	}
-
-	if (!(win->top = xdg_surface_get_toplevel(win->base)))
-	{
-		goto fail_role;
-	}
-
-	/* decorations */
-
-	if (!wl->decor)
-	{
-		goto skip_decor;
-	}
-
-	if (!(win->ssd = zxdg_decoration_manager_v1_get_toplevel_decoration(wl->decor, win->top)))
-	{
-		goto fail_decor;
-	}
-
-	zxdg_toplevel_decoration_v1_set_mode(win->ssd, ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
-
-skip_decor:
-
-	/* end */
 
 	for (int i = 0; i < WAYLAND_BUFFER_N; i++)
 	{
 		win->buffers[i] = (struct wayland_buffer){0};
 	}
 
-	win->active = true;
 	win->redraw = false; 
 	win->commit = false;
 	win->wait   = false;
 	win->init   = false;
+	win->w      = w;
+	win->h      = h;
 
 	xdg_surface_add_listener(win->base, &ear_base, win);
-	xdg_toplevel_add_listener(win->top, &ear_top,  wl);
-	wl_surface_commit(win->surface);
-	flush(wl);
 
 	return true;
-
-	/* errors */
-
-fail_decor:
-	FREE(win->top, xdg_toplevel_destroy)
-	FREE(win->pop, xdg_popup_destroy)
-fail_role:
-	xdg_surface_destroy(win->base);
-fail_base:
-	wl_surface_destroy(win->surface);
-fail_interfaces:
-	return false;
 }
 
 /************************************************************************************************************/
@@ -845,20 +950,6 @@ cl_leave(void *data, struct wl_pointer *pt, uint32_t serial, struct wl_surface *
 	(void)pt;
 	(void)serial;
 	(void)sfc;
-
-	// TODO
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-cl_motion(void *data, struct wl_pointer *pt, uint32_t time, wl_fixed_t x, wl_fixed_t y)
-{
-	(void)data;
-	(void)pt;
-	(void)time;
-	(void)x;
-	(void)y;
 
 	// TODO
 }

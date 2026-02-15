@@ -59,6 +59,7 @@ struct x11
 	uint8_t opcode_present;
 	uint8_t opcode_render;
 	uint8_t opcode_xinput;
+	uint8_t opcode_randr;
 	uint8_t opcode_sync;
 
 	/* ICCCM & EWMH atoms */

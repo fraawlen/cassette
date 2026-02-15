@@ -104,6 +104,9 @@ struct call
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static void  backend_menu_close      (cshell *);
+static bool  backend_menu_open       (cshell *, uint32_t, uint32_t);
+//static void  backend_menu_redraw     (cshell *);
 static void  backend_server_commit   (cshell *);
 static void  backend_server_dispatch (cshell *);
 static bool  backend_server_init     (cshell *, enum cshell_backend);
@@ -472,21 +475,32 @@ shell_dispatch_event(cshell *sh, struct cevent ev)
 	switch (ev.type)
 	{
 		case CEVENT_BUTTON_PRESS:
-			printf("shell clicked (id = %i)\n", ev.button);
+			backend_menu_close(sh);
 			break;
 
 		case CEVENT_BUTTON_RELEASE:
-			printf("shell release (id = %i)\n", ev.button);
+			if (ev.button == 3)
+			{
+				backend_menu_open(sh, 200, 500);
+			}
 			break;
 
 		case CEVENT_REDRAW:
-//			printf("shell redrawn\n");
+			//printf("shell redrawn\n");
 			cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
-			cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
-			cairo_paint(ev.redraw_ctx);
-			cairo_set_source_rgba(ev.redraw_ctx, 1.0, 0.0, 0.0, 0.5);
-			cairo_rectangle(ev.redraw_ctx, 20, 20, sh->w - 40, sh->h - 40);
-			cairo_fill(ev.redraw_ctx);
+			if (ev.redraw_shell)
+			{
+				cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
+				cairo_paint(ev.redraw_ctx);
+				cairo_set_source_rgba(ev.redraw_ctx, 1.0, 0.0, 0.0, 0.5);
+				cairo_rectangle(ev.redraw_ctx, 20, 20, sh->w - 40, sh->h - 40);
+				cairo_fill(ev.redraw_ctx);
+			}
+			else
+			{
+				cairo_set_source_rgba(ev.redraw_ctx, 0.2, 0.2, 0.2, 1.0);
+				cairo_paint(ev.redraw_ctx);
+			}
 			break;
 
 		case CEVENT_TRANSFORM:
@@ -495,7 +509,7 @@ shell_dispatch_event(cshell *sh, struct cevent ev)
 				sh->w = ev.transform_w;
 				sh->h = ev.transform_h;
 				backend_shell_redraw(sh);
-//				printf("shell resized\n");
+				//printf("shell resized\n");
 			}
 			break;
 
@@ -564,6 +578,42 @@ shell_w(const cshell *sh)
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
+
+static void
+backend_menu_close(cshell *sh)
+{
+	ROUTE(sh, menu_close);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static bool
+backend_menu_open(cshell *sh, uint32_t w, uint32_t h)
+{
+	switch(atomic_load(&sh->backend))
+	{
+		case CSHELL_X11:
+			return x11_menu_open(&sh->x, w, h);
+
+		case CSHELL_WAYLAND:
+			return wayland_menu_open(&sh->wl, w, h);
+
+		default:
+			return true;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+/*
+static void
+backend_menu_redraw(cshell *sh)
+{
+	ROUTE(sh, shell_redraw);
+}
+*/
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
 backend_server_commit(cshell *sh)
@@ -771,6 +821,7 @@ thread(void *arg)
 	close(sh->fd_call[1]);
 	close(sh->fd_poke[0]);
 	close(sh->fd_poke[1]);
+	backend_menu_close(sh);
 	backend_shell_close(sh);
 	backend_server_kill(sh);
 	atomic_store(&sh->state, CLOSED);

@@ -53,7 +53,11 @@ struct cevent
 
 		/* CEVENT_REDRAW  */
 
-		cairo_t *redraw_ctx;
+		struct
+		{
+			cairo_t *redraw_ctx;
+			bool redraw_shell;
+		};
 
 		/* CEVENT_NONE    */
 		/* CEVENT_FAIL    */

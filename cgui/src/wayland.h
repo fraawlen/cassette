@@ -50,6 +50,9 @@ struct wayland_window
 
 	/* states */
 
+	uint32_t w;
+	uint32_t h;
+
 	bool init;
 	bool wait;
 	bool commit;
@@ -78,6 +81,12 @@ struct wayland
 
 	struct wayland_window shell;
 	struct wayland_window menu;
+
+	/* pointer tracking */
+
+	int32_t px;
+	int32_t py;
+	uint32_t serial;
 };
 
 /************************************************************************************************************/
