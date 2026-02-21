@@ -581,6 +581,18 @@ position_popup(struct x11 *x, uint32_t w, uint32_t h, int32_t *px, int32_t *py)
 
 	/* adjust popup position to fit on monitor */
 
+	if (dw1 < w)
+	{
+		if (dw2 < w)
+		{
+			*px -= w - dw1;
+		}
+		else
+		{
+			*px -= w;
+		}
+	}
+
 	*px -= dw1 >= w ? 0 : w - (dw2 >= w ? 0 : dw1);
 	*py -= dh1 >= h ? 0 : h - (dh2 >= h ? 0 : dh1);
 }
