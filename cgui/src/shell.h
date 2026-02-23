@@ -17,18 +17,3 @@
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
 shell_dispatch_event(cshell *sh, struct cevent ev);
 
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-shell_set_error(cshell *sh, enum cerr code);
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] enum cerr
-shell_error(const cshell *sh);
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] uint32_t
-shell_h(const cshell *sh);
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] uint32_t
-shell_w(const cshell *sh);

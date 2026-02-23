@@ -34,6 +34,7 @@ struct x11_window
 	uint32_t buffer_w;
 	uint32_t buffer_h;
 	uint32_t serial;
+	bool resized;
 	bool present;
 	bool active;
 	bool redraw;

@@ -23,8 +23,8 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define GUARD(OBJ, ...)   if (!OBJ || cerr_critical(shell_error(OBJ))) { return __VA_OPT__(__VA_ARGS__); }
-#define GUARD_THREAD(OBJ) if (OBJ == thread_owner) { shell_set_error(OBJ, CERR_CALL); return; }
+#define GUARD(OBJ, ...)   if (!OBJ || cerr_critical(atomic_load(&OBJ->err))) {return __VA_OPT__(__VA_ARGS__);}
+#define GUARD_THREAD(OBJ) if (OBJ == thread_owner) { set_error(OBJ, CERR_CALL); return; }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -120,6 +120,7 @@ static void  backend_shell_redraw    (cshell *);
 static void  dispatch_invoke (cshell *);
 static void  dummy           (cshell *, void *);
 static bool  run             (cshell *);
+static void  set_error       (cshell *, enum cerr);
 static void *thread          (void   *);
 
 /************************************************************************************************************/
@@ -152,7 +153,7 @@ cshell_clear_warnings(cshell *sh)
 
 	do
 	{
-		err = shell_error(sh);
+		err = atomic_load(&sh->err);
 		tmp = err;
 		cerr_clear_warnings(&tmp);
 	}
@@ -170,7 +171,7 @@ cshell_close(cshell *sh)
 
 	if (atomic_load(&sh->state) != OPEN)
 	{
-		shell_set_error(sh, CERR_CALL);
+		set_error(sh, CERR_CALL);
 	}
 	else
 	{
@@ -232,7 +233,7 @@ cshell_destroy(cshell *sh)
 	{
 		if (sh == thread_owner)
 		{
-			shell_set_error(sh, CERR_CALL);
+			set_error(sh, CERR_CALL);
 		}
 		else
 		{
@@ -265,7 +266,7 @@ cshell_destroy(cshell *sh)
 enum cerr
 cshell_error(const cshell *sh)
 {
-	return sh ? shell_error(sh) : CERR_INVALID;
+	return sh ? atomic_load(&sh->err) : CERR_INVALID;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -284,7 +285,7 @@ cshell_invoke(cshell *sh, void (*fn)(cshell *, void *), void *data)
 	{
 		if (atomic_load(&sh->state) != OPEN)
 		{
-			shell_set_error(sh, CERR_CALL);
+			set_error(sh, CERR_CALL);
 			break;
 		}
 		else if (write(sh->fd_call[1], &cl, sizeof(cl)) == (int)sizeof(cl))
@@ -297,7 +298,7 @@ cshell_invoke(cshell *sh, void (*fn)(cshell *, void *), void *data)
 		}
 		else if (errno != EINTR)
 		{
-			shell_set_error(sh, CERR_THREAD);
+			set_error(sh, CERR_THREAD);
 			break;
 		}	
 	}
@@ -330,8 +331,8 @@ cshell_on_close(cshell *sh, void (*fn)(cshell *, void *), void *data)
 {
 	GUARD(sh);
 
-	sh->fn_close   = fn ? fn   : dummy;
-	sh->data_close = fn ? data : nullptr;
+	sh->fn_close   = fn ? fn : dummy;
+	sh->data_close = data;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -341,8 +342,8 @@ cshell_on_open(cshell *sh, void (*fn)(cshell *, void *), void *data)
 {
 	GUARD(sh);
 
-	sh->fn_open   = fn ? fn   : dummy;
-	sh->data_open = fn ? data : nullptr;
+	sh->fn_open   = fn ? fn : dummy;
+	sh->data_open = data;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -415,14 +416,14 @@ fail_pipe2:
 	close(sh->fd_call[0]);
 	close(sh->fd_call[1]);
 fail_pipe:
-	shell_set_error(sh, CERR_THREAD);
+	set_error(sh, CERR_THREAD);
 fail_win:
 	backend_server_kill(sh);
 fail_back:
-	shell_set_error(sh, CERR_DISPLAY);
+	set_error(sh, CERR_DISPLAY);
 	atomic_store(&sh->state, CLOSED);
 fail_open:
-	shell_set_error(sh, CERR_CALL);
+	set_error(sh, CERR_CALL);
 	pthread_cond_broadcast(&sh->cond);
 	pthread_mutex_unlock(&sh->mutex);
 }
@@ -523,7 +524,7 @@ shell_dispatch_event(cshell *sh, struct cevent ev)
 
 		case CEVENT_FAIL:
 			printf("display connection lost\n");
-			shell_set_error(sh, CERR_DISPLAY);
+			set_error(sh, CERR_DISPLAY);
 			break;
 
 		case CEVENT_NONE:
@@ -532,47 +533,6 @@ shell_dispatch_event(cshell *sh, struct cevent ev)
 		default:
 			break;
 	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-enum cerr
-shell_error(const cshell *sh)
-{
-	return atomic_load(&sh->err);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-uint32_t
-shell_h(const cshell *sh)
-{
-	return sh->h;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-shell_set_error(cshell *sh, enum cerr code)
-{
-	enum cerr err;
-	enum cerr tmp;
-
-	do
-	{
-		err = shell_error(sh);
-		tmp = err;
-		cerr_set(&tmp, code);
-	}
-	while (!atomic_compare_exchange_strong(&sh->err, &err, tmp));
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-uint32_t
-shell_w(const cshell *sh)
-{
-	return sh->w;
 }
 
 /************************************************************************************************************/
@@ -713,7 +673,7 @@ dispatch_invoke(cshell *sh)
 		}
 		else if (m == 0 || errno != EINTR)
 		{
-			shell_set_error(sh, CERR_THREAD);
+			set_error(sh, CERR_THREAD);
 			return;
 		}
 	}
@@ -743,7 +703,7 @@ run(cshell *sh)
 	switch (poll(pfd, flush ? 1 : 3, flush ? 0 : -1))
 	{
 		case -1:
-			shell_set_error(sh, errno == EINTR ? CERR_NONE : CERR_THREAD);
+			set_error(sh, errno == EINTR ? CERR_NONE : CERR_THREAD);
 			break;
 
 		case 0:
@@ -782,10 +742,27 @@ run(cshell *sh)
 	 || pfd[1].revents & poll_err
 	 || pfd[2].revents & poll_err)
 	{
-		shell_set_error(sh, CERR_THREAD);
+		set_error(sh, CERR_THREAD);
 	}
 
-	return !cerr_critical(shell_error(sh));	
+	return !cerr_critical(atomic_load(&sh->err));	
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+set_error(cshell *sh, enum cerr code)
+{
+	enum cerr err;
+	enum cerr tmp;
+
+	do
+	{
+		err = atomic_load(&sh->err);
+		tmp = err;
+		cerr_set(&tmp, code);
+	}
+	while (!atomic_compare_exchange_strong(&sh->err, &err, tmp));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

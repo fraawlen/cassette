@@ -27,7 +27,7 @@
 /************************************************************************************************************/
 
 static struct cevent ev_button    (xcb_button_press_event_t     *, bool);
-static struct cevent ev_conf      (xcb_configure_notify_event_t *, struct x11 *, uint32_t, uint32_t);
+static struct cevent ev_conf      (xcb_configure_notify_event_t *, struct x11 *);
 static struct cevent ev_expose    (xcb_expose_event_t           *, struct x11 *);
 static struct cevent ev_extension (xcb_ge_generic_event_t       *, struct x11 *);
 static struct cevent ev_message   (xcb_client_message_event_t   *, struct x11 *);
@@ -46,7 +46,7 @@ static bool       prop_set       (struct x11 *, struct x11_window *, xcb_atom_t,
 static bool       setup_image    (struct x11 *);
 static void       setup_sync     (struct x11 *);
 static struct x11_window *window (struct x11 *, xcb_window_t);
-static void       window_commit  (struct x11_window *, struct x11 *, cshell *, uint32_t, uint32_t);
+static void       window_commit  (struct x11_window *, struct x11 *, cshell *);
 static void       window_destroy (struct x11_window *, struct x11 *);
 static bool       window_init    (struct x11_window *, struct x11 *, uint32_t, uint32_t, bool);
 
@@ -82,8 +82,8 @@ x11_menu_redraw(struct x11 *x)
 void
 x11_server_commit(struct x11 *x, cshell *sh)
 {
-	window_commit(&x->shell, x, sh, shell_w(sh), shell_h(sh));
-	window_commit(&x->menu,  x, sh, x->menu.buffer_w, x->menu.buffer_h);
+	window_commit(&x->shell, x, sh);
+	window_commit(&x->menu,  x, sh);
 
 	xcb_flush(x->connection);
 	if (xcb_connection_has_error(x->connection))
@@ -117,7 +117,7 @@ x11_server_dispatch(struct x11 *x, cshell *sh)
 				break;
 	
 			case XCB_CONFIGURE_NOTIFY:
-				cev = ev_conf((xcb_configure_notify_event_t *)xev, x, shell_w(sh), shell_h(sh));
+				cev = ev_conf((xcb_configure_notify_event_t *)xev, x);
 				break;
 	
 			case XCB_EXPOSE:
@@ -309,8 +309,9 @@ ev_button(xcb_button_press_event_t *xev, bool press)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static struct cevent
-ev_conf(xcb_configure_notify_event_t *xev, struct x11 *x, uint32_t w, uint32_t h)
+ev_conf(xcb_configure_notify_event_t *xev, struct x11 *x)
 {
+	struct x11_window *win = window(x, xev->window);
 	struct cevent cev =
 	{
 		.type = CEVENT_TRANSFORM,
@@ -320,13 +321,12 @@ ev_conf(xcb_configure_notify_event_t *xev, struct x11 *x, uint32_t w, uint32_t h
 		.transform_y = xev->y,
 	};
 
-	if (window(x, xev->window) == &x->shell)
-	{
-		x->shell.present |= xev->width < w || xev->height < h;
-		return cev;
-	}
+	win->present |= xev->width  < win->buffer_w || xev->height  < win->buffer_h;
+	win->resized |= xev->width != win->buffer_w || xev->height != win->buffer_h;
+	win->buffer_w = xev->width;
+	win->buffer_h = xev->height;
 
-	return cevent_blank;
+	return win == &x->shell ? cev : cevent_blank;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -703,8 +703,10 @@ window(struct x11 *x, xcb_window_t xwin)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-window_commit(struct x11_window *win, struct x11 *x, cshell *sh, uint32_t w, uint32_t h)
+window_commit(struct x11_window *win, struct x11 *x, cshell *sh)
 {
+	uint32_t w = win->buffer_w;
+	uint32_t h = win->buffer_h;
 	struct cevent ev =
 	{
 		.type = CEVENT_REDRAW,
@@ -719,15 +721,14 @@ window_commit(struct x11_window *win, struct x11 *x, cshell *sh, uint32_t w, uin
 
 	/* update buffer size */
 
-	if (win->buffer_w < w || win->buffer_h < h)
+	if (win->resized)
 	{	
 		xcb_free_pixmap(x->connection, win->buffer);
-		win->buffer_w = w;
-		win->buffer_h = h;
 		win->buffer = xcb_generate_id(x->connection);
 		xcb_create_pixmap(x->connection, x->depth, win->buffer, win->window, w, h);
 		cairo_surface_flush(win->surface);
 		cairo_xcb_surface_set_drawable(win->surface, win->buffer, w, h);
+		win->resized = false;
 	}
 
 	/* rendering */
@@ -975,6 +976,7 @@ window_init(struct x11_window *win, struct x11 *x, uint32_t w, uint32_t h, bool 
 	win->buffer_h    = h;
 	win->serial      = 0;
 	win->redraw      = true;
+	win->resized     = false;
 	win->present     = false;
 	win->busy        = false;
 	win->wait        = false;
