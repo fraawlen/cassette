@@ -562,7 +562,7 @@ cl_button(void *data, struct wl_pointer *pt, uint32_t serial, uint32_t time, uin
 	}
 
 	wl->serial = serial;
-	shell_dispatch_event(ev, false);
+	shell_dispatch_event(ev, wl->menu.active);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -627,6 +627,7 @@ cl_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 		ev.transform_y = 0;
 		wl->shell.w = w;
 		wl->shell.h = h;
+		wl->shell.redraw = true;
 		shell_dispatch_event(ev, false);
 	}
 
