@@ -26,13 +26,12 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static struct cevent ev_button    (xcb_button_press_event_t     *, bool);
-static struct cevent ev_conf      (xcb_configure_notify_event_t *, struct x11 *);
-static struct cevent ev_expose    (xcb_expose_event_t           *, struct x11 *);
-static struct cevent ev_extension (xcb_ge_generic_event_t       *, struct x11 *);
-static struct cevent ev_message   (xcb_client_message_event_t   *, struct x11 *);
-static struct cevent ev_present   (xcb_present_generic_event_t  *, struct x11 *);
-static struct cevent ev_unknown   (xcb_generic_event_t          *);
+static void ev_button    (xcb_button_press_event_t     *, struct x11 *, bool);
+static void ev_conf      (xcb_configure_notify_event_t *, struct x11 *);
+static void ev_expose    (xcb_expose_event_t           *, struct x11 *);
+static void ev_extension (xcb_ge_generic_event_t       *, struct x11 *);
+static void ev_message   (xcb_client_message_event_t   *, struct x11 *);
+static void ev_present   (xcb_present_generic_event_t  *, struct x11 *);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -40,13 +39,14 @@ static xcb_atom_t atom           (struct x11 *, const char *);
 static bool       fail           (struct x11 *, xcb_void_cookie_t);
 static bool       inputs_grab    (struct x11 *);
 static void       inputs_ungrab  (struct x11 *);
+static bool       is_menu        (struct x11 *, xcb_window_t);
 static uint8_t    opcode         (struct x11 *, const char *);
 static void       position_popup (struct x11 *, uint32_t, uint32_t, int32_t *, int32_t *);
 static bool       prop_set       (struct x11 *, struct x11_window *, xcb_atom_t, xcb_atom_t, uint32_t, const void *, bool);
 static bool       setup_image    (struct x11 *);
 static void       setup_sync     (struct x11 *);
 static struct x11_window *window (struct x11 *, xcb_window_t);
-static void       window_commit  (struct x11_window *, struct x11 *, cshell *);
+static void       window_commit  (struct x11_window *, struct x11 *);
 static void       window_destroy (struct x11_window *, struct x11 *);
 static bool       window_init    (struct x11_window *, struct x11 *, uint32_t, uint32_t, bool);
 
@@ -80,60 +80,56 @@ x11_menu_redraw(struct x11 *x)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_server_commit(struct x11 *x, cshell *sh)
+x11_server_commit(struct x11 *x)
 {
-	window_commit(&x->shell, x, sh);
-	window_commit(&x->menu,  x, sh);
+	window_commit(&x->shell, x);
+	window_commit(&x->menu,  x);
 
 	xcb_flush(x->connection);
 	if (xcb_connection_has_error(x->connection))
 	{
-		shell_dispatch_event(sh, cevent_error);
+		shell_dispatch_event(cevent_error, false);
 	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_server_dispatch(struct x11 *x, cshell *sh)
+x11_server_dispatch(struct x11 *x)
 {
 	xcb_generic_event_t *xev; 
-	struct cevent cev;
 
 	while((xev = xcb_poll_for_event(x->connection)))
 	{
 		switch (xev->response_type & ~0x80)
 		{
 			case XCB_BUTTON_PRESS:
-				cev = ev_button((xcb_button_press_event_t *)xev, true);
+				ev_button((xcb_button_press_event_t *)xev, x, true);
 				break;
 
 			case XCB_BUTTON_RELEASE:
-				cev = ev_button((xcb_button_press_event_t *)xev, false);
+				ev_button((xcb_button_press_event_t *)xev, x, false);
 				break;
 
 			case XCB_CLIENT_MESSAGE:
-				cev = ev_message((xcb_client_message_event_t *)xev, x);
+				ev_message((xcb_client_message_event_t *)xev, x);
 				break;
 	
 			case XCB_CONFIGURE_NOTIFY:
-				cev = ev_conf((xcb_configure_notify_event_t *)xev, x);
+				ev_conf((xcb_configure_notify_event_t *)xev, x);
 				break;
 	
 			case XCB_EXPOSE:
-				cev = ev_expose((xcb_expose_event_t *)xev, x);
+				ev_expose((xcb_expose_event_t *)xev, x);
 				break;
 	
 			case XCB_GE_GENERIC:
-				cev = ev_extension((xcb_ge_generic_event_t *)xev, x);
+				ev_extension((xcb_ge_generic_event_t *)xev, x);
 				break;
 	
 			default:
-				cev = ev_unknown(xev);
 				break;
 		}
-		
-		shell_dispatch_event(sh, cev);
 		free(xev);
 	}
 }
@@ -294,8 +290,8 @@ atom(struct x11 *x, const char *name)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static struct cevent
-ev_button(xcb_button_press_event_t *xev, bool press)
+static void
+ev_button(xcb_button_press_event_t *xev, struct x11 *x, bool press)
 {
 	struct cevent cev =
 	{
@@ -303,12 +299,12 @@ ev_button(xcb_button_press_event_t *xev, bool press)
 		.button = xev->detail,
 	};
 
-	return cev;
+	shell_dispatch_event(cev, is_menu(x, xev->event));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static struct cevent
+static void
 ev_conf(xcb_configure_notify_event_t *xev, struct x11 *x)
 {
 	struct x11_window *win = window(x, xev->window);
@@ -326,76 +322,69 @@ ev_conf(xcb_configure_notify_event_t *xev, struct x11 *x)
 	win->buffer_w = xev->width;
 	win->buffer_h = xev->height;
 
-	return win == &x->shell ? cev : cevent_blank;
+	shell_dispatch_event(cev, is_menu(x, xev->window));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static struct cevent
+static void
 ev_expose(xcb_expose_event_t *xev, struct x11 *x)
 {
 	window(x, xev->window)->present |= xev->count == 0;
-
-	return cevent_blank;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static struct cevent
+static void
 ev_extension(xcb_ge_generic_event_t *xev, struct x11 *x)
 {
 	if (xev->extension == x->opcode_present)
 	{
-		return ev_present((xcb_present_generic_event_t *)xev, x);
+		ev_present((xcb_present_generic_event_t *)xev, x);
 	}
-
-	return cevent_blank;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static struct cevent
+static void
 ev_message(xcb_client_message_event_t *xev, struct x11 *x)
 {
 	uint32_t ev_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
 	struct x11_window *win = window(x, xev->window);
-	struct cevent cev = cevent_blank;
+	struct cevent cev = {.type = CEVENT_CLOSE};
 	xcb_atom_t msg = xev->data.data32[0];
 
-	if (xev->format != 32 || xev->type != x->atom_protocol)
+	if (xev->format == 32 || xev->type == x->atom_protocol)
 	{
-		cev.type = CEVENT_UNKNOWN;
+		if (msg == x->atom_close)
+		{
+			shell_dispatch_event(cev, is_menu(x, xev->window));
+		}
+		else if (msg == x->atom_ping)
+		{
+			xev->window = x->screen->root;
+			xcb_send_event(x->connection, 0, x->screen->root, ev_mask, (char*)xev);
+		}
+		else if (msg == x->atom_sync)
+		{
+			win->sync_val.lo = xev->data.data32[2];
+			win->sync_val.hi = xev->data.data32[3];
+			win->sync = true;
+		}
+		else if (msg == x->atom_focus)
+		{
+			xcb_set_input_focus(
+				x->connection,
+				XCB_INPUT_FOCUS_PARENT,
+				xev->window,
+				xev->data.data32[1]);
+		}
 	}
-	else if (msg == x->atom_close)
-	{
-		cev.type = CEVENT_CLOSE;
-	}
-	else if (msg == x->atom_focus)
-	{
-		xcb_set_input_focus(x->connection, XCB_INPUT_FOCUS_PARENT, xev->window, xev->data.data32[1]);
-	}
-	else if (msg == x->atom_ping)
-	{
-		xev->window = x->screen->root;
-		xcb_send_event(x->connection, 0, x->screen->root, ev_mask, (char*)xev);
-	}
-	else if (msg == x->atom_sync)
-	{
-		win->sync_val.lo = xev->data.data32[2];
-		win->sync_val.hi = xev->data.data32[3];
-		win->sync = true;
-	}
-	else
-	{
-		cev.type = CEVENT_UNKNOWN;
-	}
-
-	return cev;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static struct cevent
+static void
 ev_present(xcb_present_generic_event_t *xev, struct x11 *x)
 {
 	xcb_present_complete_notify_event_t *cev = (xcb_present_complete_notify_event_t *)xev;
@@ -417,18 +406,6 @@ ev_present(xcb_present_generic_event_t *xev, struct x11 *x)
 		default:
 			break;
 	}
-
-	return cevent_blank;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static struct cevent
-ev_unknown(xcb_generic_event_t *xev)
-{
-	(void)xev;
-
-	return cevent_unknown;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -498,6 +475,14 @@ inputs_ungrab(struct x11 *x)
 {
 	xcb_ungrab_keyboard(x->connection, XCB_CURRENT_TIME);
 	xcb_ungrab_pointer (x->connection, XCB_CURRENT_TIME);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static bool
+is_menu(struct x11 *x, xcb_window_t id)
+{
+	return x->shell.window != id;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -691,7 +676,7 @@ window(struct x11 *x, xcb_window_t xwin)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-window_commit(struct x11_window *win, struct x11 *x, cshell *sh)
+window_commit(struct x11_window *win, struct x11 *x)
 {
 	uint32_t w = win->buffer_w;
 	uint32_t h = win->buffer_h;
@@ -724,7 +709,7 @@ window_commit(struct x11_window *win, struct x11 *x, cshell *sh)
 	if (win->redraw)
 	{
 		win->redraw = false;
-		shell_dispatch_event(sh, ev);
+		shell_dispatch_event(ev, win == &x->menu);
 		cairo_surface_flush(win->surface);
 	}
 

@@ -19,7 +19,6 @@
 #include <unistd.h>
 #include <wayland-client.h>
 
-#include "event.h"
 #include "shell.h"
 #include "wayland.h"
 #include "xdg-shell.h"
@@ -59,7 +58,7 @@ static void cl_unbind (void *, struct wl_registry  *, uint32_t);
 
 static void buffer_free        (struct wayland_buffer *);
 static bool buffer_resize      (struct wayland_buffer *, struct wayland *, uint32_t, uint32_t);
-static void window_commit      (struct wayland_window *, struct wayland *, cshell *);
+static void window_commit      (struct wayland_window *, struct wayland *);
 static void window_destroy     (struct wayland_window *);
 static bool window_init_base   (struct wayland_window *, struct wayland *, uint32_t, uint32_t);
 static void destroy_interfaces (struct wayland *);
@@ -225,10 +224,10 @@ wayland_menu_redraw(struct wayland *wl)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-wayland_server_commit(struct wayland *wl, cshell *sh)
+wayland_server_commit(struct wayland *wl)
 {
-	window_commit(&wl->shell, wl, sh);
-	window_commit(&wl->menu,  wl, sh);
+	window_commit(&wl->shell, wl);
+	window_commit(&wl->menu,  wl);
 
 	flush(wl);
 }
@@ -236,18 +235,11 @@ wayland_server_commit(struct wayland *wl, cshell *sh)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-wayland_server_dispatch(struct wayland *wl, cshell *sh)
+wayland_server_dispatch(struct wayland *wl)
 {
-	if (dispatch_nonblock(wl) && event_stack_error(wl->queue) == CERR_NONE)
+	if (!dispatch_nonblock(wl))
 	{
-		while (event_stack_length(wl->queue) > 0)
-		{
-			shell_dispatch_event(sh, event_stack_pop(wl->queue));
-		}
-	}
-	else
-	{
-		shell_dispatch_event(sh, cevent_error);
+		shell_dispatch_event(cevent_error, false);
 	}
 }
 
@@ -259,11 +251,6 @@ wayland_server_init(struct wayland *wl, int *fd)
 	*wl = (struct wayland){0};
 
 	/* core components */
-
-	if (!(wl->queue = event_stack_create()))
-	{
-		goto fail_queue;
-	}
 
 	if (!(wl->display = wl_display_connect(nullptr)))
 	{
@@ -305,8 +292,6 @@ fail_trip:
 fail_reg:
 	wl_display_disconnect(wl->display);
 fail_con:
-	event_stack_destroy(wl->queue);
-fail_queue:
 	return false;
 }
 
@@ -316,7 +301,6 @@ void
 wayland_server_kill(struct wayland *wl)
 {
 	destroy_interfaces(wl);
-	event_stack_destroy(wl->queue);
 	wl_display_disconnect(wl->display);
 }
 
@@ -578,7 +562,7 @@ cl_button(void *data, struct wl_pointer *pt, uint32_t serial, uint32_t time, uin
 	}
 
 	wl->serial = serial;
-	event_stack_push(wl->queue, ev);
+	shell_dispatch_event(ev, false);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -586,12 +570,12 @@ cl_button(void *data, struct wl_pointer *pt, uint32_t serial, uint32_t time, uin
 static void
 cl_close(void *data, struct xdg_toplevel *top)
 {
+	(void)data;
 	(void)top;
 	
 	struct cevent ev = {.type = CEVENT_CLOSE};
-	struct wayland *wl = data;
 
-	event_stack_push(wl->queue, ev);
+	shell_dispatch_event(ev, false);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -643,7 +627,7 @@ cl_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 		ev.transform_y = 0;
 		wl->shell.w = w;
 		wl->shell.h = h;
-		event_stack_push(wl->queue, ev);
+		shell_dispatch_event(ev, false);
 	}
 
 	char *i;
@@ -651,7 +635,7 @@ cl_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 	{
 		if (*i == XDG_TOPLEVEL_STATE_ACTIVATED)
 		{
-			printf(">> activate\n");
+			//printf(">> activate\n");
 		}
 	}
 }
@@ -697,9 +681,12 @@ cl_ping(void *data, struct xdg_wm_base *xdg, uint32_t serial)
 static void
 cl_popout(void *data, struct xdg_popup *pop)
 {
+	(void)data;
 	(void)pop;
 
-	window_destroy(&((struct wayland *)data)->menu);
+	struct cevent ev = {.type = CEVENT_CLOSE};
+
+	shell_dispatch_event(ev, true);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -800,7 +787,7 @@ flush(struct wayland *wl)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-window_commit(struct wayland_window *win, struct wayland *wl, cshell *sh)
+window_commit(struct wayland_window *win, struct wayland *wl)
 {
 	struct wl_callback *cl;
 	struct wayland_buffer *buf = nullptr;
@@ -841,7 +828,7 @@ window_commit(struct wayland_window *win, struct wayland *wl, cshell *sh)
 			buf->busy   = true;
 
 			ev.redraw_ctx = buf->cairo;
-			shell_dispatch_event(sh, ev);
+			shell_dispatch_event(ev, win == &wl->menu);
 			cairo_surface_flush(buf->surface);
 
 			wl_callback_add_listener(cl, &ear_frame, win);
@@ -851,7 +838,7 @@ window_commit(struct wayland_window *win, struct wayland *wl, cshell *sh)
 		}
 		else
 		{
-			shell_dispatch_event(sh, cevent_error);
+			shell_dispatch_event(cevent_error, win == &wl->menu);
 		}		
 	}
 

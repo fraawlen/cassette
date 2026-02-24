@@ -66,8 +66,6 @@ struct wayland
 {
 	/* core components */
 	
-	event_stack *queue;
-
 	struct wl_display *display;
 	struct wl_registry *registry;
 	struct wl_compositor *compositor;
@@ -116,10 +114,10 @@ wayland_shell_redraw(struct wayland *wl);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
-wayland_server_commit(struct wayland *wl, cshell *sh);
+wayland_server_commit(struct wayland *wl);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
-wayland_server_dispatch(struct wayland *wl, cshell *sh);
+wayland_server_dispatch(struct wayland *wl);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] bool
 wayland_server_init(struct wayland *wl, int *fd);

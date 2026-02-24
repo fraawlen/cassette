@@ -15,5 +15,5 @@
 /************************************************************************************************************/
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-shell_dispatch_event(cshell *sh, struct cevent ev);
+shell_dispatch_event(struct cevent ev, bool menu);
 

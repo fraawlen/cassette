@@ -123,10 +123,10 @@ x11_shell_redraw(struct x11 *x);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
-x11_server_commit(struct x11 *x, cshell *sh);
+x11_server_commit(struct x11 *x);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
-x11_server_dispatch(struct x11 *x, cshell *sh);
+x11_server_dispatch(struct x11 *x);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] bool
 x11_server_init(struct x11 *x, int *fd);

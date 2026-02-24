@@ -117,11 +117,12 @@ static void  backend_shell_redraw    (cshell *);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void  dispatch_invoke (cshell *);
-static void  dummy           (cshell *, void *);
-static bool  run             (cshell *);
-static void  set_error       (cshell *, enum cerr);
-static void *thread          (void   *);
+static void  dispatch_invoke     (cshell *);
+static void  dummy               (cshell *, void *);
+static void  menu_dispatch_event (struct cevent);
+static bool  run                 (cshell *);
+static void  set_error           (cshell *, enum cerr);
+static void *thread              (void   *);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -471,14 +472,18 @@ cshell_wait(cshell *sh)
 /************************************************************************************************************/
 
 void
-shell_dispatch_event(cshell *sh, struct cevent ev)
+shell_dispatch_event(struct cevent ev, bool menu)  /* only executed on UI thread */
 {
+	cshell *sh = thread_owner;
+
+	if (menu)
+	{
+		menu_dispatch_event(ev);
+		return;
+	}
+
 	switch (ev.type)
 	{
-		case CEVENT_BUTTON_PRESS:
-			backend_menu_close(sh);
-			break;
-
 		case CEVENT_BUTTON_RELEASE:
 			if (ev.button == 3)
 			{
@@ -487,21 +492,12 @@ shell_dispatch_event(cshell *sh, struct cevent ev)
 			break;
 
 		case CEVENT_REDRAW:
-			//printf("shell redrawn\n");
 			cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
-			if (ev.redraw_shell)
-			{
-				cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
-				cairo_paint(ev.redraw_ctx);
-				cairo_set_source_rgba(ev.redraw_ctx, 1.0, 0.0, 0.0, 0.5);
-				cairo_rectangle(ev.redraw_ctx, 20, 20, sh->w - 40, sh->h - 40);
-				cairo_fill(ev.redraw_ctx);
-			}
-			else
-			{
-				cairo_set_source_rgba(ev.redraw_ctx, 0.2, 0.2, 0.2, 1.0);
-				cairo_paint(ev.redraw_ctx);
-			}
+			cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
+			cairo_paint(ev.redraw_ctx);
+			cairo_set_source_rgba(ev.redraw_ctx, 1.0, 0.0, 0.0, 0.5);
+			cairo_rectangle(ev.redraw_ctx, 20, 20, sh->w - 40, sh->h - 40);
+			cairo_fill(ev.redraw_ctx);
 			break;
 
 		case CEVENT_TRANSFORM:
@@ -510,12 +506,7 @@ shell_dispatch_event(cshell *sh, struct cevent ev)
 				sh->w = ev.transform_w;
 				sh->h = ev.transform_h;
 				backend_shell_redraw(sh);
-				//printf("shell resized\n");
 			}
-			break;
-
-		case CEVENT_UNKNOWN:
-			//printf("unhandled display event\n");
 			break;
 
 		case CEVENT_CLOSE:
@@ -523,11 +514,7 @@ shell_dispatch_event(cshell *sh, struct cevent ev)
 			break;
 
 		case CEVENT_FAIL:
-			printf("display connection lost\n");
 			set_error(sh, CERR_DISPLAY);
-			break;
-
-		case CEVENT_NONE:
 			break;
 
 		default:
@@ -578,7 +565,7 @@ backend_menu_redraw(cshell *sh)
 static void
 backend_server_commit(cshell *sh)
 {
-	ROUTE(sh, server_commit, sh);
+	ROUTE(sh, server_commit);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -586,7 +573,7 @@ backend_server_commit(cshell *sh)
 static void
 backend_server_dispatch(cshell *sh)
 {
-	ROUTE(sh, server_dispatch, sh);
+	ROUTE(sh, server_dispatch);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -682,6 +669,34 @@ dispatch_invoke(cshell *sh)
 	pthread_cond_broadcast(&sh->cond);
 	pthread_mutex_unlock(&sh->mutex);
 	cl.fn(sh, cl.data);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+menu_dispatch_event(struct cevent ev) /* only executed on UI thread */
+{
+	cshell *sh = thread_owner;
+
+	switch (ev.type)
+	{
+		case CEVENT_REDRAW:
+			cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
+			cairo_set_source_rgba(ev.redraw_ctx, 0.2, 0.2, 0.2, 1.0);
+			cairo_paint(ev.redraw_ctx);
+			break;
+
+		case CEVENT_BUTTON_PRESS:
+			printf(">> button pressed menu\n");
+			/* fallthrough */
+
+		case CEVENT_CLOSE:
+			backend_menu_close(sh);
+			break;
+
+		default:
+			break;
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
