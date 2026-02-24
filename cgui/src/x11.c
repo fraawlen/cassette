@@ -74,7 +74,8 @@ x11_menu_open(struct x11 *x, uint32_t w, uint32_t h)
 void
 x11_menu_redraw(struct x11 *x)
 {
-	x->menu.redraw = true;
+	x->menu.redraw  = true;
+	x->menu.present = true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -246,6 +247,7 @@ void
 x11_shell_close(struct x11 *x)
 {
 	window_destroy(&x->shell, x);
+	inputs_ungrab(x);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -261,7 +263,8 @@ x11_shell_open(struct x11 *x, uint32_t w, uint32_t h)
 void
 x11_shell_redraw(struct x11 *x)
 {
-	x->shell.redraw = true;
+	x->shell.redraw  = true;
+	x->shell.present = true;
 }
 
 /************************************************************************************************************/
@@ -354,7 +357,7 @@ ev_message(xcb_client_message_event_t *xev, struct x11 *x)
 	struct cevent cev = {.type = CEVENT_CLOSE};
 	xcb_atom_t msg = xev->data.data32[0];
 
-	if (xev->format == 32 || xev->type == x->atom_protocol)
+	if (xev->format == 32 && xev->type == x->atom_protocol)
 	{
 		if (msg == x->atom_close)
 		{
@@ -696,12 +699,13 @@ window_commit(struct x11_window *win, struct x11 *x)
 
 	if (win->resized)
 	{	
+		win->redraw  = true;
+		win->resized = false;
 		xcb_free_pixmap(x->connection, win->buffer);
 		win->buffer = xcb_generate_id(x->connection);
 		xcb_create_pixmap(x->connection, x->depth, win->buffer, win->window, w, h);
 		cairo_surface_flush(win->surface);
 		cairo_xcb_surface_set_drawable(win->surface, win->buffer, w, h);
-		win->resized = false;
 	}
 
 	/* rendering */
@@ -737,12 +741,12 @@ window_commit(struct x11_window *win, struct x11 *x)
 			win->present = false;
 			xcb_copy_area(x->connection, win->buffer, win->window, win->gc, 0, 0, 0, 0, w, h);
 		}
+	}
 
-		if (x->opcode_sync != 0 && win->sync)
-		{
-			win->sync = false;
-			xcb_sync_set_counter(x->connection, win->sync_count, win->sync_val);
-		}
+	if (x->opcode_sync != 0 && win->sync && !win->present && !win->resized)
+	{
+		win->sync = false;
+		xcb_sync_set_counter(x->connection, win->sync_count, win->sync_val);
 	}
 }
 
@@ -753,6 +757,11 @@ window_destroy(struct x11_window *win, struct x11 *x)
 {
 	if (win->active)
 	{
+		if (x->opcode_sync != 0)
+		{
+			xcb_sync_destroy_counter(x->connection, win->sync_count);
+		}
+
 		cairo_destroy(win->cairo);
 		cairo_surface_finish(win->surface);
 		cairo_surface_destroy(win->surface);
@@ -760,7 +769,6 @@ window_destroy(struct x11_window *win, struct x11 *x)
 		xcb_free_pixmap(x->connection, win->buffer);
 		xcb_unmap_window(x->connection, win->window);
 		xcb_destroy_window(x->connection, win->window);
-		xcb_sync_destroy_counter(x->connection, win->sync_count);
 		win->active = false;
 	}
 }
@@ -825,16 +833,6 @@ window_init(struct x11_window *win, struct x11 *x, uint32_t w, uint32_t h, bool 
 		goto fail_win;
 	}
 
-	/* sync setup */
-
-	win->sync_count = xcb_generate_id(x->connection);
-	ck = xcb_sync_create_counter_checked(x->connection, win->sync_count, win->sync_val);
-
-	if (fail(x, ck))
-	{
-		goto fail_sync;
-	}
-
 	/* buffer setup */
 
 	win->buffer = xcb_generate_id(x->connection);
@@ -875,6 +873,19 @@ window_init(struct x11_window *win, struct x11 *x, uint32_t w, uint32_t h, bool 
 	if (cairo_status(win->cairo) != CAIRO_STATUS_SUCCESS)
 	{
 		goto fail_ctx;
+	}
+
+	/* sync setup */
+
+	if (x->opcode_sync != 0)
+	{
+		win->sync_count = xcb_generate_id(x->connection);
+		ck = xcb_sync_create_counter_checked(x->connection, win->sync_count, win->sync_val);
+	
+		if (fail(x, ck))
+		{
+			goto fail_sync;
+		}
 	}
 
 	/* register window to extension events */
@@ -948,13 +959,13 @@ window_init(struct x11_window *win, struct x11 *x, uint32_t w, uint32_t h, bool 
 	win->buffer_w    = w;
 	win->buffer_h    = h;
 	win->serial      = 0;
+	win->active      = true;
 	win->redraw      = true;
 	win->resized     = false;
 	win->present     = false;
 	win->busy        = false;
 	win->wait        = false;
 	win->sync        = false;
-	win->active      = true;
 
 	xcb_flush(x->connection);
 
@@ -963,6 +974,8 @@ window_init(struct x11_window *win, struct x11 *x, uint32_t w, uint32_t h, bool 
 	/* errors */
 
 fail_ev:
+	xcb_sync_destroy_counter(x->connection, win->sync_count);
+fail_sync:
 	cairo_destroy(win->cairo);
 fail_ctx:
 	cairo_surface_destroy(win->surface);
@@ -971,8 +984,6 @@ fail_sfc:
 fail_gc:
 	xcb_free_pixmap(x->connection, win->buffer);
 fail_buf:
-	xcb_sync_destroy_counter(x->connection, win->sync_count);
-fail_sync:
 	xcb_destroy_window(x->connection, win->window);
 fail_win:
 	return false;

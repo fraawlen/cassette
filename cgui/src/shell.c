@@ -106,7 +106,7 @@ struct call
 
 static void  backend_menu_close      (cshell *);
 static bool  backend_menu_open       (cshell *, uint32_t, uint32_t);
-//static void  backend_menu_redraw     (cshell *);
+static void  backend_menu_redraw     (cshell *);
 static void  backend_server_commit   (cshell *);
 static void  backend_server_dispatch (cshell *);
 static bool  backend_server_init     (cshell *, enum cshell_backend);
@@ -472,11 +472,11 @@ cshell_wait(cshell *sh)
 /************************************************************************************************************/
 
 void
-shell_dispatch_event(struct cevent ev, bool menu)  /* only executed on UI thread */
+shell_dispatch_event(struct cevent ev, bool for_menu)  /* only executed on UI thread */
 {
 	cshell *sh = thread_owner;
 
-	if (menu)
+	if (for_menu)
 	{
 		menu_dispatch_event(ev);
 		return;
@@ -501,12 +501,8 @@ shell_dispatch_event(struct cevent ev, bool menu)  /* only executed on UI thread
 			break;
 
 		case CEVENT_TRANSFORM:
-			if (sh->w != ev.transform_w || sh->h != ev.transform_h)
-			{
-				sh->w = ev.transform_w;
-				sh->h = ev.transform_h;
-				backend_shell_redraw(sh);
-			}
+			sh->w = ev.transform_w;
+			sh->h = ev.transform_h;
 			break;
 
 		case CEVENT_CLOSE:
@@ -552,13 +548,11 @@ backend_menu_open(cshell *sh, uint32_t w, uint32_t h)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-/*
 static void
 backend_menu_redraw(cshell *sh)
 {
 	ROUTE(sh, shell_redraw);
 }
-*/
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
