@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <wayland-client.h>
 
-#include "event.h"
 #include "xdg-decoration-unstable-v1.h"
 #include "xdg-shell.h"
 
