@@ -599,13 +599,21 @@ static void
 cl_conf_pop(void *data, struct xdg_popup *pop, int x, int y, int w, int h)
 {
 	(void)pop;
-	(void)x;
-	(void)y;
 
 	struct wayland *wl = data;
+	struct cevent ev =
+	{
+		.type = CEVENT_TRANSFORM,
+		.transform_x = x,
+		.transform_y = y,
+		.transform_w = w,
+		.transform_h = h,
+	};
 
 	wl->menu.w = w;
 	wl->menu.h = h;
+
+	shell_dispatch_event(ev, true);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -614,6 +622,7 @@ static void
 cl_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array *states)
 {
 	(void)top;
+	(void)states;
 
 	struct cevent ev = {0};
 	struct wayland *wl = data;
@@ -629,15 +638,6 @@ cl_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 		wl->shell.h = h;
 		wl->shell.redraw = true;
 		shell_dispatch_event(ev, false);
-	}
-
-	char *i;
-	wl_array_for_each(i, states)
-	{
-		if (*i == XDG_TOPLEVEL_STATE_ACTIVATED)
-		{
-			//printf(">> activate\n");
-		}
 	}
 }
 

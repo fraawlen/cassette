@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "menu.h"
 #include "shell.h"
 #include "wayland.h"
 #include "x11.h"
@@ -90,6 +91,10 @@ struct cshell
 		struct wayland wl;
 		struct x11 x;
 	};
+
+	/* contents */
+
+	struct menu menu;
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -117,12 +122,11 @@ static void  backend_shell_redraw    (cshell *);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void  dispatch_invoke     (cshell *);
-static void  dummy               (cshell *, void *);
-static void  menu_dispatch_event (struct cevent);
-static bool  run                 (cshell *);
-static void  set_error           (cshell *, enum cerr);
-static void *thread              (void   *);
+static void  dispatch_invoke (cshell *);
+static void  dummy           (cshell *, void *);
+static bool  run             (cshell *);
+static void  set_error       (cshell *, enum cerr);
+static void *thread          (void   *);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -212,6 +216,7 @@ cshell_create(void)
 	sh->data_open  = nullptr;
 	sh->fn_close   = dummy;
 	sh->fn_open    = dummy;
+	sh->menu       = (struct menu){0};
 
 	return sh;
 
@@ -472,15 +477,27 @@ cshell_wait(cshell *sh)
 /************************************************************************************************************/
 
 void
-shell_dispatch_event(struct cevent ev, bool for_menu)  /* only executed on UI thread */
+shell_dispatch_event(struct cevent ev, bool for_menu) 
 {
 	cshell *sh = thread_owner;
 
+	/* menu event redirection */
+
 	if (for_menu)
 	{
-		menu_dispatch_event(ev);
+		menu_dispatch_event(&sh->menu, ev);
+		if (!sh->menu.active)
+		{
+			backend_menu_close(sh);
+		}
+		else if (sh->menu.redraw)
+		{
+			backend_menu_redraw(sh);
+		}
 		return;
 	}
+
+	/* main shell event handling */
 
 	switch (ev.type)
 	{
@@ -526,6 +543,8 @@ static void
 backend_menu_close(cshell *sh)
 {
 	ROUTE(sh, menu_close);
+
+	sh->menu.active = false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -533,17 +552,28 @@ backend_menu_close(cshell *sh)
 static bool
 backend_menu_open(cshell *sh, uint32_t w, uint32_t h)
 {
+	bool ok = false;
+
 	switch(atomic_load(&sh->backend))
 	{
 		case CSHELL_X11:
-			return x11_menu_open(&sh->x, w, h);
+			ok = x11_menu_open(&sh->x, w, h);
+			break;
 
 		case CSHELL_WAYLAND:
-			return wayland_menu_open(&sh->wl, w, h);
+			ok =  wayland_menu_open(&sh->wl, w, h);
+			break;
 
 		default:
-			return true;
+			return false;
 	}
+
+	if (ok)
+	{
+		sh->menu.active = true;
+	}
+
+	return ok;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -552,6 +582,8 @@ static void
 backend_menu_redraw(cshell *sh)
 {
 	ROUTE(sh, shell_redraw);
+
+	sh->menu.redraw = false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -663,34 +695,6 @@ dispatch_invoke(cshell *sh)
 	pthread_cond_broadcast(&sh->cond);
 	pthread_mutex_unlock(&sh->mutex);
 	cl.fn(sh, cl.data);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-menu_dispatch_event(struct cevent ev) /* only executed on UI thread */
-{
-	cshell *sh = thread_owner;
-
-	switch (ev.type)
-	{
-		case CEVENT_REDRAW:
-			cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
-			cairo_set_source_rgba(ev.redraw_ctx, 0.2, 0.2, 0.2, 1.0);
-			cairo_paint(ev.redraw_ctx);
-			break;
-
-		case CEVENT_BUTTON_PRESS:
-			printf(">> button pressed menu\n");
-			/* fallthrough */
-
-		case CEVENT_CLOSE:
-			backend_menu_close(sh);
-			break;
-
-		default:
-			break;
-	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

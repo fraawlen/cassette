@@ -302,7 +302,7 @@ ev_button(xcb_button_press_event_t *xev, struct x11 *x, bool press)
 		.button = xev->detail,
 	};
 
-	shell_dispatch_event(cev, is_menu(x, xev->event));
+	shell_dispatch_event(cev, x->menu.active);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -571,6 +571,20 @@ position_popup(struct x11 *x, uint32_t w, uint32_t h, int32_t *px, int32_t *py)
 
 	*px -= dw1 >= w ? 0 : w - (dw2 >= w ? 0 : dw1);
 	*py -= dh1 >= h ? 0 : h - (dh2 >= h ? 0 : dh1);
+
+	/* generate a synthetic transform event because the popup is not managed by the WM */
+	/* without it, the shell's menu never gets configured after it's opened            */
+
+	struct cevent cev =
+	{
+		.type = CEVENT_TRANSFORM,
+		.transform_x = *px,
+		.transform_y = *py,
+		.transform_w = w,
+		.transform_h = h,
+	};
+
+	shell_dispatch_event(cev, true);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
