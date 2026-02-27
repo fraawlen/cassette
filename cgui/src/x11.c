@@ -571,20 +571,6 @@ position_popup(struct x11 *x, uint32_t w, uint32_t h, int32_t *px, int32_t *py)
 
 	*px -= dw1 >= w ? 0 : w - (dw2 >= w ? 0 : dw1);
 	*py -= dh1 >= h ? 0 : h - (dh2 >= h ? 0 : dh1);
-
-	/* generate a synthetic transform event because the popup is not managed by the WM */
-	/* without it, the shell's menu never gets configured after it's opened            */
-
-	struct cevent cev =
-	{
-		.type = CEVENT_TRANSFORM,
-		.transform_x = *px,
-		.transform_y = *py,
-		.transform_w = w,
-		.transform_h = h,
-	};
-
-	shell_dispatch_event(cev, true);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -961,12 +947,30 @@ window_init(struct x11_window *win, struct x11 *x, uint32_t w, uint32_t h, bool 
 		prop_set(x, win, x->atom_sync2,    XCB_ATOM_CARDINAL, 1, &win->sync_count, true);
 	}
 
-	/* end */
+	/* show window on screen */
 
 	if (fail(x, xcb_map_window_checked(x->connection, win->window)))
 	{
 		goto fail_ev;
 	}
+
+	xcb_flush(x->connection);
+
+	/* generate a synthetic transform before the first expose event   */
+	/* without it, the window never gets configured after it's opened */
+
+	struct cevent cev =
+	{
+		.type = CEVENT_TRANSFORM,
+		.transform_x = px,
+		.transform_y = py,
+		.transform_w = w,
+		.transform_h = h,
+	};
+
+	shell_dispatch_event(cev, popup);
+
+	/* end */
 
 	win->sync_val.hi = 0;
 	win->sync_val.lo = 0;

@@ -612,6 +612,7 @@ cl_conf_pop(void *data, struct xdg_popup *pop, int x, int y, int w, int h)
 
 	wl->menu.w = w;
 	wl->menu.h = h;
+	wl->menu.redraw = true;
 
 	shell_dispatch_event(ev, true);
 }
@@ -627,18 +628,19 @@ cl_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 	struct cevent ev = {0};
 	struct wayland *wl = data;
 
-	if (w > 0 && h > 0)
-	{
-		ev.type = CEVENT_TRANSFORM;
-		ev.transform_w = w;
-		ev.transform_h = h;
-		ev.transform_x = 0;
-		ev.transform_y = 0;
-		wl->shell.w = w;
-		wl->shell.h = h;
-		wl->shell.redraw = true;
-		shell_dispatch_event(ev, false);
-	}
+	w = w == 0 ? (int)wl->shell.w : w;
+	h = h == 0 ? (int)wl->shell.h : h;
+
+	ev.type = CEVENT_TRANSFORM;
+	ev.transform_w = w;
+	ev.transform_h = h;
+	ev.transform_x = 0;
+	ev.transform_y = 0;
+	wl->shell.w = w;
+	wl->shell.h = h;
+	wl->shell.redraw = true;
+
+	shell_dispatch_event(ev, false);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

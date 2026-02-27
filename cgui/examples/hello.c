@@ -46,6 +46,7 @@ main(void)
 	cshell_on_close(sh, task2, nullptr);
 	cshell_on_open(sh,  task4, nullptr);
 	cshell_open(sh);
+	cshell_wait(sh);
 
 	/* Task */
 

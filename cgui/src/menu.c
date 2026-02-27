@@ -35,7 +35,7 @@ menu_dispatch_event(struct menu *mn, struct cevent ev)
 			break;
 
 		case CEVENT_BUTTON_PRESS:
-			printf(">> menu button pressed\n");
+//			printf(">> menu button pressed\n");
 			/* fallthrough */
 
 		case CEVENT_CLOSE:

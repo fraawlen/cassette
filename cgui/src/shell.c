@@ -375,11 +375,6 @@ cshell_open(cshell *sh)
 		goto fail_back;
 	}
 
-	if (!backend_shell_open(sh, 500, 300))
-	{
-		goto fail_win;
-	}
-
 	if (pipe(sh->fd_call) != 0)
 	{
 		goto fail_pipe;
@@ -396,25 +391,13 @@ cshell_open(cshell *sh)
 		goto fail_flags;
 	}
 	
-	if (pthread_create(&sh->thread, nullptr, thread, sh) != 0)
+	if (pthread_create(&sh->thread, nullptr, thread, sh) == 0)
 	{
-		goto fail_thread;
+		goto done;
 	}
-
-	/* end */
-
-	sh->w = 500;
-	sh->h = 300;
-
-	atomic_store(&sh->state, OPEN);
-	pthread_cond_broadcast(&sh->cond);
-	pthread_mutex_unlock(&sh->mutex);
-
-	return;
 
 	/* error cleanup */
 
-fail_thread:
 fail_flags:
 	close(sh->fd_poke[0]);
 	close(sh->fd_poke[1]);
@@ -423,7 +406,6 @@ fail_pipe2:
 	close(sh->fd_call[1]);
 fail_pipe:
 	set_error(sh, CERR_THREAD);
-fail_win:
 	backend_server_kill(sh);
 fail_back:
 	set_error(sh, CERR_DISPLAY);
@@ -431,6 +413,10 @@ fail_back:
 fail_open:
 	set_error(sh, CERR_CALL);
 	pthread_cond_broadcast(&sh->cond);
+
+	/* end */
+
+done:
 	pthread_mutex_unlock(&sh->mutex);
 }
 
@@ -464,7 +450,8 @@ cshell_wait(cshell *sh)
 
 	pthread_mutex_lock(&sh->mutex);
 
-	while (atomic_load(&sh->state) == INIT)
+	while (atomic_load(&sh->state) == INIT
+	    || atomic_load(&sh->state) == OPENING)
 	{
 		pthread_cond_wait(&sh->cond, &sh->mutex);
 	}
@@ -552,28 +539,17 @@ backend_menu_close(cshell *sh)
 static bool
 backend_menu_open(cshell *sh, uint32_t w, uint32_t h)
 {
-	bool ok = false;
-
 	switch(atomic_load(&sh->backend))
 	{
 		case CSHELL_X11:
-			ok = x11_menu_open(&sh->x, w, h);
-			break;
+			return (sh->menu.active = x11_menu_open(&sh->x, w, h));
 
 		case CSHELL_WAYLAND:
-			ok =  wayland_menu_open(&sh->wl, w, h);
-			break;
+			return (sh->menu.active = wayland_menu_open(&sh->wl, w, h));
 
 		default:
 			return false;
 	}
-
-	if (ok)
-	{
-		sh->menu.active = true;
-	}
-
-	return ok;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -797,12 +773,23 @@ thread(void *arg)
 	/* the remaining invokes, but stops processing */
 	/* backend events.                             */
 
-	sh->fn_open(sh, sh->data_open);
-	while (run(sh))
+	if (backend_shell_open(sh, 500, 300))
 	{
-		backend_server_commit(sh);
+		pthread_mutex_lock(&sh->mutex);
+		atomic_store(&sh->state, OPEN);
+		pthread_cond_broadcast(&sh->cond);
+		pthread_mutex_unlock(&sh->mutex);
+		sh->fn_open(sh, sh->data_open);
+		while (run(sh))
+		{
+			backend_server_commit(sh);
+		}
+		sh->fn_close(sh, sh->data_close);
 	}
-	sh->fn_close(sh, sh->data_close);
+	else
+	{
+		set_error(sh, CERR_DISPLAY);
+	}
 
 	/* teardown */
 
