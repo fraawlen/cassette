@@ -23,6 +23,7 @@ enum cevent_type
 {
 	CEVENT_NONE = 0,
 	CEVENT_FAIL,
+	CEVENT_OPEN,
 	CEVENT_CLOSE,
 	CEVENT_REDRAW,
 	CEVENT_TRANSFORM,
@@ -50,28 +51,18 @@ struct cevent
 			uint32_t transform_h;
 		};
 
-		/* CEVENT_REDRAW  */
+		/* CEVENT_REDRAW */
 
-		struct
-		{
-			cairo_t *redraw_ctx;
-			bool redraw_shell;
-		};
+		cairo_t *redraw_ctx;
 
-		/* CEVENT_NONE    */
-		/* CEVENT_FAIL    */
-		/* CEVENT_CLOSE   */
+		/* CEVENT_CLOSE */
+		/* CEVENT_OPEN  */
+		/* CEVENT_FAIL  */
+		/* CEVENT_NONE  */
 
 		/* no fields for these events */
 	};
 };
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-constexpr struct cevent cevent_blank = { .type = CEVENT_NONE };
-constexpr struct cevent cevent_error = { .type = CEVENT_FAIL };
 
 /************************************************************************************************************/
 /************************************************************************************************************/

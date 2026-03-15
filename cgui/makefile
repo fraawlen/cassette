@@ -55,7 +55,7 @@ doc:
 	asciidoctor -b manpage -D $(DIR_DOC) $(DIR_API)/*.adoc
 
 lib: $(WL_LIB) $(OBJ_LIB)
-	$(CC) $(LDFLAGS) -o $(DIR_LIB)/lib$(NAME).so $^ $(DEPS)
+	$(CC) $(LDFLAGS) -o $(DIR_LIB)/lib$(NAME).so $^ $(DEPS) $(RPATH)
 
 $(DIR_OBJ)/%.o: $(DIR_SRC)/%.c
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@ $(INCS)

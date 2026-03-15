@@ -5,31 +5,12 @@
 #pragma once
 
 #include <cassette/cgui.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdlib.h>
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-enum menu_action
-{
-	MENU_IDLE,
-	MENU_DAMAGE,
-	MENU_HIDE,
-};
-
-struct menu
-{
-	uint32_t w;
-	uint32_t h;
-};
-
-/************************************************************************************************************/
-/************************************************************************************************************/
-/************************************************************************************************************/
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] enum menu_action
-menu_send_event(struct menu *mn, struct cevent ev);
-
+constexpr struct cevent event_blank = { .type = CEVENT_NONE  };
+constexpr struct cevent event_error = { .type = CEVENT_FAIL  };
+constexpr struct cevent event_open  = { .type = CEVENT_OPEN  };
+constexpr struct cevent event_close = { .type = CEVENT_CLOSE };

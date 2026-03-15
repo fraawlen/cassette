@@ -13,6 +13,8 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_renderutil.h>
 
+#include "shell.h"
+
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -31,13 +33,15 @@ struct x11_window
 	/* states */
 
 	xcb_sync_int64_t sync_val;
-	uint32_t buffer_w;
-	uint32_t buffer_h;
 	uint32_t serial;
-	bool resized;
+	uint32_t w;
+	uint32_t h;
+
 	bool present;
+	bool resized;
+	bool damaged;
 	bool active;
-	bool redraw;
+	bool mapped;
 	bool wait;
 	bool busy;
 	bool sync;
@@ -92,7 +96,7 @@ struct x11
 
 	/* surfaces */
 
-	struct x11_window shell;
+	struct x11_window main;
 	struct x11_window menu;
 };
 
@@ -100,36 +104,25 @@ struct x11
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-x11_menu_close(struct x11 *x);
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] bool
-x11_menu_open(struct x11 *x, uint32_t w, uint32_t h);
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] int
+x11_init(struct x11 *x11);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-x11_menu_redraw(struct x11 *x);
+x11_kill(struct x11 *x11);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
+x11_read(struct x11 *x11);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-x11_shell_close(struct x11 *x);
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] bool
-x11_shell_open(struct x11 *x, uint32_t w, uint32_t h);
+x11_damage(struct x11 *x11, enum shell_target target);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-x11_shell_redraw(struct x11 *x);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
-x11_server_commit(struct x11 *x);
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
-x11_server_dispatch(struct x11 *x);
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] bool
-x11_server_init(struct x11 *x, int *fd);
+x11_commit(struct x11 *x11, enum shell_target target);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-x11_server_kill(struct x11 *x);
+x11_hide(struct x11 *x11, enum shell_target target);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
+x11_show(struct x11 *x11, enum shell_target target, uint32_t w, uint32_t h);

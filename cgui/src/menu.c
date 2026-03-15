@@ -15,11 +15,14 @@
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
-void
-menu_dispatch_event(struct menu *mn, struct cevent ev)
+enum menu_action
+menu_send_event(struct menu *mn, struct cevent ev)
 {
 	switch (ev.type)
 	{
+		case CEVENT_BUTTON_RELEASE:
+			break;
+
 		case CEVENT_REDRAW:
 			cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
 			cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
@@ -34,17 +37,18 @@ menu_dispatch_event(struct menu *mn, struct cevent ev)
 			mn->h = ev.transform_h;
 			break;
 
-		case CEVENT_BUTTON_PRESS:
-//			printf(">> menu button pressed\n");
-			/* fallthrough */
-
-		case CEVENT_CLOSE:
-			mn->active = false;
-			mn->redraw = false;
+		case CEVENT_OPEN:
 			break;
+
+		case CEVENT_BUTTON_PRESS:
+		case CEVENT_CLOSE:
+		case CEVENT_FAIL:
+			return MENU_HIDE;
 
 		default:
 			break;
 	}
+
+	return MENU_IDLE;
 }
 

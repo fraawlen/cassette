@@ -25,13 +25,18 @@
 
 struct wayland_buffer
 {
+	/* components */
+
 	struct wl_buffer *handle;
 	cairo_surface_t *surface;
 	cairo_t *cairo;
+
+	/* states */
+
 	uint32_t *pixels;
+	bool busy;
 	size_t h;
 	size_t w;
-	bool busy;
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -51,19 +56,18 @@ struct wayland_window
 
 	uint32_t w;
 	uint32_t h;
-
-	bool init;
-	bool wait;
 	bool commit;
 	bool redraw;
 	bool active;
+	bool wait;
+	bool init;
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct wayland
 {
-	/* core components */
+	/* components */
 	
 	struct wl_display *display;
 	struct wl_registry *registry;
@@ -76,50 +80,39 @@ struct wayland
 
 	/* surfaces */
 
-	struct wayland_window shell;
+	struct wayland_window main;
 	struct wayland_window menu;
 
 	/* pointer tracking */
 
+	uint32_t serial;
 	int32_t px;
 	int32_t py;
-	uint32_t serial;
 };
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-wayland_menu_close(struct wayland *wl);
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] bool
-wayland_menu_open(struct wayland *wl, uint32_t w, uint32_t h);
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] int
+wayland_init(struct wayland *wl);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-wayland_menu_redraw(struct wayland *wl);
+wayland_kill(struct wayland *wl);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
+wayland_read(struct wayland *wl);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-wayland_shell_close(struct wayland *wl);
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] bool
-wayland_shell_open(struct wayland *wl, uint32_t w, uint32_t h);
+wayland_damage(struct wayland *wl, enum shell_target target);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-wayland_shell_redraw(struct wayland *wl);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
-wayland_server_commit(struct wayland *wl);
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
-wayland_server_dispatch(struct wayland *wl);
-
-[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] bool
-wayland_server_init(struct wayland *wl, int *fd);
+wayland_commit(struct wayland *wl, enum shell_target target);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-wayland_server_kill(struct wayland *wl);
+wayland_hide(struct wayland *wl, enum shell_target target);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
+wayland_show(struct wayland *wl, enum shell_target target, uint32_t w, uint32_t h);

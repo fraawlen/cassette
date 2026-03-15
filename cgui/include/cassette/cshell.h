@@ -19,12 +19,21 @@ extern "C" {
 
 typedef struct cshell cshell;
 
-enum cshell_backend
+enum cshell_server
 {
 	CSHELL_NONE    = 0b00,
 	CSHELL_X11     = 0b01,
 	CSHELL_WAYLAND = 0b10,
-	CSHELL_ANY     = 0b11,
+	CSHELL_ANY     = ~0,
+};
+
+enum cshell_state
+{
+	CSHELL_INIT,
+	CSHELL_OPENING,
+	CSHELL_OPEN,
+	CSHELL_CLOSING,
+	CSHELL_CLOSED,
 };
 
 /************************************************************************************************************/
@@ -51,7 +60,7 @@ void cshell_on_close(cshell *sh, void (*fn)(cshell *, void *), void *data);
 
 void cshell_on_open(cshell *sh, void (*fn)(cshell *, void *), void *data);
 
-void cshell_open(cshell *sh);
+void cshell_open(cshell *sh, enum cshell_server server);
 
 void cshell_wait(cshell *sh);
 
@@ -59,13 +68,13 @@ void cshell_wait(cshell *sh);
 /* ACCESS ***************************************************************************************************/
 /************************************************************************************************************/
 
-enum cshell_backend cshell_backend(const cshell *sh);
+enum cerr cshell_error(cshell *sh);
 
-enum cerr cshell_error(const cshell *sh);
+bool cshell_self(cshell *sh);
 
-bool cshell_opened(const cshell *sh);
+enum cshell_server cshell_server(cshell *sh);
 
-bool cshell_self(const cshell *sh);
+enum cshell_state cshell_state(cshell *sh);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
