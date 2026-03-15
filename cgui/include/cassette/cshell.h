@@ -60,7 +60,9 @@ void cshell_on_close(cshell *sh, void (*fn)(cshell *, void *), void *data);
 
 void cshell_on_open(cshell *sh, void (*fn)(cshell *, void *), void *data);
 
-void cshell_open(cshell *sh, enum cshell_server server);
+void cshell_open(cshell *sh, enum cshell_server server, const char *tag);
+
+void cshell_rename(cshell *sh, const char *name);
 
 void cshell_wait(cshell *sh);
 
@@ -68,13 +70,13 @@ void cshell_wait(cshell *sh);
 /* ACCESS ***************************************************************************************************/
 /************************************************************************************************************/
 
-enum cerr cshell_error(cshell *sh);
+enum cerr cshell_error(const cshell *sh);
 
-bool cshell_self(cshell *sh);
+bool cshell_self(const cshell *sh);
 
-enum cshell_server cshell_server(cshell *sh);
+enum cshell_server cshell_server(const cshell *sh);
 
-enum cshell_state cshell_state(cshell *sh);
+enum cshell_state cshell_state(const cshell *sh);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

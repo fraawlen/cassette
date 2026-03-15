@@ -59,7 +59,7 @@ static void buffer_free   (struct wayland_buffer *);
 static bool buffer_resize (struct wayland_buffer *, struct wayland *, uint32_t, uint32_t);
 static void flush         (struct wayland *);
 static void init_menu     (struct wayland *, struct wayland_window *);
-static void init_shell    (struct wayland *, struct wayland_window *);
+static void init_shell    (struct wayland *, struct wayland_window *, const char *);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -350,10 +350,23 @@ wayland_read(struct wayland *wl)
 	}
 }
 
+
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-wayland_show(struct wayland *wl, enum shell_target target, uint32_t w, uint32_t h)
+wayland_rename(struct wayland *wl, enum shell_target target, const char *name)
+{
+	if (target == SHELL_MAIN)
+	{
+		xdg_toplevel_set_title(wl->main.top, name);
+		flush(wl);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+wayland_show(struct wayland *wl, enum shell_target target, const char *tag, uint32_t w, uint32_t h)
 {
 	struct wayland_window *win = target == SHELL_MAIN ? &wl->main : &wl->menu;
 
@@ -394,7 +407,7 @@ wayland_show(struct wayland *wl, enum shell_target target, uint32_t w, uint32_t 
 
 	if (target == SHELL_MAIN)
 	{
-		init_shell(wl, win);
+		init_shell(wl, win, tag);
 	}
 	else
 	{
@@ -661,10 +674,10 @@ ev_conf_pop(void *data, struct xdg_popup *pop, int x, int y, int w, int h)
 		shell_send_event(event_open, SHELL_MENU);
 	}
 
-	win->w = w;
-	win->h = h;
 	win->redraw = true;
 	win->init   = true;
+	win->w      = w;
+	win->h      = h;
 
 	shell_send_event(ev, SHELL_MENU);
 }
@@ -692,10 +705,10 @@ ev_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 		shell_send_event(event_open, SHELL_MAIN);
 	}
 
-	win->w = ev.transform_w;
-	win->h = ev.transform_h;
 	win->redraw = true;
 	win->init   = true;
+	win->w      = ev.transform_w;
+	win->h      = ev.transform_h;
 
 	shell_send_event(ev, SHELL_MAIN);
 }
@@ -840,7 +853,7 @@ fail_pos:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-init_shell(struct wayland *wl, struct wayland_window *win)
+init_shell(struct wayland *wl, struct wayland_window *win, const char *tag)
 {
 	/* role */
 
@@ -868,6 +881,7 @@ skip_decor:
 	/* finish */
 
 	xdg_toplevel_add_listener(win->top, &ear_top, win);
+	xdg_toplevel_set_app_id(win->top, tag);
 	wl_surface_commit(win->surface);
 	flush(wl);
 	

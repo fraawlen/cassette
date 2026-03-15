@@ -106,13 +106,16 @@ wayland_read(struct wayland *wl);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-wayland_damage(struct wayland *wl, enum shell_target target);
+wayland_commit(struct wayland *wl, enum shell_target target);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-wayland_commit(struct wayland *wl, enum shell_target target);
+wayland_damage(struct wayland *wl, enum shell_target target);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
 wayland_hide(struct wayland *wl, enum shell_target target);
 
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
+wayland_rename(struct wayland *wl, enum shell_target target, const char *name);
+
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-wayland_show(struct wayland *wl, enum shell_target target, uint32_t w, uint32_t h);
+wayland_show(struct wayland *wl, enum shell_target target, const char *tag, uint32_t w, uint32_t h);

@@ -14,6 +14,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "menu.h"
@@ -24,6 +25,11 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
+
+#define DEFAULT_NAME "cgui window"
+#define DEFAULT_TAG  "cgui"
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 #define GUARD(SH, ...)   if (cerr_critical(cshell_error(SH))) { return __VA_OPT__(__VA_ARGS__); }
 #define GUARD_THREAD(SH) if (SH == thread_owner) { set_error(SH, CERR_CALL); return; }
@@ -97,16 +103,20 @@ struct cshell
 	/* contents */
 
 	struct menu menu;
+	char *name;
+	char *tag;
 };
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static void  apply_name    (cshell *, void *);
 static void  destroy       (cshell *);
 static void  dummy         (cshell *, void *);
 static void  finish_close  (cshell *);
 static void  finish_open   (cshell *);
+static void  invoke        (cshell *, void (*)(cshell *, void *), void *);
 static void  join          (cshell *);
 static void  menu_redirect (cshell *, struct cevent);
 static void  read_invoke   (cshell *);
@@ -154,7 +164,7 @@ cshell_close(cshell *sh)
 	GUARD(sh);
 	LOCK(sh)
 	{
-		if (atomic_compare_exchange_strong(&sh->state, &opened, CSHELL_CLOSING))
+		if (atomic_compare_exchange_strong(&sh->state, &opened,  CSHELL_CLOSING))
 		{
 			while (write(sh->fd_wake[1], "\1", 1) < 0 && errno == EINTR) {}
 		}
@@ -193,9 +203,10 @@ cshell_create(void)
 
 	sh->cl_close = (struct call){.fn = dummy, .data = nullptr};
 	sh->cl_open  = (struct call){.fn = dummy, .data = nullptr};
-
-	sh->w = 0;
-	sh->h = 0;
+	sh->name     = nullptr;
+	sh->tag      = nullptr;
+	sh->w        = 500;
+	sh->h        = 300;
 
 	return sh;
 
@@ -240,8 +251,8 @@ cshell_destroy(cshell *sh)
 				join(sh);
 				/* fallthrough */
 
-			case CSHELL_CLOSED:
 			case CSHELL_INIT:
+			case CSHELL_CLOSED:
 				destroy(sh);
 				break;
 		}
@@ -253,7 +264,7 @@ cshell_destroy(cshell *sh)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 enum cerr
-cshell_error(cshell *sh)
+cshell_error(const cshell *sh)
 {
 	return sh ? atomic_load(&sh->err) : CERR_INVALID;
 }
@@ -263,29 +274,11 @@ cshell_error(cshell *sh)
 void
 cshell_invoke(cshell *sh, void (*fn)(cshell *, void *), void *data)
 {
-	struct call cl = {.fn = fn, .data = data};
-
 	GUARD(sh);
 	GUARD_THREAD(sh);
 	LOCK(sh)
 	{
-		while (atomic_load(&sh->state) == CSHELL_OPEN)
-		{
-			if (write(sh->fd_call[1], &cl, sizeof(cl)) == sizeof(cl))
-			{
-				goto done;
-			}
-			else if (errno == EAGAIN)
-			{
-				pthread_cond_wait(&sh->cond, &sh->mutex);
-			}
-		}
-
-		set_error(sh, CERR_CALL);
-	done:
-
-		/* On EINTR loop back again.                   */
-		/* Other errors should not be possible at all. */
+		invoke(sh, fn ? fn : dummy, data);
 	}
 }
 
@@ -329,7 +322,7 @@ cshell_on_open(cshell *sh, void (*fn)(cshell *, void *), void *data)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cshell_open(cshell *sh, enum cshell_server server)
+cshell_open(cshell *sh, enum cshell_server server, const char *tag)
 {
 	enum cshell_state init   = CSHELL_INIT;
 	enum cshell_state closed = CSHELL_CLOSED;
@@ -342,6 +335,11 @@ cshell_open(cshell *sh, enum cshell_server server)
 		 && !atomic_compare_exchange_strong(&sh->state, &closed, CSHELL_OPENING))
 		{
 			goto fail_open;
+		}
+
+		if (!(sh->tag = strdup(tag ? tag : DEFAULT_TAG)))
+		{
+			goto fail_tag;
 		}
 
 		if (!server_init(sh, server))
@@ -381,11 +379,15 @@ cshell_open(cshell *sh, enum cshell_server server)
 		close(sh->fd_call[1]);
 	fail_pipe:
 		set_error(sh, CERR_THREAD);
+		SERVER(sh, kill);
 	fail_server:
 		set_error(sh, CERR_DISPLAY);
+		free(sh->tag);
+	fail_tag:
+		set_error(sh, CERR_MEMORY);
+		atomic_store(&sh->state, CSHELL_CLOSED);
 	fail_open:
 		set_error(sh, CERR_CALL);
-		atomic_store(&sh->state, CSHELL_CLOSED);
 
 		/* end */
 
@@ -396,8 +398,50 @@ cshell_open(cshell *sh, enum cshell_server server)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void
+cshell_rename(cshell *sh, const char *name)
+{
+	char *tmp;
+
+	GUARD(sh);
+
+	/* update stored name */
+
+	LOCK(sh)
+	{
+		if ((tmp = strdup(name ? name : DEFAULT_NAME)))
+		{
+			free(sh->name);
+			sh->name = tmp;
+		}
+		else
+		{
+			set_error(sh, CERR_MEMORY);
+		}
+	}
+
+	/* notify the backend */
+
+	if (sh == thread_owner)
+	{
+		apply_name(sh, nullptr);
+	}
+	else
+	{
+		LOCK(sh)
+		{
+			if (atomic_load(&sh->state) == CSHELL_OPEN)
+			{
+				invoke(sh, apply_name, nullptr);
+			}
+		}
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 bool
-cshell_self(cshell *sh)
+cshell_self(const cshell *sh)
 {
 	return sh == thread_owner;
 }
@@ -405,7 +449,7 @@ cshell_self(cshell *sh)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 enum cshell_server
-cshell_server(cshell *sh)
+cshell_server(const cshell *sh)
 {
 	GUARD(sh, CSHELL_NONE);
 
@@ -415,7 +459,7 @@ cshell_server(cshell *sh)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 enum cshell_state
-cshell_state(cshell *sh)
+cshell_state(const cshell *sh)
 {
 	GUARD(sh, false);
 
@@ -466,7 +510,7 @@ shell_send_event(struct cevent ev, enum shell_target target)
 		case CEVENT_BUTTON_PRESS:
 			if (ev.button == 3)
 			{
-				SERVER(sh, show, SHELL_MENU, 200, 500);
+				SERVER(sh, show, SHELL_MENU, sh->tag, 200, 500);
 			}
 			break;
 
@@ -510,10 +554,28 @@ shell_send_event(struct cevent ev, enum shell_target target)
 /************************************************************************************************************/
 
 static void
+apply_name(cshell *sh, void *data)
+{
+	char tmp[256];
+	
+	(void)data;
+
+	LOCK(sh)
+	{
+		snprintf(tmp, sizeof(tmp), "%s", sh->name ? sh->name : DEFAULT_NAME);
+	}
+
+	SERVER(sh, rename, SHELL_MAIN, tmp);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 destroy(cshell *sh)
 {
 	pthread_mutex_destroy(&sh->mutex);
 	pthread_cond_destroy(&sh->cond);
+	free(sh->name);
 	free(sh);
 }
 
@@ -530,12 +592,13 @@ finish_close(cshell *sh)
 	}
 
 	cl.fn(sh, cl.data);
+	SERVER(sh, hide, SHELL_MENU);
+	SERVER(sh, hide, SHELL_MAIN);
+	SERVER(sh, kill);
 
 	LOCK(sh)
-	{
-		SERVER(sh, hide, SHELL_MENU);
-		SERVER(sh, hide, SHELL_MAIN);
-		SERVER(sh, kill);
+	{		
+		free(sh->tag);
 		close(sh->fd_call[1]);
 		close(sh->fd_call[0]);
 		close(sh->fd_wake[1]);
@@ -560,15 +623,39 @@ finish_open(cshell *sh)
 	LOCK(sh)
 	{
 		cl = sh->cl_open;
-	}
-	
-	cl.fn(sh, cl.data);
-
-	LOCK(sh)
-	{
 		atomic_store(&sh->state, CSHELL_OPEN);
 		pthread_cond_broadcast(&sh->cond);
 	}
+	
+	cl.fn(sh, cl.data);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+invoke(cshell *sh, void (*fn)(cshell *, void *), void *data)
+{
+	/* Always called outside the UI thread */
+	/* Always called with a locked mutex   */
+
+	struct call cl = {.fn = fn, .data = data};
+
+	while (atomic_load(&sh->state) == CSHELL_OPEN)
+	{
+		if (write(sh->fd_call[1], &cl, sizeof(cl)) == sizeof(cl))
+		{
+			return;
+		}
+		else if (errno == EAGAIN)
+		{
+			pthread_cond_wait(&sh->cond, &sh->mutex);
+		}
+
+		/* On EINTR loop back again.                   */
+		/* Other errors should not be possible at all. */
+	}
+
+	set_error(sh, CERR_CALL);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -699,11 +786,7 @@ run(cshell *sh)
 static bool
 server_init(cshell *sh, enum cshell_server server)
 {
-	if (server == CSHELL_NONE)
-	{
-		sh->fd_server = -1;
-	}
-	else if (server & CSHELL_WAYLAND && (sh->fd_server = wayland_init(&sh->wl)) != -1)
+	if (server & CSHELL_WAYLAND && (sh->fd_server = wayland_init(&sh->wl)) != -1)
 	{
 		atomic_store(&sh->server, CSHELL_WAYLAND);
 	}
@@ -749,7 +832,9 @@ ui_thread(void *arg)
 	cshell *sh = arg;
 	thread_owner = sh;
 
-	SERVER(sh, show, SHELL_MAIN, 500, 300);
+	SERVER(sh, show, SHELL_MAIN, sh->tag, sh->w, sh->h);
+	apply_name(sh, nullptr);
+
 	while (run(sh))
 	{
 		SERVER(sh, commit, SHELL_MAIN);

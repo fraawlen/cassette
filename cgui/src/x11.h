@@ -116,13 +116,17 @@ x11_read(struct x11 *x11);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-x11_damage(struct x11 *x11, enum shell_target target);
+x11_commit(struct x11 *x11, enum shell_target target);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-x11_commit(struct x11 *x11, enum shell_target target);
+x11_damage(struct x11 *x11, enum shell_target target);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
 x11_hide(struct x11 *x11, enum shell_target target);
 
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
+x11_rename(struct x11 *x11, enum shell_target target, const char *name);
+
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
-x11_show(struct x11 *x11, enum shell_target target, uint32_t w, uint32_t h);
+x11_show(struct x11 *x11, enum shell_target target, const char *tag, uint32_t w, uint32_t h);
+

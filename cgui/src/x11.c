@@ -329,7 +329,23 @@ x11_read(struct x11 *x11)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-x11_show(struct x11 *x11, enum shell_target target, uint32_t w, uint32_t h)
+x11_rename(struct x11 *x11, enum shell_target target, const char *name)
+{
+	struct x11_window *win = target == SHELL_MAIN ? &x11->main : &x11->menu;
+	size_t name_n = strlen(name);
+
+	prop_set(x11, win, x11->atom_name2, x11->atom_utf8,  name_n, name, true);
+	prop_set(x11, win, x11->atom_icon2, x11->atom_utf8,  name_n, name, true);
+	prop_set(x11, win, x11->atom_name,  XCB_ATOM_STRING, name_n, name, true);
+	prop_set(x11, win, x11->atom_icon,  XCB_ATOM_STRING, name_n, name, true);
+
+	xcb_flush(x11->connection);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_show(struct x11 *x11, enum shell_target target, const char *tag, uint32_t w, uint32_t h)
 {
 	struct x11_window *win = target == SHELL_MAIN ? &x11->main : &x11->menu;
 	int32_t x = 0;
@@ -448,31 +464,25 @@ x11_show(struct x11 *x11, enum shell_target target, uint32_t w, uint32_t h)
 
 	/* ICCCM and EWMH X properties setup */
 
-	const char *name = "cgui"; // TODO set as arg
-	const char *tag  = "tag";  // TODO set as arg
-
 	xcb_atom_t atom_type = target == SHELL_MAIN ? x11->atom_shell : x11->atom_menu;
+	const char *class = "cgui";
 	char host[256] = "";
-	size_t name_n;
+	size_t class_n;
 	size_t host_n;
 	size_t tag_n;
 	uint32_t pid;
 
 	gethostname(host, 256);
 
-	tag_n  = strlen(tag) + 1;
-	host_n = strlen(host);
-	name_n = strlen(name);
-	pid    = getpid();
+	class_n = strlen(class) + 1;
+	tag_n   = strlen(tag) + 1;
+	host_n  = strlen(host);
+	pid     = getpid();
 
 	prop_set(x11, win, x11->atom_protocol, XCB_ATOM_ATOM,     1,       &x11->atom_close, true);
 	prop_set(x11, win, x11->atom_protocol, XCB_ATOM_ATOM,     1,       &x11->atom_focus, false);
 	prop_set(x11, win, x11->atom_protocol, XCB_ATOM_ATOM,     1,       &x11->atom_ping,  false);
-	prop_set(x11, win, x11->atom_name2,    x11->atom_utf8,    name_n,  name,             true);
-	prop_set(x11, win, x11->atom_icon2,    x11->atom_utf8,    name_n,  name,             true);
-	prop_set(x11, win, x11->atom_name,     XCB_ATOM_STRING,   name_n,  name,             true);
-	prop_set(x11, win, x11->atom_icon,     XCB_ATOM_STRING,   name_n,  name,             true);
-	prop_set(x11, win, x11->atom_class,    XCB_ATOM_STRING,   tag_n,   tag,              true);
+	prop_set(x11, win, x11->atom_class,    XCB_ATOM_STRING,   class_n, class,            true);
 	prop_set(x11, win, x11->atom_class,    XCB_ATOM_STRING,   tag_n,   tag,              false);
 	prop_set(x11, win, x11->atom_type,     XCB_ATOM_ATOM,     1,       &atom_type,       true);
 	prop_set(x11, win, x11->atom_lead,     XCB_ATOM_WINDOW,   1,       &win->window,     true);
