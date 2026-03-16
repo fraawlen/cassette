@@ -254,25 +254,14 @@ cshell_destroy(cshell *sh)
 	}
 	else if (sh)
 	{
-		switch (atomic_load(&sh->state))
+		if (atomic_load(&sh->state) == CSHELL_OPENING
+		 || atomic_load(&sh->state) == CSHELL_OPEN)
 		{
-			case CSHELL_OPENING:
-				cshell_wait(sh);
-				/* fallthrough */
-
-			case CSHELL_OPEN:
-				cshell_close(sh);
-				/* fallthrough */
-
-			case CSHELL_CLOSING:
-				join(sh);
-				/* fallthrough */
-
-			case CSHELL_INIT:
-			case CSHELL_CLOSED:
-				destroy(sh);
-				break;
+			poke(sh);
 		}
+
+		join(sh);
+		destroy(sh);
 	}
 
 	return nullptr;
@@ -346,22 +335,25 @@ cshell_open(cshell *sh, enum cshell_server server, const char *tag)
 		if (atomic_load(&sh->state) == CSHELL_CLOSED
 		 || atomic_load(&sh->state) == CSHELL_INIT)
 		{
+			snprintf(sh->tag, STR_LEN, "%s", tag ? tag : DEFAULT_TAG);
 			atomic_store(&sh->state, CSHELL_OPENING);
 			atomic_store(&sh->server, server);
-			snprintf(sh->tag, STR_LEN, "%s", tag ? tag : DEFAULT_TAG);
-
-			if (pthread_create(&sh->thread, nullptr, ui_thread, sh) == 0)
+	
+			if (pthread_create(&sh->thread, nullptr, ui_thread, sh) != 0)
 			{
-				pthread_detach(sh->thread);
+				atomic_store(&sh->state, CSHELL_CLOSED);
+				pthread_cond_broadcast(&sh->cond);
+				set_error(sh, CERR_THREAD);
 			}
 			else
 			{
-				atomic_store(&sh->state, CSHELL_CLOSED);
-				set_error(sh, CERR_THREAD);
+				pthread_detach(sh->thread);
 			}
 		}
-
-		pthread_cond_broadcast(&sh->cond);
+		else
+		{
+			set_error(sh, CERR_CALL);
+		}
 	}
 }
 
@@ -536,6 +528,9 @@ finish_close(cshell *sh)
 	}
 
 	cl.fn(sh, cl.data);
+	SERVER(sh, hide, SHELL_MENU);
+	SERVER(sh, hide, SHELL_MAIN);
+	SERVER(sh, kill);
 
 	LOCK(sh)
 	{
@@ -781,6 +776,7 @@ server_init(cshell *sh, enum cshell_server server)
 	}
 	else
 	{
+		atomic_store(&sh->server, CSHELL_NONE);
 		return false;
 	}
 
@@ -821,16 +817,11 @@ ui_thread(void *arg)
 	{
 		SERVER(sh, show, SHELL_MAIN, sh->tag, sh->w, sh->h);
 		apply_name(sh, nullptr);
-
 		while (run(sh))
 		{
 			SERVER(sh, commit, SHELL_MAIN);
 			SERVER(sh, commit, SHELL_MENU);
 		}
-
-		SERVER(sh, hide, SHELL_MENU);
-		SERVER(sh, hide, SHELL_MAIN);
-		SERVER(sh, kill);
 	}
 	else
 	{

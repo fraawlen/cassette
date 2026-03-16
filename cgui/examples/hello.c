@@ -27,7 +27,7 @@ main(void)
 	cshell_on_open (sh,  cl_open, nullptr);
 	cshell_on_close(sh, cl_close, nullptr);
 	cshell_open(sh, CSHELL_ANY, "hello");
-	cshell_rename(sh, "hello12345");
+	cshell_rename(sh, "hello");
 	cshell_wait(sh);
 
 	cshell_invoke(sh, cl_task, &(int){1});
