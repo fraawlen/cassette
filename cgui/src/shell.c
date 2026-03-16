@@ -28,6 +28,7 @@
 
 #define DEFAULT_NAME "cgui window"
 #define DEFAULT_TAG  "cgui"
+#define STR_LEN       256
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -75,6 +76,7 @@ struct cshell
 	pthread_cond_t cond;
 	pthread_t thread;
 	int fd_call[2];
+	int fd_crit[2];
 	int fd_wake[2];
 	int fd_server;
 
@@ -102,9 +104,9 @@ struct cshell
 
 	/* contents */
 
+	char name[STR_LEN];
+	char tag[STR_LEN];
 	struct menu menu;
-	char *name;
-	char *tag;
 };
 
 /************************************************************************************************************/
@@ -164,7 +166,7 @@ cshell_close(cshell *sh)
 	GUARD(sh);
 	LOCK(sh)
 	{
-		if (atomic_compare_exchange_strong(&sh->state, &opened,  CSHELL_CLOSING))
+		if (atomic_compare_exchange_strong(&sh->state, &opened, CSHELL_CLOSING))
 		{
 			while (write(sh->fd_wake[1], "\1", 1) < 0 && errno == EINTR) {}
 		}
@@ -197,14 +199,26 @@ cshell_create(void)
 		goto fail_cond;
 	}
 
+	if (pipe(sh->fd_crit) != 0)
+	{
+		goto fail_pipe;
+	}
+
+	if (fcntl(sh->fd_crit[1], F_SETFL, O_NONBLOCK) == -1)
+	{
+		goto fail_flag;
+	}
+
 	atomic_init(&sh->server, CSHELL_NONE);
 	atomic_init(&sh->state,  CSHELL_INIT);
 	atomic_init(&sh->err,    CERR_NONE);
 
+	snprintf(sh->name, STR_LEN, "%s", DEFAULT_NAME);
+	snprintf(sh->tag,  STR_LEN, "%s", DEFAULT_TAG);
+
 	sh->cl_close = (struct call){.fn = dummy, .data = nullptr};
 	sh->cl_open  = (struct call){.fn = dummy, .data = nullptr};
-	sh->name     = nullptr;
-	sh->tag      = nullptr;
+	sh->menu     = (struct menu){0};
 	sh->w        = 500;
 	sh->h        = 300;
 
@@ -212,6 +226,11 @@ cshell_create(void)
 
 	/* errors */
 
+fail_flag:
+	close(sh->fd_crit[0]);
+	close(sh->fd_crit[1]);
+fail_pipe:
+	pthread_cond_destroy(&sh->cond);
 fail_cond:
 	pthread_mutex_destroy(&sh->mutex);
 fail_mutex:
@@ -232,7 +251,6 @@ cshell_destroy(cshell *sh)
 
 	if (sh == thread_owner)
 	{
-		cshell_close(sh);
 		thread_destroy = true;
 	}
 	else
@@ -337,11 +355,6 @@ cshell_open(cshell *sh, enum cshell_server server, const char *tag)
 			goto fail_open;
 		}
 
-		if (!(sh->tag = strdup(tag ? tag : DEFAULT_TAG)))
-		{
-			goto fail_tag;
-		}
-
 		if (!server_init(sh, server))
 		{
 			goto fail_server;
@@ -363,6 +376,7 @@ cshell_open(cshell *sh, enum cshell_server server, const char *tag)
 			goto fail_flag;
 		}
 
+		snprintf(sh->tag, STR_LEN, "%s", tag ? tag : DEFAULT_TAG);
 		if (pthread_create(&sh->thread, nullptr, ui_thread, sh) == 0)
 		{
 			pthread_detach(sh->thread);
@@ -382,9 +396,6 @@ cshell_open(cshell *sh, enum cshell_server server, const char *tag)
 		SERVER(sh, kill);
 	fail_server:
 		set_error(sh, CERR_DISPLAY);
-		free(sh->tag);
-	fail_tag:
-		set_error(sh, CERR_MEMORY);
 		atomic_store(&sh->state, CSHELL_CLOSED);
 	fail_open:
 		set_error(sh, CERR_CALL);
@@ -401,23 +412,13 @@ cshell_open(cshell *sh, enum cshell_server server, const char *tag)
 void
 cshell_rename(cshell *sh, const char *name)
 {
-	char *tmp;
-
 	GUARD(sh);
 
 	/* update stored name */
 
 	LOCK(sh)
 	{
-		if ((tmp = strdup(name ? name : DEFAULT_NAME)))
-		{
-			free(sh->name);
-			sh->name = tmp;
-		}
-		else
-		{
-			set_error(sh, CERR_MEMORY);
-		}
+		snprintf(sh->name, STR_LEN, "%s", name);
 	}
 
 	/* notify the backend */
@@ -430,7 +431,8 @@ cshell_rename(cshell *sh, const char *name)
 	{
 		LOCK(sh)
 		{
-			if (atomic_load(&sh->state) == CSHELL_OPEN)
+			if (atomic_load(&sh->state) == CSHELL_OPEN
+			 || atomic_load(&sh->state) == CSHELL_OPENING)
 			{
 				invoke(sh, apply_name, nullptr);
 			}
@@ -556,13 +558,13 @@ shell_send_event(struct cevent ev, enum shell_target target)
 static void
 apply_name(cshell *sh, void *data)
 {
-	char tmp[256];
+	char tmp[STR_LEN];
 	
 	(void)data;
 
 	LOCK(sh)
 	{
-		snprintf(tmp, sizeof(tmp), "%s", sh->name ? sh->name : DEFAULT_NAME);
+		snprintf(tmp, STR_LEN, "%s", sh->name);
 	}
 
 	SERVER(sh, rename, SHELL_MAIN, tmp);
@@ -575,7 +577,8 @@ destroy(cshell *sh)
 {
 	pthread_mutex_destroy(&sh->mutex);
 	pthread_cond_destroy(&sh->cond);
-	free(sh->name);
+	close(sh->fd_crit[0]);
+	close(sh->fd_crit[1]);
 	free(sh);
 }
 
@@ -598,7 +601,6 @@ finish_close(cshell *sh)
 
 	LOCK(sh)
 	{		
-		free(sh->tag);
 		close(sh->fd_call[1]);
 		close(sh->fd_call[0]);
 		close(sh->fd_wake[1]);
@@ -640,7 +642,8 @@ invoke(cshell *sh, void (*fn)(cshell *, void *), void *data)
 
 	struct call cl = {.fn = fn, .data = data};
 
-	while (atomic_load(&sh->state) == CSHELL_OPEN)
+	while (atomic_load(&sh->state) == CSHELL_OPENING
+	    || atomic_load(&sh->state) == CSHELL_OPEN)
 	{
 		if (write(sh->fd_call[1], &cl, sizeof(cl)) == sizeof(cl))
 		{
@@ -729,24 +732,25 @@ static bool
 run(cshell *sh)
 {
 	const int poll_err = POLLERR | POLLHUP | POLLNVAL;
-	bool flush = thread_flush;
-	struct pollfd pfd[3] =
+	bool flush = thread_flush | thread_destroy;
+	struct pollfd pfd[4] =
 	{
 		{ sh->fd_call[0], POLLIN, 0 },
+		{ sh->fd_crit[0], POLLIN, 0 },
 		{ sh->fd_wake[0], POLLIN, 0 },
 		{ sh->fd_server,  POLLIN, 0 },
 	};
 
 	/* detect activity */
 
-	switch (poll(pfd, flush ? 1 : 3, flush ? 0 : -1))
+	switch (poll(pfd, flush ? 1 : 4, flush ? 0 : -1))
 	{
 		case 0:
 			return false;
 
 		case -1:
 			set_error(sh, errno == EINTR ? CERR_NONE : CERR_THREAD);
-			break;
+			return true;
 
 		default:
 			break;
@@ -759,12 +763,13 @@ run(cshell *sh)
 		read_invoke(sh);
 	}
 
-	if (pfd[1].revents & POLLIN)
+	if (pfd[1].revents & POLLIN
+	 || pfd[2].revents & POLLIN)
 	{
 		thread_flush = true;
 	}
 
-	if (pfd[2].revents & POLLIN)
+	if (pfd[3].revents & POLLIN)
 	{
 		SERVER(sh, read);
 	}
@@ -773,7 +778,8 @@ run(cshell *sh)
 
 	if (pfd[0].revents & poll_err
 	 || pfd[1].revents & poll_err
-	 || pfd[2].revents & poll_err)
+	 || pfd[2].revents & poll_err
+	 || pfd[3].revents & poll_err)
 	{
 		set_error(sh, CERR_THREAD);
 	}
@@ -820,7 +826,7 @@ set_error(cshell *sh, enum cerr code)
 
 	if (cerr_critical(code))
 	{
-		thread_flush = true;
+		while (write(sh->fd_crit[1], "\1", 1) < 0 && errno == EINTR) {}
 	}
 }
 
