@@ -210,15 +210,12 @@ cshell_create(void)
 		goto fail_pipe2;
 	}
 
-	if (fcntl(sh->fd_call[1], F_SETFL, O_NONBLOCK) == -1
-	 || fcntl(sh->fd_wake[1], F_SETFL, O_NONBLOCK) == -1)
-	{
-		goto fail_flags;
-	}
-
 	atomic_init(&sh->server, CSHELL_NONE);
 	atomic_init(&sh->state,  CSHELL_INIT);
 	atomic_init(&sh->err,    CERR_NONE);
+
+	fcntl(sh->fd_call[1], F_SETFL, O_NONBLOCK);
+	fcntl(sh->fd_wake[1], F_SETFL, O_NONBLOCK);
 
 	snprintf(sh->name, STR_LEN, "%s", DEFAULT_NAME);
 	snprintf(sh->tag,  STR_LEN, "%s", DEFAULT_TAG);
@@ -233,9 +230,6 @@ cshell_create(void)
 
 	/* errors */
 
-fail_flags:
-	close(sh->fd_wake[0]);
-	close(sh->fd_wake[1]);
 fail_pipe2:
 	close(sh->fd_call[0]);
 	close(sh->fd_call[1]);
