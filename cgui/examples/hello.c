@@ -30,9 +30,9 @@ main(void)
 	cshell_rename(sh, "hello");
 	cshell_wait(sh);
 
-	cshell_invoke(sh, cl_task, &(int){1});
-	cshell_invoke(sh, cl_task, &(int){2});
-	cshell_invoke(sh, cl_task, &(int){3});
+	cshell_post(sh, cl_task, &(int){1});
+	cshell_post(sh, cl_task, &(int){2});
+	cshell_post(sh, cl_task, &(int){3});
 	cshell_join(sh);
 
 	printf("done, errors: %s\n", cerr_name(cshell_error(sh)));
