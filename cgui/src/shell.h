@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <cassette/cobj.h>
 #include <cassette/cgui.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -26,4 +25,3 @@ enum shell_target
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
 shell_send_event(struct cevent ev, enum shell_target target);
-

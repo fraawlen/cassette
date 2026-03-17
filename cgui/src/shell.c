@@ -3,12 +3,14 @@
 /************************************************************************************************************/
 
 #include <cairo/cairo.h>
+#include <cassette/ccfg.h>
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
 #include <pthread.h>
+#include <pwd.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -26,9 +28,12 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define DEFAULT_NAME "cgui window"
-#define DEFAULT_TAG  "cgui"
-#define STR_LEN       256
+#define ENV_NO_CONFIG "CGUI_CONFIG_HARDCODED"
+#define ENV_CONFIG    "CGUI_CONFIG_SRC"
+#define CONFIG_PARAM  "shell_tag"
+#define DEFAULT_NAME  "cgui window"
+#define DEFAULT_TAG   "cgui"
+#define STR_LEN        256
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -93,6 +98,7 @@ struct cshell
 	char name[STR_LEN];
 	char tag[STR_LEN];
 	struct menu menu;
+	ccfg *config;
 
 	/* callbacks */
 
@@ -117,6 +123,8 @@ static void  destroy       (cshell *);
 static void  dummy         (cshell *, void *);
 static void  finish_close  (cshell *);
 static void  finish_open   (cshell *);
+static bool  init_config   (cshell *);
+static bool  init_server   (cshell *);
 static void  join          (cshell *);
 static void  menu_redirect (cshell *, struct cevent);
 static void  poke          (cshell *);
@@ -124,7 +132,6 @@ static void  post          (cshell *, void (*)(cshell *, void *), void *, bool);
 static void  purge_fd      (cshell *, int);
 static void  read_post     (cshell *);
 static bool  run           (cshell *);
-static bool  server_init   (cshell *, enum cshell_server);
 static void  set_error     (cshell *, enum cerr);
 static void *ui_thread     (void   *);
 
@@ -533,6 +540,7 @@ finish_close(cshell *sh)
 
 	LOCK(sh)
 	{
+		ccfg_destroy(sh->config);
 		purge_fd(sh, sh->fd_post[0]);
 		purge_fd(sh, sh->fd_wake[0]);
 		atomic_store(&sh->state, CSHELL_CLOSED);
@@ -560,6 +568,93 @@ finish_open(cshell *sh)
 	}
 	
 	cl.fn(sh, cl.data);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static bool
+init_config(cshell *sh)
+{
+	cstr *home1 = cstr_create();
+	cstr *home2 = cstr_create();
+	cstr *home3 = cstr_create();
+	cstr *home4 = cstr_create();
+	bool  err   = false;
+
+	if (cutil_env_exists(ENV_NO_CONFIG))
+	{
+		sh->config = nullptr;
+		return true;
+	}
+
+	/* get relative paths */
+
+	cstr_append(home1, cutil_env_exists("HOME") ? getenv("HOME") : getpwuid(getuid())->pw_dir);
+	cstr_append(home2, cutil_env_exists("XDG_CONFIG_HOME") ? getenv("XDG_CONFIG_HOME") : cstr_bytes(home1));
+	cstr_append(home3, home1);
+	cstr_append(home4, home2);
+
+	cstr_append(home1, "/.config/cassette/cgui.ccfg");
+	cstr_append(home2, "/cassette/cgui.ccfg");
+	cstr_append(home3, "/.config/cgui.ccfg");
+	cstr_append(home4, "/cgui.ccfg");
+
+	/* build path list */
+
+	sh->config = ccfg_create();
+
+	ccfg_push_source(sh->config, getenv(ENV_CONFIG));
+	ccfg_push_source(sh->config, cstr_bytes(home1));
+	ccfg_push_source(sh->config, cstr_bytes(home3));
+	ccfg_push_source(sh->config, cstr_bytes(home2));
+	ccfg_push_source(sh->config, cstr_bytes(home4));
+	ccfg_push_source(sh->config, "/etc/cassette/cgui.ccfg");
+	ccfg_push_source(sh->config, "/etc/cgui.ccfg");
+
+	/* load config */
+
+	ccfg_push_param(sh->config, CONFIG_PARAM, sh->tag);
+	ccfg_load(sh->config);
+
+	/* end */
+
+	err |= ccfg_error(sh->config);
+	err |= cstr_error(home1);
+	err |= cstr_error(home2);
+	err |= cstr_error(home3);
+	err |= cstr_error(home4);
+
+	ccfg_destroy(err ? sh->config : nullptr);
+	cstr_destroy(home1);
+	cstr_destroy(home2);
+	cstr_destroy(home3);
+	cstr_destroy(home4);
+
+	return !err;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static bool
+init_server(cshell *sh)
+{
+	enum cshell_server srv = atomic_load(&sh->server);
+
+	if (srv & CSHELL_WAYLAND && (sh->fd_server = wayland_init(&sh->wl)) != -1)
+	{
+		atomic_store(&sh->server, CSHELL_WAYLAND);
+	}
+	else if (srv & CSHELL_X11 && (sh->fd_server = x11_init(&sh->x11)) != -1)
+	{
+		atomic_store(&sh->server, CSHELL_X11);
+	}
+	else
+	{
+		atomic_store(&sh->server, CSHELL_NONE);
+		return false;
+	}
+
+	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -762,28 +857,6 @@ run(cshell *sh)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static bool
-server_init(cshell *sh, enum cshell_server server)
-{
-	if (server & CSHELL_WAYLAND && (sh->fd_server = wayland_init(&sh->wl)) != -1)
-	{
-		atomic_store(&sh->server, CSHELL_WAYLAND);
-	}
-	else if (server & CSHELL_X11 && (sh->fd_server = x11_init(&sh->x11)) != -1)
-	{
-		atomic_store(&sh->server, CSHELL_X11);
-	}
-	else
-	{
-		atomic_store(&sh->server, CSHELL_NONE);
-		return false;
-	}
-
-	return true;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 static void
 set_error(cshell *sh, enum cerr code)
 {
@@ -812,7 +885,8 @@ ui_thread(void *arg)
 	cshell *sh = arg;
 	thread_owner = sh;
 
-	if (server_init(sh, atomic_load(&sh->server)))
+	if (init_server(sh)
+	 && init_config(sh))
 	{
 		SERVER(sh, show, SHELL_MAIN, sh->tag, sh->w, sh->h);
 		apply_name(sh, nullptr);
