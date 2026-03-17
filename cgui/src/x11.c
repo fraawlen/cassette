@@ -244,7 +244,7 @@ x11_init(struct x11 *x11)
 	setup_sync(x11);
 	setup_render(x11);
 
-	/* colormap setup */
+	/* colormap setup for custom visuals */
 
 	x11->colormap = xcb_generate_id(x11->connection);
 	xcb_create_colormap(
@@ -584,7 +584,6 @@ ev_conf(struct x11 *x11, xcb_configure_notify_event_t *ev)
 
 	win->present |= ev->width  < win->w || ev->height  < win->h;
 	win->resized |= ev->width != win->w || ev->height != win->h;
-	win->wait    &= ev->width == win->w && ev->height == win->h; /* vblank bypass */
 	win->h        = ev->height;
 	win->w        = ev->width;
 

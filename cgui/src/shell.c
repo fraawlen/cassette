@@ -162,14 +162,13 @@ cshell_clear_warnings(cshell *sh)
 void
 cshell_close(cshell *sh)
 {
-	enum cshell_state opened = CSHELL_OPEN;
-
 	GUARD(sh);
 	LOCK(sh)
 	{
-		if (atomic_compare_exchange_strong(&sh->state, &opened, CSHELL_CLOSING))
+		if (atomic_load(&sh->state) == CSHELL_OPEN)
 		{
-			while (write(sh->fd_wake[1], "\1", 1) < 0 && errno == EINTR) {}
+			atomic_store(&sh->state, CSHELL_CLOSING);
+			poke(sh);
 		}
 		else
 		{
