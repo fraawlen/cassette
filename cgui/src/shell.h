@@ -25,3 +25,9 @@ enum shell_target
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
 shell_send_event(struct cevent ev, enum shell_target target);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
+shell_pull_grid(cshell *sh, cgrid *gr);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] bool
+shell_push_grid(cshell *sh, cgrid *gr);

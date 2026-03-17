@@ -99,6 +99,7 @@ struct cshell
 	char tag[STR_LEN];
 	struct menu menu;
 	ccfg *config;
+	cref *grids;
 
 	/* callbacks */
 
@@ -132,6 +133,7 @@ static void  post          (cshell *, void (*)(cshell *, void *), void *, bool);
 static void  purge_fd      (cshell *, int);
 static void  read_post     (cshell *);
 static bool  run           (cshell *);
+static void  select_grid   (cshell *);
 static void  set_error     (cshell *, enum cerr);
 static void *ui_thread     (void   *);
 
@@ -196,6 +198,11 @@ cshell_create(void)
 		goto fail_alloc;
 	}
 
+	if (!(sh->grids = cref_create()))
+	{
+		goto fail_grids;
+	}
+
 	if (pthread_mutex_init(&sh->mutex, nullptr) != 0)
 	{
 		goto fail_mutex;
@@ -245,6 +252,8 @@ fail_pipe:
 fail_cond:
 	pthread_mutex_destroy(&sh->mutex);
 fail_mutex:
+	cref_destroy(sh->grids);
+fail_grids:
 	free(sh);
 fail_alloc:
 	return nullptr;
@@ -430,8 +439,8 @@ cshell_wait(cshell *sh)
 void
 shell_send_event(struct cevent ev, enum shell_target target)
 {
-	/* Always called from the UI thread */
-	/* Never called with a locked mutex */
+	/* Always called from the UI thread. */
+	/* Never called with a locked mutex. */
 
 	cshell *sh = thread_owner;
 
@@ -485,6 +494,34 @@ shell_send_event(struct cevent ev, enum shell_target target)
 	}
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+shell_pull_grid(cshell *sh, cgrid *gr)
+{
+	/* Expected to be called from a single thread while shell is closed. */
+	/* Otherwhise, expected to be called from the UI thread.             */
+	/* Never called with a locked mutex.                                 */
+
+	cref_purge(sh->grids, gr);
+	select_grid(sh);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+shell_push_grid(cshell *sh, cgrid *gr)
+{
+	/* Expected to be called from a single thread while shell is closed. */
+	/* Otherwhise, expected to be called from the UI thread.             */
+	/* Never called with a locked mutex.                                 */
+
+	cref_push(sh->grids, gr);
+	select_grid(sh);
+
+	return !cref_error(sh->grids);
+}
+
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
@@ -511,6 +548,7 @@ destroy(cshell *sh)
 {
 	pthread_mutex_destroy(&sh->mutex);
 	pthread_cond_destroy(&sh->cond);
+	cref_destroy(sh->grids);
 	close(sh->fd_post[0]);
 	close(sh->fd_post[1]);
 	close(sh->fd_wake[0]);
@@ -848,6 +886,16 @@ run(cshell *sh)
 	}
 
 	return true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+select_grid(cshell *sh)
+{
+	(void)sh;
+
+	// TODO
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

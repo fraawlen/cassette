@@ -6,3 +6,4 @@
 
 #include "cevent.h"
 #include "cshell.h"
+#include "cgrid.h"

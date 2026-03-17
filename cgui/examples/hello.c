@@ -23,9 +23,10 @@ int
 main(void)
 {
 	cshell *sh = cshell_create();
+	cgrid  *gr = cgrid_create();
 
-	cshell_on_open (sh,  cl_open, nullptr);
-	cshell_on_close(sh, cl_close, nullptr);
+	cshell_on_open (sh,  cl_open, gr);
+	cshell_on_close(sh, cl_close, gr);
 	cshell_open(sh, CSHELL_ANY, "hello");
 	cshell_rename(sh, "hello");
 	cshell_wait(sh);
@@ -37,6 +38,7 @@ main(void)
 
 	printf("done, errors: %s\n", cerr_name(cshell_error(sh)));
 	cshell_destroy(sh);
+	cgrid_destroy(gr);
 
 	return 0;
 }
@@ -48,10 +50,13 @@ main(void)
 static void
 cl_close(cshell *sh, void *data)
 {
-	(void)data;
+	cgrid *gr = data;
+
 	(void)sh;
 
 	printf("shell closed\n");
+
+	cgrid_retire(gr);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -59,10 +64,11 @@ cl_close(cshell *sh, void *data)
 static void
 cl_open(cshell *sh, void *data)
 {
-	(void)data;
-	(void)sh;
+	cgrid *gr = data;
 
 	printf("shell opened\n");
+	
+	cgrid_assign(gr, sh);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
