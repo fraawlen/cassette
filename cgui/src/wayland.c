@@ -4,6 +4,7 @@
 
 #include <cairo/cairo.h>
 #include <cassette/cgui.h>
+#include <cassette/ccfg.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -138,16 +139,6 @@ static const struct xdg_wm_base_listener ear_xdg =
 /************************************************************************************************************/
 
 void
-wayland_damage(struct wayland *wl, enum shell_target target)
-{
-	struct wayland_window *win = target == SHELL_MAIN ? &wl->main : &wl->menu;
-
-	win->redraw = true;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
 wayland_commit(struct wayland *wl, enum shell_target target)
 {
 	struct cevent ev = { .type = CEVENT_REDRAW, };
@@ -208,6 +199,27 @@ wayland_commit(struct wayland *wl, enum shell_target target)
 	}
 
 	flush(wl);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+wayland_config(struct wayland *wl, ccfg *cfg)
+{
+	(void)wl;
+	(void)cfg;
+
+	/* no backend-specific options */
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+wayland_damage(struct wayland *wl, enum shell_target target)
+{
+	struct wayland_window *win = target == SHELL_MAIN ? &wl->main : &wl->menu;
+
+	win->redraw = true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

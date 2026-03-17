@@ -5,6 +5,7 @@
 #include <cairo/cairo.h>
 #include <cairo/cairo-xcb.h>
 #include <cassette/cgui.h>
+#include <cassette/ccfg.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -141,6 +142,17 @@ x11_commit(struct x11 *x11, enum shell_target target)
 	{
 		shell_send_event(event_error, SHELL_MAIN);
 	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_config(struct x11 *x11, ccfg *cfg)
+{
+	(void)x11;
+	(void)cfg;
+
+	/* no backend-specific options */
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

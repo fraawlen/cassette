@@ -229,6 +229,7 @@ cshell_create(void)
 	sh->cl_close = (struct call){.fn = dummy, .data = nullptr};
 	sh->cl_open  = (struct call){.fn = dummy, .data = nullptr};
 	sh->menu     = (struct menu){0};
+	sh->config   = nullptr;
 	sh->w        = 500;
 	sh->h        = 300;
 
@@ -434,15 +435,11 @@ shell_send_event(struct cevent ev, enum shell_target target)
 
 	cshell *sh = thread_owner;
 
-	/* menu event redirection */
-
 	if (target == SHELL_MENU)
 	{
 		menu_redirect(sh, ev);
 		return;
 	}
-
-	/* main shell event handling */
 
 	switch(ev.type)
 	{
@@ -599,7 +596,7 @@ init_config(cshell *sh)
 	cstr_append(home3, "/.config/cgui.ccfg");
 	cstr_append(home4, "/cgui.ccfg");
 
-	/* build path list */
+	/* config setup */
 
 	sh->config = ccfg_create();
 
@@ -610,8 +607,6 @@ init_config(cshell *sh)
 	ccfg_push_source(sh->config, cstr_bytes(home4));
 	ccfg_push_source(sh->config, "/etc/cassette/cgui.ccfg");
 	ccfg_push_source(sh->config, "/etc/cgui.ccfg");
-
-	/* load config */
 
 	ccfg_push_param(sh->config, CONFIG_PARAM, sh->tag);
 	ccfg_load(sh->config);
@@ -888,6 +883,7 @@ ui_thread(void *arg)
 	if (init_server(sh)
 	 && init_config(sh))
 	{
+		SERVER(sh, config, sh->config);
 		SERVER(sh, show, SHELL_MAIN, sh->tag, sh->w, sh->h);
 		apply_name(sh, nullptr);
 		while (run(sh))

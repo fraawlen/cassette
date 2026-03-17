@@ -6,6 +6,7 @@
 
 #include <cairo/cairo.h>
 #include <cassette/cgui.h>
+#include <cassette/ccfg.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -103,6 +104,9 @@ struct x11
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
+x11_config(struct x11 *x11, ccfg *cfg);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] int
 x11_init(struct x11 *x11);

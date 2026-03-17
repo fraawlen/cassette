@@ -6,6 +6,7 @@
 
 #include <cairo/cairo.h>
 #include <cassette/cgui.h>
+#include <cassette/ccfg.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -93,6 +94,9 @@ struct wayland
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
+wayland_config(struct wayland *wl, ccfg *cfg);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] int
 wayland_init(struct wayland *wl);
