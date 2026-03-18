@@ -34,6 +34,7 @@ main(void)
 	cshell_post(sh, cl_task, &(int){1});
 	cshell_post(sh, cl_task, &(int){2});
 	cshell_post(sh, cl_task, &(int){3});
+	cshell_close(sh);
 	cshell_join(sh);
 
 	printf("done, errors: %s\n", cerr_name(cshell_error(sh)));

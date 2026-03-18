@@ -509,8 +509,8 @@ x11_show(struct x11 *x11, enum shell_target target, const char *tag, uint32_t w,
 
 	/* finish */
 
-	win->w           = w;
-	win->h           = h;
+	win->w           = 0;
+	win->h           = 0;
 	win->sync_val.hi = 0;
 	win->sync_val.lo = 0;
 	win->serial      = 0;
@@ -590,12 +590,18 @@ ev_conf(struct x11 *x11, xcb_configure_notify_event_t *ev)
 		.type        = CEVENT_TRANSFORM,
 		.transform_h = ev->height,
 		.transform_w = ev->width,
-		.transform_x = ev->x,
-		.transform_y = ev->y,
+		.transform_x = 0,
+		.transform_y = 0,
 	};
 
+	if (win->h == ev->height
+	 || win->w == ev->width)
+	{
+		return;
+	}
+
+	win->resized  = true;
 	win->present |= ev->width  < win->w || ev->height  < win->h;
-	win->resized |= ev->width != win->w || ev->height != win->h;
 	win->h        = ev->height;
 	win->w        = ev->width;
 

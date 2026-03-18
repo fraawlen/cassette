@@ -19,6 +19,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "event.h"
 #include "menu.h"
 #include "shell.h"
 #include "wayland.h"
@@ -441,6 +442,7 @@ cshell_wait(cshell *sh)
 void
 shell_send_event(struct cevent ev, enum shell_target target)
 {
+
 	/* Always called from the UI thread. */
 	/* Never called with a locked mutex. */
 
@@ -452,6 +454,7 @@ shell_send_event(struct cevent ev, enum shell_target target)
 		return;
 	}
 
+	event_print(ev);
 	switch(ev.type)
 	{
 		case CEVENT_BUTTON_PRESS:
@@ -493,7 +496,7 @@ shell_send_event(struct cevent ev, enum shell_target target)
 
 		default:
 			break;
-	}
+	}	
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

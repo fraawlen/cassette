@@ -24,6 +24,7 @@ WL_LIB := $(patsubst $(WL_DIR)/%.xml, $(WL_OUT)/%.o, $(WL_XML))
 #############################################################################################################
 
 NAME := cgui
+OPTS := $(if $(CGUI_DEBUG_EVENTS), -DENV_SRV_DEBUG)
 INCS := -I../cobj/$(DIR_INC) -I../ccfg/$(DIR_INC) -I$(DIR_INC) -I$(WL_OUT)
 DEPS := -L../cobj/$(DIR_LIB) -L../ccfg/$(DIR_LIB) -lcobj -lccfg -lm -lpthread -lcairo -lfontconfig \
         -lxcb -lxcb-keysyms -lxcb-present -lxcb-randr -lxcb-xinput -lxkbcommon -lxcb-render \
@@ -58,7 +59,7 @@ lib: $(WL_LIB) $(OBJ_LIB)
 	$(CC) $(LDFLAGS) -o $(DIR_LIB)/lib$(NAME).so $^ $(DEPS) $(RPATH)
 
 $(DIR_OBJ)/%.o: $(DIR_SRC)/%.c
-	$(CC) $(CFLAGS) -fPIC -c $< -o $@ $(INCS)
+	$(CC) $(CFLAGS) -fPIC -c $< -o $@ $(INCS) $(OPTS)
 
 $(DIR_BIN)%: $(DIR_DEMOS)/%.c
 	$(CC) $(CFLAGS) $< -o $@ $(INCS) -L$(DIR_LIB) -l$(NAME) $(DEPS) $(RPATH)

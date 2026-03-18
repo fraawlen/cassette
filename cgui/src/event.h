@@ -14,3 +14,10 @@ constexpr struct cevent event_blank = { .type = CEVENT_NONE  };
 constexpr struct cevent event_error = { .type = CEVENT_FAIL  };
 constexpr struct cevent event_open  = { .type = CEVENT_OPEN  };
 constexpr struct cevent event_close = { .type = CEVENT_CLOSE };
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+[[gnu::visibility("hidden")]] void
+event_print(struct cevent ev);
