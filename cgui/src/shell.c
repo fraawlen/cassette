@@ -98,6 +98,7 @@ struct cshell
 	char name[STR_LEN];
 	char tag[STR_LEN];
 	struct menu menu;
+	cgrid *focus_grid;
 	ccfg *config;
 	cref *grids;
 
@@ -233,12 +234,13 @@ cshell_create(void)
 	snprintf(sh->name, STR_LEN, "%s", DEFAULT_NAME);
 	snprintf(sh->tag,  STR_LEN, "%s", DEFAULT_TAG);
 
-	sh->cl_close = (struct call){.fn = dummy, .data = nullptr};
-	sh->cl_open  = (struct call){.fn = dummy, .data = nullptr};
-	sh->menu     = (struct menu){0};
-	sh->config   = nullptr;
-	sh->w        = 500;
-	sh->h        = 300;
+	sh->cl_close   = (struct call){.fn = dummy, .data = nullptr};
+	sh->cl_open    = (struct call){.fn = dummy, .data = nullptr};
+	sh->menu       = (struct menu){0};
+	sh->config     = nullptr;
+	sh->focus_grid = nullptr;
+	sh->w          = 500;
+	sh->h          = 300;
 
 	return sh;
 
@@ -300,6 +302,20 @@ cshell_join(cshell *sh)
 	GUARD_THREAD(sh);
 
 	join(sh);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cshell_name(cshell *sh, const char *name)
+{
+	GUARD(sh);
+	LOCK(sh)
+	{
+		snprintf(sh->name, STR_LEN, "%s", name ? name : DEFAULT_NAME);
+	}
+
+	post(sh, apply_name, nullptr, false);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -371,20 +387,6 @@ cshell_post(cshell *sh, void (*fn)(cshell *, void *), void *data)
 	GUARD_THREAD(sh);
 	
 	post(sh, fn ? fn : dummy, data, true);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cshell_rename(cshell *sh, const char *name)
-{
-	GUARD(sh);
-	LOCK(sh)
-	{
-		snprintf(sh->name, STR_LEN, "%s", name ? name : DEFAULT_NAME);
-	}
-
-	post(sh, apply_name, nullptr, false);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -600,6 +602,7 @@ finish_open(cshell *sh)
 		cl = sh->cl_open;
 		atomic_store(&sh->state, CSHELL_OPEN);
 		pthread_cond_broadcast(&sh->cond);
+		select_grid(sh);
 	}
 	
 	cl.fn(sh, cl.data);
@@ -614,7 +617,6 @@ init_config(cshell *sh)
 	cstr *home2 = cstr_create();
 	cstr *home3 = cstr_create();
 	cstr *home4 = cstr_create();
-	bool  err   = false;
 
 	if (cutil_env_exists(ENV_NO_CONFIG))
 	{
@@ -624,8 +626,11 @@ init_config(cshell *sh)
 
 	/* get relative paths */
 
-	cstr_append(home1, cutil_env_exists("HOME") ? getenv("HOME") : getpwuid(getuid())->pw_dir);
-	cstr_append(home2, cutil_env_exists("XDG_CONFIG_HOME") ? getenv("XDG_CONFIG_HOME") : cstr_bytes(home1));
+	const char *s1 = cutil_env_exists("HOME") ? getenv("HOME") : nullptr;
+	const char *s2 = cutil_env_exists("XDG_CONFIG_HOME") ? getenv("XDG_CONFIG_HOME") : nullptr;
+
+	cstr_append(home1, s1 ? s1 : getpwuid(getuid())->pw_dir);
+	cstr_append(home2, s2 ? s2 : cstr_bytes(home1));
 	cstr_append(home3, home1);
 	cstr_append(home4, home2);
 
@@ -650,6 +655,8 @@ init_config(cshell *sh)
 	ccfg_load(sh->config);
 
 	/* end */
+	
+	bool err = false;
 
 	err |= ccfg_error(sh->config);
 	err |= cstr_error(home1);
@@ -893,9 +900,23 @@ run(cshell *sh)
 static void
 select_grid(cshell *sh)
 {
-	(void)sh;
+	cgrid *gr = nullptr;
 
-	// TODO
+	if (sh != thread_owner)
+	{
+		return;
+	}
+
+	CREF_FOR_EACH(sh->grids, cgrid, tmp, i)
+	{
+		// TODO
+	}
+
+	if (gr != sh->focus_grid)
+	{
+		sh->focus_grid = gr;
+		SERVER(sh, damage, SHELL_MAIN);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

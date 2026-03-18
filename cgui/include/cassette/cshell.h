@@ -54,6 +54,8 @@ void cshell_close(cshell *sh);
 
 void cshell_join(cshell *sh);
 
+void cshell_name(cshell *sh, const char *name);
+
 void cshell_on_close(cshell *sh, void (*fn)(cshell *, void *), void *data);
 
 void cshell_on_open(cshell *sh, void (*fn)(cshell *, void *), void *data);
@@ -61,8 +63,6 @@ void cshell_on_open(cshell *sh, void (*fn)(cshell *, void *), void *data);
 void cshell_open(cshell *sh, enum cshell_server server, const char *tag);
 
 void cshell_post(cshell *sh, void (*fn)(cshell *, void *), void *data);
-
-void cshell_rename(cshell *sh, const char *name);
 
 void cshell_wait(cshell *sh);
 

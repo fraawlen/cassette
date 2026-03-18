@@ -28,7 +28,7 @@ main(void)
 	cshell_on_open (sh,  cl_open, gr);
 	cshell_on_close(sh, cl_close, gr);
 	cshell_open(sh, CSHELL_ANY, "hello");
-	cshell_rename(sh, "hello");
+	cshell_name(sh, "hello world !");
 	cshell_wait(sh);
 
 	cshell_post(sh, cl_task, &(int){1});
