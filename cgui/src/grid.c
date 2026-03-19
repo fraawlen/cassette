@@ -20,7 +20,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define GUARD(OBJ, ...) if (!OBJ || cerr_critical(OBJ->err)) { return __VA_OPT__(__VA_ARGS__); }
+#define GUARD(GR, ...)     if (!GR || cerr_critical(GR->err)) { return __VA_OPT__(__VA_ARGS__); }
+#define GUARD_COL(GR, COL) if (COL >= gr->cols_n)             { cerr_set(&gr->err, CERR_CALL); }
+#define GUARD_ROW(GR, ROW) if (ROW >= gr->rows_n)             { cerr_set(&gr->err, CERR_CALL); }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -58,7 +60,8 @@ struct cgrid
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static uint32_t config (ccfg *, uint32_t, const char *);
+static uint32_t config (ccfg  *, uint32_t, const char *);
+static void     update (cgrid *);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -221,11 +224,18 @@ cgrid_error(const cgrid *gr)
 void
 cgrid_flex_col(cgrid *gr, uint32_t col, double factor)
 {
-	(void)gr;
-	(void)col;
-	(void)factor;
+	GUARD(gr);
+	GUARD_COL(gr, col);
 
-	// TODO
+	if (factor < 0.0)
+	{
+		cerr_set(&gr->err, CERR_CALL);
+	}
+	else
+	{
+		gr->cols[col].factor = factor;
+		update(gr);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -233,11 +243,18 @@ cgrid_flex_col(cgrid *gr, uint32_t col, double factor)
 void
 cgrid_flex_row(cgrid *gr, uint32_t row, double factor)
 {
-	(void)gr;
-	(void)row;
-	(void)factor;
+	GUARD(gr);
+	GUARD_ROW(gr, row);
 
-	// TODO
+	if (factor < 0.0)
+	{
+		cerr_set(&gr->err, CERR_CALL);
+	}
+	else
+	{
+		gr->rows[row].factor = factor;
+		update(gr);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -245,11 +262,11 @@ cgrid_flex_row(cgrid *gr, uint32_t row, double factor)
 void
 cgrid_resize_col(cgrid *gr, uint32_t col, int32_t size)
 {
-	(void)gr;
-	(void)col;
-	(void)size;
+	GUARD(gr);
+	GUARD_COL(gr, col);
 
-	// TODO
+	gr->cols[col].size = size;
+	update(gr);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -257,11 +274,11 @@ cgrid_resize_col(cgrid *gr, uint32_t col, int32_t size)
 void
 cgrid_resize_row(cgrid *gr, uint32_t row, int32_t size)
 {
-	(void)gr;
-	(void)row;
-	(void)size;
+	GUARD(gr);
+	GUARD_ROW(gr, row);
 
-	// TODO
+	gr->rows[row].size = size;
+	update(gr);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -340,4 +357,15 @@ config(ccfg *cfg, uint32_t base, const char *name)
 	ccfg_fetch(cfg, "grid", name);
 
 	return ccfg_iterate(cfg) ? cutil_str_to_long(ccfg_resource(cfg), 0, UINT32_MAX) : base;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+update (cgrid *gr)
+{
+	if (gr->owner)
+	{
+		shell_update_grid(gr->owner);
+	}
 }

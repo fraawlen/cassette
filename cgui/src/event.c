@@ -26,6 +26,7 @@ void
 event_print(struct cevent ev, const char *prefix)
 {
 	(void)ev;
+	(void)prefix;
 
 	#ifdef ENV_SRV_DEBUG
 

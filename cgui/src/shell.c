@@ -531,6 +531,18 @@ shell_push_grid(cshell *sh, cgrid *gr)
 	return !cref_error(sh->grids);
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+shell_update_grid(cshell *sh)
+{
+	/* Expected to be called from a single thread while shell is closed. */
+	/* Otherwhise, expected to be called exclusively from the UI thread. */
+	/* Never called with a locked mutex.                                 */
+
+	grid_select(sh);
+}
+
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
