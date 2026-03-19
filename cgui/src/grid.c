@@ -2,6 +2,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+#include <cassette/ccfg.h>
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
 #include <stdbool.h>
@@ -10,6 +11,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "event.h"
 #include "grid.h"
 #include "shell.h"
 
@@ -23,13 +25,25 @@
 
 struct cgrid
 {
+	/* state */
+
 	cshell *owner;
 	enum cerr err;
+
+	/* config */
+
+	uint32_t gutter;
+	uint32_t gap;
+	uint32_t pad;
+	uint32_t col;
+	uint32_t row;
 };
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
+
+static uint32_t config (ccfg *, uint32_t, const char *);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -74,8 +88,13 @@ cgrid_clone(const cgrid *gr)
 		return nullptr;
 	}
 
-	gr_new->owner = nullptr;
-	gr_new->err   = gr->err;
+	gr_new->err    = gr->err;
+	gr_new->owner  = nullptr;
+	gr_new->gutter = 0;
+	gr_new->gap    = 0;
+	gr_new->pad    = 0;
+	gr_new->col    = 0;
+	gr_new->row    = 0;
 
 	return gr_new;
 }
@@ -92,8 +111,13 @@ cgrid_create(void)
 		return nullptr;
 	}
 
-	gr->owner = nullptr;
-	gr->err   = CERR_NONE;
+	gr->err    = CERR_NONE;
+	gr->owner  = nullptr;
+	gr->gutter = 0;
+	gr->gap    = 0;
+	gr->pad    = 0;
+	gr->col    = 0;
+	gr->row    = 0;
 
 	return gr;
 }
@@ -142,7 +166,59 @@ grid_cache_geometry(cgrid *gr)
 	// TODO
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint32_t
+grid_h(cgrid *gr)
+{
+	(void)gr;
+
+	// TODO
+
+	return 0;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+grid_send_event(cgrid *gr, struct cevent ev)
+{
+	event_print(ev, "grid");
+	switch (ev.type)
+	{
+		case CEVENT_CONFIG:
+			gr->gutter = config(ev.config, 5, "gutter");
+			gr->gap    = config(ev.config, 5, "gap");
+			gr->pad    = config(ev.config, 5, "pad");
+			gr->col    = config(ev.config, 4, "col");
+			gr->row    = config(ev.config, 8, "row");
+			break;
+
+		default:
+			break;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint32_t
+grid_w(cgrid *gr)
+{
+	(void)gr;
+
+	// TODO
+
+	return 0;
+}
+
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
+static uint32_t
+config(ccfg *cfg, uint32_t base, const char *name)
+{
+	ccfg_fetch(cfg, "grid", name);
+
+	return ccfg_iterate(cfg) ? cutil_str_to_long(ccfg_resource(cfg), 0, UINT32_MAX) : base;
+}

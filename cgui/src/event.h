@@ -20,4 +20,4 @@ constexpr struct cevent event_close = { .type = CEVENT_CLOSE };
 /************************************************************************************************************/
 
 [[gnu::visibility("hidden")]] void
-event_print(struct cevent ev);
+event_print(struct cevent ev, const char *prefix);

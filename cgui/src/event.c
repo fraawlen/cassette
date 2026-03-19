@@ -13,11 +13,17 @@
 #include "event.h"
 
 /************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+#define LOG(EV, ARGS, ...) printf("%s: CEVENT_" EV " [" ARGS "]\n", prefix __VA_OPT__(, __VA_ARGS__));
+
+/************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
 void
-event_print(struct cevent ev)
+event_print(struct cevent ev, const char *prefix)
 {
 	(void)ev;
 
@@ -26,41 +32,44 @@ event_print(struct cevent ev)
 	switch(ev.type)
 	{
 		case CEVENT_CLOSE:
-			printf("CEVENT_CLOSE [-]\n");
+			LOG("CLOSE", "-");
 			break;
 
 		case CEVENT_OPEN:
-			printf("CEVENT_OPEN [-]\n");
+			LOG("OPEN", "-");
 			break;
 
 		case CEVENT_FAIL:
-			printf("CEVENT_FAIL [-]\n");
+			LOG("FAIL", "-");
 			break;
 
 		case CEVENT_NONE:
-			printf("CEVENT_NONE [-]\n");
+			LOG("NONE", "-");
 			break;
 
 		case CEVENT_BUTTON_PRESS:
-			printf("CEVENT_BUTTON_PRESS [id = %i]\n", ev.button);
+			LOG("BUTTON_PRESS", "id = %i", ev.button);
 			break;
 
 		case CEVENT_BUTTON_RELEASE:
-			printf("CEVENT_BUTTON_RELEASE [id = %i]\n", ev.button);
+			LOG("BUTTON_RELEASE", "id = %i", ev.button);
 			break;
 
 		case CEVENT_REDRAW:
-			printf("CEVENT_REDRAW [ctx = %p]\n", (void *)ev.redraw_ctx);
+			LOG("REDRAW", "ctx = %p", (void *)ev.redraw_ctx);
+			break;
+
+		case CEVENT_CONFIG:
+			LOG("CONFIG", "cfg = %p", (void *)ev.config);
 			break;
 
 		case CEVENT_TRANSFORM:
-			printf(
-				"CEVENT_TRANSFORM "
-				"[x = %"PRIu32", y = %"PRIu32", w = %"PRIu32", h = %"PRIu32"]\n",
-				ev.transform_x,
-				ev.transform_y,
-				ev.transform_w,
-				ev.transform_h);
+			LOG("TRANSFORM",
+			    "x = %"PRIu32", y = %"PRIu32", w = %"PRIu32", h = %"PRIu32"",
+			    ev.transform_x,
+			    ev.transform_y,
+			    ev.transform_w,
+			    ev.transform_h);
 			break;
 
 		default:

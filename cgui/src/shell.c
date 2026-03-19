@@ -20,8 +20,10 @@
 #include <unistd.h>
 
 #include "event.h"
+#include "grid.h"
 #include "menu.h"
 #include "shell.h"
+
 #include "wayland.h"
 #include "x11.h"
 
@@ -126,6 +128,8 @@ static void  destroy       (cshell *);
 static void  dummy         (cshell *, void *);
 static void  finish_close  (cshell *);
 static void  finish_open   (cshell *);
+static void  grid_config   (cshell *, cgrid *);
+static void  grid_select   (cshell *);
 static bool  init_config   (cshell *);
 static bool  init_server   (cshell *);
 static void  join          (cshell *);
@@ -135,7 +139,6 @@ static void  post          (cshell *, void (*)(cshell *, void *), void *, bool);
 static void  purge_fd      (cshell *, int);
 static void  read_post     (cshell *);
 static bool  run           (cshell *);
-static void  select_grid   (cshell *);
 static void  set_error     (cshell *, enum cerr);
 static void *ui_thread     (void   *);
 
@@ -442,7 +445,6 @@ cshell_wait(cshell *sh)
 void
 shell_send_event(struct cevent ev, enum shell_target target)
 {
-
 	/* Always called from the UI thread. */
 	/* Never called with a locked mutex. */
 
@@ -454,7 +456,7 @@ shell_send_event(struct cevent ev, enum shell_target target)
 		return;
 	}
 
-	event_print(ev);
+	event_print(ev, "shell");
 	switch(ev.type)
 	{
 		case CEVENT_BUTTON_PRESS:
@@ -480,6 +482,7 @@ shell_send_event(struct cevent ev, enum shell_target target)
 		case CEVENT_TRANSFORM:
 			sh->w = ev.transform_w;
 			sh->h = ev.transform_h;
+			grid_select(sh);
 			break;
 
 		case CEVENT_CLOSE:
@@ -505,11 +508,11 @@ void
 shell_pull_grid(cshell *sh, cgrid *gr)
 {
 	/* Expected to be called from a single thread while shell is closed. */
-	/* Otherwhise, expected to be called from the UI thread.             */
+	/* Otherwhise, expected to be called exclusively from the UI thread. */
 	/* Never called with a locked mutex.                                 */
 
 	cref_purge(sh->grids, gr);
-	select_grid(sh);
+	grid_select(sh);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -518,11 +521,12 @@ bool
 shell_push_grid(cshell *sh, cgrid *gr)
 {
 	/* Expected to be called from a single thread while shell is closed. */
-	/* Otherwhise, expected to be called from the UI thread.             */
+	/* Otherwhise, expected to be called exclusively from the UI thread. */
 	/* Never called with a locked mutex.                                 */
 
 	cref_push(sh->grids, gr);
-	select_grid(sh);
+	grid_config(sh, gr);
+	grid_select(sh);
 
 	return !cref_error(sh->grids);
 }
@@ -605,10 +609,53 @@ finish_open(cshell *sh)
 		cl = sh->cl_open;
 		atomic_store(&sh->state, CSHELL_OPEN);
 		pthread_cond_broadcast(&sh->cond);
-		select_grid(sh);
+	}
+
+	CREF_FOR_EACH(sh->grids, cgrid, gr, i)
+	{
+		grid_config(sh, gr);
 	}
 	
+	grid_select(sh);
 	cl.fn(sh, cl.data);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+grid_config(cshell *sh, cgrid *gr)
+{
+	struct cevent ev =
+	{
+		.type   = CEVENT_CONFIG,
+		.config = sh->config,
+	};
+
+	grid_send_event(gr, ev);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+grid_select(cshell *sh)
+{
+	cgrid *gr = nullptr;
+
+	if (sh != thread_owner)
+	{
+		return;
+	}
+
+	CREF_FOR_EACH(sh->grids, cgrid, tmp, i)
+	{
+		// TODO
+	}
+
+	if (gr != sh->focus_grid)
+	{
+		sh->focus_grid = gr;
+		SERVER(sh, damage, SHELL_MAIN);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -896,30 +943,6 @@ run(cshell *sh)
 	}
 
 	return true;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-select_grid(cshell *sh)
-{
-	cgrid *gr = nullptr;
-
-	if (sh != thread_owner)
-	{
-		return;
-	}
-
-	CREF_FOR_EACH(sh->grids, cgrid, tmp, i)
-	{
-		// TODO
-	}
-
-	if (gr != sh->focus_grid)
-	{
-		sh->focus_grid = gr;
-		SERVER(sh, damage, SHELL_MAIN);
-	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "event.h"
 #include "menu.h"
 
 /************************************************************************************************************/
@@ -18,6 +19,7 @@
 enum menu_action
 menu_send_event(struct menu *mn, struct cevent ev)
 {
+	event_print(ev, "menu");
 	switch (ev.type)
 	{
 		case CEVENT_BUTTON_RELEASE:

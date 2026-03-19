@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cairo/cairo.h>
+#include <cassette/ccfg.h>
 #include <cassette/cobj.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -25,6 +26,7 @@ enum cevent_type
 	CEVENT_FAIL,
 	CEVENT_OPEN,
 	CEVENT_CLOSE,
+	CEVENT_CONFIG,
 	CEVENT_REDRAW,
 	CEVENT_TRANSFORM,
 	CEVENT_BUTTON_PRESS,
@@ -54,6 +56,10 @@ struct cevent
 		/* CEVENT_REDRAW */
 
 		cairo_t *redraw_ctx;
+
+		/* CEVENT_CONFIG */
+
+		ccfg *config;
 
 		/* CEVENT_CLOSE */
 		/* CEVENT_OPEN  */

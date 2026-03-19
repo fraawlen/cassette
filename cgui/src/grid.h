@@ -15,3 +15,16 @@
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
 grid_cache_geometry(cgrid *gr);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
+grid_send_event(cgrid *gr, struct cevent ev);
+
+/************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] uint32_t
+grid_h(cgrid *gr);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] uint32_t
+grid_w(cgrid *gr);
