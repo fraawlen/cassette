@@ -23,9 +23,9 @@ typedef struct cgrid cgrid;
 /* LIFECYCLE ************************************************************************************************/
 /************************************************************************************************************/
 
-[[nodiscard]] cgrid *cgrid_create(void);
-
 [[nodiscard]] cgrid *cgrid_clone(const cgrid *gr);
+
+[[nodiscard]] cgrid *cgrid_create(uint32_t rows, uint32_t cols);
 
 nullptr_t cgrid_destroy(cgrid *gr);
 
@@ -36,6 +36,14 @@ nullptr_t cgrid_destroy(cgrid *gr);
 void cgrid_assign(cgrid *gr, cshell *sh);
 
 void cgrid_clear_warnings(cgrid *gr);
+
+void cgrid_flex_col(cgrid *gr, uint32_t col, double factor);
+
+void cgrid_flex_row(cgrid *gr, uint32_t row, double factor);
+
+void cgrid_resize_col(cgrid *gr, uint32_t col, int32_t size);
+
+void cgrid_resize_row(cgrid *gr, uint32_t row, int32_t size);
 
 void cgrid_retire(cgrid *gr);
 

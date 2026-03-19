@@ -23,7 +23,7 @@ int
 main(void)
 {
 	cshell *sh = cshell_create();
-	cgrid  *gr = cgrid_create();
+	cgrid  *gr = cgrid_create(1, 3);
 
 	cshell_on_open (sh,  cl_open, gr);
 	cshell_on_close(sh, cl_close, gr);
