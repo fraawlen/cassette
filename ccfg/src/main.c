@@ -26,7 +26,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void        push_std_src  (ccfg *, const char *, const char *);
+static void        push_std_src  (ccfg *, const char *, const char *, const char *);
 static const char *select_source (const ccfg *, size_t *);
 static void        update_err    (ccfg *);
 
@@ -327,9 +327,9 @@ ccfg_push_std_source(ccfg *cfg, const char *filename)
 	char *s2 = cutil_env_exists("HOME") ? getenv("HOME") : nullptr;
 	char *s3 = getpwuid(getuid())->pw_dir;
 
-	push_std_src(cfg, filename, s1);
-	push_std_src(cfg, filename, s2 ? s2 : s3);
-	push_std_src(cfg, filename, "/etc");
+	push_std_src(cfg, filename, nullptr,    s1);
+	push_std_src(cfg, filename, "/.config", s2 ? s2 : s3);
+	push_std_src(cfg, filename, nullptr,    "/etc");
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -426,14 +426,15 @@ ccfg_valid_cursor(const ccfg *cfg, const ccfg_cursor cursor)
 /************************************************************************************************************/
 
 void
-push_std_src(ccfg *cfg, const char *suffix, const char *prefix)
+push_std_src(ccfg *cfg, const char *suffix, const char *prefix1, const char *prefix2)
 {
-	if (!prefix || !suffix)
+	if (!prefix2 || !suffix)
 	{
 		return;
 	}
 
-	cstr_append(cfg->str, prefix);
+	cstr_append(cfg->str, prefix2);
+	cstr_append(cfg->str, prefix1);
 	cstr_append(cfg->str, "/");
 	cstr_append(cfg->str, suffix);
 

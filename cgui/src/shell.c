@@ -137,7 +137,7 @@ static void  dummy       (cshell *, void *);
 static void  finish      (cshell *);
 static void  grid_config (cshell *, cgrid *);
 static void  grid_select (cshell *);
-static bool  init_config (cshell *);
+static void  init_config (cshell *);
 static bool  init_server (cshell *);
 static void  join        (cshell *);
 static void  poke        (cshell *);
@@ -732,68 +732,24 @@ grid_select(cshell *sh)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static bool
+static void
 init_config(cshell *sh)
 {
-	cstr *home1 = cstr_create();
-	cstr *home2 = cstr_create();
-	cstr *home3 = cstr_create();
-	cstr *home4 = cstr_create();
-
 	if (cutil_env_exists(ENV_NO_CONFIG))
 	{
-		return true;
+		return;
 	}
 
-	/* get relative paths */
-
-	const char *s1 = cutil_env_exists("HOME") ? getenv("HOME") : nullptr;
-	const char *s2 = cutil_env_exists("XDG_CONFIG_HOME") ? getenv("XDG_CONFIG_HOME") : nullptr;
-
-	cstr_append(home1, s1 ? s1 : getpwuid(getuid())->pw_dir);
-	cstr_append(home2, s2 ? s2 : cstr_bytes(home1));
-	cstr_append(home3, home1);
-	cstr_append(home4, home2);
-
-	cstr_append(home1, "/.config/cassette/cgui.ccfg");
-	cstr_append(home2, "/cassette/cgui.ccfg");
-	cstr_append(home3, "/.config/cgui.ccfg");
-	cstr_append(home4, "/cgui.ccfg");
-
-	/* config setup */
+	ccfg_clear_sources(sh->config);
+	ccfg_push_source(sh->config, getenv(ENV_CONFIG));
+	ccfg_push_std_source(sh->config, "cassette/cgui.ccfg");
+	ccfg_push_std_source(sh->config, "cgui.ccfg");
 
 	ccfg_clear_params(sh->config);
-	ccfg_clear_sources(sh->config);
-	ccfg_clear_resources(sh->config);
-
-	ccfg_push_source(sh->config, getenv(ENV_CONFIG));
-	ccfg_push_source(sh->config, cstr_bytes(home1));
-	ccfg_push_source(sh->config, cstr_bytes(home3));
-	ccfg_push_source(sh->config, cstr_bytes(home2));
-	ccfg_push_source(sh->config, cstr_bytes(home4));
-	ccfg_push_source(sh->config, "/etc/cassette/cgui.ccfg");
-	ccfg_push_source(sh->config, "/etc/cgui.ccfg");
-
 	ccfg_push_param(sh->config, CONFIG_PARAM, sh->tag);
 	ccfg_load(sh->config);
 
-	/* end */
-	
-	bool err = false;
-
-	err |= ccfg_error(sh->config);
-	err |= cstr_error(home1);
-	err |= cstr_error(home2);
-	err |= cstr_error(home3);
-	err |= cstr_error(home4);
-
-	ccfg_destroy(err ? sh->config : nullptr);
-	cstr_destroy(home1);
-	cstr_destroy(home2);
-	cstr_destroy(home3);
-	cstr_destroy(home4);
-
-	return !err;
+	set_error(sh, ccfg_error(sh->config));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1028,8 +984,8 @@ ui_thread(void *arg)
 	cshell *sh = arg;
 	thread_owner = sh;
 
-	if (init_server(sh)
-	 && init_config(sh))
+	init_config(sh);
+	if (init_server(sh))
 	{
 		SERVER(sh, config, sh->config);
 		SERVER(sh, show, SHELL_MAIN, sh->tag, sh->w, sh->h);
