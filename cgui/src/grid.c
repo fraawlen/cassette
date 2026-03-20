@@ -5,8 +5,7 @@
 #include <cassette/ccfg.h>
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
-#include <stdbool.h>
-#include <stdckdint.h>
+#include <float.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -21,8 +20,8 @@
 /************************************************************************************************************/
 
 #define GUARD(GR, ...)     if (!GR || cerr_critical(GR->err)) { return __VA_OPT__(__VA_ARGS__); }
-#define GUARD_COL(GR, COL) if (COL >= gr->cols_n)             { cerr_set(&gr->err, CERR_CALL); }
-#define GUARD_ROW(GR, ROW) if (ROW >= gr->rows_n)             { cerr_set(&gr->err, CERR_CALL); }
+#define GUARD_COL(GR, COL) if (COL >= gr->cols_n) { cerr_set(&gr->err, CERR_CALL);  return; }
+#define GUARD_ROW(GR, ROW) if (ROW >= gr->rows_n) { cerr_set(&gr->err, CERR_CALL);  return; }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -227,7 +226,7 @@ cgrid_flex_col(cgrid *gr, uint32_t col, double factor)
 	GUARD(gr);
 	GUARD_COL(gr, col);
 
-	if (factor < 0.0)
+	if (factor < DBL_EPSILON)
 	{
 		cerr_set(&gr->err, CERR_CALL);
 	}
@@ -246,7 +245,7 @@ cgrid_flex_row(cgrid *gr, uint32_t row, double factor)
 	GUARD(gr);
 	GUARD_ROW(gr, row);
 
-	if (factor < 0.0)
+	if (factor < DBL_EPSILON)
 	{
 		cerr_set(&gr->err, CERR_CALL);
 	}

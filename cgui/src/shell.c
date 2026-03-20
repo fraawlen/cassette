@@ -458,6 +458,7 @@ cshell_wait(cshell *sh)
 void
 shell_send_event(struct cevent ev, enum shell_target target)
 {
+	/* Always called by server backends. */
 	/* Always called from the UI thread. */
 	/* Never called with a locked mutex. */
 
@@ -658,6 +659,7 @@ ev_transform(cshell *sh, struct cevent ev)
 	sh->h = ev.transform_h;
 	sh->damaged = true;
 
+	grid_send_event(sh->focus_grid, ev);
 	grid_select(sh);
 }
 
@@ -703,7 +705,10 @@ grid_config(cshell *sh, cgrid *gr)
 		.config = sh->config,
 	};
 
-	grid_send_event(gr, ev);
+	if (sh == thread_owner)
+	{
+		grid_send_event(gr, ev);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -725,6 +730,7 @@ grid_select(cshell *sh)
 
 	if (gr != sh->focus_grid)
 	{
+		sh->damaged    = true;
 		sh->focus_grid = gr;
 		SERVER(sh, damage, SHELL_MAIN);
 	}
