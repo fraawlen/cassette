@@ -43,11 +43,11 @@ struct cgrid
 
 	/* contents */
 
+	cref *cells;
 	struct line *cols;
 	struct line *rows;
 	uint32_t rows_n;
 	uint32_t cols_n;
-	cref *cells;
 
 	/* config */
 
@@ -362,7 +362,7 @@ config(ccfg *cfg, uint32_t base, const char *name)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-update (cgrid *gr)
+update(cgrid *gr)
 {
 	if (gr->owner)
 	{

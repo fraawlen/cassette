@@ -93,6 +93,7 @@ struct cshell
 	_Atomic enum cshell_state  state;
 	_Atomic enum cerr err;
 
+	bool damaged;
 	uint32_t w;
 	uint32_t h;
 
@@ -123,24 +124,29 @@ struct cshell
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void  apply_name    (cshell *, void *);
-static void  destroy       (cshell *);
-static void  dummy         (cshell *, void *);
-static void  finish_close  (cshell *);
-static void  finish_open   (cshell *);
-static void  grid_config   (cshell *, cgrid *);
-static void  grid_select   (cshell *);
-static bool  init_config   (cshell *);
-static bool  init_server   (cshell *);
-static void  join          (cshell *);
-static void  menu_redirect (cshell *, struct cevent);
-static void  poke          (cshell *);
-static void  post          (cshell *, void (*)(cshell *, void *), void *, bool);
-static void  purge_fd      (cshell *, int);
-static void  read_post     (cshell *);
-static bool  run           (cshell *);
-static void  set_error     (cshell *, enum cerr);
-static void *ui_thread     (void   *);
+static void  ev_open      (cshell *);
+static void  ev_redirect  (cshell *, struct cevent);
+static void  ev_redraw    (cshell *, struct cevent);
+static void  ev_transform (cshell *, struct cevent);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void  apply_name  (cshell *, void *);
+static void  destroy     (cshell *);
+static void  dummy       (cshell *, void *);
+static void  finish      (cshell *);
+static void  grid_config (cshell *, cgrid *);
+static void  grid_select (cshell *);
+static bool  init_config (cshell *);
+static bool  init_server (cshell *);
+static void  join        (cshell *);
+static void  poke        (cshell *);
+static void  post        (cshell *, void (*)(cshell *, void *), void *, bool);
+static void  purge_fd    (cshell *, int);
+static void  read_post   (cshell *);
+static bool  run         (cshell *);
+static void  set_error   (cshell *, enum cerr);
+static void *ui_thread   (void   *);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -208,6 +214,11 @@ cshell_create(void)
 		goto fail_grids;
 	}
 
+	if (!(sh->config = ccfg_create()))
+	{
+		goto fail_config;
+	}
+
 	if (pthread_mutex_init(&sh->mutex, nullptr) != 0)
 	{
 		goto fail_mutex;
@@ -241,8 +252,8 @@ cshell_create(void)
 	sh->cl_close   = (struct call){.fn = dummy, .data = nullptr};
 	sh->cl_open    = (struct call){.fn = dummy, .data = nullptr};
 	sh->menu       = (struct menu){0};
-	sh->config     = nullptr;
 	sh->focus_grid = nullptr;
+	sh->damaged    = false;
 	sh->w          = 500;
 	sh->h          = 300;
 
@@ -257,6 +268,8 @@ fail_pipe:
 	pthread_cond_destroy(&sh->cond);
 fail_cond:
 	pthread_mutex_destroy(&sh->mutex);
+fail_config:
+	ccfg_destroy(sh->config);
 fail_mutex:
 	cref_destroy(sh->grids);
 fail_grids:
@@ -452,7 +465,7 @@ shell_send_event(struct cevent ev, enum shell_target target)
 
 	if (target == SHELL_MENU)
 	{
-		menu_redirect(sh, ev);
+		ev_redirect(sh, ev);
 		return;
 	}
 
@@ -471,26 +484,19 @@ shell_send_event(struct cevent ev, enum shell_target target)
 			break;
 
 		case CEVENT_REDRAW:
-			cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
-			cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
-			cairo_paint(ev.redraw_ctx);
-			cairo_set_source_rgba(ev.redraw_ctx, 1.0, 0.0, 0.0, 0.5);
-			cairo_rectangle(ev.redraw_ctx, 20, 20, sh->w - 40, sh->h - 40);
-			cairo_fill(ev.redraw_ctx);
+			ev_redraw(sh, ev);
 			break;
 
 		case CEVENT_TRANSFORM:
-			sh->w = ev.transform_w;
-			sh->h = ev.transform_h;
-			grid_select(sh);
+			ev_transform(sh, ev);
+			break;
+
+		case CEVENT_OPEN:
+			ev_open(sh);
 			break;
 
 		case CEVENT_CLOSE:
 			cshell_close(sh);
-			break;
-
-		case CEVENT_OPEN:
-			finish_open(sh);
 			break;
 
 		case CEVENT_FAIL:
@@ -569,6 +575,7 @@ destroy(cshell *sh)
 {
 	pthread_mutex_destroy(&sh->mutex);
 	pthread_cond_destroy(&sh->cond);
+	ccfg_destroy(sh->config);
 	cref_destroy(sh->grids);
 	close(sh->fd_post[0]);
 	close(sh->fd_post[1]);
@@ -580,39 +587,7 @@ destroy(cshell *sh)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-finish_close(cshell *sh)
-{
-	struct call cl;
-
-	LOCK(sh)
-	{
-		cl = sh->cl_close;
-	}
-
-	cl.fn(sh, cl.data);
-	SERVER(sh, hide, SHELL_MENU);
-	SERVER(sh, hide, SHELL_MAIN);
-	SERVER(sh, kill);
-
-	LOCK(sh)
-	{
-		ccfg_destroy(sh->config);
-		purge_fd(sh, sh->fd_post[0]);
-		purge_fd(sh, sh->fd_wake[0]);
-		atomic_store(&sh->state, CSHELL_CLOSED);
-		pthread_cond_broadcast(&sh->cond);
-	}
-
-	if (thread_destroy)
-	{
-		destroy(sh);
-	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-finish_open(cshell *sh)
+ev_open(cshell *sh)
 {
 	struct call cl;
 
@@ -630,6 +605,91 @@ finish_open(cshell *sh)
 	
 	grid_select(sh);
 	cl.fn(sh, cl.data);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+ev_redirect(cshell *sh, struct cevent ev)
+{
+	switch (menu_send_event(&sh->menu, ev))
+	{
+		case MENU_DAMAGE:
+			SERVER(sh, damage, SHELL_MENU);
+			break;
+
+		case MENU_HIDE:
+			SERVER(sh, hide, SHELL_MENU);
+			break;
+
+		case MENU_IDLE:
+			break;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+ev_redraw(cshell *sh, struct cevent ev)
+{
+	if (!sh->damaged)
+	{
+		goto skip_bg;
+	}
+		
+	cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
+	cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
+	cairo_paint(ev.redraw_ctx);
+
+	cairo_set_source_rgba(ev.redraw_ctx, 1.0, 0.0, 0.0, 0.5);
+	cairo_rectangle(ev.redraw_ctx, 20, 20, sh->w - 40, sh->h - 40);
+	cairo_fill(ev.redraw_ctx);
+
+skip_bg:
+	grid_send_event(sh->focus_grid, ev);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+ev_transform(cshell *sh, struct cevent ev)
+{
+	sh->w = ev.transform_w;
+	sh->h = ev.transform_h;
+	sh->damaged = true;
+
+	grid_select(sh);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+finish(cshell *sh)
+{
+	struct call cl;
+
+	LOCK(sh)
+	{
+		cl = sh->cl_close;
+	}
+
+	cl.fn(sh, cl.data);
+	SERVER(sh, hide, SHELL_MENU);
+	SERVER(sh, hide, SHELL_MAIN);
+	SERVER(sh, kill);
+
+	LOCK(sh)
+	{
+		purge_fd(sh, sh->fd_post[0]);
+		purge_fd(sh, sh->fd_wake[0]);
+		atomic_store(&sh->state, CSHELL_CLOSED);
+		pthread_cond_broadcast(&sh->cond);
+	}
+
+	if (thread_destroy)
+	{
+		destroy(sh);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -682,7 +742,6 @@ init_config(cshell *sh)
 
 	if (cutil_env_exists(ENV_NO_CONFIG))
 	{
-		sh->config = nullptr;
 		return true;
 	}
 
@@ -703,7 +762,9 @@ init_config(cshell *sh)
 
 	/* config setup */
 
-	sh->config = ccfg_create();
+	ccfg_clear_params(sh->config);
+	ccfg_clear_sources(sh->config);
+	ccfg_clear_resources(sh->config);
 
 	ccfg_push_source(sh->config, getenv(ENV_CONFIG));
 	ccfg_push_source(sh->config, cstr_bytes(home1));
@@ -771,26 +832,6 @@ join(cshell *sh)
 		{
 			pthread_cond_wait(&sh->cond, &sh->mutex);
 		}
-	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-menu_redirect(cshell *sh, struct cevent ev)
-{
-	switch (menu_send_event(&sh->menu, ev))
-	{
-		case MENU_DAMAGE:
-			SERVER(sh, damage, SHELL_MENU);
-			break;
-
-		case MENU_HIDE:
-			SERVER(sh, hide, SHELL_MENU);
-			break;
-
-		case MENU_IDLE:
-			break;
 	}
 }
 
@@ -1004,7 +1045,7 @@ ui_thread(void *arg)
 		set_error(sh, CERR_DISPLAY);
 	}
 
-	finish_close(sh);
+	finish(sh);
 	pthread_exit(nullptr);
 }
 
