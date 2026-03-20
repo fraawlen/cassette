@@ -14,15 +14,22 @@
 
 struct ccfg
 {
+	/* contents */
+
 	cbook *params;
 	cbook *sequences; 
 	cbook *sources;
 	cdict *keys_params;
 	cdict *keys_sequences;
 	cdict *tokens;
+	cstr  *str;
+
+	/* states */
+
 	size_t it_group;
 	size_t it;
 	size_t loads;
+
 	bool restricted;
 	enum cerr err;
 };

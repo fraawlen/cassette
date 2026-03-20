@@ -4,10 +4,13 @@
 
 #include <cassette/ccfg.h>
 #include <cassette/cobj.h>
+#include <pwd.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "main.h"
 #include "source.h"
@@ -23,6 +26,7 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static void        push_std_src  (ccfg *, const char *, const char *);
 static const char *select_source (const ccfg *, size_t *);
 static void        update_err    (ccfg *);
 
@@ -77,6 +81,7 @@ ccfg_clear_warnings(ccfg *cfg)
 {
 	GUARD(cfg);
 
+	cstr_clear_warnings(cfg->str);
 	cerr_clear_warnings(&cfg->err);
 	cbook_clear_warnings(cfg->params);
 	cbook_clear_warnings(cfg->sequences);
@@ -108,6 +113,7 @@ ccfg_clone(ccfg *cfg)
 		return nullptr;
 	}
 
+	cfg_new->str            = cstr_create();
 	cfg_new->params         = cbook_clone(cfg->params);
 	cfg_new->sequences      = cbook_clone(cfg->sequences);
 	cfg_new->sources        = cbook_clone(cfg->sources);
@@ -145,6 +151,7 @@ ccfg_create(void)
 		return nullptr;
 	}
 
+	cfg->str            =  cstr_create();
 	cfg->params         = cbook_create();
 	cfg->sequences      = cbook_create();
 	cfg->sources        = cbook_create();
@@ -175,6 +182,7 @@ ccfg_destroy(ccfg *cfg)
 {
 	if (cfg)
 	{
+		 cstr_destroy(cfg->str);
 		cbook_destroy(cfg->params);
 		cbook_destroy(cfg->sequences);
 		cbook_destroy(cfg->sources);
@@ -312,6 +320,20 @@ ccfg_push_source(ccfg *cfg, const char *filename)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void
+ccfg_push_std_source(ccfg *cfg, const char *filename)
+{
+	char *s1 = cutil_env_exists("XDG_CONFIG_HOME") ? getenv("XDG_CONFIG_HOME") : nullptr;
+	char *s2 = cutil_env_exists("HOME") ? getenv("HOME") : nullptr;
+	char *s3 = getpwuid(getuid())->pw_dir;
+
+	push_std_src(cfg, filename, s1);
+	push_std_src(cfg, filename, s2 ? s2 : s3);
+	push_std_src(cfg, filename, "/etc");
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 const char *
 ccfg_resource(const ccfg *cfg)
 {
@@ -403,6 +425,25 @@ ccfg_valid_cursor(const ccfg *cfg, const ccfg_cursor cursor)
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
+void
+push_std_src(ccfg *cfg, const char *suffix, const char *prefix)
+{
+	if (!prefix || !suffix)
+	{
+		return;
+	}
+
+	cstr_append(cfg->str, prefix);
+	cstr_append(cfg->str, "/");
+	cstr_append(cfg->str, suffix);
+
+	ccfg_push_source(cfg, cstr_bytes(cfg->str));
+	cstr_clear(cfg->str);
+	update_err(cfg);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 static const char *
 select_source(const ccfg *cfg, size_t *index)
 {
@@ -437,4 +478,5 @@ update_err(ccfg *cfg)
 	cerr_set(&cfg->err, cdict_error(cfg->keys_params));
 	cerr_set(&cfg->err, cdict_error(cfg->keys_sequences));
 	cerr_set(&cfg->err, cdict_error(cfg->tokens));
+	cerr_set(&cfg->err,  cstr_error(cfg->str));
 }

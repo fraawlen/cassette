@@ -386,6 +386,9 @@ void ccfg_push_param_str(ccfg *cfg, const char *name, const char *str) [[reprodu
  */
 void ccfg_push_source(ccfg *cfg, const char *filename) [[reproducible]];
 
+
+void ccfg_push_std_source(ccfg *cfg, const char *filename) [[reproducible]];
+
 /**
  * [Description]
  *
