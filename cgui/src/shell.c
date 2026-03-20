@@ -136,7 +136,6 @@ static void  destroy     (cshell *);
 static void  dummy       (cshell *, void *);
 static void  finish      (cshell *);
 static void  grid_config (cshell *, cgrid *);
-static void  grid_select (cshell *);
 static void  init_config (cshell *);
 static bool  init_server (cshell *);
 static void  join        (cshell *);
@@ -147,6 +146,7 @@ static void  read_post   (cshell *);
 static bool  run         (cshell *);
 static void  set_error   (cshell *, enum cerr);
 static void *ui_thread   (void   *);
+static void  update_grid (cshell *);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -519,7 +519,7 @@ shell_pull_grid(cshell *sh, cgrid *gr)
 	/* Never called with a locked mutex.                                 */
 
 	cref_purge(sh->grids, gr);
-	grid_select(sh);
+	update_grid(sh);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -533,7 +533,7 @@ shell_push_grid(cshell *sh, cgrid *gr)
 
 	cref_push(sh->grids, gr);
 	grid_config(sh, gr);
-	grid_select(sh);
+	update_grid(sh);
 
 	return !cref_error(sh->grids);
 }
@@ -547,7 +547,7 @@ shell_update_grid(cshell *sh)
 	/* Otherwhise, expected to be called exclusively from the UI thread. */
 	/* Never called with a locked mutex.                                 */
 
-	grid_select(sh);
+	update_grid(sh);
 }
 
 /************************************************************************************************************/
@@ -599,12 +599,6 @@ ev_open(cshell *sh)
 		pthread_cond_broadcast(&sh->cond);
 	}
 
-	CREF_FOR_EACH(sh->grids, cgrid, gr, i)
-	{
-		grid_config(sh, gr);
-	}
-	
-	grid_select(sh);
 	cl.fn(sh, cl.data);
 }
 
@@ -647,7 +641,11 @@ ev_redraw(cshell *sh, struct cevent ev)
 	cairo_fill(ev.redraw_ctx);
 
 skip_bg:
-	grid_send_event(sh->focus_grid, ev);
+
+	if (sh->focus_grid)
+	{
+		grid_send_event(sh->focus_grid, ev);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -659,8 +657,7 @@ ev_transform(cshell *sh, struct cevent ev)
 	sh->h = ev.transform_h;
 	sh->damaged = true;
 
-	grid_send_event(sh->focus_grid, ev);
-	grid_select(sh);
+	update_grid(sh);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -708,31 +705,6 @@ grid_config(cshell *sh, cgrid *gr)
 	if (sh == thread_owner)
 	{
 		grid_send_event(gr, ev);
-	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-grid_select(cshell *sh)
-{
-	cgrid *gr = nullptr;
-
-	if (sh != thread_owner)
-	{
-		return;
-	}
-
-	CREF_FOR_EACH(sh->grids, cgrid, tmp, i)
-	{
-		// TODO
-	}
-
-	if (gr != sh->focus_grid)
-	{
-		sh->damaged    = true;
-		sh->focus_grid = gr;
-		SERVER(sh, damage, SHELL_MAIN);
 	}
 }
 
@@ -1009,6 +981,58 @@ ui_thread(void *arg)
 
 	finish(sh);
 	pthread_exit(nullptr);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+update_grid(cshell *sh)
+{
+	cgrid   *gr   = nullptr;
+	uint32_t gr_w = 0;
+	uint32_t gr_h = 0;
+	uint32_t tmp_w;
+	uint32_t tmp_h;
+
+	if (sh != thread_owner)
+	{
+		return;
+	}
+
+	CREF_FOR_EACH(sh->grids, cgrid, tmp, i)
+	{
+		tmp_w = grid_w(tmp);
+		tmp_h = grid_h(tmp);
+
+		if (tmp_w <= sh->w && tmp_h <= sh->h
+		 && tmp_w >=  gr_w && tmp_h >=  gr_h)
+		{
+			gr   = tmp;
+			gr_w = tmp_w;
+			gr_h = tmp_h;
+		}
+	}
+
+	if (gr != sh->focus_grid)
+	{
+		sh->damaged    = true;
+		sh->focus_grid = gr;
+		SERVER(sh, damage, SHELL_MAIN);
+	}
+
+	struct cevent ev =
+	{
+		.type        = CEVENT_TRANSFORM,
+		.transform_w = sh->w,
+		.transform_h = sh->h,
+		.transform_x = 0,
+		.transform_y = 0,
+	};
+
+	if (gr)
+	{
+		grid_send_event(gr, ev);
+	}
 }
 
 /************************************************************************************************************/

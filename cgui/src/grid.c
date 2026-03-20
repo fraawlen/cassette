@@ -45,14 +45,16 @@ struct cgrid
 	cref *cells;
 	struct line *cols;
 	struct line *rows;
-	uint32_t rows_n;
-	uint32_t cols_n;
+	size_t rows_n;
+	size_t cols_n;
 
 	/* config */
 
 	uint32_t gutter;
 	uint32_t gap;
 	uint32_t pad;
+	uint32_t font_w; // TODO actual sampling
+	uint32_t font_h; // TODO actual sampling
 };
 
 /************************************************************************************************************/
@@ -130,6 +132,8 @@ cgrid_clone(const cgrid *gr)
 	gr_new->gutter = 0;
 	gr_new->gap    = 0;
 	gr_new->pad    = 0;
+	gr_new->font_w = 0;
+	gr_new->font_h = 0;
 
 	return gr_new;
 
@@ -148,7 +152,7 @@ fail_alloc:
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 cgrid *
-cgrid_create(uint32_t rows, uint32_t cols)
+cgrid_create(size_t rows, size_t cols)
 {
 	cgrid *gr;
 
@@ -172,18 +176,27 @@ cgrid_create(uint32_t rows, uint32_t cols)
 		goto fail_cells;
 	}
 
+	if (rows == 0 || cols == 0)
+	{
+		goto fail_param;
+	}
+
 	gr->err    = CERR_NONE;
 	gr->owner  = nullptr;
-	gr->rows_n = 0;
-	gr->cols_n = 0;
+	gr->rows_n = rows;
+	gr->cols_n = cols;
 	gr->gutter = 0;
 	gr->gap    = 0;
 	gr->pad    = 0;
+	gr->font_w = 0;
+	gr->font_h = 0;
 
 	return gr;
 
 	/* errors */
 
+fail_param:
+	cref_destroy(gr->cells);
 fail_cells:
 	free(gr->cols);
 fail_cols:
@@ -221,7 +234,7 @@ cgrid_error(const cgrid *gr)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgrid_flex_col(cgrid *gr, uint32_t col, double factor)
+cgrid_flex_col(cgrid *gr, size_t col, double factor)
 {
 	GUARD(gr);
 	GUARD_COL(gr, col);
@@ -240,7 +253,7 @@ cgrid_flex_col(cgrid *gr, uint32_t col, double factor)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgrid_flex_row(cgrid *gr, uint32_t row, double factor)
+cgrid_flex_row(cgrid *gr, size_t row, double factor)
 {
 	GUARD(gr);
 	GUARD_ROW(gr, row);
@@ -259,7 +272,7 @@ cgrid_flex_row(cgrid *gr, uint32_t row, double factor)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgrid_resize_col(cgrid *gr, uint32_t col, int32_t size)
+cgrid_resize_col(cgrid *gr, size_t col, int32_t size)
 {
 	GUARD(gr);
 	GUARD_COL(gr, col);
@@ -271,7 +284,7 @@ cgrid_resize_col(cgrid *gr, uint32_t col, int32_t size)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgrid_resize_row(cgrid *gr, uint32_t row, int32_t size)
+cgrid_resize_row(cgrid *gr, size_t row, int32_t size)
 {
 	GUARD(gr);
 	GUARD_ROW(gr, row);
@@ -295,24 +308,20 @@ cgrid_retire(cgrid *gr)
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
-void
-grid_cache_geometry(cgrid *gr)
-{
-	(void)gr;
-
-	// TODO
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 uint32_t
 grid_h(cgrid *gr)
 {
-	(void)gr;
+	uint32_t h = 0;
+	int32_t  r;
 
-	// TODO
+	for (size_t i = 0; i < gr->rows_n; i++)
+	{
+		r  = gr->rows[i].size;
+		h += r == 0 ? gr->gutter : ((r > 0 ? gr->font_h : -gr->font_w) * r);
+		h += gr->gap;
+	}
 
-	return 0;
+	return h - gr->gap;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -323,7 +332,12 @@ grid_send_event(cgrid *gr, struct cevent ev)
 	event_print(ev, "grid");
 	switch (ev.type)
 	{
+		case CEVENT_REDRAW:
+			break;
+
 		case CEVENT_CONFIG:
+			gr->font_w = config(ev.config, 4, "font_w");
+			gr->font_h = config(ev.config, 8, "font_h");
 			gr->gutter = config(ev.config, 5, "gutter");
 			gr->gap    = config(ev.config, 5, "gap");
 			gr->pad    = config(ev.config, 5, "pad");
@@ -339,11 +353,17 @@ grid_send_event(cgrid *gr, struct cevent ev)
 uint32_t
 grid_w(cgrid *gr)
 {
-	(void)gr;
+	uint32_t w = 0;
+	int32_t  c;
 
-	// TODO
+	for (size_t i = 0; i < gr->cols_n; i++)
+	{
+		c  = gr->cols[i].size;
+		w += c == 0 ? gr->gutter : ((c > 0 ? gr->font_w : -gr->font_h) * c);
+		w += gr->gap;
+	}
 
-	return 0;
+	return w - gr->gap;
 }
 
 /************************************************************************************************************/
