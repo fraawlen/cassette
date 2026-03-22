@@ -29,7 +29,6 @@ enum cshell_server
 
 enum cshell_state
 {
-	CSHELL_INIT,
 	CSHELL_OPENING,
 	CSHELL_OPEN,
 	CSHELL_CLOSING,
@@ -59,6 +58,8 @@ void cshell_name(cshell *sh, const char *name);
 void cshell_on_close(cshell *sh, void (*fn)(cshell *, void *), void *data);
 
 void cshell_on_open(cshell *sh, void (*fn)(cshell *, void *), void *data);
+
+void cshell_on_setup(cshell *sh, void (*fn)(cshell *, void *), void *data);
 
 void cshell_open(cshell *sh, enum cshell_server server, const char *tag);
 

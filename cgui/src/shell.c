@@ -110,6 +110,7 @@ struct cshell
 
 	struct call cl_open;
 	struct call cl_close;
+	struct call cl_setup;
 
 	/* backends */
 
@@ -132,17 +133,18 @@ static void  ev_transform (cshell *, struct cevent);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void  apply_name  (cshell *, void *);
+static void  callback    (cshell *, struct call *);
+static void  configure   (cshell *);
 static void  destroy     (cshell *);
 static void  dummy       (cshell *, void *);
 static void  finish      (cshell *);
-static void  init_config (cshell *);
-static bool  init_server (cshell *);
 static void  join        (cshell *);
 static void  poke        (cshell *);
 static void  post        (cshell *, void (*)(cshell *, void *), void *, bool);
 static void  purge_fd    (cshell *, int);
 static void  read_post   (cshell *);
 static bool  run         (cshell *);
+static bool  server_init (cshell *);
 static void  set_error   (cshell *, enum cerr);
 static void *ui_thread   (void   *);
 
@@ -151,6 +153,7 @@ static void *ui_thread   (void   *);
 /************************************************************************************************************/
 
 static _Thread_local bool thread_flush    = false;
+static _Thread_local bool thread_opened   = false;
 static _Thread_local bool thread_destroy  = false;
 static _Thread_local cshell *thread_owner = nullptr;
 
@@ -237,8 +240,8 @@ cshell_create(void)
 		goto fail_pipe2;
 	}
 
+	atomic_init(&sh->state,  CSHELL_CLOSED);
 	atomic_init(&sh->server, CSHELL_NONE);
-	atomic_init(&sh->state,  CSHELL_INIT);
 	atomic_init(&sh->err,    CERR_NONE);
 
 	fcntl(sh->fd_post[1], F_SETFL, O_NONBLOCK);
@@ -248,6 +251,7 @@ cshell_create(void)
 	snprintf(sh->tag,  STR_LEN, "%s", DEFAULT_TAG);
 
 	sh->cl_close   = (struct call){.fn = dummy, .data = nullptr};
+	sh->cl_setup   = (struct call){.fn = dummy, .data = nullptr};
 	sh->cl_open    = (struct call){.fn = dummy, .data = nullptr};
 	sh->menu       = (struct menu){0};
 	sh->focus_grid = nullptr;
@@ -362,24 +366,36 @@ cshell_on_open(cshell *sh, void (*fn)(cshell *, void *), void *data)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cshell_on_setup(cshell *sh, void (*fn)(cshell *, void *), void *data)
+{
+	GUARD(sh);
+	LOCK(sh)
+	{
+		sh->cl_setup.fn   = fn ? fn : dummy;
+		sh->cl_setup.data = data;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cshell_open(cshell *sh, enum cshell_server server, const char *tag)
 {
 	GUARD(sh);
 	GUARD_THREAD(sh);
 	LOCK(sh)
 	{
-		if (atomic_load(&sh->state) == CSHELL_CLOSED
-		 || atomic_load(&sh->state) == CSHELL_INIT)
+		if (atomic_load(&sh->state) == CSHELL_CLOSED)
 		{
 			snprintf(sh->tag, STR_LEN, "%s", tag ? tag : DEFAULT_TAG);
 			atomic_store(&sh->state, CSHELL_OPENING);
-			atomic_store(&sh->server, server);
-	
+			atomic_store(&sh->server, server);	
+
 			if (pthread_create(&sh->thread, nullptr, ui_thread, sh) != 0)
 			{
+				set_error(sh, CERR_THREAD);
 				atomic_store(&sh->state, CSHELL_CLOSED);
 				pthread_cond_broadcast(&sh->cond);
-				set_error(sh, CERR_THREAD);
 			}
 			else
 			{
@@ -409,7 +425,9 @@ cshell_post(cshell *sh, void (*fn)(cshell *, void *), void *data)
 bool
 cshell_self(const cshell *sh)
 {
-	return sh && sh == thread_owner;
+	GUARD(sh, false);
+
+	return sh == thread_owner;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -442,7 +460,8 @@ cshell_wait(cshell *sh)
 	LOCK(sh)
 	{
 		while (atomic_load(&sh->state) == CSHELL_OPENING
-		    || atomic_load(&sh->state) == CSHELL_INIT)
+		   || (atomic_load(&sh->state) == CSHELL_CLOSING)
+		   || (atomic_load(&sh->state) == CSHELL_CLOSED && !cerr_critical(atomic_load(&sh->err))))
 		{
 			pthread_cond_wait(&sh->cond, &sh->mutex);
 		}
@@ -575,6 +594,43 @@ apply_name(cshell *sh, void *data)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
+callback(cshell *sh, struct call *cl)
+{
+	struct call tmp;
+
+	LOCK(sh)
+	{
+		tmp = *cl;
+	}
+
+	tmp.fn(sh, tmp.data);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+configure(cshell *sh)
+{
+	if (cutil_env_exists(ENV_NO_CONFIG))
+	{
+		return;
+	}
+
+	ccfg_clear_sources(sh->config);
+	ccfg_push_source(sh->config, getenv(ENV_CONFIG));
+	ccfg_push_std_source(sh->config, "cassette/cgui.ccfg");
+	ccfg_push_std_source(sh->config, "cgui.ccfg");
+
+	ccfg_clear_params(sh->config);
+	ccfg_push_param(sh->config, CONFIG_PARAM, sh->tag);
+	ccfg_load(sh->config);
+
+	set_error(sh, ccfg_error(sh->config));
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 destroy(cshell *sh)
 {
 	pthread_mutex_destroy(&sh->mutex);
@@ -593,16 +649,14 @@ destroy(cshell *sh)
 static void
 ev_open(cshell *sh)
 {
-	struct call cl;
-
 	LOCK(sh)
 	{
-		cl = sh->cl_open;
+		thread_opened = true;
 		atomic_store(&sh->state, CSHELL_OPEN);
 		pthread_cond_broadcast(&sh->cond);
 	}
 
-	cl.fn(sh, cl.data);
+	callback(sh, &sh->cl_open);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -659,14 +713,8 @@ ev_transform(cshell *sh, struct cevent ev)
 static void
 finish(cshell *sh)
 {
-	struct call cl;
+	callback(sh, &sh->cl_close);
 
-	LOCK(sh)
-	{
-		cl = sh->cl_close;
-	}
-
-	cl.fn(sh, cl.data);
 	SERVER(sh, hide, SHELL_MENU);
 	SERVER(sh, hide, SHELL_MAIN);
 	SERVER(sh, kill);
@@ -688,58 +736,11 @@ finish(cshell *sh)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-init_config(cshell *sh)
-{
-	if (cutil_env_exists(ENV_NO_CONFIG))
-	{
-		return;
-	}
-
-	ccfg_clear_sources(sh->config);
-	ccfg_push_source(sh->config, getenv(ENV_CONFIG));
-	ccfg_push_std_source(sh->config, "cassette/cgui.ccfg");
-	ccfg_push_std_source(sh->config, "cgui.ccfg");
-
-	ccfg_clear_params(sh->config);
-	ccfg_push_param(sh->config, CONFIG_PARAM, sh->tag);
-	ccfg_load(sh->config);
-
-	set_error(sh, ccfg_error(sh->config));
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static bool
-init_server(cshell *sh)
-{
-	enum cshell_server srv = atomic_load(&sh->server);
-
-	if (srv & CSHELL_WAYLAND && (sh->fd_server = wayland_init(&sh->wl)) != -1)
-	{
-		atomic_store(&sh->server, CSHELL_WAYLAND);
-	}
-	else if (srv & CSHELL_X11 && (sh->fd_server = x11_init(&sh->x11)) != -1)
-	{
-		atomic_store(&sh->server, CSHELL_X11);
-	}
-	else
-	{
-		atomic_store(&sh->server, CSHELL_NONE);
-		return false;
-	}
-
-	return true;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
 join(cshell *sh)
 {
 	LOCK(sh)
 	{
-		while (atomic_load(&sh->state) != CSHELL_CLOSED
-		    && atomic_load(&sh->state) != CSHELL_INIT)
+		while (atomic_load(&sh->state) != CSHELL_CLOSED)
 		{
 			pthread_cond_wait(&sh->cond, &sh->mutex);
 		}
@@ -911,6 +912,30 @@ run(cshell *sh)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+static bool
+server_init(cshell *sh)
+{
+	enum cshell_server srv = atomic_load(&sh->server);
+
+	if (srv & CSHELL_WAYLAND && (sh->fd_server = wayland_init(&sh->wl)) != -1)
+	{
+		atomic_store(&sh->server, CSHELL_WAYLAND);
+	}
+	else if (srv & CSHELL_X11 && (sh->fd_server = x11_init(&sh->x11)) != -1)
+	{
+		atomic_store(&sh->server, CSHELL_X11);
+	}
+	else
+	{
+		atomic_store(&sh->server, CSHELL_NONE);
+		return false;
+	}
+
+	return true;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 static void
 set_error(cshell *sh, enum cerr code)
 {
@@ -939,9 +964,10 @@ ui_thread(void *arg)
 	cshell *sh = arg;
 	thread_owner = sh;
 
-	init_config(sh);
-	if (init_server(sh))
+	configure(sh);
+	if (server_init(sh))
 	{
+		callback(sh, &sh->cl_setup);
 		SERVER(sh, config, sh->config);
 		SERVER(sh, show, SHELL_MAIN, sh->tag, sh->w, sh->h);
 		apply_name(sh, nullptr);
