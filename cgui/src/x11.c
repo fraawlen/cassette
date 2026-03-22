@@ -595,7 +595,7 @@ ev_conf(struct x11 *x11, xcb_configure_notify_event_t *ev)
 	};
 
 	if (win->h == ev->height
-	 || win->w == ev->width)
+	 && win->w == ev->width)
 	{
 		return;
 	}
