@@ -39,7 +39,9 @@ struct cgrid
 	/* state */
 
 	enum cerr err;
+	bool damaged;
 	bool locked;
+	int  variant;
 
 	/* contents */
 
@@ -119,15 +121,17 @@ cgrid_create(size_t rows, size_t cols)
 		goto fail_param;
 	}
 
-	gr->err    = CERR_NONE;
-	gr->locked = false;
-	gr->rows_n = rows;
-	gr->cols_n = cols;
-	gr->gutter = 0;
-	gr->gap    = 0;
-	gr->pad    = 0;
-	gr->font_w = 0;
-	gr->font_h = 0;
+	gr->err     = CERR_NONE;
+	gr->damaged = false;
+	gr->locked  = false;
+	gr->rows_n  = rows;
+	gr->cols_n  = cols;
+	gr->variant = 0;
+	gr->gutter  = 0;
+	gr->gap     = 0;
+	gr->pad     = 0;
+	gr->font_w  = 0;
+	gr->font_h  = 0;
 
 	return gr;
 
@@ -241,6 +245,17 @@ cgrid_resize_row(cgrid *gr, size_t row, int32_t size)
 	gr->rows[row].size = size;
 }
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cgrid_show_variant(cgrid *gr, int variant)
+{
+	GUARD(gr);
+
+	gr->variant = variant;
+	gr->damaged = true;
+}
+
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
@@ -248,17 +263,16 @@ cgrid_resize_row(cgrid *gr, size_t row, int32_t size)
 uint32_t
 grid_h(cgrid *gr)
 {
-	uint32_t h = 0;
+	uint32_t h = gr->gap * (gr->rows_n - 1);
 	int32_t  r;
 
 	for (size_t i = 0; i < gr->rows_n; i++)
 	{
 		r  = gr->rows[i].size;
 		h += r == 0 ? gr->gutter : ((r > 0 ? gr->font_h : -gr->font_w) * r);
-		h += gr->gap;
 	}
 
-	return h - gr->gap;
+	return h;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -270,11 +284,11 @@ grid_send_event(cgrid *gr, struct cevent ev)
 	switch (ev.type)
 	{
 		case CEVENT_TRANSFORM:
-			// TODO
+			gr->damaged = true;  // TODO
 			break;
 
 		case CEVENT_REDRAW:
-			// TODO
+			gr->damaged = false; // TODO
 			break;
 
 		case CEVENT_CLOSE:
@@ -299,17 +313,16 @@ grid_send_event(cgrid *gr, struct cevent ev)
 uint32_t
 grid_w(cgrid *gr)
 {
-	uint32_t w = 0;
+	uint32_t w = gr->gap * (gr->cols_n - 1);
 	int32_t  c;
 
 	for (size_t i = 0; i < gr->cols_n; i++)
 	{
 		c  = gr->cols[i].size;
 		w += c == 0 ? gr->gutter : ((c > 0 ? gr->font_w : -gr->font_h) * c);
-		w += gr->gap;
 	}
 
-	return w - gr->gap;
+	return w;
 }
 
 /************************************************************************************************************/

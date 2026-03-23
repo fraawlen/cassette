@@ -102,7 +102,7 @@ struct cshell
 	char name[STR_LEN];
 	char tag[STR_LEN];
 	struct menu menu;
-	cgrid *focus_grid;
+	cgrid *focus;
 	ccfg *config;
 	cref *grids;
 
@@ -254,14 +254,14 @@ cshell_create(void)
 	snprintf(sh->name, STR_LEN, "%s", DEFAULT_NAME);
 	snprintf(sh->tag,  STR_LEN, "%s", DEFAULT_TAG);
 
-	sh->cl_close   = (struct call){.fn = dummy, .data = nullptr};
-	sh->cl_setup   = (struct call){.fn = dummy, .data = nullptr};
-	sh->cl_open    = (struct call){.fn = dummy, .data = nullptr};
-	sh->menu       = (struct menu){0};
-	sh->focus_grid = nullptr;
-	sh->damaged    = false;
-	sh->w          = 500;
-	sh->h          = 300;
+	sh->cl_close = (struct call){.fn = dummy, .data = nullptr};
+	sh->cl_setup = (struct call){.fn = dummy, .data = nullptr};
+	sh->cl_open  = (struct call){.fn = dummy, .data = nullptr};
+	sh->menu     = (struct menu){0};
+	sh->focus    = nullptr;
+	sh->damaged  = false;
+	sh->w        = 500;
+	sh->h        = 300;
 
 	return sh;
 
@@ -684,18 +684,35 @@ ev_redirect(cshell *sh, struct cevent ev)
 static void
 ev_redraw(cshell *sh, struct cevent ev)
 {
-	if (!sh->damaged)
-	{
-		return;
-	}
-		
-	cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
-	cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
-	cairo_paint(ev.redraw_ctx);
+	const uint32_t bd = 20;
 
-	cairo_set_source_rgba(ev.redraw_ctx, 1.0, 0.0, 0.0, 0.5);
-	cairo_rectangle(ev.redraw_ctx, 20, 20, sh->w - 40, sh->h - 40);
-	cairo_fill(ev.redraw_ctx);
+	if (sh->damaged)
+	{	
+		cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
+		cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
+		cairo_paint(ev.redraw_ctx);
+
+		cairo_set_source_rgba(ev.redraw_ctx, 1.0, 0.0, 0.0, 0.5);
+		cairo_rectangle(ev.redraw_ctx, bd, bd, sh->w - 2 * bd, sh->h - 2 * bd);
+		cairo_fill(ev.redraw_ctx);
+
+		if (!sh->focus)
+		{
+			cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
+			cairo_set_line_width (ev.redraw_ctx, bd);
+
+			cairo_move_to(ev.redraw_ctx, bd, bd);
+			cairo_line_to(ev.redraw_ctx, sh->w - bd, sh->h - bd);
+			cairo_move_to(ev.redraw_ctx, sh->w - bd, bd);
+			cairo_line_to(ev.redraw_ctx, bd, sh->h - bd);
+			cairo_stroke (ev.redraw_ctx);
+		}
+	}
+
+	if (sh->focus)
+	{
+		grid_send_event(sh->focus, ev);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -703,29 +720,37 @@ ev_redraw(cshell *sh, struct cevent ev)
 static void
 ev_transform(cshell *sh, struct cevent ev)
 {
-	/* update shell */
+	/* shell update */
 
-	sh->w = ev.transform_w;
-	sh->h = ev.transform_h;
+	sh->w       = ev.transform_w;
+	sh->h       = ev.transform_h;
+	sh->focus   = nullptr;
 	sh->damaged = true;
 
-	/* select biggest grid that fits */
+	/* find biggest grid that fits */
 
-	sh->focus_grid = nullptr;
 	CREF_FOR_EACH(sh->grids, cgrid, gr, i)
 	{
-		if (sh->w >= grid_w(gr) 
-		 && sh->h >= grid_h(gr))
+		if (grid_w(gr) <= sh->w
+		 && grid_h(gr) <= sh->h)
 		{
-			// TODO
+			if (sh->focus)
+			{
+				if (grid_w(gr) < grid_w(sh->focus)
+				 || grid_h(gr) < grid_h(sh->focus))
+				{
+					continue;
+				}
+			}
+			sh->focus = gr;
 		}
 	}
 
-	/* update grid */
+	/* grid update */
 
-	if (sh->focus_grid)
+	if (sh->focus)
 	{
-		grid_send_event(sh->focus_grid, ev);
+		grid_send_event(sh->focus, ev);
 	}
 }
 
