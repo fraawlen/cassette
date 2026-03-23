@@ -125,28 +125,32 @@ struct cshell
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void  ev_open      (cshell *);
-static void  ev_redirect  (cshell *, struct cevent);
-static void  ev_redraw    (cshell *, struct cevent);
-static void  ev_transform (cshell *, struct cevent);
+static void ev_open      (cshell *);
+static void ev_redirect  (cshell *, struct cevent);
+static void ev_redraw    (cshell *, struct cevent);
+static void ev_transform (cshell *, struct cevent);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void  apply_name  (cshell *, void *);
-static void  callback    (cshell *, struct call *);
-static void  configure   (cshell *);
-static void  destroy     (cshell *);
-static void  dummy       (cshell *, void *);
-static void  finish      (cshell *);
-static void  join        (cshell *);
-static void  poke        (cshell *);
-static void  post        (cshell *, void (*)(cshell *, void *), void *, bool);
-static void  purge_fd    (cshell *, int);
-static void  read_post   (cshell *);
-static bool  run         (cshell *);
-static bool  server_init (cshell *);
-static void  set_error   (cshell *, enum cerr);
-static void *ui_thread   (void   *);
+static void apply_name  (cshell *, void *);
+static void callback    (cshell *, struct call *);
+static void conf_grids  (cshell *);
+static void conf_shell  (cshell *);
+static void destroy     (cshell *);
+static void dummy       (cshell *, void *);
+static void finish      (cshell *);
+static void join        (cshell *);
+static void poke        (cshell *);
+static void post        (cshell *, void (*)(cshell *, void *), void *, bool);
+static void purge_fd    (cshell *, int);
+static void read_post   (cshell *);
+static bool run         (cshell *);
+static bool server_init (cshell *);
+static void set_error   (cshell *, enum cerr);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void *ui_thread (void *);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -528,48 +532,22 @@ shell_send_event(struct cevent ev, enum shell_target target)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-void
-shell_pull_grid(cshell *sh, cgrid *gr)
-{
-	/* Expected to be called from a single thread while shell is closed. */
-	/* Otherwhise, expected to be called exclusively from the UI thread. */
-	/* Never called with a locked mutex.                                 */
-
-	(void)sh;
-	(void)gr;
-
-	// TODO
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
 bool
-shell_push_grid(cshell *sh, cgrid *gr)
+shell_push_grid(cgrid *gr)
 {
-	/* Expected to be called from a single thread while shell is closed. */
-	/* Otherwhise, expected to be called exclusively from the UI thread. */
-	/* Never called with a locked mutex.                                 */
+	/* Expected to be exclusively called from cl_setup callback */
+	/* Never called with a locked mutex.                        */
 
-	(void)sh;
-	(void)gr;
+	cshell *sh = thread_owner;
 
-	// TODO
+	if (!sh || thread_opened)
+	{
+		return false;
+	}
 
-	return false;
-}
+	cref_push(sh->grids, gr);
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-shell_update_grid(cshell *sh)
-{
-	/* Expected to be called from a single thread while shell is closed. */
-	/* Otherwhise, expected to be called exclusively from the UI thread. */
-	/* Never called with a locked mutex.                                 */
-
-	(void)sh;
-
-	// TODO
+	return cref_error(sh->grids);
 }
 
 /************************************************************************************************************/
@@ -609,7 +587,29 @@ callback(cshell *sh, struct call *cl)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-configure(cshell *sh)
+conf_grids(cshell *sh)
+{
+	struct cevent ev =
+	{
+		.type   = CEVENT_CONFIG,
+		.config = sh->config,
+	};
+
+	CREF_FOR_EACH(sh->grids, cgrid, gr, i)
+	{
+		grid_send_event(gr, ev);
+		if (i == 0)
+		{
+			sh->w = grid_w(gr);
+			sh->h = grid_h(gr);
+		}
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+conf_shell(cshell *sh)
 {
 	if (cutil_env_exists(ENV_NO_CONFIG))
 	{
@@ -703,9 +703,30 @@ ev_redraw(cshell *sh, struct cevent ev)
 static void
 ev_transform(cshell *sh, struct cevent ev)
 {
+	/* update shell */
+
 	sh->w = ev.transform_w;
 	sh->h = ev.transform_h;
 	sh->damaged = true;
+
+	/* select biggest grid that fits */
+
+	sh->focus_grid = nullptr;
+	CREF_FOR_EACH(sh->grids, cgrid, gr, i)
+	{
+		if (sh->w >= grid_w(gr) 
+		 && sh->h >= grid_h(gr))
+		{
+			// TODO
+		}
+	}
+
+	/* update grid */
+
+	if (sh->focus_grid)
+	{
+		grid_send_event(sh->focus_grid, ev);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -718,6 +739,12 @@ finish(cshell *sh)
 	SERVER(sh, hide, SHELL_MENU);
 	SERVER(sh, hide, SHELL_MAIN);
 	SERVER(sh, kill);
+
+	CREF_FOR_EACH_REV(sh->grids, cgrid, gr, i)
+	{
+		grid_send_event(gr, event_close);
+		cref_purge(sh->grids, i);
+	}
 
 	LOCK(sh)
 	{
@@ -964,10 +991,11 @@ ui_thread(void *arg)
 	cshell *sh = arg;
 	thread_owner = sh;
 
-	configure(sh);
+	conf_shell(sh);
 	if (server_init(sh))
 	{
 		callback(sh, &sh->cl_setup);
+		conf_grids(sh);
 		SERVER(sh, config, sh->config);
 		SERVER(sh, show, SHELL_MAIN, sh->tag, sh->w, sh->h);
 		apply_name(sh, nullptr);

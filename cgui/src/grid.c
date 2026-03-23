@@ -22,6 +22,7 @@
 #define GUARD(GR, ...)     if (!GR || cerr_critical(GR->err)) { return __VA_OPT__(__VA_ARGS__); }
 #define GUARD_COL(GR, COL) if (COL >= gr->cols_n) { cerr_set(&gr->err, CERR_CALL);  return; }
 #define GUARD_ROW(GR, ROW) if (ROW >= gr->rows_n) { cerr_set(&gr->err, CERR_CALL);  return; }
+#define GUARD_LOCK(GR)     if (GR->locked)        { cerr_set(&gr->err, CERR_CALL);  return; }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -37,8 +38,8 @@ struct cgrid
 {
 	/* state */
 
-	cshell *owner;
 	enum cerr err;
+	bool locked;
 
 	/* contents */
 
@@ -62,25 +63,18 @@ struct cgrid
 /************************************************************************************************************/
 
 static uint32_t config (ccfg  *, uint32_t, const char *);
-static void     update (cgrid *);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 void
-cgrid_assign(cgrid *gr, cshell *sh)
+cgrid_assign(cgrid *gr)
 {
 	GUARD(gr);
+	GUARD_LOCK(gr);
 
-	if (!sh || cerr_critical(cshell_error(sh)) || gr->owner)
-	{
-		cerr_set(&gr->err, CERR_CALL);
-	}
-	else if (shell_push_grid(sh, gr))
-	{
-		gr->owner = sh;
-	}
+	gr->locked = shell_push_grid(gr);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -91,62 +85,6 @@ cgrid_clear_warnings(cgrid *gr)
 	GUARD(gr);
 
 	cerr_clear_warnings(&gr->err);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-cgrid *
-cgrid_clone(const cgrid *gr)
-{
-	GUARD(gr, nullptr);
-
-	cgrid *gr_new;
-
-	if (!(gr_new = malloc(sizeof(cgrid))))
-	{
-		goto fail_alloc;
-	}
-
-	if (!(gr_new->rows = malloc(gr->rows_n * sizeof(struct line))))
-	{
-		goto fail_rows;
-	}
-
-	if (!(gr_new->cols = malloc(gr->cols_n * sizeof(struct line))))
-	{
-		goto fail_cols;
-	}
-
-	if (!(gr_new->cells = cref_clone(gr->cells)))
-	{
-		goto fail_cells;
-	}
-
-	memcpy(gr_new->rows, gr->rows, gr->rows_n * sizeof(struct line));
-	memcpy(gr_new->cols, gr->cols, gr->cols_n * sizeof(struct line));
-
-	gr_new->owner  = nullptr;
-	gr_new->err    = gr->err;
-	gr_new->rows_n = gr->rows_n;
-	gr_new->cols_n = gr->cols_n;
-	gr_new->gutter = 0;
-	gr_new->gap    = 0;
-	gr_new->pad    = 0;
-	gr_new->font_w = 0;
-	gr_new->font_h = 0;
-
-	return gr_new;
-
-	/* errors */
-
-fail_cells:
-	free(gr_new->cols);
-fail_cols:
-	free(gr_new->rows);
-fail_rows:
-	free(gr_new);
-fail_alloc:
-	return nullptr;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -182,7 +120,7 @@ cgrid_create(size_t rows, size_t cols)
 	}
 
 	gr->err    = CERR_NONE;
-	gr->owner  = nullptr;
+	gr->locked = false;
 	gr->rows_n = rows;
 	gr->cols_n = cols;
 	gr->gutter = 0;
@@ -212,7 +150,7 @@ fail_alloc:
 nullptr_t
 cgrid_destroy(cgrid *gr)
 {
-	if (gr)
+	if (gr && !gr->locked)
 	{
 		cref_destroy(gr->cells);
 		free(gr->cols);
@@ -237,6 +175,7 @@ void
 cgrid_flex_col(cgrid *gr, size_t col, double factor)
 {
 	GUARD(gr);
+	GUARD_LOCK(gr);
 	GUARD_COL(gr, col);
 
 	if (factor < DBL_EPSILON)
@@ -246,7 +185,6 @@ cgrid_flex_col(cgrid *gr, size_t col, double factor)
 	else
 	{
 		gr->cols[col].factor = factor;
-		update(gr);
 	}
 }
 
@@ -256,6 +194,7 @@ void
 cgrid_flex_row(cgrid *gr, size_t row, double factor)
 {
 	GUARD(gr);
+	GUARD_LOCK(gr);
 	GUARD_ROW(gr, row);
 
 	if (factor < DBL_EPSILON)
@@ -265,8 +204,17 @@ cgrid_flex_row(cgrid *gr, size_t row, double factor)
 	else
 	{
 		gr->rows[row].factor = factor;
-		update(gr);
 	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+cgrid_locked(const cgrid *gr)
+{
+	GUARD(gr, false);
+
+	return gr->locked;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -275,10 +223,10 @@ void
 cgrid_resize_col(cgrid *gr, size_t col, int32_t size)
 {
 	GUARD(gr);
+	GUARD_LOCK(gr);
 	GUARD_COL(gr, col);
 
 	gr->cols[col].size = size;
-	update(gr);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -287,21 +235,10 @@ void
 cgrid_resize_row(cgrid *gr, size_t row, int32_t size)
 {
 	GUARD(gr);
+	GUARD_LOCK(gr);
 	GUARD_ROW(gr, row);
 
 	gr->rows[row].size = size;
-	update(gr);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cgrid_retire(cgrid *gr)
-{
-	if (gr->owner)
-	{
-		shell_pull_grid(gr->owner, gr);
-	}
 }
 
 /************************************************************************************************************/
@@ -332,7 +269,16 @@ grid_send_event(cgrid *gr, struct cevent ev)
 	event_print(ev, "grid");
 	switch (ev.type)
 	{
+		case CEVENT_TRANSFORM:
+			// TODO
+			break;
+
 		case CEVENT_REDRAW:
+			// TODO
+			break;
+
+		case CEVENT_CLOSE:
+			gr->locked = false;
 			break;
 
 		case CEVENT_CONFIG:
@@ -376,15 +322,4 @@ config(ccfg *cfg, uint32_t base, const char *name)
 	ccfg_fetch(cfg, "grid", name);
 
 	return ccfg_iterate(cfg) ? cutil_str_to_long(ccfg_resource(cfg), 0, UINT32_MAX) : base;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-update(cgrid *gr)
-{
-	if (gr->owner)
-	{
-		shell_update_grid(gr->owner);
-	}
 }

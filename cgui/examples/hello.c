@@ -36,7 +36,6 @@ main(void)
 	cshell_post(sh, cl_task, &(int){1});
 	cshell_post(sh, cl_task, &(int){2});
 	cshell_post(sh, cl_task, &(int){3});
-//	cshell_close(sh);
 	cshell_join(sh);
 
 	printf("done, errors: %s\n", cerr_name(cshell_error(sh)));
@@ -51,13 +50,12 @@ main(void)
 /************************************************************************************************************/
 
 static void
-cl_close(cshell *sh, void *gr)
+cl_close(cshell *sh, void *data)
 {
 	(void)sh;
+	(void)data;
 
 	printf("shell closed\n");
-
-	cgrid_retire(gr);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -78,7 +76,12 @@ cl_setup(cshell *sh, void *gr)
 {
 	printf("shell opening on backend %i\n", cshell_server(sh));
 
-	cgrid_assign(gr, sh);
+	cgrid_resize_row(gr, 0, 20);
+	cgrid_resize_col(gr, 0, 20);
+	cgrid_resize_col(gr, 1, 20);
+	cgrid_resize_col(gr, 2, 20);
+
+	cgrid_assign(gr);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
