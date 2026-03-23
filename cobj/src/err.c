@@ -71,6 +71,9 @@ cerr_name(enum cerr code)
 		case CERR_CONFIG:
 			return "CERR_CONFIG";
 
+		case CERR_MENU:
+			return "CERR_MENU";
+
 		default:
 			return "UNKNOWN";
 	}

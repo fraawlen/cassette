@@ -136,6 +136,7 @@ static void apply_name  (cshell *, void *);
 static void callback    (cshell *, struct call *);
 static void conf_grids  (cshell *);
 static void conf_init   (cshell *);
+static void conf_menu   (cshell *);
 static void conf_shell  (cshell *);
 static void destroy     (cshell *);
 static void dummy       (cshell *, void *);
@@ -714,6 +715,10 @@ ev_redirect(cshell *sh, struct cevent ev)
 			SERVER(sh, hide, SHELL_MENU);
 			break;
 
+		case MENU_FAIL:
+			set_error(sh, CERR_MENU);
+			break;
+
 		case MENU_IDLE:
 			break;
 	}
@@ -1057,6 +1062,7 @@ ui_thread(void *arg)
 		SERVER(sh, config, sh->config);
 		SERVER(sh, show, SHELL_MAIN, sh->tag, sh->w, sh->h);
 		apply_name(sh, nullptr);
+
 		while (run(sh))
 		{
 			SERVER(sh, commit, SHELL_MAIN);

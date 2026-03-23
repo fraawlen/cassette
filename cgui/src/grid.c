@@ -184,7 +184,7 @@ cgrid_flex_col(cgrid *gr, size_t col, double factor)
 
 	if (factor < DBL_EPSILON)
 	{
-		cerr_set(&gr->err, CERR_CALL);
+		cerr_set(&gr->err, CERR_PARAM);
 	}
 	else
 	{
@@ -203,7 +203,7 @@ cgrid_flex_row(cgrid *gr, size_t row, double factor)
 
 	if (factor < DBL_EPSILON)
 	{
-		cerr_set(&gr->err, CERR_CALL);
+		cerr_set(&gr->err, CERR_PARAM);
 	}
 	else
 	{

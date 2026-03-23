@@ -18,6 +18,7 @@ enum menu_action
 	MENU_IDLE,
 	MENU_DAMAGE,
 	MENU_HIDE,
+	MENU_FAIL,
 };
 
 struct menu
