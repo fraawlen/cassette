@@ -124,6 +124,7 @@ struct cshell
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static void ev_button    (cshell *, struct cevent);
 static void ev_open      (cshell *);
 static void ev_redirect  (cshell *, struct cevent);
 static void ev_redraw    (cshell *, struct cevent);
@@ -134,6 +135,7 @@ static void ev_transform (cshell *, struct cevent);
 static void apply_name  (cshell *, void *);
 static void callback    (cshell *, struct call *);
 static void conf_grids  (cshell *);
+static void conf_init   (cshell *);
 static void conf_shell  (cshell *);
 static void destroy     (cshell *);
 static void dummy       (cshell *, void *);
@@ -494,14 +496,11 @@ shell_send_event(struct cevent ev, enum shell_target target)
 	switch (ev.type)
 	{
 		case CEVENT_BUTTON_PRESS:
-			if (ev.button == 3)
-			{
-				SERVER(sh, show, SHELL_MENU, sh->tag, 200, 500);
-			}
+			ev_button(sh, ev);
 			break;
 
 		case CEVENT_BUTTON_RELEASE:
-			// TODO
+			ev_button(sh, ev);
 			break;
 
 		case CEVENT_REDRAW:
@@ -608,7 +607,7 @@ conf_grids(cshell *sh)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-conf_shell(cshell *sh)
+conf_init(cshell *sh)
 {
 	if (cutil_env_exists(ENV_NO_CONFIG))
 	{
@@ -630,6 +629,30 @@ conf_shell(cshell *sh)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
+conf_menu(cshell *sh)
+{
+	struct cevent ev =
+	{
+		.type   = CEVENT_CONFIG,
+		.config = sh->config,
+	};
+
+	menu_send_event(&sh->menu, ev);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+conf_shell(cshell *sh)
+{
+	(void)sh;
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 destroy(cshell *sh)
 {
 	pthread_mutex_destroy(&sh->mutex);
@@ -641,6 +664,24 @@ destroy(cshell *sh)
 	close(sh->fd_wake[0]);
 	close(sh->fd_wake[1]);
 	free(sh);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+ev_button(cshell *sh, struct cevent ev)
+{
+	if (ev.type == CEVENT_BUTTON_RELEASE)
+	{
+		return;
+	}
+
+	if (ev.button == 3)
+	{
+		SERVER(sh, show, SHELL_MENU, sh->tag, 200, 500);
+	}
+
+	// TODO
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -687,6 +728,8 @@ ev_redraw(cshell *sh, struct cevent ev)
 
 	if (sh->damaged)
 	{	
+		sh->damaged = false;
+
 		cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
 		cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
 		cairo_paint(ev.redraw_ctx);
@@ -1003,7 +1046,10 @@ ui_thread(void *arg)
 	cshell *sh = arg;
 	thread_owner = sh;
 
+	conf_init (sh);
+	conf_menu (sh);
 	conf_shell(sh);
+
 	if (server_init(sh))
 	{
 		callback(sh, &sh->cl_setup);
