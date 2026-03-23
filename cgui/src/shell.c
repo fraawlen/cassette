@@ -23,7 +23,6 @@
 #include "grid.h"
 #include "menu.h"
 #include "shell.h"
-
 #include "wayland.h"
 #include "x11.h"
 
@@ -54,7 +53,7 @@
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 #define SERVER(SH, FN, ...) \
-	switch(atomic_load(&SH->server)) \
+	switch (atomic_load(&SH->server)) \
 	{ \
 		case CSHELL_WAYLAND: \
 			wayland_##FN(&SH->wl __VA_OPT__(, __VA_ARGS__)); \
@@ -492,7 +491,7 @@ shell_send_event(struct cevent ev, enum shell_target target)
 	}
 
 	event_print(ev, "shell");
-	switch(ev.type)
+	switch (ev.type)
 	{
 		case CEVENT_BUTTON_PRESS:
 			if (ev.button == 3)
@@ -535,8 +534,8 @@ shell_send_event(struct cevent ev, enum shell_target target)
 bool
 shell_push_grid(cgrid *gr)
 {
-	/* Expected to be exclusively called from cl_setup callback */
-	/* Never called with a locked mutex.                        */
+	/* Expected to be called from cl_setup callback */
+	/* Never called with a locked mutex.            */
 
 	cshell *sh = thread_owner;
 
@@ -720,14 +719,10 @@ ev_redraw(cshell *sh, struct cevent ev)
 static void
 ev_transform(cshell *sh, struct cevent ev)
 {
-	/* shell update */
-
 	sh->w       = ev.transform_w;
 	sh->h       = ev.transform_h;
 	sh->focus   = nullptr;
 	sh->damaged = true;
-
-	/* find biggest grid that fits */
 
 	CREF_FOR_EACH(sh->grids, cgrid, gr, i)
 	{
@@ -745,8 +740,6 @@ ev_transform(cshell *sh, struct cevent ev)
 			sh->focus = gr;
 		}
 	}
-
-	/* grid update */
 
 	if (sh->focus)
 	{
@@ -856,7 +849,7 @@ purge_fd(cshell *sh, int fd)
 	while (!err)
 	{
 		pfd.revents = 0;
-		switch(poll(&pfd, 1, 0))
+		switch (poll(&pfd, 1, 0))
 		{
 			case 0:
 				return;
@@ -918,8 +911,6 @@ run(cshell *sh)
 		{ sh->fd_server,  POLLIN, 0 },
 	};
 
-	/* detect activity */
-
 	switch (poll(pfd, flush ? 1 : 3, flush ? 0 : -1))
 	{
 		case 0:
@@ -932,8 +923,6 @@ run(cshell *sh)
 		default:
 			break;
 	}
-
-	/* process input */
 
 	if (pfd[0].revents & POLLIN)
 	{
@@ -949,8 +938,6 @@ run(cshell *sh)
 	{
 		SERVER(sh, read);
 	}
-
-	/* end */
 
 	if (pfd[0].revents & poll_err
 	 || pfd[1].revents & poll_err

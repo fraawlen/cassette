@@ -30,7 +30,7 @@ event_print(struct cevent ev, const char *prefix)
 
 	#ifdef ENV_SRV_DEBUG
 
-	switch(ev.type)
+	switch (ev.type)
 	{
 		case CEVENT_CLOSE:
 			LOG("CLOSE", "-");
