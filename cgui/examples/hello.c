@@ -26,9 +26,9 @@ main(void)
 	cshell *sh = cshell_create();
 	cgrid  *gr = cgrid_create(1, 3);
 
-	cshell_on_open (sh, cl_open,  gr);
-	cshell_on_close(sh, cl_close, gr);
 	cshell_on_setup(sh, cl_setup, gr);
+	cshell_on_open (sh, cl_open,  nullptr);
+	cshell_on_close(sh, cl_close, nullptr);
 	cshell_open(sh, CSHELL_ANY, "hello");
 	cshell_name(sh, "hello world !");
 	cshell_wait(sh);

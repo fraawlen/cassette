@@ -41,7 +41,7 @@ struct cgrid
 	enum cerr err;
 	bool damaged;
 	bool locked;
-	int  variant;
+	int  layer;
 
 	/* contents */
 
@@ -126,7 +126,7 @@ cgrid_create(size_t rows, size_t cols)
 	gr->locked  = false;
 	gr->rows_n  = rows;
 	gr->cols_n  = cols;
-	gr->variant = 0;
+	gr->layer   = 0;
 	gr->gutter  = 0;
 	gr->gap     = 0;
 	gr->pad     = 0;
@@ -216,7 +216,7 @@ cgrid_flex_row(cgrid *gr, size_t row, double factor)
 bool
 cgrid_locked(const cgrid *gr)
 {
-	GUARD(gr, false);
+	GUARD(gr, true);
 
 	return gr->locked;
 }
@@ -248,11 +248,11 @@ cgrid_resize_row(cgrid *gr, size_t row, int32_t size)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cgrid_show_variant(cgrid *gr, int variant)
+cgrid_show_layer(cgrid *gr, int layer)
 {
 	GUARD(gr);
 
-	gr->variant = variant;
+	gr->layer   = layer;
 	gr->damaged = true;
 }
 

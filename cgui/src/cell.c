@@ -23,7 +23,7 @@
 
 struct call
 {
-	void (*fn)(ccell *, void *);
+	void (*fn)(ccell *, void *, struct cevent);
 	void *data;
 };
 
@@ -38,18 +38,43 @@ struct ccell
 
 	/* callbacks */
 
+	struct call cl_destroy;
 	struct call cl_event;
+
+	/* geometry */
+
+	uint32_t x;
+	uint32_t y;
+	uint32_t w;
+	uint32_t h;
 };
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void dummy (ccell *, void *);
+static void dummy (ccell *, void *, struct cevent);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
+
+void
+ccell_assign(ccell *cl, cgrid *gr, int layer, size_t x, size_t y, size_t w, size_t h)
+{
+	GUARD(cl);
+
+	(void)layer;
+	(void)gr;
+	(void)x;
+	(void)y;
+	(void)w;
+	(void)h;
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 ccell_clear_warnings(ccell *cl)
@@ -71,9 +96,14 @@ ccell_create(void)
 		return nullptr;
 	}
 
-	cl->err      = CERR_NONE;
-	cl->cl_event = (struct call){.fn = dummy, .data = nullptr};
-	cl->damaged  = false;
+	cl->cl_destroy = (struct call){.fn = dummy, .data = nullptr};
+	cl->cl_event   = (struct call){.fn = dummy, .data = nullptr};
+	cl->err        = CERR_NONE;
+	cl->damaged    = false;
+	cl->x          = 0;
+	cl->y          = 0;
+	cl->w          = 0;
+	cl->h          = 0;
 
 	return cl;
 }
@@ -113,13 +143,53 @@ ccell_error(const ccell *cl)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+uint32_t
+ccell_h(const ccell *cl)
+{
+	GUARD(cl, 0);
+
+	return cl->h;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 void
-ccell_on_event(ccell *cl, void (*fn)(ccell *, void *), void *data)
+ccell_on_event(ccell *cl, void (*fn)(ccell *, void *, struct cevent), void *data)
 {
 	GUARD(cl);
 
 	cl->cl_event.fn   = fn ? fn : dummy;
 	cl->cl_event.data = data;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint32_t
+ccell_w(const ccell *cl)
+{
+	GUARD(cl, 0);
+
+	return cl->w;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint32_t
+ccell_x(const ccell *cl)
+{
+	GUARD(cl, 0);
+
+	return cl->x;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint32_t
+ccell_y(const ccell *cl)
+{
+	GUARD(cl, 0);
+
+	return cl->y;
 }
 
 /************************************************************************************************************/
@@ -135,7 +205,11 @@ cell_send_event(ccell *cl, struct cevent ev)
 	switch (ev.type)
 	{
 		case CEVENT_TRANSFORM:
-			cl->damaged = true;  // TODO
+			cl->x = ev.transform_x;
+			cl->y = ev.transform_y;
+			cl->w = ev.transform_w;
+			cl->h = ev.transform_h;
+			cl->damaged = true;
 			break;
 
 		case CEVENT_REDRAW:
@@ -145,6 +219,8 @@ cell_send_event(ccell *cl, struct cevent ev)
 		default:
 			break;
 	}
+
+	cl->cl_event.fn(cl, cl->cl_event.data, ev);
 }
 
 /************************************************************************************************************/
@@ -156,8 +232,9 @@ cell_send_event(ccell *cl, struct cevent ev)
 /************************************************************************************************************/
 
 static void
-dummy(ccell *cl, void *data)
+dummy(ccell *cl, void *data, struct cevent ev)
 {
-	(void)cl;
 	(void)data;
+	(void)cl;
+	(void)ev;
 }

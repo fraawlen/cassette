@@ -43,15 +43,15 @@ void cgrid_resize_col(cgrid *gr, size_t col, int32_t size);
 
 void cgrid_resize_row(cgrid *gr, size_t row, int32_t size);
 
-void cgrid_show_variant(cgrid *gr, int variant);
+void cgrid_show_layer(cgrid *gr, int layer);
 
 /************************************************************************************************************/
 /* ACCESS ***************************************************************************************************/
 /************************************************************************************************************/
 
-enum cerr cgrid_error(const cgrid *gr);
+enum cerr cgrid_error(const cgrid *gr) [[reproducible]];
 
-bool cgrid_locked(const cgrid *gr);
+bool cgrid_locked(const cgrid *gr) [[reproducible]];
 
 /************************************************************************************************************/
 /************************************************************************************************************/

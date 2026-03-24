@@ -539,7 +539,7 @@ shell_push_grid(cgrid *gr)
 
 	cshell *sh = thread_owner;
 
-	if (!sh || thread_opened)
+	if (!sh || thread_opened || thread_flush)
 	{
 		return false;
 	}
@@ -697,6 +697,11 @@ ev_open(cshell *sh)
 		pthread_cond_broadcast(&sh->cond);
 	}
 
+	CREF_FOR_EACH(sh->grids, cgrid, gr, i)
+	{
+		grid_send_event(gr, event_open);
+	}
+
 	callback(sh, &sh->cl_open);
 }
 
@@ -800,17 +805,16 @@ ev_transform(cshell *sh, struct cevent ev)
 static void
 finish(cshell *sh)
 {
-	callback(sh, &sh->cl_close);
-
-	SERVER(sh, hide, SHELL_MENU);
-	SERVER(sh, hide, SHELL_MAIN);
-	SERVER(sh, kill);
-
 	CREF_FOR_EACH_REV(sh->grids, cgrid, gr, i)
 	{
 		grid_send_event(gr, event_close);
 		cref_purge(sh->grids, i);
 	}
+
+	callback(sh,  &sh->cl_close);
+	SERVER(sh, hide, SHELL_MENU);
+	SERVER(sh, hide, SHELL_MAIN);
+	SERVER(sh, kill);
 
 	LOCK(sh)
 	{

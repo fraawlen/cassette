@@ -31,17 +31,27 @@ nullptr_t ccell_destroy(ccell *cl);
 /* MUTATION *************************************************************************************************/
 /************************************************************************************************************/
 
+void ccell_assign(ccell *cl, cgrid *gr, int layer, size_t x, size_t y, size_t w, size_t h);
+
 void ccell_clear_warnings(ccell *cl);
 
 void ccell_damage(ccell *cl);
 
-void ccell_on_event(ccell *cl, void (*fn)(ccell *, void *), void *data);
+void ccell_on_event(ccell *cl, void (*fn)(ccell *, void *, struct cevent), void *data);
 
 /************************************************************************************************************/
 /* ACCESS ***************************************************************************************************/
 /************************************************************************************************************/
 
-enum cerr ccell_error(const ccell *cl);
+enum cerr ccell_error(const ccell *cl) [[reproducible]];
+
+uint32_t ccell_h(const ccell *cl) [[reproducible]];
+
+uint32_t ccell_w(const ccell *cl) [[reproducible]];
+
+uint32_t ccell_x(const ccell *cl) [[reproducible]];
+
+uint32_t ccell_y(const ccell *cl) [[reproducible]];
 
 /************************************************************************************************************/
 /************************************************************************************************************/
