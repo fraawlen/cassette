@@ -20,9 +20,9 @@
 /************************************************************************************************************/
 
 #define GUARD(GR, ...)     if (!GR || cerr_critical(GR->err)) { return __VA_OPT__(__VA_ARGS__); }
-#define GUARD_COL(GR, COL) if (COL >= gr->cols_n) { cerr_set(&gr->err, CERR_CALL);  return; }
-#define GUARD_ROW(GR, ROW) if (ROW >= gr->rows_n) { cerr_set(&gr->err, CERR_CALL);  return; }
-#define GUARD_LOCK(GR)     if (GR->locked)        { cerr_set(&gr->err, CERR_CALL);  return; }
+#define GUARD_COL(GR, COL) if (COL >= gr->cols_n) { cerr_set(&gr->err, CERR_PARAM); return; }
+#define GUARD_ROW(GR, ROW) if (ROW >= gr->rows_n) { cerr_set(&gr->err, CERR_PARAM); return; }
+#define GUARD_LOCK(GR)     if (GR->locked)        { cerr_set(&gr->err, CERR_CALL ); return; }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -64,11 +64,42 @@ struct cgrid
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static uint32_t config (ccfg  *, uint32_t, const char *);
+static void ev_close     (cgrid *, struct cevent);
+static void ev_conf      (cgrid *, struct cevent);
+static void ev_redraw    (cgrid *, struct cevent);
+static void ev_transform (cgrid *, struct cevent);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static uint32_t fetch (ccfg  *, uint32_t, const char *);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
+
+void
+cgrid_assign_cell(cgrid *gr, ccell *cl, int layer, uint32_t x, uint32_t y, uint32_t w, uint32_t h)
+{
+	GUARD(gr);
+	GUARD_LOCK(gr);
+	GUARD_COL(gr, x);
+	GUARD_ROW(gr, y);
+
+	(void)layer;
+	(void)cl;
+
+	if (w == 0 || w > gr->rows_n - x
+	 || h == 0 || h > gr->rows_n - y)
+	{
+		cerr_set(&gr->err, CERR_PARAM);
+	}
+	else
+	{
+		// TODO
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
 cgrid_clear_warnings(cgrid *gr)
@@ -273,24 +304,19 @@ grid_send_event(cgrid *gr, struct cevent ev)
 	switch (ev.type)
 	{
 		case CEVENT_TRANSFORM:
-			gr->damaged = true;  // TODO
+			ev_transform(gr, ev);
 			break;
 
 		case CEVENT_REDRAW:
-			gr->damaged = false; // TODO
+			ev_redraw(gr, ev);
 			break;
 
 		case CEVENT_CLOSE:
-			gr->locked = false;
+			ev_close(gr, ev);
 			break;
 
 		case CEVENT_CONFIG:
-			gr->locked = true;
-			gr->font_w = config(ev.config, 4, "font_w");
-			gr->font_h = config(ev.config, 8, "font_h");
-			gr->gutter = config(ev.config, 5, "gutter");
-			gr->gap    = config(ev.config, 5, "gap");
-			gr->pad    = config(ev.config, 5, "pad");
+			ev_conf(gr, ev);
 			break;
 
 		default:
@@ -319,8 +345,60 @@ grid_w(cgrid *gr)
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
+static void
+ev_close(cgrid *gr, struct cevent ev)
+{
+	(void)ev;
+
+	gr->locked = false;
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+ev_conf(cgrid *gr, struct cevent ev)
+{
+	gr->locked = true;
+
+	gr->font_w = fetch(ev.config, 4, "font_w");
+	gr->font_h = fetch(ev.config, 8, "font_h");
+	gr->gutter = fetch(ev.config, 5, "gutter");
+	gr->gap    = fetch(ev.config, 5, "gap");
+	gr->pad    = fetch(ev.config, 5, "pad");
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+ev_redraw(cgrid *gr, struct cevent ev)
+{
+	(void)ev;
+
+	gr->damaged = false;
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+ev_transform(cgrid *gr, struct cevent ev)
+{
+	(void)ev;
+
+	gr->damaged = true;
+
+	// TODO
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 static uint32_t
-config(ccfg *cfg, uint32_t base, const char *name)
+fetch(ccfg *cfg, uint32_t base, const char *name)
 {
 	ccfg_fetch(cfg, "grid", name);
 
