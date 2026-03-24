@@ -22,11 +22,7 @@ static void event (ccell *, void *, struct cevent);
 ccell *
 cgap_create(void)
 {
-	ccell *cl = ccell_create();
-
-	ccell_on_event(cl, event, nullptr);
-
-	return cl;
+	return ccell_create(event, nullptr);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

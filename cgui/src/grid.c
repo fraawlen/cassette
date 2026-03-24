@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "cell.h"
 #include "event.h"
 #include "grid.h"
 #include "shell.h"
@@ -34,6 +35,18 @@ struct line
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+struct zone
+{
+	ccell *cell;
+	uint32_t x;
+	uint32_t y;
+	uint32_t w;
+	uint32_t h;
+	int layer;
+};
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 struct cgrid
 {
 	/* state */
@@ -45,7 +58,7 @@ struct cgrid
 
 	/* contents */
 
-	cref *cells;
+	cref *zones;
 	struct line *cols;
 	struct line *rows;
 	size_t rows_n;
@@ -71,7 +84,8 @@ static void ev_transform (cgrid *, struct cevent);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static uint32_t fetch (ccfg  *, uint32_t, const char *);
+static uint32_t fetch     (ccfg  *, uint32_t, const char *);
+static void     propagate (cgrid *, struct cevent);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -80,23 +94,57 @@ static uint32_t fetch (ccfg  *, uint32_t, const char *);
 void
 cgrid_assign_cell(cgrid *gr, ccell *cl, int layer, uint32_t x, uint32_t y, uint32_t w, uint32_t h)
 {
+	struct zone *zn;
+
 	GUARD(gr);
 	GUARD_LOCK(gr);
 	GUARD_COL(gr, x);
 	GUARD_ROW(gr, y);
 
-	(void)layer;
-	(void)cl;
+	CREF_FOR_EACH(gr->zones, struct zone, tmp, i)
+	{
+		if (tmp->cell == cl && tmp->layer == layer)
+		{
+			goto fail_check;
+		}
+	}
 
 	if (w == 0 || w > gr->rows_n - x
 	 || h == 0 || h > gr->rows_n - y)
 	{
-		cerr_set(&gr->err, CERR_PARAM);
+		goto fail_param;
 	}
-	else
+
+	if (!(zn = malloc(sizeof(struct zone))))
 	{
-		// TODO
+		goto fail_alloc;
 	}
+
+	cref_push(gr->zones, zn);
+	if (cref_error(gr->zones))
+	{
+		goto fail_push;
+	}
+
+	zn->layer = layer;
+	zn->cell  = cl;
+	zn->x     = x;
+	zn->y     = y;
+	zn->w     = w;
+	zn->h     = h;
+
+	return;
+
+	/* errors */
+
+fail_push:
+	cerr_set(&gr->err, cref_error(gr->zones));
+	free(zn);
+fail_alloc:
+	cerr_set(&gr->err, CERR_MEMORY);
+fail_param:
+fail_check:
+	cerr_set(&gr->err, CERR_PARAM);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -131,9 +179,9 @@ cgrid_create(size_t rows, size_t cols)
 		goto fail_cols;
 	}
 
-	if (!(gr->cells = cref_create()))
+	if (!(gr->zones = cref_create()))
 	{
-		goto fail_cells;
+		goto fail_zones;
 	}
 
 	if (rows == 0 || cols == 0)
@@ -158,8 +206,8 @@ cgrid_create(size_t rows, size_t cols)
 	/* errors */
 
 fail_param:
-	cref_destroy(gr->cells);
-fail_cells:
+	cref_destroy(gr->zones);
+fail_zones:
 	free(gr->cols);
 fail_cols:
 	free(gr->rows);
@@ -176,7 +224,7 @@ cgrid_destroy(cgrid *gr)
 {
 	if (gr && !gr->locked)
 	{
-		cref_destroy(gr->cells);
+		cref_destroy(gr->zones);
 		free(gr->cols);
 		free(gr->rows);
 		free(gr);
@@ -348,11 +396,9 @@ grid_w(cgrid *gr)
 static void
 ev_close(cgrid *gr, struct cevent ev)
 {
-	(void)ev;
-
 	gr->locked = false;
 
-	// TODO
+	propagate(gr, ev);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -368,7 +414,7 @@ ev_conf(cgrid *gr, struct cevent ev)
 	gr->gap    = fetch(ev.config, 5, "gap");
 	gr->pad    = fetch(ev.config, 5, "pad");
 
-	// TODO
+	propagate(gr, ev);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -376,11 +422,9 @@ ev_conf(cgrid *gr, struct cevent ev)
 static void
 ev_redraw(cgrid *gr, struct cevent ev)
 {
-	(void)ev;
-
 	gr->damaged = false;
 
-	// TODO
+	propagate(gr, ev);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -392,7 +436,7 @@ ev_transform(cgrid *gr, struct cevent ev)
 
 	gr->damaged = true;
 
-	// TODO
+	// TODO per cell transform
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -403,4 +447,18 @@ fetch(ccfg *cfg, uint32_t base, const char *name)
 	ccfg_fetch(cfg, "grid", name);
 
 	return ccfg_iterate(cfg) ? cutil_str_to_long(ccfg_resource(cfg), 0, UINT32_MAX) : base;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+propagate(cgrid *gr, struct cevent ev)
+{
+	CREF_FOR_EACH(gr->zones, struct zone, zn, i)
+	{
+		if (gr->layer == zn->layer)
+		{
+			cell_send_event(zn->cell, ev);
+		}
+	}
 }

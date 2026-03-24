@@ -36,24 +36,28 @@ struct ccell
 	enum cerr err;
 	bool damaged;
 
-	/* callbacks */
-
-	struct call cl_destroy;
-	struct call cl_event;
-
 	/* geometry */
 
 	uint32_t x;
 	uint32_t y;
 	uint32_t w;
 	uint32_t h;
+
+	/* propagates */
+
+	struct call cb_event;
 };
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void dummy (ccell *, void *, struct cevent);
+static void ev_redraw    (ccell *, struct cevent);
+static void ev_transform (ccell *, struct cevent);
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void propagate (ccell *, struct cevent);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -70,23 +74,22 @@ ccell_clear_warnings(ccell *cl)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 ccell *
-ccell_create(void)
+ccell_create(void (*fn)(ccell *, void *, struct cevent), void *data)
 {
 	ccell *cl;
 
-	if (!(cl = malloc(sizeof(ccell))))
+	if (!fn || !(cl = malloc(sizeof(ccell))))
 	{
 		return nullptr;
 	}
 
-	cl->cl_destroy = (struct call){.fn = dummy, .data = nullptr};
-	cl->cl_event   = (struct call){.fn = dummy, .data = nullptr};
-	cl->err        = CERR_NONE;
-	cl->damaged    = false;
-	cl->x          = 0;
-	cl->y          = 0;
-	cl->w          = 0;
-	cl->h          = 0;
+	cl->cb_event = (struct call){.fn = fn, .data = data};
+	cl->err      = CERR_NONE;
+	cl->damaged  = false;
+	cl->x        = 0;
+	cl->y        = 0;
+	cl->w        = 0;
+	cl->h        = 0;
 
 	return cl;
 }
@@ -108,10 +111,7 @@ ccell_damage(ccell *cl)
 nullptr_t
 ccell_destroy(ccell *cl)
 {
-	if (cl)
-	{
-		free(cl);
-	}
+	free(cl);
 
 	return nullptr;
 }
@@ -132,17 +132,6 @@ ccell_h(const ccell *cl)
 	GUARD(cl, 0);
 
 	return cl->h;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-ccell_on_event(ccell *cl, void (*fn)(ccell *, void *, struct cevent), void *data)
-{
-	GUARD(cl);
-
-	cl->cl_event.fn   = fn ? fn : dummy;
-	cl->cl_event.data = data;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -182,42 +171,55 @@ ccell_y(const ccell *cl)
 void
 cell_send_event(ccell *cl, struct cevent ev)
 {
-	(void)cl;
-
 	event_print(ev, "cell");
 	switch (ev.type)
 	{
 		case CEVENT_TRANSFORM:
-			cl->x = ev.transform_x;
-			cl->y = ev.transform_y;
-			cl->w = ev.transform_w;
-			cl->h = ev.transform_h;
-			cl->damaged = true;
+			ev_transform(cl, ev);
 			break;
 
 		case CEVENT_REDRAW:
-			cl->damaged = false; // TODO
+			ev_redraw(cl, ev);
 			break;
 
 		default:
+			propagate(cl, ev);
 			break;
 	}
-
-	cl->cl_event.fn(cl, cl->cl_event.data, ev);
 }
 
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-/************************************************************************************************************/
-/* STATIC - NOOP ********************************************************************************************/
-/************************************************************************************************************/
+static void
+propagate(ccell *cl, struct cevent ev)
+{
+	cl->cb_event.fn(cl, cl->cb_event.data, ev);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-dummy(ccell *cl, void *data, struct cevent ev)
+ev_redraw(ccell *cl, struct cevent ev)
 {
-	(void)data;
-	(void)cl;
-	(void)ev;
+	if (!cl->damaged)
+	{
+		cl->damaged = false;
+		propagate(cl, ev);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+ev_transform(ccell *cl, struct cevent ev)
+{
+	cl->x = ev.transform_x;
+	cl->y = ev.transform_y;
+	cl->w = ev.transform_w;
+	cl->h = ev.transform_h;
+
+	cl->damaged = true;
+	propagate(cl, ev);
 }

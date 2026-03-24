@@ -107,9 +107,9 @@ struct cshell
 
 	/* callbacks */
 
-	struct call cl_open;
-	struct call cl_close;
-	struct call cl_setup;
+	struct call cb_open;
+	struct call cb_close;
+	struct call cb_setup;
 
 	/* backends */
 
@@ -255,9 +255,9 @@ cshell_create(void)
 	snprintf(sh->name, STR_LEN, "%s", DEFAULT_NAME);
 	snprintf(sh->tag,  STR_LEN, "%s", DEFAULT_TAG);
 
-	sh->cl_close = (struct call){.fn = dummy, .data = nullptr};
-	sh->cl_setup = (struct call){.fn = dummy, .data = nullptr};
-	sh->cl_open  = (struct call){.fn = dummy, .data = nullptr};
+	sh->cb_close = (struct call){.fn = dummy, .data = nullptr};
+	sh->cb_setup = (struct call){.fn = dummy, .data = nullptr};
+	sh->cb_open  = (struct call){.fn = dummy, .data = nullptr};
 	sh->menu     = (struct menu){0};
 	sh->focus    = nullptr;
 	sh->damaged  = false;
@@ -350,8 +350,8 @@ cshell_on_close(cshell *sh, void (*fn)(cshell *, void *), void *data)
 	GUARD(sh);
 	LOCK(sh)
 	{
-		sh->cl_close.fn   = fn ? fn : dummy;
-		sh->cl_close.data = data;
+		sh->cb_close.fn   = fn ? fn : dummy;
+		sh->cb_close.data = data;
 	}
 }
 
@@ -363,8 +363,8 @@ cshell_on_open(cshell *sh, void (*fn)(cshell *, void *), void *data)
 	GUARD(sh);
 	LOCK(sh)
 	{
-		sh->cl_open.fn   = fn ? fn : dummy;
-		sh->cl_open.data = data;
+		sh->cb_open.fn   = fn ? fn : dummy;
+		sh->cb_open.data = data;
 	}
 }
 
@@ -376,8 +376,8 @@ cshell_on_setup(cshell *sh, void (*fn)(cshell *, void *), void *data)
 	GUARD(sh);
 	LOCK(sh)
 	{
-		sh->cl_setup.fn   = fn ? fn : dummy;
-		sh->cl_setup.data = data;
+		sh->cb_setup.fn   = fn ? fn : dummy;
+		sh->cb_setup.data = data;
 	}
 }
 
@@ -573,13 +573,13 @@ apply_name(cshell *sh, void *data)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-callback(cshell *sh, struct call *cl)
+callback(cshell *sh, struct call *cb)
 {
 	struct call tmp;
 
 	LOCK(sh)
 	{
-		tmp = *cl;
+		tmp = *cb;
 	}
 
 	tmp.fn(sh, tmp.data);
@@ -703,7 +703,7 @@ ev_open(cshell *sh)
 		grid_send_event(gr, event_open);
 	}
 
-	callback(sh, &sh->cl_open);
+	callback(sh, &sh->cb_open);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -812,7 +812,7 @@ finish(cshell *sh)
 		cref_purge(sh->grids, i);
 	}
 
-	callback(sh,  &sh->cl_close);
+	callback(sh,  &sh->cb_close);
 	SERVER(sh, hide, SHELL_MENU);
 	SERVER(sh, hide, SHELL_MAIN);
 	SERVER(sh, kill);
@@ -858,7 +858,7 @@ poke(cshell *sh)
 void
 post(cshell *sh, void (*fn)(cshell *, void *), void *data, bool warn)
 {
-	struct call cl = {.fn = fn, .data = data};
+	struct call cb = {.fn = fn, .data = data};
 
 	if (sh == thread_owner)
 	{
@@ -871,7 +871,7 @@ post(cshell *sh, void (*fn)(cshell *, void *), void *data, bool warn)
 			while (atomic_load(&sh->state) == CSHELL_OPENING
 			    || atomic_load(&sh->state) == CSHELL_OPEN)
 			{
-				if (write(sh->fd_post[1], &cl, sizeof(cl)) == sizeof(cl))
+				if (write(sh->fd_post[1], &cb, sizeof(cb)) == sizeof(cb))
 				{
 					warn = false;
 					break;
@@ -925,13 +925,13 @@ purge_fd(cshell *sh, int fd)
 static void
 read_post(cshell *sh)
 {
-	struct call cl;
+	struct call cb;
 	size_t n = 0;
 	ssize_t m;
 
-	while (n < sizeof(cl))
+	while (n < sizeof(cb))
 	{
-		if ((m = read(sh->fd_post[0], (uint8_t *)&cl + n, sizeof(cl) - n)) > 0)
+		if ((m = read(sh->fd_post[0], (uint8_t *)&cb + n, sizeof(cb) - n)) > 0)
 		{
 			n += m;
 		}
@@ -947,7 +947,7 @@ read_post(cshell *sh)
 		pthread_cond_broadcast(&sh->cond);
 	}
 
-	cl.fn(sh, cl.data);
+	cb.fn(sh, cb.data);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -1062,7 +1062,7 @@ ui_thread(void *arg)
 
 	if (server_init(sh))
 	{
-		callback(sh, &sh->cl_setup);
+		callback(sh, &sh->cb_setup);
 		conf_grids(sh);
 		SERVER(sh, config, sh->config);
 		SERVER(sh, show, SHELL_MAIN, sh->tag, sh->w, sh->h);

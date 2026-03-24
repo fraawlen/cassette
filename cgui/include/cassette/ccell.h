@@ -23,7 +23,7 @@ typedef struct ccell ccell;
 /* LIFECYCLE ************************************************************************************************/
 /************************************************************************************************************/
 
-[[nodiscard]] ccell *ccell_create(void);
+[[nodiscard]] ccell *ccell_create(void (*fn)(ccell *, void *, struct cevent), void *data);
 
 nullptr_t ccell_destroy(ccell *cl);
 
@@ -34,8 +34,6 @@ nullptr_t ccell_destroy(ccell *cl);
 void ccell_clear_warnings(ccell *cl);
 
 void ccell_damage(ccell *cl);
-
-void ccell_on_event(ccell *cl, void (*fn)(ccell *, void *, struct cevent), void *data);
 
 /************************************************************************************************************/
 /* ACCESS ***************************************************************************************************/
