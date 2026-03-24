@@ -24,11 +24,9 @@ int
 main(void)
 {
 	cshell *sh = cshell_create();
-	cgrid  *gr = cgrid_create(1, 3);
 
-	cshell_on_setup(sh, cl_setup, gr);
+	cshell_on_setup(sh, cl_setup, nullptr);
 	cshell_on_open (sh, cl_open,  nullptr);
-	cshell_on_close(sh, cl_close, nullptr);
 	cshell_open(sh, CSHELL_ANY, "hello");
 	cshell_name(sh, "hello world !");
 	cshell_wait(sh);
@@ -40,7 +38,6 @@ main(void)
 
 	printf("done, errors: %s\n", cerr_name(cshell_error(sh)));
 	cshell_destroy(sh);
-	cgrid_destroy(gr);
 
 	return 0;
 }
@@ -50,12 +47,13 @@ main(void)
 /************************************************************************************************************/
 
 static void
-cl_close(cshell *sh, void *data)
+cl_close(cshell *sh, void *gr)
 {
 	(void)sh;
-	(void)data;
 
 	printf("shell closed\n");
+
+	cgrid_destroy(gr);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -64,24 +62,26 @@ static void
 cl_open(cshell *sh, void *data)
 {
 	(void)data;
-	(void)sh;
 
-	printf("shell opened\n");	
+	printf("shell opened on backend %i\n", cshell_server(sh));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-cl_setup(cshell *sh, void *gr)
+cl_setup(cshell *sh, void *data)
 {
-	printf("shell opening on backend %i\n", cshell_server(sh));
+	(void)data;
+
+	cgrid *gr = cgrid_create(1, 3);
 
 	cgrid_resize_row(gr, 0, 20);
 	cgrid_resize_col(gr, 0, 20);
 	cgrid_resize_col(gr, 1, 20);
 	cgrid_resize_col(gr, 2, 20);
 
-	cgrid_assign(gr);
+	cshell_use_grid(sh, gr);
+	cshell_on_close(sh, cl_close, gr);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

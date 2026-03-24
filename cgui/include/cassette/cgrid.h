@@ -31,8 +31,6 @@ nullptr_t cgrid_destroy(cgrid *gr);
 /* MUTATION *************************************************************************************************/
 /************************************************************************************************************/
 
-void cgrid_assign(cgrid *gr);
-
 void cgrid_clear_warnings(cgrid *gr);
 
 void cgrid_flex_col(cgrid *gr, size_t col, double factor);

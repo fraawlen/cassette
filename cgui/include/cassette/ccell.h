@@ -31,8 +31,6 @@ nullptr_t ccell_destroy(ccell *cl);
 /* MUTATION *************************************************************************************************/
 /************************************************************************************************************/
 
-void ccell_assign(ccell *cl, cgrid *gr, int layer, size_t x, size_t y, size_t w, size_t h);
-
 void ccell_clear_warnings(ccell *cl);
 
 void ccell_damage(ccell *cl);

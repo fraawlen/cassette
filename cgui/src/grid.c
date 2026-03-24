@@ -71,17 +71,6 @@ static uint32_t config (ccfg  *, uint32_t, const char *);
 /************************************************************************************************************/
 
 void
-cgrid_assign(cgrid *gr)
-{
-	GUARD(gr);
-	GUARD_LOCK(gr);
-
-	gr->locked = shell_push_grid(gr);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
 cgrid_clear_warnings(cgrid *gr)
 {
 	GUARD(gr);
@@ -296,6 +285,7 @@ grid_send_event(cgrid *gr, struct cevent ev)
 			break;
 
 		case CEVENT_CONFIG:
+			gr->locked = true;
 			gr->font_w = config(ev.config, 4, "font_w");
 			gr->font_h = config(ev.config, 8, "font_h");
 			gr->gutter = config(ev.config, 5, "gutter");

@@ -60,23 +60,6 @@ static void dummy (ccell *, void *, struct cevent);
 /************************************************************************************************************/
 
 void
-ccell_assign(ccell *cl, cgrid *gr, int layer, size_t x, size_t y, size_t w, size_t h)
-{
-	GUARD(cl);
-
-	(void)layer;
-	(void)gr;
-	(void)x;
-	(void)y;
-	(void)w;
-	(void)h;
-
-	// TODO
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
 ccell_clear_warnings(ccell *cl)
 {
 	GUARD(cl);

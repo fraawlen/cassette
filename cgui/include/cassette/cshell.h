@@ -65,6 +65,8 @@ void cshell_open(cshell *sh, enum cshell_server server, const char *tag);
 
 void cshell_post(cshell *sh, void (*fn)(cshell *, void *), void *data);
 
+void cshell_use_grid(cshell *sh, cgrid *gr);
+
 void cshell_wait(cshell *sh);
 
 /************************************************************************************************************/

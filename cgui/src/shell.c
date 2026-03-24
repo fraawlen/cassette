@@ -159,7 +159,6 @@ static void *ui_thread (void *);
 /************************************************************************************************************/
 
 static _Thread_local bool thread_flush    = false;
-static _Thread_local bool thread_opened   = false;
 static _Thread_local bool thread_destroy  = false;
 static _Thread_local cshell *thread_owner = nullptr;
 
@@ -459,6 +458,29 @@ cshell_state(const cshell *sh)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
+cshell_use_grid(cshell *sh, cgrid *gr)
+{
+	GUARD(sh);
+	LOCK(sh)
+	{
+		if (atomic_load(&sh->state) == CSHELL_CLOSING
+		|| (atomic_load(&sh->state) == CSHELL_OPEN)
+		|| (atomic_load(&sh->state) == CSHELL_OPENING && sh != thread_owner)
+		|| (cgrid_locked(gr)))
+		{
+			set_error(sh, CERR_CALL);
+		}
+		else
+		{
+			cref_push(sh->grids, gr);
+			set_error(sh, cref_error(sh->grids));
+		}
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 cshell_wait(cshell *sh)
 {
 	GUARD(sh);
@@ -527,26 +549,6 @@ shell_send_event(struct cevent ev, enum shell_target target)
 		default:
 			break;
 	}	
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-shell_push_grid(cgrid *gr)
-{
-	/* Expected to be called from cl_setup callback */
-	/* Never called with a locked mutex.            */
-
-	cshell *sh = thread_owner;
-
-	if (!sh || thread_opened || thread_flush)
-	{
-		return false;
-	}
-
-	cref_push(sh->grids, gr);
-
-	return cref_error(sh->grids);
 }
 
 /************************************************************************************************************/
@@ -692,7 +694,6 @@ ev_open(cshell *sh)
 {
 	LOCK(sh)
 	{
-		thread_opened = true;
 		atomic_store(&sh->state, CSHELL_OPEN);
 		pthread_cond_broadcast(&sh->cond);
 	}
