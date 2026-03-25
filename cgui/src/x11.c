@@ -68,7 +68,7 @@ x11_commit(struct x11 *x11, enum shell_target target)
 
 	/* update buffer size */
 
-	if (win->resized)
+	if (win->resized && win->w > 0 && win->h > 0)
 	{
 		xcb_free_pixmap(x11->connection, win->buffer);
 		win->buffer = xcb_generate_id(x11->connection);
@@ -667,7 +667,7 @@ ev_msg(struct x11 *x11, xcb_client_message_event_t *ev)
 	}
 	else if (msg == x11->atom_focus)
 	{
-		xcb_set_input_focus(
+		xcb_set_input_focus_checked(
 			x11->connection,
 			XCB_INPUT_FOCUS_PARENT,
 			ev->window,
