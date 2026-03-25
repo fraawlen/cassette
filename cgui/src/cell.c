@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "cell.h"
@@ -203,7 +204,7 @@ propagate(ccell *cl, struct cevent ev)
 static void
 ev_redraw(ccell *cl, struct cevent ev)
 {
-	if (!cl->damaged)
+	if (cl->damaged)
 	{
 		cl->damaged = false;
 		propagate(cl, ev);

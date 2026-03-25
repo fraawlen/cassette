@@ -9,6 +9,8 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#include "event.h"
+
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -40,6 +42,8 @@ cgap_destroy(ccell *cl)
 static void
 event(ccell *cl, void *data, struct cevent ev)
 {
+	const uint32_t bd = 10;
+
 	(void)data;
 
 	uint32_t x = ccell_x(cl);
@@ -47,15 +51,16 @@ event(ccell *cl, void *data, struct cevent ev)
 	uint32_t w = ccell_w(cl);
 	uint32_t h = ccell_h(cl);
 
-	switch (ev.type)
+	if (ev.type != CEVENT_REDRAW)
 	{
-		case CEVENT_REDRAW:
-			cairo_set_source_rgba(ev.redraw_ctx, 0.9, 0.9, 0.9, 1.0);
-			cairo_rectangle(ev.redraw_ctx, x, y, w, h);
-			cairo_fill(ev.redraw_ctx);
-			break;
-
-		default:
-			break;
+		return;
 	}
+
+	cairo_set_source_rgba(ev.redraw_ctx, 0.9, 0.9, 0.9, 1.0);
+	cairo_rectangle(ev.redraw_ctx, x, y, w, h);
+	cairo_fill(ev.redraw_ctx);
+
+	cairo_set_source_rgba(ev.redraw_ctx, 0.4, 0.4, 0.9, 1.0);
+	cairo_rectangle(ev.redraw_ctx, x + bd, y + bd, w - 2 * bd, h - 2 * bd);
+	cairo_fill(ev.redraw_ctx);
 }

@@ -30,8 +30,15 @@
 
 struct line
 {
+	/* spec */
+
 	int32_t size;
-	double factor;
+	double  flex;
+
+	/* cache */
+
+	uint32_t offset_1;
+	uint32_t offset_2;
 };
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -53,7 +60,6 @@ struct cgrid
 	/* state */
 
 	enum cerr err;
-	bool damaged;
 	bool locked;
 	int  layer;
 
@@ -80,13 +86,14 @@ struct cgrid
 
 static void ev_close     (cgrid *, struct cevent);
 static void ev_conf      (cgrid *, struct cevent);
-static void ev_redraw    (cgrid *, struct cevent);
 static void ev_transform (cgrid *, struct cevent);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static uint32_t fetch     (ccfg  *, uint32_t, const char *);
-static void     propagate (cgrid *, struct cevent, bool);
+static void     cache_axis (cgrid *, uint32_t, struct line *, size_t, int);
+static uint32_t fetch      (ccfg  *, uint32_t, const char  *);
+static uint32_t line_len   (cgrid *, struct line *, int);
+static void     propagate  (cgrid *, struct cevent, bool);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -192,7 +199,6 @@ cgrid_create(size_t cols, size_t rows)
 	}
 
 	gr->err     = CERR_NONE;
-	gr->damaged = false;
 	gr->locked  = false;
 	gr->rows_n  = rows;
 	gr->cols_n  = cols;
@@ -258,7 +264,7 @@ cgrid_flex_col(cgrid *gr, size_t col, double factor)
 	}
 	else
 	{
-		gr->cols[col].factor = factor;
+		gr->cols[col].flex = factor;
 	}
 }
 
@@ -277,7 +283,7 @@ cgrid_flex_row(cgrid *gr, size_t row, double factor)
 	}
 	else
 	{
-		gr->rows[row].factor = factor;
+		gr->rows[row].flex = factor;
 	}
 }
 
@@ -322,8 +328,7 @@ cgrid_show_layer(cgrid *gr, int layer)
 {
 	GUARD(gr);
 
-	gr->layer   = layer;
-	gr->damaged = true;
+	gr->layer = layer;
 }
 
 /************************************************************************************************************/
@@ -333,16 +338,15 @@ cgrid_show_layer(cgrid *gr, int layer)
 uint32_t
 grid_h(cgrid *gr)
 {
-	uint32_t h = gr->gap * (gr->rows_n - 1);
-	int32_t  r;
+	uint32_t h = 0;
 
 	for (size_t i = 0; i < gr->rows_n; i++)
 	{
-		r  = gr->rows[i].size;
-		h += r == 0 ? gr->gutter : ((r > 0 ? gr->font_h : -gr->font_w) * r);
+		h += line_len(gr, gr->rows + i, -1);
+		h += gr->gap;
 	}
 
-	return h;
+	return h - gr->gap;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -357,16 +361,16 @@ grid_send_event(cgrid *gr, struct cevent ev)
 			ev_transform(gr, ev);
 			break;
 
-		case CEVENT_REDRAW:
-			ev_redraw(gr, ev);
-			break;
-
 		case CEVENT_CLOSE:
 			ev_close(gr, ev);
 			break;
 
 		case CEVENT_CONFIG:
 			ev_conf(gr, ev);
+			break;
+
+		case CEVENT_REDRAW:
+			propagate(gr, ev, false);
 			break;
 
 		case CEVENT_OPEN:
@@ -383,21 +387,47 @@ grid_send_event(cgrid *gr, struct cevent ev)
 uint32_t
 grid_w(cgrid *gr)
 {
-	uint32_t w = gr->gap * (gr->cols_n - 1);
-	int32_t  c;
+	uint32_t w = 0;
 
 	for (size_t i = 0; i < gr->cols_n; i++)
 	{
-		c  = gr->cols[i].size;
-		w += c == 0 ? gr->gutter : ((c > 0 ? gr->font_w : -gr->font_h) * c);
+		w += line_len(gr, gr->cols + i, 1);
+		w += gr->gap;
 	}
 
-	return w;
+	return w - gr->gap;
 }
 
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
+
+static void
+cache_axis(cgrid *gr, uint32_t l, struct line *ln, size_t n, int axis)
+{
+	double   f = 0.0;
+	uint32_t o = 0;
+	uint32_t a;
+
+	for (size_t i = 0; i < n; i++)
+	{
+		f += ln[i].flex;
+	}
+
+	for (size_t i = 0; i < n; i++)
+	{
+		a = f < DBL_EPSILON ? 0 : l * ln[i].flex / f;
+
+		ln[i].offset_1 = o;
+		ln[i].offset_2 = o + a + line_len(gr, ln + i, axis);
+
+		o  = ln[i].offset_2 + gr->gap;
+		f -= ln[i].flex;
+		l -= a;
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
 ev_close(cgrid *gr, struct cevent ev)
@@ -427,23 +457,23 @@ ev_conf(cgrid *gr, struct cevent ev)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-ev_redraw(cgrid *gr, struct cevent ev)
-{
-	gr->damaged = false;
-
-	propagate(gr, ev, false);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
 ev_transform(cgrid *gr, struct cevent ev)
 {
-	(void)ev;
+	cache_axis(gr, ev.transform_w - grid_w(gr), gr->cols, gr->cols_n,  1);
+	cache_axis(gr, ev.transform_h - grid_h(gr), gr->rows, gr->rows_n, -1);
 
-	gr->damaged = true;
+	CREF_FOR_EACH(gr->zones, struct zone, zn, i)
+	{
+		if (gr->layer == zn->layer)
+		{
+			ev.transform_x = gr->cols[zn->x].offset_1;
+			ev.transform_y = gr->rows[zn->y].offset_1;
+			ev.transform_w = gr->cols[zn->x + zn->w - 1].offset_2 - ev.transform_x;
+			ev.transform_h = gr->rows[zn->y + zn->h - 1].offset_2 - ev.transform_y;
 
-	// TODO per cell transform
+			cell_send_event(zn->cell, ev);
+		}	
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -454,6 +484,17 @@ fetch(ccfg *cfg, uint32_t base, const char *name)
 	ccfg_fetch(cfg, "grid", name);
 
 	return ccfg_iterate(cfg) ? cutil_str_to_long(ccfg_resource(cfg), 0, UINT32_MAX) : base;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static uint32_t
+line_len(cgrid *gr, struct line *ln, int axis)
+{
+	uint32_t a = axis > 0 ? gr->font_w : gr->font_h;
+	uint32_t b = axis > 0 ? gr->font_h : gr->font_w;
+	
+	return ln->size == 0 ? gr->gutter : ((ln->size > 0 ? a : -b) * ln->size);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
