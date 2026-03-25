@@ -23,5 +23,8 @@ enum shell_target
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+[[gnu::visibility("hidden")]] void
+shell_damage(void);
+
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
 shell_send_event(struct cevent ev, enum shell_target target);

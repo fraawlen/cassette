@@ -159,6 +159,7 @@ static void *ui_thread (void *);
 /************************************************************************************************************/
 
 static _Thread_local bool thread_flush    = false;
+static _Thread_local bool thread_active   = false;
 static _Thread_local bool thread_destroy  = false;
 static _Thread_local cshell *thread_owner = nullptr;
 
@@ -501,6 +502,19 @@ cshell_wait(cshell *sh)
 /************************************************************************************************************/
 
 void
+shell_damage(void)
+{
+	if (!thread_flush
+	  && thread_active
+	  && thread_owner)
+	{
+		SERVER(thread_owner, damage, SHELL_MAIN);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
 shell_send_event(struct cevent ev, enum shell_target target)
 {
 	/* Always called by server backends. */
@@ -696,6 +710,7 @@ ev_open(cshell *sh)
 	{
 		atomic_store(&sh->state, CSHELL_OPEN);
 		pthread_cond_broadcast(&sh->cond);
+		thread_active = true;
 	}
 
 	CREF_FOR_EACH(sh->grids, cgrid, gr, i)

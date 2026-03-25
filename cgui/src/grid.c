@@ -329,6 +329,13 @@ cgrid_show_layer(cgrid *gr, int layer)
 	GUARD(gr);
 
 	gr->layer = layer;
+	CREF_FOR_EACH(gr->zones, struct zone, zn, i)
+	{
+		if (zn->layer == layer)
+		{
+			ccell_damage(zn->cell);
+		}
+	}
 }
 
 /************************************************************************************************************/
@@ -412,6 +419,11 @@ cache_axis(cgrid *gr, uint32_t l, struct line *ln, size_t n, int axis)
 	for (size_t i = 0; i < n; i++)
 	{
 		f += ln[i].flex;
+	}
+
+	if (f < DBL_EPSILON)
+	{
+		o += l / 2;
 	}
 
 	for (size_t i = 0; i < n; i++)
