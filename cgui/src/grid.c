@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "cell.h"
@@ -85,7 +86,7 @@ static void ev_transform (cgrid *, struct cevent);
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static uint32_t fetch     (ccfg  *, uint32_t, const char *);
-static void     propagate (cgrid *, struct cevent);
+static void     propagate (cgrid *, struct cevent, bool);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
@@ -109,7 +110,8 @@ cgrid_assign_cell(cgrid *gr, ccell *cl, int layer, uint32_t x, uint32_t y, uint3
 		}
 	}
 
-	if (w == 0 || w > gr->rows_n - x
+	if (cerr_critical(ccell_error(cl))
+	 || w == 0 || w > gr->cols_n - x
 	 || h == 0 || h > gr->rows_n - y)
 	{
 		goto fail_param;
@@ -160,7 +162,7 @@ cgrid_clear_warnings(cgrid *gr)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 cgrid *
-cgrid_create(size_t rows, size_t cols)
+cgrid_create(size_t cols, size_t rows)
 {
 	cgrid *gr;
 
@@ -367,6 +369,10 @@ grid_send_event(cgrid *gr, struct cevent ev)
 			ev_conf(gr, ev);
 			break;
 
+		case CEVENT_OPEN:
+			propagate(gr, ev, true);
+			break;
+
 		default:
 			break;
 	}
@@ -398,7 +404,8 @@ ev_close(cgrid *gr, struct cevent ev)
 {
 	gr->locked = false;
 
-	propagate(gr, ev);
+	propagate(gr, ev, true);
+	cref_clear(gr->zones);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -414,7 +421,7 @@ ev_conf(cgrid *gr, struct cevent ev)
 	gr->gap    = fetch(ev.config, 5, "gap");
 	gr->pad    = fetch(ev.config, 5, "pad");
 
-	propagate(gr, ev);
+	propagate(gr, ev, true);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -424,7 +431,7 @@ ev_redraw(cgrid *gr, struct cevent ev)
 {
 	gr->damaged = false;
 
-	propagate(gr, ev);
+	propagate(gr, ev, false);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -452,11 +459,11 @@ fetch(ccfg *cfg, uint32_t base, const char *name)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-propagate(cgrid *gr, struct cevent ev)
+propagate(cgrid *gr, struct cevent ev, bool all_layers)
 {
 	CREF_FOR_EACH(gr->zones, struct zone, zn, i)
 	{
-		if (gr->layer == zn->layer)
+		if (all_layers || gr->layer == zn->layer)
 		{
 			cell_send_event(zn->cell, ev);
 		}

@@ -23,7 +23,7 @@ typedef struct cgrid cgrid;
 /* LIFECYCLE ************************************************************************************************/
 /************************************************************************************************************/
 
-[[nodiscard]] cgrid *cgrid_create(size_t rows, size_t cols);
+[[nodiscard]] cgrid *cgrid_create(size_t cols, size_t rows);
 
 nullptr_t cgrid_destroy(cgrid *gr);
 
