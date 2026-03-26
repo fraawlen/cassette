@@ -17,9 +17,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void ev_conf      (struct menu *mn, struct cevent ev);
-static void ev_redraw    (struct menu *mn, struct cevent ev);
-static void ev_transform (struct menu *mn, struct cevent ev);
+static void ev_conf   (struct menu *mn, struct cevent ev);
+static void ev_redraw (struct menu *mn, struct cevent ev);
+static void ev_shape  (struct menu *mn, struct cevent ev);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -35,8 +35,8 @@ menu_send_event(struct menu *mn, struct cevent ev)
 			ev_redraw(mn, ev);
 			break;
 
-		case CEVENT_TRANSFORM:
-			ev_transform(mn, ev);
+		case CEVENT_SHAPE:
+			ev_shape(mn, ev);
 			break;
 
 		case CEVENT_CONFIG:
@@ -92,9 +92,9 @@ ev_redraw(struct menu *mn, struct cevent ev)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-ev_transform(struct menu *mn, struct cevent ev)
+ev_shape(struct menu *mn, struct cevent ev)
 {
-	mn->w       = ev.transform_w;
-	mn->h       = ev.transform_h;
+	mn->w       = ev.shape_w;
+	mn->h       = ev.shape_h;
 	mn->damaged = true;
 }
