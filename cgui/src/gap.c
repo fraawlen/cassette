@@ -24,7 +24,13 @@ static void event (ccell *, void *, struct cevent);
 ccell *
 cgap_create(void)
 {
-	return ccell_create(event, nullptr);
+	cbox *frame = cbox_create();
+
+	cbox_default_outline(frame, ccolor_blue, 1);
+	cbox_default_border(frame, ccolor_green, 10);
+	cbox_default_background(frame, ccolor_white);
+
+	return frame ? ccell_create(event, frame) : nullptr;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -32,6 +38,8 @@ cgap_create(void)
 nullptr_t
 cgap_destroy(ccell *cl)
 {
+	free(ccell_data(cl));
+
 	return ccell_destroy(cl);
 }
 
@@ -42,25 +50,30 @@ cgap_destroy(ccell *cl)
 static void
 event(ccell *cl, void *data, struct cevent ev)
 {
-	const uint32_t bd = 10;
+	(void)cl;
 
-	(void)data;
+	cbox *frame = data;
 
-	uint32_t x = ccell_x(cl);
-	uint32_t y = ccell_y(cl);
-	uint32_t w = ccell_w(cl);
-	uint32_t h = ccell_h(cl);
-
-	if (ev.type != CEVENT_REDRAW)
+	switch (ev.type)
 	{
-		return;
+		case CEVENT_REDRAW:
+			cbox_draw(frame, ev.redraw_ctx);
+			break;
+
+		case CEVENT_CONFIG:
+			cbox_config(frame, ev.config, "gap");
+			break;
+
+		case CEVENT_TRANSFORM:
+			cbox_transform(
+				frame,
+				ev.transform_x,
+				ev.transform_y,
+				ev.transform_w,
+				ev.transform_h);
+			break;
+		
+		default:
+			break;
 	}
-
-	cairo_set_source_rgba(ev.redraw_ctx, 0.9, 0.9, 0.9, 1.0);
-	cairo_rectangle(ev.redraw_ctx, x, y, w, h);
-	cairo_fill(ev.redraw_ctx);
-
-	cairo_set_source_rgba(ev.redraw_ctx, 0.4, 0.4, 0.9, 1.0);
-	cairo_rectangle(ev.redraw_ctx, x + bd, y + bd, w - 2 * bd, h - 2 * bd);
-	cairo_fill(ev.redraw_ctx);
 }

@@ -39,6 +39,8 @@ void ccell_damage(ccell *cl);
 /* ACCESS ***************************************************************************************************/
 /************************************************************************************************************/
 
+void *ccell_data(const ccell *cl) [[reproducible]];
+
 enum cerr ccell_error(const ccell *cl) [[reproducible]];
 
 uint32_t ccell_h(const ccell *cl) [[reproducible]];

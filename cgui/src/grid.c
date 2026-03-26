@@ -506,7 +506,7 @@ line_len(cgrid *gr, struct line *ln, int axis)
 	uint32_t a = axis > 0 ? gr->font_w : gr->font_h;
 	uint32_t b = axis > 0 ? gr->font_h : gr->font_w;
 	
-	return ln->size == 0 ? gr->gutter : ((ln->size > 0 ? a : -b) * ln->size);
+	return 2 * gr->pad + (ln->size == 0 ? gr->gutter : ((ln->size > 0 ? a : -b) * ln->size));
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

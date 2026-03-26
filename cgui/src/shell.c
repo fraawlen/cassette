@@ -19,6 +19,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "box.h"
 #include "event.h"
 #include "grid.h"
 #include "menu.h"
@@ -110,6 +111,10 @@ struct cshell
 	struct call cb_open;
 	struct call cb_close;
 	struct call cb_setup;
+
+	/* config */
+
+	cbox *frame;
 
 	/* backends */
 
@@ -216,6 +221,11 @@ cshell_create(void)
 		goto fail_alloc;
 	}
 
+	if (!(sh->frame = cbox_create()))
+	{
+		goto fail_frame;
+	}
+
 	if (!(sh->grids = cref_create()))
 	{
 		goto fail_grids;
@@ -256,6 +266,10 @@ cshell_create(void)
 	snprintf(sh->name, STR_LEN, "%s", DEFAULT_NAME);
 	snprintf(sh->tag,  STR_LEN, "%s", DEFAULT_TAG);
 
+	box_strip(sh->frame);
+	cbox_default_border(sh->frame, ccolor_black, 10);
+	cbox_default_background(sh->frame, ccolor_red);
+
 	sh->cb_close = (struct call){.fn = dummy, .data = nullptr};
 	sh->cb_setup = (struct call){.fn = dummy, .data = nullptr};
 	sh->cb_open  = (struct call){.fn = dummy, .data = nullptr};
@@ -281,6 +295,8 @@ fail_config:
 fail_mutex:
 	cref_destroy(sh->grids);
 fail_grids:
+	cbox_destroy(sh->frame);
+fail_frame:
 	free(sh);
 fail_alloc:
 	return nullptr;
@@ -662,9 +678,7 @@ conf_menu(cshell *sh)
 static void
 conf_shell(cshell *sh)
 {
-	(void)sh;
-
-	// TODO
+	cbox_config(sh->frame, sh->config, "shell");
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -676,6 +690,7 @@ destroy(cshell *sh)
 	pthread_cond_destroy(&sh->cond);
 	ccfg_destroy(sh->config);
 	cref_destroy(sh->grids);
+	cbox_destroy(sh->frame);
 	close(sh->fd_post[0]);
 	close(sh->fd_post[1]);
 	close(sh->fd_wake[0]);
@@ -750,31 +765,12 @@ ev_redirect(cshell *sh, struct cevent ev)
 static void
 ev_redraw(cshell *sh, struct cevent ev)
 {
-	const uint32_t bd = 20;
-
 	if (sh->damaged)
 	{	
-		sh->damaged = false;
-
 		cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
-		cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
-		cairo_paint(ev.redraw_ctx);
-
-		cairo_set_source_rgba(ev.redraw_ctx, 1.0, 0.0, 0.0, 0.5);
-		cairo_rectangle(ev.redraw_ctx, bd, bd, sh->w - 2 * bd, sh->h - 2 * bd);
-		cairo_fill(ev.redraw_ctx);
-
-		if (!sh->focus)
-		{
-			cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
-			cairo_set_line_width (ev.redraw_ctx, bd);
-
-			cairo_move_to(ev.redraw_ctx, bd, bd);
-			cairo_line_to(ev.redraw_ctx, sh->w - bd, sh->h - bd);
-			cairo_move_to(ev.redraw_ctx, sh->w - bd, bd);
-			cairo_line_to(ev.redraw_ctx, bd, sh->h - bd);
-			cairo_stroke (ev.redraw_ctx);
-		}
+		cbox_transform(sh->frame, 0, 0, sh->w, sh->h);
+		cbox_draw(sh->frame, ev.redraw_ctx);
+		sh->damaged = false;
 	}
 
 	if (sh->focus)

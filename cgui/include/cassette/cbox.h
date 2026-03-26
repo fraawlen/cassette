@@ -37,11 +37,11 @@ void cbox_default_background(cbox *bx, struct ccolor clr);
 
 void cbox_default_border(cbox *bx, struct ccolor clr, uint32_t size);
 
-void cbox_default_outine(cbox *bx, struct ccolor clr, uint32_t size);
+void cbox_default_outline(cbox *bx, struct ccolor clr, uint32_t size);
 
-void cbox_redraw(cbox *bx, cairo_t *ctx);
+void cbox_draw(cbox *bx, cairo_t *ctx);
 
-void cbox_transform(cbox *bx, uint32_t x, uint32_t y, uint32_t h, uint32_t w);
+void cbox_transform(cbox *bx, int32_t x, int32_t y, uint32_t w, uint32_t h);
 
 /************************************************************************************************************/
 /************************************************************************************************************/

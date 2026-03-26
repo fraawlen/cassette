@@ -110,6 +110,16 @@ ccell_damage(ccell *cl)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void *
+ccell_data(const ccell *cl)
+{
+	GUARD(cl, nullptr);
+
+	return cl->cb_event.data;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 nullptr_t
 ccell_destroy(ccell *cl)
 {

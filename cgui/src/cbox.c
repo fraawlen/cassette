@@ -31,8 +31,8 @@ struct cbox
 
 	/* geometry */
 
-	uint32_t x;
-	uint32_t y;
+	int32_t  x;
+	int32_t  y;
 	uint32_t w;
 	uint32_t h;
 
@@ -135,7 +135,7 @@ cbox_default_border(cbox *bx, struct ccolor clr, uint32_t size)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cbox_default_outine(cbox *bx, struct ccolor clr, uint32_t size)
+cbox_default_outline(cbox *bx, struct ccolor clr, uint32_t size)
 {
 	GUARD(bx);
 
@@ -156,7 +156,7 @@ cbox_destroy(cbox *bx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cbox_redraw(cbox *bx, cairo_t *ctx)
+cbox_draw(cbox *bx, cairo_t *ctx)
 {
 	GUARD(bx);
 
@@ -164,8 +164,8 @@ cbox_redraw(cbox *bx, cairo_t *ctx)
 	struct ccolor c2 = bx->clr_border;
 	struct ccolor c3 = bx->clr_bg;
 
-	uint32_t o = bx->outline;
-	uint32_t b = bx->border;
+	int32_t o = bx->outline;
+	int32_t b = bx->border;
 
 	if (o > 0 && !bx->strip)
 	{
@@ -176,7 +176,7 @@ cbox_redraw(cbox *bx, cairo_t *ctx)
 
 	if (b > 0)
 	{
-		cairo_set_source_rgba(ctx, c2.r, c1.g, c1.b, c1.a);
+		cairo_set_source_rgba(ctx, c2.r, c2.g, c2.b, c2.a);
 		cairo_rectangle(ctx, bx->x, bx->y, bx->w, bx->h);
 		cairo_fill(ctx);
 	}
@@ -189,7 +189,7 @@ cbox_redraw(cbox *bx, cairo_t *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cbox_transform(cbox *bx, uint32_t x, uint32_t y, uint32_t h, uint32_t w)
+cbox_transform(cbox *bx, int32_t x, int32_t y, uint32_t w, uint32_t h)
 {
 	GUARD(bx);
 
