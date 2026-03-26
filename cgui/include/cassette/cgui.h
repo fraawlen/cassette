@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "cbox.h"
 #include "cevent.h"
 #include "ccell.h"
 #include "cgrid.h"
