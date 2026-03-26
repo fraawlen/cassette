@@ -28,7 +28,7 @@ OPTS := $(if $(CGUI_DEBUG_EVENTS), -DENV_SRV_DEBUG)
 INCS := -I../cobj/$(DIR_INC) -I../ccfg/$(DIR_INC) -I$(DIR_INC) -I$(WL_OUT)
 DEPS := -L../cobj/$(DIR_LIB) -L../ccfg/$(DIR_LIB) -lcobj -lccfg -lm -lpthread -lcairo -lfontconfig \
         -lxcb -lxcb-keysyms -lxcb-present -lxcb-randr -lxcb-xinput -lxkbcommon -lxcb-render \
-	  -lxcb-render-util -lxcb-util -lxcb-sync -lwayland-client
+	  -lxcb-render-util -lxcb-util -lxcb-sync -lxcb-icccm -lwayland-client
 
 #############################################################################################################
 # PUBLIC TARGETS ############################################################################################

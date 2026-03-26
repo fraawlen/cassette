@@ -17,6 +17,7 @@
 #include <xcb/sync.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_aux.h>
+#include <xcb/xcb_icccm.h>
 #include <xcb/xcb_renderutil.h>
 #include <xcb/xfixes.h>
 
@@ -195,6 +196,31 @@ x11_hide(struct x11 *x11, enum shell_target target)
 	inputs_ungrab(x11);
 
 	win->active = false;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+x11_hint(struct x11 *x11, uint32_t w, uint32_t h)
+{
+	xcb_size_hints_t hints =
+	{
+		.min_width  = w,
+		.min_height = h,
+		.flags      = XCB_ICCCM_SIZE_HINT_P_MIN_SIZE,
+	};
+
+	if (x11->main.active)
+	{
+		prop_set(
+			 x11,
+			&x11->main,
+			XCB_ATOM_WM_NORMAL_HINTS,
+			XCB_ATOM_WM_SIZE_HINTS,
+			sizeof(hints),
+			&hints,
+			true);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

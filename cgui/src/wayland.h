@@ -118,6 +118,9 @@ wayland_damage(struct wayland *wl, enum shell_target target);
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
 wayland_hide(struct wayland *wl, enum shell_target target);
 
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
+wayland_hint(struct wayland *wl, uint32_t w, uint32_t h);
+
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1, 2)]] void
 wayland_rename(struct wayland *wl, enum shell_target target, const char *name);
 

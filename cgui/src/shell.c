@@ -137,23 +137,24 @@ static void ev_transform (cshell *, struct cevent);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void apply_name  (cshell *, void *);
-static void callback    (cshell *, struct call *);
-static void conf_grids  (cshell *);
-static void conf_init   (cshell *);
-static void conf_menu   (cshell *);
-static void conf_shell  (cshell *);
-static void destroy     (cshell *);
-static void dummy       (cshell *, void *);
-static void finish      (cshell *);
-static void join        (cshell *);
-static void poke        (cshell *);
-static void post        (cshell *, void (*)(cshell *, void *), void *, bool);
-static void purge_fd    (cshell *, int);
-static void read_post   (cshell *);
-static bool run         (cshell *);
-static bool server_init (cshell *);
-static void set_error   (cshell *, enum cerr);
+static void apply_name   (cshell *, void *);
+static void callback     (cshell *, struct call *);
+static void conf_grids   (cshell *);
+static void conf_init    (cshell *);
+static void conf_menu    (cshell *);
+static void conf_shell   (cshell *);
+static void destroy      (cshell *);
+static void dummy        (cshell *, void *);
+static void finish       (cshell *);
+static void join         (cshell *);
+static void poke         (cshell *);
+static void post         (cshell *, void (*)(cshell *, void *), void *, bool);
+static void purge_fd     (cshell *, int);
+static void read_post    (cshell *);
+static bool run          (cshell *);
+static bool server_init  (cshell *);
+static void set_error    (cshell *, enum cerr);
+static void set_min_size (cshell *);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -1061,6 +1062,26 @@ set_error(cshell *sh, enum cerr code)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+static void
+set_min_size(cshell *sh)
+{
+	uint32_t w = UINT32_MAX;
+	uint32_t h = UINT32_MAX;
+
+	if (cref_length(sh->grids) > 0)
+	{
+		CREF_FOR_EACH(sh->grids, cgrid, gr, i)
+		{
+			w = w > grid_w(gr) ? grid_w(gr) : w;
+			h = h > grid_h(gr) ? grid_h(gr) : w;
+		}
+	
+		SERVER(sh, hint, w, h);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 static void *
 ui_thread(void *arg)
 {
@@ -1078,6 +1099,7 @@ ui_thread(void *arg)
 		SERVER(sh, config, sh->config);
 		SERVER(sh, show, SHELL_MAIN, sh->tag, sh->w, sh->h);
 		apply_name(sh, nullptr);
+		set_min_size(sh);
 
 		while (run(sh))
 		{

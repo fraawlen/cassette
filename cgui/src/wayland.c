@@ -250,6 +250,17 @@ wayland_hide(struct wayland *wl, enum shell_target target)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+void
+wayland_hint(struct wayland *wl, uint32_t w, uint32_t h)
+{
+	if (wl->main.active)
+	{
+		xdg_toplevel_set_min_size(wl->main.top, w, h);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 int
 wayland_init(struct wayland *wl)
 {
