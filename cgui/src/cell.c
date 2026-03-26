@@ -54,11 +54,8 @@ struct ccell
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void ev_redraw    (ccell *, struct cevent);
-static void ev_transform (ccell *, struct cevent);
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
+static void ev_redraw (ccell *, struct cevent);
+static void ev_shape  (ccell *, struct cevent);
 static void propagate (ccell *, struct cevent);
 
 /************************************************************************************************************/
@@ -186,8 +183,8 @@ cell_send_event(ccell *cl, struct cevent ev)
 	event_print(ev, "cell");
 	switch (ev.type)
 	{
-		case CEVENT_TRANSFORM:
-			ev_transform(cl, ev);
+		case CEVENT_SHAPE:
+			ev_shape(cl, ev);
 			break;
 
 		case CEVENT_REDRAW:
@@ -225,12 +222,12 @@ ev_redraw(ccell *cl, struct cevent ev)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-ev_transform(ccell *cl, struct cevent ev)
+ev_shape(ccell *cl, struct cevent ev)
 {
-	cl->x = ev.transform_x;
-	cl->y = ev.transform_y;
-	cl->w = ev.transform_w;
-	cl->h = ev.transform_h;
+	cl->x = ev.shape_x;
+	cl->y = ev.shape_y;
+	cl->w = ev.shape_w;
+	cl->h = ev.shape_h;
 
 	cl->damaged = true;
 	propagate(cl, ev);

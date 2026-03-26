@@ -224,7 +224,7 @@ cbox_pad(const cbox *bx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cbox_transform(cbox *bx, int32_t x, int32_t y, uint32_t w, uint32_t h)
+cbox_shape(cbox *bx, int32_t x, int32_t y, uint32_t w, uint32_t h)
 {
 	GUARD(bx);
 

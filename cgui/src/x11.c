@@ -613,11 +613,11 @@ ev_conf(struct x11 *x11, xcb_configure_notify_event_t *ev)
 	struct x11_window *win = window(x11, ev->window);
 	struct cevent cev =
 	{
-		.type        = CEVENT_TRANSFORM,
-		.transform_h = ev->height,
-		.transform_w = ev->width,
-		.transform_x = 0,
-		.transform_y = 0,
+		.type    = CEVENT_SHAPE,
+		.shape_h = ev->height,
+		.shape_w = ev->width,
+		.shape_x = 0,
+		.shape_y = 0,
 	};
 
 	if (win->h == ev->height
@@ -856,16 +856,16 @@ move_popup(struct x11 *x11, uint32_t w, uint32_t h, int32_t *x, int32_t *y)
 	*x -= dw1 >= w ? 0 : w - (dw2 >= w ? 0 : dw1);
 	*y -= dh1 >= h ? 0 : h - (dh2 >= h ? 0 : dh1);
 
-	/* send a transform event manually                           */
+	/* send a shape event manually                           */
 	/* because override redirect windows get no configure events */
 
 	struct cevent ev = 
 	{
-		.type        = CEVENT_TRANSFORM,
-		.transform_x = *x,
-		.transform_y = *y,
-		.transform_w =  w,
-		.transform_h =  h,
+		.type    = CEVENT_SHAPE,
+		.shape_x = *x,
+		.shape_y = *y,
+		.shape_w =  w,
+		.shape_h =  h,
 	};
 
 	shell_send_event(ev, SHELL_MENU);

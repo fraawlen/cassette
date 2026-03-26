@@ -685,11 +685,11 @@ ev_conf_pop(void *data, struct xdg_popup *pop, int x, int y, int w, int h)
 	struct wayland_window *win = data;
 	struct cevent ev =
 	{
-		.type        = CEVENT_TRANSFORM,
-		.transform_x = x,
-		.transform_y = y,
-		.transform_w = w,
-		.transform_h = h,
+		.type    = CEVENT_SHAPE,
+		.shape_x = x,
+		.shape_y = y,
+		.shape_w = w,
+		.shape_h = h,
 	};
 
 	if (!win->init)
@@ -716,11 +716,11 @@ ev_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 	struct wayland_window *win = data;
 	struct cevent ev =
 	{
-		.type        = CEVENT_TRANSFORM,
-		.transform_w = w == 0 ? (int)win->w : w,
-		.transform_h = h == 0 ? (int)win->h : h,
-		.transform_x = 0,
-		.transform_y = 0,
+		.type    = CEVENT_SHAPE,
+		.shape_w = w == 0 ? (int)win->w : w,
+		.shape_h = h == 0 ? (int)win->h : h,
+		.shape_x = 0,
+		.shape_y = 0,
 	};
 
 	if (!win->init)
@@ -730,8 +730,8 @@ ev_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 
 	win->redraw = true;
 	win->init   = true;
-	win->w      = ev.transform_w;
-	win->h      = ev.transform_h;
+	win->w      = ev.shape_w;
+	win->h      = ev.shape_h;
 
 	shell_send_event(ev, SHELL_MAIN);
 }

@@ -26,9 +26,9 @@ enum cevent_type
 	CEVENT_FAIL,
 	CEVENT_OPEN,
 	CEVENT_CLOSE,
+	CEVENT_SHAPE,
 	CEVENT_CONFIG,
 	CEVENT_REDRAW,
-	CEVENT_TRANSFORM,
 	CEVENT_BUTTON_PRESS,
 	CEVENT_BUTTON_RELEASE,
 };
@@ -43,14 +43,14 @@ struct cevent
 
 		int button;
 
-		/* CEVENT_TRANSFORM */
+		/* CEVENT_SHAPE */
 
 		struct
 		{
-			int32_t  transform_x;
-			int32_t  transform_y;
-			uint32_t transform_w;
-			uint32_t transform_h;
+			int32_t  shape_x;
+			int32_t  shape_y;
+			uint32_t shape_w;
+			uint32_t shape_h;
 		};
 
 		/* CEVENT_REDRAW */

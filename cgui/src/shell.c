@@ -130,11 +130,11 @@ struct cshell
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void ev_button    (cshell *, struct cevent);
-static void ev_open      (cshell *);
-static void ev_redirect  (cshell *, struct cevent);
-static void ev_redraw    (cshell *, struct cevent);
-static void ev_transform (cshell *, struct cevent);
+static void ev_button   (cshell *, struct cevent);
+static void ev_open     (cshell *);
+static void ev_redirect (cshell *, struct cevent);
+static void ev_redraw   (cshell *, struct cevent);
+static void ev_shape    (cshell *, struct cevent);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -562,8 +562,8 @@ shell_send_event(struct cevent ev, enum shell_target target)
 			ev_redraw(sh, ev);
 			break;
 
-		case CEVENT_TRANSFORM:
-			ev_transform(sh, ev);
+		case CEVENT_SHAPE:
+			ev_shape(sh, ev);
 			break;
 
 		case CEVENT_OPEN:
@@ -770,7 +770,7 @@ ev_redraw(cshell *sh, struct cevent ev)
 	if (sh->damaged)
 	{	
 		cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
-		cbox_transform(sh->frame, 0, 0, sh->w, sh->h);
+		cbox_shape(sh->frame, 0, 0, sh->w, sh->h);
 		cbox_draw(sh->frame, ev.redraw_ctx);
 		sh->damaged = false;
 	}
@@ -784,10 +784,10 @@ ev_redraw(cshell *sh, struct cevent ev)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-ev_transform(cshell *sh, struct cevent ev)
+ev_shape(cshell *sh, struct cevent ev)
 {
-	sh->w       = ev.transform_w;
-	sh->h       = ev.transform_h;
+	sh->w       = ev.shape_w;
+	sh->h       = ev.shape_h;
 	sh->focus   = nullptr;
 	sh->damaged = true;
 
@@ -810,10 +810,10 @@ ev_transform(cshell *sh, struct cevent ev)
 
 	if (sh->focus)
 	{
-		ev.transform_x += FRAME(sh) / 2;
-		ev.transform_y += FRAME(sh) / 2;
-		ev.transform_w -= FRAME(sh);
-		ev.transform_h -= FRAME(sh);
+		ev.shape_x += FRAME(sh) / 2;
+		ev.shape_y += FRAME(sh) / 2;
+		ev.shape_w -= FRAME(sh);
+		ev.shape_h -= FRAME(sh);
 
 		grid_send_event(sh->focus, ev);
 	}

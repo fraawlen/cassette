@@ -64,13 +64,13 @@ event(ccell *cl, void *data, struct cevent ev)
 			cbox_config(frame, ev.config, "gap");
 			break;
 
-		case CEVENT_TRANSFORM:
-			cbox_transform(
+		case CEVENT_SHAPE:
+			cbox_shape(
 				frame,
-				ev.transform_x,
-				ev.transform_y,
-				ev.transform_w,
-				ev.transform_h);
+				ev.shape_x,
+				ev.shape_y,
+				ev.shape_w,
+				ev.shape_h);
 			break;
 		
 		default:

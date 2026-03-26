@@ -41,7 +41,7 @@ void cbox_default_outline(cbox *bx, struct ccolor clr, uint32_t size);
 
 void cbox_draw(cbox *bx, cairo_t *ctx);
 
-void cbox_transform(cbox *bx, int32_t x, int32_t y, uint32_t w, uint32_t h);
+void cbox_shape(cbox *bx, int32_t x, int32_t y, uint32_t w, uint32_t h);
 
 /************************************************************************************************************/
 /* ACCESS ***************************************************************************************************/
