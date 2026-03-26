@@ -101,7 +101,7 @@ cb_setup(cshell *sh, void *data)
 	cgrid_flex_col(app->gr, 1, 1.0);
 	cgrid_flex_col(app->gr, 2, 1.0);
 
-	cgrid_resize_row(app->gr, 0, 20);
+	cgrid_resize_row(app->gr, 0, 10);
 	cgrid_resize_col(app->gr, 0, 20);
 	cgrid_resize_col(app->gr, 1, 20);
 	cgrid_resize_col(app->gr, 2, 20);

@@ -38,6 +38,7 @@ struct cbox
 
 	/* config */
 
+	uint32_t pad;
 	uint32_t border;
 	uint32_t outline;
 
@@ -47,6 +48,7 @@ struct cbox
 
 	/* defaults */
 
+	uint32_t df_pad;
 	uint32_t df_border;
 	uint32_t df_outline;
 
@@ -66,6 +68,16 @@ static uint32_t      fetch_len (ccfg  *, const char *, const char  *, uint32_t);
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
+uint32_t
+cbox_border(const cbox *bx)
+{
+	GUARD(bx, 0);
+
+	return bx->border;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 cbox *
 cbox_create(void)
 {
@@ -81,12 +93,14 @@ cbox_create(void)
 	bx->clr_bg      = ccolor_black;
 	bx->border      = 0;
 	bx->outline     = 0;
+	bx->pad         = 0;
 
 	bx->df_clr_border  = ccolor_black;
 	bx->df_clr_outline = ccolor_black;
 	bx->df_clr_bg      = ccolor_black;
 	bx->df_border      = 0;
 	bx->df_outline     = 0;
+	bx->df_pad         = 0;
 
 	bx->strip = false;
 	bx->x     = 0;
@@ -104,6 +118,7 @@ cbox_config(cbox *bx, ccfg *cfg, const char *group)
 {
 	GUARD(bx);
 
+	bx->pad         = fetch_len(cfg, group, "pad",           bx->df_pad);
 	bx->border      = fetch_len(cfg, group, "border",        bx->df_border);
 	bx->outline     = fetch_len(cfg, group, "outline",       bx->df_outline);
 	bx->clr_border  = fetch_clr(cfg, group, "border_color",  bx->df_clr_border);
@@ -184,6 +199,26 @@ cbox_draw(cbox *bx, cairo_t *ctx)
 	cairo_set_source_rgba(ctx, c3.r, c3.g, c3.b, c3.a);
 	cairo_rectangle(ctx, bx->x + b, bx->y + b, bx->w - 2 * b, bx->h - 2 * b);
 	cairo_fill(ctx);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint32_t
+cbox_outline(const cbox *bx)
+{
+	GUARD(bx, 0);
+
+	return bx->outline;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint32_t
+cbox_pad(const cbox *bx)
+{
+	GUARD(bx, 0);
+
+	return bx->pad;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

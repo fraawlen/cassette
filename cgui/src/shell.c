@@ -42,6 +42,7 @@
 
 #define GUARD(SH, ...)   if (cerr_critical(cshell_error(SH))) { return __VA_OPT__(__VA_ARGS__); }
 #define GUARD_THREAD(SH) if (SH == thread_owner) { set_error(SH, CERR_CALL); return; }
+#define FRAME(SH)           (2 * (cbox_border(sh->frame) + cbox_pad(sh->frame)))
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -632,8 +633,8 @@ conf_grids(cshell *sh)
 		grid_send_event(gr, ev);
 		if (i == 0)
 		{
-			sh->w = grid_w(gr);
-			sh->h = grid_h(gr);
+			sh->w = grid_w(gr) + FRAME(sh);
+			sh->h = grid_h(gr) + FRAME(sh);
 		}
 	}
 }
@@ -792,8 +793,8 @@ ev_transform(cshell *sh, struct cevent ev)
 
 	CREF_FOR_EACH(sh->grids, cgrid, gr, i)
 	{
-		if (grid_w(gr) <= sh->w
-		 && grid_h(gr) <= sh->h)
+		if (grid_w(gr) + FRAME(sh) <= sh->w
+		 && grid_h(gr) + FRAME(sh) <= sh->h)
 		{
 			if (sh->focus)
 			{
@@ -809,6 +810,11 @@ ev_transform(cshell *sh, struct cevent ev)
 
 	if (sh->focus)
 	{
+		ev.transform_x += FRAME(sh) / 2;
+		ev.transform_y += FRAME(sh) / 2;
+		ev.transform_w -= FRAME(sh);
+		ev.transform_h -= FRAME(sh);
+
 		grid_send_event(sh->focus, ev);
 	}
 }
@@ -1076,7 +1082,7 @@ set_min_size(cshell *sh)
 			h = h > grid_h(gr) ? grid_h(gr) : w;
 		}
 	
-		SERVER(sh, hint, w, h);
+		SERVER(sh, hint, w + FRAME(sh), h + FRAME(sh));
 	}
 }
 

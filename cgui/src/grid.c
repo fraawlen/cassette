@@ -90,7 +90,7 @@ static void ev_transform (cgrid *, struct cevent);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void     cache_axis (cgrid *, uint32_t, struct line *, size_t, int);
+static void     cache_axis (cgrid *, uint32_t, uint32_t, struct line *, size_t, int);
 static uint32_t fetch      (ccfg  *, uint32_t, const char  *);
 static uint32_t line_len   (cgrid *, struct line *, int);
 static void     propagate  (cgrid *, struct cevent, bool);
@@ -410,10 +410,9 @@ grid_w(cgrid *gr)
 /************************************************************************************************************/
 
 static void
-cache_axis(cgrid *gr, uint32_t l, struct line *ln, size_t n, int axis)
+cache_axis(cgrid *gr, uint32_t o, uint32_t l, struct line *ln, size_t n, int axis)
 {
 	double   f = 0.0;
-	uint32_t o = 0;
 	uint32_t a;
 
 	for (size_t i = 0; i < n; i++)
@@ -471,8 +470,8 @@ ev_conf(cgrid *gr, struct cevent ev)
 static void
 ev_transform(cgrid *gr, struct cevent ev)
 {
-	cache_axis(gr, ev.transform_w - grid_w(gr), gr->cols, gr->cols_n,  1);
-	cache_axis(gr, ev.transform_h - grid_h(gr), gr->rows, gr->rows_n, -1);
+	cache_axis(gr, ev.transform_x, ev.transform_w - grid_w(gr), gr->cols, gr->cols_n,  1);
+	cache_axis(gr, ev.transform_y, ev.transform_h - grid_h(gr), gr->rows, gr->rows_n, -1);
 
 	CREF_FOR_EACH(gr->zones, struct zone, zn, i)
 	{
