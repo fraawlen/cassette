@@ -83,8 +83,8 @@ x11_commit(struct x11 *x11, enum shell_target target)
 
 	struct cevent ev =
 	{
-		.type = CEVENT_REDRAW,
-		.redraw_ctx = win->cairo,
+		.type     = CEVENT_DRAW,
+		.drawable = win->cairo,
 	};
 
 	if (win->damaged)

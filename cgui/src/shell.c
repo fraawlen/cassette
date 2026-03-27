@@ -131,9 +131,9 @@ struct cshell
 /************************************************************************************************************/
 
 static void ev_button   (cshell *, struct cevent);
+static void ev_draw     (cshell *, struct cevent);
 static void ev_open     (cshell *);
 static void ev_redirect (cshell *, struct cevent);
-static void ev_redraw   (cshell *, struct cevent);
 static void ev_shape    (cshell *, struct cevent);
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -558,8 +558,8 @@ shell_send_event(struct cevent ev, enum shell_target target)
 			ev_button(sh, ev);
 			break;
 
-		case CEVENT_REDRAW:
-			ev_redraw(sh, ev);
+		case CEVENT_DRAW:
+			ev_draw(sh, ev);
 			break;
 
 		case CEVENT_SHAPE:
@@ -721,6 +721,25 @@ ev_button(cshell *sh, struct cevent ev)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
+ev_draw(cshell *sh, struct cevent ev)
+{
+	if (sh->damaged)
+	{	
+		cairo_set_operator(ev.drawable, CAIRO_OPERATOR_SOURCE);
+		cbox_shape(sh->frame, 0, 0, sh->w, sh->h);
+		cbox_draw(sh->frame, ev.drawable);
+		sh->damaged = false;
+	}
+
+	if (sh->focus)
+	{
+		grid_send_event(sh->focus, ev);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 ev_open(cshell *sh)
 {
 	LOCK(sh)
@@ -759,25 +778,6 @@ ev_redirect(cshell *sh, struct cevent ev)
 
 		case MENU_IDLE:
 			break;
-	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-ev_redraw(cshell *sh, struct cevent ev)
-{
-	if (sh->damaged)
-	{	
-		cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
-		cbox_shape(sh->frame, 0, 0, sh->w, sh->h);
-		cbox_draw(sh->frame, ev.redraw_ctx);
-		sh->damaged = false;
-	}
-
-	if (sh->focus)
-	{
-		grid_send_event(sh->focus, ev);
 	}
 }
 

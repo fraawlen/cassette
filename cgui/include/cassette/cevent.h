@@ -28,7 +28,7 @@ enum cevent_type
 	CEVENT_CLOSE,
 	CEVENT_SHAPE,
 	CEVENT_CONFIG,
-	CEVENT_REDRAW,
+	CEVENT_DRAW,
 	CEVENT_BUTTON_PRESS,
 	CEVENT_BUTTON_RELEASE,
 };
@@ -53,9 +53,9 @@ struct cevent
 			uint32_t shape_h;
 		};
 
-		/* CEVENT_REDRAW */
+		/* CEVENT_DRAW */
 
-		cairo_t *redraw_ctx;
+		cairo_t *drawable;
 
 		/* CEVENT_CONFIG */
 

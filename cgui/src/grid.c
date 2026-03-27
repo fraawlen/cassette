@@ -376,7 +376,7 @@ grid_send_event(cgrid *gr, struct cevent ev)
 			ev_conf(gr, ev);
 			break;
 
-		case CEVENT_REDRAW:
+		case CEVENT_DRAW:
 			propagate(gr, ev, false);
 			break;
 

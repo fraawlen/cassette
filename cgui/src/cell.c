@@ -54,7 +54,7 @@ struct ccell
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void ev_redraw (ccell *, struct cevent);
+static void ev_draw   (ccell *, struct cevent);
 static void ev_shape  (ccell *, struct cevent);
 static void propagate (ccell *, struct cevent);
 
@@ -187,8 +187,8 @@ cell_send_event(ccell *cl, struct cevent ev)
 			ev_shape(cl, ev);
 			break;
 
-		case CEVENT_REDRAW:
-			ev_redraw(cl, ev);
+		case CEVENT_DRAW:
+			ev_draw(cl, ev);
 			break;
 
 		default:
@@ -210,7 +210,7 @@ propagate(ccell *cl, struct cevent ev)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-ev_redraw(ccell *cl, struct cevent ev)
+ev_draw(ccell *cl, struct cevent ev)
 {
 	if (cl->damaged)
 	{

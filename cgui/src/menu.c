@@ -17,9 +17,9 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void ev_conf   (struct menu *mn, struct cevent ev);
-static void ev_redraw (struct menu *mn, struct cevent ev);
-static void ev_shape  (struct menu *mn, struct cevent ev);
+static void ev_conf  (struct menu *mn, struct cevent ev);
+static void ev_draw  (struct menu *mn, struct cevent ev);
+static void ev_shape (struct menu *mn, struct cevent ev);
 
 /************************************************************************************************************/
 /* PRIVATE **************************************************************************************************/
@@ -31,8 +31,8 @@ menu_send_event(struct menu *mn, struct cevent ev)
 	event_print(ev, "menu");
 	switch (ev.type)
 	{
-		case CEVENT_REDRAW:
-			ev_redraw(mn, ev);
+		case CEVENT_DRAW:
+			ev_draw(mn, ev);
 			break;
 
 		case CEVENT_SHAPE:
@@ -71,20 +71,20 @@ ev_conf(struct menu *mn, struct cevent ev)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
-ev_redraw(struct menu *mn, struct cevent ev)
+ev_draw(struct menu *mn, struct cevent ev)
 {
 	if (!mn->damaged)
 	{
 		return;
 	}
 
-	cairo_set_operator(ev.redraw_ctx, CAIRO_OPERATOR_SOURCE);
-	cairo_set_source_rgba(ev.redraw_ctx, 0.0, 0.0, 0.0, 1.0);
-	cairo_paint(ev.redraw_ctx);
+	cairo_set_operator(ev.drawable, CAIRO_OPERATOR_SOURCE);
+	cairo_set_source_rgba(ev.drawable, 0.0, 0.0, 0.0, 1.0);
+	cairo_paint(ev.drawable);
 	
-	cairo_set_source_rgba(ev.redraw_ctx, 0.0, 1.0, 0.0, 0.5);
-	cairo_rectangle(ev.redraw_ctx, 20, 20, mn->w - 40, mn->h - 40);
-	cairo_fill(ev.redraw_ctx);
+	cairo_set_source_rgba(ev.drawable, 0.0, 1.0, 0.0, 0.5);
+	cairo_rectangle(ev.drawable, 20, 20, mn->w - 40, mn->h - 40);
+	cairo_fill(ev.drawable);
 
 	mn->damaged = false;
 }

@@ -56,8 +56,8 @@ event(ccell *cl, void *data, struct cevent ev)
 
 	switch (ev.type)
 	{
-		case CEVENT_REDRAW:
-			cbox_draw(frame, ev.redraw_ctx);
+		case CEVENT_DRAW:
+			cbox_draw(frame, ev.drawable);
 			break;
 
 		case CEVENT_CONFIG:

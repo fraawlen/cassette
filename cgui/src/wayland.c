@@ -141,7 +141,7 @@ static const struct xdg_wm_base_listener ear_xdg =
 void
 wayland_commit(struct wayland *wl, enum shell_target target)
 {
-	struct cevent ev = { .type = CEVENT_REDRAW, };
+	struct cevent ev = { .type = CEVENT_DRAW, };
 	struct wayland_window *win = target == SHELL_MAIN ? &wl->main : &wl->menu;
 	struct wayland_buffer *buf = nullptr;
 	struct wl_callback *cl;
@@ -180,7 +180,7 @@ wayland_commit(struct wayland *wl, enum shell_target target)
 		win->wait   = true;
 		buf->busy   = true;
 
-		ev.redraw_ctx = buf->cairo;
+		ev.drawable = buf->cairo;
 		shell_send_event(ev, target);
 		cairo_surface_flush(buf->surface);
 

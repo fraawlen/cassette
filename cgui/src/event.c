@@ -56,21 +56,21 @@ event_print(struct cevent ev, const char *prefix)
 			LOG("BUTTON_RELEASE", "id = %i", ev.button);
 			break;
 
-		case CEVENT_REDRAW:
-			LOG("REDRAW", "ctx = %p", (void *)ev.redraw_ctx);
+		case CEVENT_DRAW:
+			LOG("DRAW", "ctx = %p", (void *)ev.drawable);
 			break;
 
 		case CEVENT_CONFIG:
 			LOG("CONFIG", "cfg = %p", (void *)ev.config);
 			break;
 
-		case CEVENT_TRANSFORM:
-			LOG("TRANSFORM",
+		case CEVENT_SHAPE:
+			LOG("SHAPE",
 			    "x = %"PRIu32", y = %"PRIu32", w = %"PRIu32", h = %"PRIu32"",
-			    ev.transform_x,
-			    ev.transform_y,
-			    ev.transform_w,
-			    ev.transform_h);
+			    ev.shape_x,
+			    ev.shape_y,
+			    ev.shape_w,
+			    ev.shape_h);
 			break;
 
 		default:
