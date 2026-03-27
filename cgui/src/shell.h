@@ -19,12 +19,18 @@ enum shell_target
 	SHELL_MENU,
 };
 
+enum shell_damage
+{
+	SHELL_FULL,
+	SHELL_PARTIAL,
+};
+
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
 [[gnu::visibility("hidden")]] void
-shell_damage(void);
+shell_damage(enum shell_damage damage);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
 shell_send_event(struct cevent ev, enum shell_target target);

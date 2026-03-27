@@ -102,7 +102,7 @@ ccell_damage(ccell *cl)
 
 	cl->damaged = true;
 
-	shell_damage();
+	shell_damage(SHELL_PARTIAL);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

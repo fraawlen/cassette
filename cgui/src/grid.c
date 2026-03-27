@@ -328,7 +328,13 @@ cgrid_show_layer(cgrid *gr, int layer)
 {
 	GUARD(gr);
 
+	if (layer == gr->layer)
+	{
+		return;
+	}
+
 	gr->layer = layer;
+	shell_damage(SHELL_FULL);
 	CREF_FOR_EACH(gr->zones, struct zone, zn, i)
 	{
 		if (zn->layer == layer)

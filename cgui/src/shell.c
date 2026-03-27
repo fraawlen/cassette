@@ -520,14 +520,19 @@ cshell_wait(cshell *sh)
 /************************************************************************************************************/
 
 void
-shell_damage(void)
+shell_damage(enum shell_damage damage)
 {
-	if (!thread_flush
-	  && thread_active
-	  && thread_owner)
+	cshell *sh = thread_owner;
+
+	if (!sh
+	 || thread_flush
+	 || thread_active)
 	{
-		SERVER(thread_owner, damage, SHELL_MAIN);
+		return;
 	}
+
+	thread_owner->damaged |= damage == SHELL_FULL;
+	SERVER(thread_owner, damage, SHELL_MAIN);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
