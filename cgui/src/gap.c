@@ -65,12 +65,7 @@ event(ccell *cl, void *data, struct cevent ev)
 			break;
 
 		case CEVENT_SHAPE:
-			cbox_shape(
-				frame,
-				ev.shape_x,
-				ev.shape_y,
-				ev.shape_w,
-				ev.shape_h);
+			cbox_shape(frame, ev.shape_x, ev.shape_y, ev.shape_w, ev.shape_h);
 			break;
 		
 		default:

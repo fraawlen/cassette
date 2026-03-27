@@ -202,6 +202,49 @@ cbox_draw(cbox *bx, cairo_t *ctx)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 uint32_t
+cbox_inner_h(const cbox *bx)
+{
+	GUARD(bx, 0);
+
+	if (bx->h / 2 < bx->border
+	 || bx->h / 2 - bx->border < bx->pad)
+	{
+		return 0;
+	}
+
+	return bx->h - (bx->border + bx->pad) * 2;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint32_t
+cbox_inner_w(const cbox *bx)
+{
+	GUARD(bx, 0);
+
+	if (bx->w / 2 < bx->border
+	 || bx->w / 2 - bx->border < bx->pad)
+	{
+		return 0;
+	}
+
+	return bx->w - (bx->border + bx->pad) * 2;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+bool
+cbox_inside(const cbox *bx, int32_t x, int32_t y)
+{
+	GUARD(bx, false);
+
+	return x >= bx->x && x - (int64_t)bx->w <= bx->x
+	    && y >= bx->y && y - (int64_t)bx->h <= bx->y;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+uint32_t
 cbox_outline(const cbox *bx)
 {
 	GUARD(bx, 0);

@@ -6,6 +6,7 @@
 
 #include <cairo/cairo.h>
 #include <cassette/ccfg.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 
@@ -50,6 +51,12 @@ void cbox_strip(cbox *bx);
 /************************************************************************************************************/
 
 uint32_t cbox_border(const cbox *bx) [[reproducible]];
+
+uint32_t cbox_inner_h(const cbox *bx) [[reproducible]];
+
+uint32_t cbox_inner_w(const cbox *bx) [[reproducible]];
+
+bool cbox_inside(const cbox *bx, int32_t x, int32_t y) [[reproducible]];
 
 uint32_t cbox_outline(const cbox *bx) [[reproducible]];
 
