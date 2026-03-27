@@ -23,14 +23,29 @@ enum menu_action
 
 struct menu
 {
+	/* state */
+
+	bool damaged;
+
+	/* geometry */
+
 	uint32_t w;
 	uint32_t h;
-	bool damaged;
+
+	/* contents */
+
+	cbox *frame;
 };
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] bool
+menu_init(struct menu *mn);
+
+[[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] void
+menu_kill(struct menu *mn);
 
 [[gnu::visibility("hidden")]] [[gnu::nonnull(1)]] enum menu_action
 menu_send_event(struct menu *mn, struct cevent ev);

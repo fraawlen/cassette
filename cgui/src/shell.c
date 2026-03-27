@@ -19,7 +19,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "box.h"
 #include "event.h"
 #include "grid.h"
 #include "menu.h"
@@ -238,6 +237,11 @@ cshell_create(void)
 		goto fail_config;
 	}
 
+	if (!menu_init(&sh->menu))
+	{
+		goto fail_menu;
+	}
+
 	if (pthread_mutex_init(&sh->mutex, nullptr) != 0)
 	{
 		goto fail_mutex;
@@ -268,14 +272,13 @@ cshell_create(void)
 	snprintf(sh->name, STR_LEN, "%s", DEFAULT_NAME);
 	snprintf(sh->tag,  STR_LEN, "%s", DEFAULT_TAG);
 
-	box_strip(sh->frame);
 	cbox_default_border(sh->frame, ccolor_black, 10);
 	cbox_default_background(sh->frame, ccolor_red);
+	cbox_strip(sh->frame);
 
 	sh->cb_close = (struct call){.fn = dummy, .data = nullptr};
 	sh->cb_setup = (struct call){.fn = dummy, .data = nullptr};
 	sh->cb_open  = (struct call){.fn = dummy, .data = nullptr};
-	sh->menu     = (struct menu){0};
 	sh->focus    = nullptr;
 	sh->damaged  = false;
 	sh->w        = 500;
@@ -292,9 +295,11 @@ fail_pipe:
 	pthread_cond_destroy(&sh->cond);
 fail_cond:
 	pthread_mutex_destroy(&sh->mutex);
-fail_config:
-	ccfg_destroy(sh->config);
 fail_mutex:
+	menu_kill(&sh->menu);
+fail_menu:
+	ccfg_destroy(sh->config);
+fail_config:
 	cref_destroy(sh->grids);
 fail_grids:
 	cbox_destroy(sh->frame);
@@ -702,6 +707,7 @@ destroy(cshell *sh)
 	close(sh->fd_post[1]);
 	close(sh->fd_wake[0]);
 	close(sh->fd_wake[1]);
+	menu_kill(&sh->menu);
 	free(sh);
 }
 

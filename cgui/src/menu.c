@@ -25,6 +25,38 @@ static void ev_shape (struct menu *mn, struct cevent ev);
 /* PRIVATE **************************************************************************************************/
 /************************************************************************************************************/
 
+bool
+menu_init(struct menu *mn)
+{
+	*mn = (struct menu){0};
+
+	if (!(mn->frame = cbox_create()))
+	{
+		goto fail_frame;
+	}
+
+	cbox_default_border(mn->frame, ccolor_black, 10);
+	cbox_default_background(mn->frame, ccolor_green);
+	cbox_strip(mn->frame);
+	
+	return true;
+
+	/* errors */
+
+fail_frame:
+	return false;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+menu_kill(struct menu *mn)
+{
+	cbox_destroy(mn->frame);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
 enum menu_action
 menu_send_event(struct menu *mn, struct cevent ev)
 {
