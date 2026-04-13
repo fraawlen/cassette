@@ -4,8 +4,8 @@ Cassette is a GUI application framework written in C23, with a UI inspired by th
 
 ## Table of Contents <a name="toc"></a>
 
-- [Overview](#overview)
 - [Status](#status)
+- [Overview](#overview)
 - [Documentation](#documentation)
 - [Dependencies](#dependencies)
 - [Build and Installation](#build)
@@ -15,11 +15,16 @@ Cassette is a GUI application framework written in C23, with a UI inspired by th
 - [Third-Party Visual Resources](#credits)
 - [Mirrors](#mirrors)
 
+## Status <a name="status"></a>
+
+> [!Warning]
+> Cassette is currently in an Alpha state and is actively developped on a separate branch (0.3-dev). Core features are not yet frozen, especially for CGUI. Notably, version 0.3 will upgrade its API to C23 and the UI model is completely reworked both on the end-user and API sides. Documentation, along with manpages are also currently in the works. 0.3 is also multiplatform, supporting both X11 and Wayland.
+
 ## Overview <a name="overview"></a>
 
 #### [CGUI - Cassette Graphics](cgui)
 
-The main component of the framework - a retained-mode X11 GUI toolkit library designed as a universal interface, equally targeting desktop, laptop, mobile, and miscellaneous devices with more or less limited inputs. All thanks to a flexible and responsive grid layout, simple widget appearance, and an advanced configuration system powered by CCFG, allowing one to tailor the theme, behavior, keybinds and input interpretation for each device class.
+The main component of the framework, a highly opiniated X11/Wayland GUI toolkit library and designed to be as consistent as possible, all while targeting desktop, laptop, mobile, and miscellaneous devices with more or less limited inputs. All thanks to a flexible and responsive grid layout, simple widget appearance, and an advanced configuration system powered by CCFG, allowing one to tailor the theme, behavior, keybinds and input interpretation for each device class.
 
 #### [CCFG - Cassette Configuration](ccfg)
 
@@ -28,11 +33,6 @@ A configuration language and parser library featuring array based values and sho
 #### [COBJ - Cassette Objects](cobj)
 
 A collection of self-contained data structures and utilities shared by both CCFG and CGUI. Notably, it includes a versatile 2D UTF-8 string object with associated methods, designed for easy manipulation of strings in monospace text displays.
-
-## Status <a name="status"></a>
-
-> [!Warning]
-> Cassette is currently in an Alpha stage. COBJ and CCFG (with the exception of cstr.h) are largely complete and considered stable, but CGUI remains under active development. Notably, CGUI still needs broader Unicode support—only single codepoint glyphs work reliably at the moment—and it lacks a substantial set of widgets. Although some minimal documentation exists for end users, it is also a work in progress. Ongoing development aims to address these shortcomings and expand Cassette’s feature set.
 
 ## Documentation <a name="documentation"></a>
 
@@ -98,14 +98,6 @@ font size  VALUE
 ```
 
 Replace `FONT_NAME` and `VALUE` with your preferred font name and size. The font name follows the FontConfig naming convention. More font and CGUI theme configuration options can be found [here](docs/cgui-theming.md). For full theme examples, check out these [pre-made themes](cgui/themes).
-
----
-
-Some X servers (like those for for MS Windows or MacOS XQuartz) do not support visuals with 32-bit depths (needed for transparency). On these servers, CGUI may fail to initialize using the default settings. In this case, you *must* add the following line in your configuration ([more info](docs/cgui-theming.md#render)):
-
-```
-render mode forward
-```
 
 ## Usage
 
