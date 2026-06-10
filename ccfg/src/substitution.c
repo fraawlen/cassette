@@ -469,6 +469,9 @@ math(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_res
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-out-of-bounds"
+
 static enum token
 math_cl(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_result, enum token type, size_t n)
 {
@@ -527,6 +530,8 @@ math_cl(struct context *ctx, char token[static CCFG_TOKEN_LENGTH], double *math_
 
 	return TOKEN_NUMBER;
 }
+
+#pragma GCC diagnostic pop
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 

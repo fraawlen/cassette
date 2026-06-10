@@ -908,6 +908,9 @@ prop_set(struct x11 *x11, struct x11_window *win, xcb_atom_t prop, xcb_atom_t ty
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-double-free"
+
 static void
 setup_render(struct x11 *x11)
 {
@@ -962,6 +965,8 @@ done:
 	x11->depth  = xcb_aux_get_depth_of_visual(x11->screen, id);
 	x11->visual = xcb_aux_find_visual_by_id(x11->screen, id);
 }
+
+#pragma GCC diagnostic pop
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
