@@ -613,11 +613,8 @@ ev_conf(struct x11 *x11, xcb_configure_notify_event_t *ev)
 	struct x11_window *win = window(x11, ev->window);
 	struct cevent cev =
 	{
-		.type    = CEVENT_SHAPE,
-		.shape_h = ev->height,
-		.shape_w = ev->width,
-		.shape_x = 0,
-		.shape_y = 0,
+		.type  = CEVENT_SHAPE,
+		.shape = {0, 0, ev->width, ev->height},
 	};
 
 	if (win->h == ev->height
@@ -861,11 +858,8 @@ move_popup(struct x11 *x11, uint32_t w, uint32_t h, int32_t *x, int32_t *y)
 
 	struct cevent ev = 
 	{
-		.type    = CEVENT_SHAPE,
-		.shape_x = *x,
-		.shape_y = *y,
-		.shape_w =  w,
-		.shape_h =  h,
+		.type  = CEVENT_SHAPE,
+		.shape = {*x, *y, w, h},
 	};
 
 	shell_send_event(ev, SHELL_MENU);

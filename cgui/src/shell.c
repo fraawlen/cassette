@@ -797,8 +797,8 @@ ev_redirect(cshell *sh, struct cevent ev)
 static void
 ev_shape(cshell *sh, struct cevent ev)
 {
-	sh->w       = ev.shape_w;
-	sh->h       = ev.shape_h;
+	sh->w       = ev.shape.w;
+	sh->h       = ev.shape.h;
 	sh->focus   = nullptr;
 	sh->damaged = true;
 
@@ -821,10 +821,10 @@ ev_shape(cshell *sh, struct cevent ev)
 
 	if (sh->focus)
 	{
-		ev.shape_x += FRAME(sh) / 2;
-		ev.shape_y += FRAME(sh) / 2;
-		ev.shape_w -= FRAME(sh);
-		ev.shape_h -= FRAME(sh);
+		ev.shape.x += FRAME(sh) / 2;
+		ev.shape.y += FRAME(sh) / 2;
+		ev.shape.w -= FRAME(sh);
+		ev.shape.h -= FRAME(sh);
 
 		grid_send_event(sh->focus, ev);
 	}

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "carea.h"
 #include "cbox.h"
 #include "cevent.h"
 #include "ccell.h"

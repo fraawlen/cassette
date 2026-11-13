@@ -45,13 +45,7 @@ struct cevent
 
 		/* CEVENT_SHAPE */
 
-		struct
-		{
-			int32_t  shape_x;
-			int32_t  shape_y;
-			uint32_t shape_w;
-			uint32_t shape_h;
-		};
+		struct carea shape;
 
 		/* CEVENT_DRAW */
 

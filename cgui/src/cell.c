@@ -224,10 +224,10 @@ ev_draw(ccell *cl, struct cevent ev)
 static void
 ev_shape(ccell *cl, struct cevent ev)
 {
-	cl->x = ev.shape_x;
-	cl->y = ev.shape_y;
-	cl->w = ev.shape_w;
-	cl->h = ev.shape_h;
+	cl->x = ev.shape.x;
+	cl->y = ev.shape.y;
+	cl->w = ev.shape.w;
+	cl->h = ev.shape.h;
 
 	cl->damaged = true;
 	propagate(cl, ev);

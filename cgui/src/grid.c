@@ -476,17 +476,17 @@ ev_conf(cgrid *gr, struct cevent ev)
 static void
 ev_shape(cgrid *gr, struct cevent ev)
 {
-	cache_axis(gr, ev.shape_x, ev.shape_w - grid_w(gr), gr->cols, gr->cols_n,  1);
-	cache_axis(gr, ev.shape_y, ev.shape_h - grid_h(gr), gr->rows, gr->rows_n, -1);
+	cache_axis(gr, ev.shape.x, ev.shape.w - grid_w(gr), gr->cols, gr->cols_n,  1);
+	cache_axis(gr, ev.shape.y, ev.shape.h - grid_h(gr), gr->rows, gr->rows_n, -1);
 
 	CREF_FOR_EACH(gr->zones, struct zone, zn, i)
 	{
 		if (gr->layer == zn->layer)
 		{
-			ev.shape_x = gr->cols[zn->x].offset_1;
-			ev.shape_y = gr->rows[zn->y].offset_1;
-			ev.shape_w = gr->cols[zn->x + zn->w - 1].offset_2 - ev.shape_x;
-			ev.shape_h = gr->rows[zn->y + zn->h - 1].offset_2 - ev.shape_y;
+			ev.shape.x = gr->cols[zn->x].offset_1;
+			ev.shape.y = gr->rows[zn->y].offset_1;
+			ev.shape.w = gr->cols[zn->x + zn->w - 1].offset_2 - ev.shape.x;
+			ev.shape.h = gr->rows[zn->y + zn->h - 1].offset_2 - ev.shape.y;
 
 			cell_send_event(zn->cell, ev);
 		}	
