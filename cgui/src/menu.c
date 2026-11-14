@@ -126,7 +126,7 @@ ev_draw(struct menu *mn, struct cevent ev)
 static void
 ev_shape(struct menu *mn, struct cevent ev)
 {
-	mn->w       = ev.shape_w;
-	mn->h       = ev.shape_h;
+	mn->w       = ev.shape.w;
+	mn->h       = ev.shape.h;
 	mn->damaged = true;
 }
