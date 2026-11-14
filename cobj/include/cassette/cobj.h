@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "carea.h"
 #include "cbook.h"
 #include "ccolor.h"
 #include "cdict.h"
