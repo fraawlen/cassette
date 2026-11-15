@@ -75,7 +75,15 @@ cbox2_add_variant(cbox2 *bx, struct cbox2_style defaults, const char *name)
 		return;
 	}
 
-	snprintf(bx->variants[bx->n].name, CCFG_TOKEN_LENGTH + 2, "%s.%s", bx->namespace, name);
+	if (name)
+	{
+		snprintf(bx->variants[bx->n].name, CCFG_TOKEN_LENGTH + 2, "%s.%s", bx->namespace, name);
+	}
+	else
+	{
+		bx->variants[bx->n].name[0] = '\0';
+	}
+
 	bx->variants[bx->n].defaults = defaults;
 	bx->variants[bx->n].resolved = defaults;
 	bx->n++;
