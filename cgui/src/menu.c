@@ -69,9 +69,6 @@ menu_send_event(struct menu *mn, struct cevent ev)
 	event_print(ev, "menu");
 	switch (ev.type)
 	{
-		case CEVENT_OPEN:
-			break;
-
 		case CEVENT_DRAW:
 			ev_draw(mn, ev);
 			break;
@@ -103,9 +100,6 @@ menu_send_event(struct menu *mn, struct cevent ev)
 static void
 ev_conf(struct menu *mn, struct cevent ev)
 {
-	(void)mn;
-	(void)ev;
-
 	cbox2_config(mn->frame, ev.config);
 }
 
