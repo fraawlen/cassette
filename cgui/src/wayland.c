@@ -681,12 +681,14 @@ static void
 ev_conf_pop(void *data, struct xdg_popup *pop, int x, int y, int w, int h)
 {
 	(void)pop;
+	(void)x;
+	(void)y;
 
 	struct wayland_window *win = data;
 	struct cevent ev =
 	{
 		.type  = CEVENT_SHAPE,
-		.shape = {x, y, w, h},
+		.shape = {0, 0, w, h},
 	};
 
 	if (!win->init)

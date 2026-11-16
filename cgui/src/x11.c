@@ -859,7 +859,7 @@ move_popup(struct x11 *x11, uint32_t w, uint32_t h, int32_t *x, int32_t *y)
 	struct cevent ev = 
 	{
 		.type  = CEVENT_SHAPE,
-		.shape = {*x, *y, w, h},
+		.shape = {0, 0, w, h},
 	};
 
 	shell_send_event(ev, SHELL_MENU);

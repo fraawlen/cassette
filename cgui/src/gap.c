@@ -18,17 +18,30 @@
 static void event (ccell *, void *, struct cevent);
 
 /************************************************************************************************************/
+/************************************************************************************************************/
+/************************************************************************************************************/
+
+static constexpr struct cbox2_style default_style =
+{
+	.striped     = false,
+	.pad         = 10,
+	.border      = 10,
+	.outline     = 1,
+	.clr_border  = ccolor_green,
+	.clr_outline = ccolor_blue,
+	.clr_bg      = ccolor_red,
+};
+
+/************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
 ccell *
 cgap_create(void)
 {
-	cbox *frame = cbox_create();
+	cbox2 *frame = cbox2_create("gap", 1);
 
-	cbox_default_outline(frame, ccolor_blue, 1);
-	cbox_default_border(frame, ccolor_green, 10);
-	cbox_default_background(frame, ccolor_white);
+	cbox2_setup(frame, 0, default_style, "");
 
 	return frame ? ccell_create(event, frame) : nullptr;
 }
@@ -52,20 +65,20 @@ event(ccell *cl, void *data, struct cevent ev)
 {
 	(void)cl;
 
-	cbox *frame = data;
+	cbox2 *frame = data;
 
 	switch (ev.type)
 	{
 		case CEVENT_DRAW:
-			cbox_draw(frame, ev.drawable);
+			cbox2_draw(frame, ev.drawable);
 			break;
 
 		case CEVENT_CONFIG:
-			cbox_config(frame, ev.config, "gap");
+			cbox2_config(frame, ev.config);
 			break;
 
 		case CEVENT_SHAPE:
-			cbox_shape(frame, ev.shape.x, ev.shape.y, ev.shape.w, ev.shape.h);
+			cbox2_shape(frame, ev.shape);
 			break;
 		
 		default:

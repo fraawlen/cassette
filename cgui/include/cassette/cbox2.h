@@ -41,7 +41,7 @@ typedef struct cbox2 cbox2;
 /* LIFECYCLE ************************************************************************************************/
 /************************************************************************************************************/
 
-[[nodiscard]] cbox2 *cbox2_create(const char *name);
+[[nodiscard]] cbox2 *cbox2_create(const char *name, size_t variants);
 
 nullptr_t cbox2_destroy(cbox2 *bx);
 
@@ -49,15 +49,15 @@ nullptr_t cbox2_destroy(cbox2 *bx);
 /* MUTATION *************************************************************************************************/
 /************************************************************************************************************/
 
-void cbox2_add_variant(cbox2 *bx, struct cbox2_style defaults, const char *name);
-
 void cbox2_clear_warnings(cbox2 *bx);
 
 void cbox2_config(cbox2 *bx, ccfg *cfg);
 
 void cbox2_draw(cbox2 *bx, cairo_t *ctx);
 
-void cbox2_select(cbox2 *bx, size_t id);
+void cbox2_select(cbox2 *bx, size_t variant);
+
+void cbox2_setup(cbox2 *bx, size_t variant, struct cbox2_style defaults, const char *name);
 
 void cbox2_shape(cbox2 *bx, struct carea shape);
 
