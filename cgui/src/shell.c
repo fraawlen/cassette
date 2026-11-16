@@ -41,7 +41,7 @@
 
 #define GUARD(SH, ...)   if (cerr_critical(cshell_error(SH))) { return __VA_OPT__(__VA_ARGS__); }
 #define GUARD_THREAD(SH) if (SH == thread_owner) { set_error(SH, CERR_CALL); return; }
-#define FRAME(SH)           (2 * (cbox_border(sh->frame) + cbox_pad(sh->frame)))
+#define FRAME(SH)           (2 * cbox_offset(sh->frame))
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -169,6 +169,17 @@ static _Thread_local bool thread_active   = false;
 static _Thread_local bool thread_destroy  = false;
 static _Thread_local cshell *thread_owner = nullptr;
 
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static constexpr struct cbox_style default_style =
+{
+	.striped    = true,
+	.border     = 10,
+	.pad        = 10,
+	.clr_border = ccolor_black,
+	.clr_bg     = ccolor_red,
+};
+
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
@@ -222,7 +233,7 @@ cshell_create(void)
 		goto fail_alloc;
 	}
 
-	if (!(sh->frame = cbox_create()))
+	if (!(sh->frame = cbox_create("shell", 1)))
 	{
 		goto fail_frame;
 	}
@@ -272,9 +283,7 @@ cshell_create(void)
 	snprintf(sh->name, STR_LEN, "%s", DEFAULT_NAME);
 	snprintf(sh->tag,  STR_LEN, "%s", DEFAULT_TAG);
 
-	cbox_default_border(sh->frame, ccolor_black, 10);
-	cbox_default_background(sh->frame, ccolor_red);
-	cbox_strip(sh->frame);
+	cbox_setup(sh->frame, 0, default_style, "");
 
 	sh->cb_close = (struct call){.fn = dummy, .data = nullptr};
 	sh->cb_setup = (struct call){.fn = dummy, .data = nullptr};
@@ -690,7 +699,7 @@ conf_menu(cshell *sh)
 static void
 conf_shell(cshell *sh)
 {
-	cbox_config(sh->frame, sh->config, "shell");
+	cbox_config(sh->frame, sh->config);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -734,10 +743,11 @@ ev_button(cshell *sh, struct cevent ev)
 static void
 ev_draw(cshell *sh, struct cevent ev)
 {
+	struct carea shape = {0, 0, sh->w, sh->h};
+
 	if (sh->damaged)
 	{	
-		cairo_set_operator(ev.drawable, CAIRO_OPERATOR_SOURCE);
-		cbox_shape(sh->frame, 0, 0, sh->w, sh->h);
+		cbox_shape(sh->frame, shape);
 		cbox_draw(sh->frame, ev.drawable);
 		sh->damaged = false;
 	}

@@ -18,13 +18,30 @@ extern "C" {
 /* TYPES ****************************************************************************************************/
 /************************************************************************************************************/
 
+struct cbox_style
+{
+	/* dev-only configurable */
+
+	bool striped;
+
+	/* end-user configurable */
+
+	uint32_t pad;
+	uint32_t border;
+	uint32_t outline;
+
+	struct ccolor clr_border;
+	struct ccolor clr_outline;
+	struct ccolor clr_bg;
+};
+
 typedef struct cbox cbox;
 
 /************************************************************************************************************/
 /* LIFECYCLE ************************************************************************************************/
 /************************************************************************************************************/
 
-[[nodiscard]] cbox *cbox_create(void);
+[[nodiscard]] cbox *cbox_create(const char *name, size_t variants);
 
 nullptr_t cbox_destroy(cbox *bx);
 
@@ -32,35 +49,23 @@ nullptr_t cbox_destroy(cbox *bx);
 /* MUTATION *************************************************************************************************/
 /************************************************************************************************************/
 
-void cbox_config(cbox *bx, ccfg *cfg, const char *group);
-
-void cbox_default_background(cbox *bx, struct ccolor clr);
-
-void cbox_default_border(cbox *bx, struct ccolor clr, uint32_t size);
-
-void cbox_default_outline(cbox *bx, struct ccolor clr, uint32_t size);
+void cbox_config(cbox *bx, ccfg *cfg);
 
 void cbox_draw(cbox *bx, cairo_t *ctx);
 
-void cbox_shape(cbox *bx, int32_t x, int32_t y, uint32_t w, uint32_t h);
+void cbox_select(cbox *bx, size_t variant);
 
-void cbox_strip(cbox *bx);
+void cbox_setup(cbox *bx, size_t variant, struct cbox_style defaults, const char *name);
+
+void cbox_shape(cbox *bx, struct carea shape);
 
 /************************************************************************************************************/
 /* ACCESS ***************************************************************************************************/
 /************************************************************************************************************/
 
-uint32_t cbox_border(const cbox *bx) [[reproducible]];
+struct carea cbox_area(const cbox *bx) [[reproducible]];
 
-uint32_t cbox_inner_h(const cbox *bx) [[reproducible]];
-
-uint32_t cbox_inner_w(const cbox *bx) [[reproducible]];
-
-bool cbox_inside(const cbox *bx, int32_t x, int32_t y) [[reproducible]];
-
-uint32_t cbox_outline(const cbox *bx) [[reproducible]];
-
-uint32_t cbox_pad(const cbox *bx) [[reproducible]];
+uint32_t cbox_offset(const cbox *bx) [[reproducible]];
 
 /************************************************************************************************************/
 /************************************************************************************************************/

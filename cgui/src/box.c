@@ -7,6 +7,7 @@
 #include <cassette/cgui.h>
 #include <cassette/cobj.h>
 #include <stdbool.h>
+#include <stdckdint.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -17,143 +18,106 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-#define GUARD(CB, ...) if (!CB) { return __VA_OPT__(__VA_ARGS__); }
+#define GUARD(BX, ...) if (!BX) { return __VA_OPT__(__VA_ARGS__); }
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+struct cbox_variant
+{
+	char name[CCFG_TOKEN_LENGTH + 2];
+
+	struct cbox_style defaults;
+	struct cbox_style resolved;
+};
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 struct cbox
 {
+	/* properties */
+
+	char namespace[CCFG_TOKEN_LENGTH];
+
 	/* state */
+	
+	enum   cerr err;
+	struct carea shape;
+	size_t current;
 
-	bool strip;
+	/* configs */
 
-	/* geometry */
-
-	int32_t  x;
-	int32_t  y;
-	uint32_t w;
-	uint32_t h;
-
-	/* config */
-
-	uint32_t pad;
-	uint32_t border;
-	uint32_t outline;
-
-	struct ccolor clr_border;
-	struct ccolor clr_outline;
-	struct ccolor clr_bg;
-
-	/* defaults */
-
-	uint32_t df_pad;
-	uint32_t df_border;
-	uint32_t df_outline;
-
-	struct ccolor df_clr_border;
-	struct ccolor df_clr_outline;
-	struct ccolor df_clr_bg;
+	struct cbox_variant *variants;
+	size_t n;
 };
 
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static struct ccolor fetch_clr (ccfg  *, const char *, const char  *, struct ccolor);
-static uint32_t      fetch_len (ccfg  *, const char *, const char  *, uint32_t);
+static void     apply_clr (ccfg *, const char *, const char *, const char *, struct ccolor *);
+static void     apply_len (ccfg *, const char *, const char *, const char *, uint32_t *);
+static void     config    (ccfg *, const char *, struct cbox_variant *);
+static bool     fetch     (ccfg *, const char *, const char *, const char *);
+static uint32_t offset    (const cbox *);
 
 /************************************************************************************************************/
 /* PUBLIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-uint32_t
-cbox_border(const cbox *bx)
+struct carea
+cbox_area(const cbox *bx)
 {
-	GUARD(bx, 0);
+	GUARD(bx, carea_zero);
 
-	return bx->border;
+	struct carea area = bx->shape;
+	uint32_t l = offset(bx);
+
+	area.x = bx->shape.x + l;
+	area.y = bx->shape.y + l;
+	area.w = bx->shape.w - l * 2;
+	area.h = bx->shape.h - l * 2;
+
+	return area;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cbox_config(cbox *bx, ccfg *cfg)
+{
+	GUARD(bx);
+
+	for (size_t i = 0; i < bx->n; i++)
+	{
+		config(cfg, bx->namespace, bx->variants + i);
+	}
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 cbox *
-cbox_create(void)
+cbox_create(const char *name, size_t variants)
 {
 	cbox *bx;
 
-	if (!(bx = malloc(sizeof(cbox))))
+	if (variants == 0 || !(bx = malloc(sizeof(cbox))))
 	{
 		return nullptr;
 	}
 
-	bx->clr_border  = ccolor_black;
-	bx->clr_outline = ccolor_black;
-	bx->clr_bg      = ccolor_black;
-	bx->border      = 0;
-	bx->outline     = 0;
-	bx->pad         = 0;
+	if (!(bx->variants = calloc(variants, sizeof(struct cbox_variant))))
+	{
+		free(bx);
+		return nullptr;
+	}
 
-	bx->df_clr_border  = ccolor_black;
-	bx->df_clr_outline = ccolor_black;
-	bx->df_clr_bg      = ccolor_black;
-	bx->df_border      = 0;
-	bx->df_outline     = 0;
-	bx->df_pad         = 0;
+	snprintf(bx->namespace, CCFG_TOKEN_LENGTH, "%s", name);
 
-	bx->strip = false;
-	bx->x     = 0;
-	bx->y     = 0;
-	bx->w     = 0;
-	bx->h     = 0;
+	bx->shape   = carea_zero;
+	bx->n       = variants;
+	bx->current = 0;
 
 	return bx;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cbox_config(cbox *bx, ccfg *cfg, const char *group)
-{
-	GUARD(bx);
-
-	bx->pad         = fetch_len(cfg, group, "pad",           bx->df_pad);
-	bx->border      = fetch_len(cfg, group, "border",        bx->df_border);
-	bx->outline     = fetch_len(cfg, group, "outline",       bx->df_outline);
-	bx->clr_border  = fetch_clr(cfg, group, "border_color",  bx->df_clr_border);
-	bx->clr_outline = fetch_clr(cfg, group, "outline_color", bx->df_clr_outline);
-	bx->clr_bg      = fetch_clr(cfg, group, "background",    bx->df_clr_bg);
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cbox_default_background(cbox *bx, struct ccolor clr)
-{
-	GUARD(bx);
-
-	bx->df_clr_bg = clr;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cbox_default_border(cbox *bx, struct ccolor clr, uint32_t size)
-{
-	GUARD(bx);
-
-	bx->df_clr_border = clr;
-	bx->df_border     = size;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-void
-cbox_default_outline(cbox *bx, struct ccolor clr, uint32_t size)
-{
-	GUARD(bx);
-
-	bx->df_clr_outline = clr;
-	bx->df_outline     = size;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -161,7 +125,11 @@ cbox_default_outline(cbox *bx, struct ccolor clr, uint32_t size)
 nullptr_t
 cbox_destroy(cbox *bx)
 {
-	free(bx);
+	if (bx)
+	{
+		free(bx->variants);
+		free(bx);
+	}
 
 	return nullptr;
 }
@@ -173,140 +141,161 @@ cbox_draw(cbox *bx, cairo_t *ctx)
 {
 	GUARD(bx);
 
-	struct ccolor c1 = bx->clr_outline;
-	struct ccolor c2 = bx->clr_border;
-	struct ccolor c3 = bx->clr_bg;
+	struct cbox_style style = bx->variants[bx->current].resolved;
+	struct carea shape = bx->shape;
 
-	int32_t o = bx->outline;
-	int32_t b = bx->border;
+	struct ccolor c1 = style.clr_outline;
+	struct ccolor c2 = style.clr_border;
+	struct ccolor c3 = style.clr_bg;
 
-	if (o > 0 && !bx->strip)
+	int32_t o = style.outline;
+	int32_t b = style.border;
+	
+	cairo_set_operator(ctx, CAIRO_OPERATOR_SOURCE);
+	if (o > 0 && !style.striped)
 	{
 		cairo_set_source_rgba(ctx, c1.r, c1.g, c1.b, c1.a);
-		cairo_rectangle(ctx, bx->x - o, bx->y - o, bx->w + 2 * o, bx->h + 2 * o);
+		cairo_rectangle(ctx, shape.x - o, shape.y - o, shape.w + 2 * o, shape.h + 2 * o);
 		cairo_fill(ctx);
 	}
 
 	if (b > 0)
 	{
 		cairo_set_source_rgba(ctx, c2.r, c2.g, c2.b, c2.a);
-		cairo_rectangle(ctx, bx->x, bx->y, bx->w, bx->h);
+		cairo_rectangle(ctx, shape.x, shape.y, shape.w, shape.h);
 		cairo_fill(ctx);
 	}
 
 	cairo_set_source_rgba(ctx, c3.r, c3.g, c3.b, c3.a);
-	cairo_rectangle(ctx, bx->x + b, bx->y + b, bx->w - 2 * b, bx->h - 2 * b);
+	cairo_rectangle(ctx, shape.x + b, shape.y + b, shape.w - 2 * b, shape.h - 2 * b);
 	cairo_fill(ctx);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 uint32_t
-cbox_inner_h(const cbox *bx)
+cbox_offset(const cbox *bx)
 {
 	GUARD(bx, 0);
 
-	if (bx->h / 2 < bx->border
-	 || bx->h / 2 - bx->border < bx->pad)
-	{
-		return 0;
-	}
-
-	return bx->h - (bx->border + bx->pad) * 2;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-uint32_t
-cbox_inner_w(const cbox *bx)
-{
-	GUARD(bx, 0);
-
-	if (bx->w / 2 < bx->border
-	 || bx->w / 2 - bx->border < bx->pad)
-	{
-		return 0;
-	}
-
-	return bx->w - (bx->border + bx->pad) * 2;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-bool
-cbox_inside(const cbox *bx, int32_t x, int32_t y)
-{
-	GUARD(bx, false);
-
-	return x >= bx->x && x - (int64_t)bx->w <= bx->x
-	    && y >= bx->y && y - (int64_t)bx->h <= bx->y;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-uint32_t
-cbox_outline(const cbox *bx)
-{
-	GUARD(bx, 0);
-
-	return bx->outline;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-uint32_t
-cbox_pad(const cbox *bx)
-{
-	GUARD(bx, 0);
-
-	return bx->pad;
+	return offset(bx);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cbox_shape(cbox *bx, int32_t x, int32_t y, uint32_t w, uint32_t h)
+cbox_select(cbox *bx, size_t variant)
 {
 	GUARD(bx);
 
-	bx->x = x;
-	bx->y = y;
-	bx->w = w;
-	bx->h = h;
+	bx->current = variant < bx->n ? variant : bx->n - 1;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 void
-cbox_strip(cbox *bx)
+cbox_setup(cbox *bx, size_t variant, struct cbox_style defaults, const char *name)
 {
 	GUARD(bx);
 
-	bx->strip = true;
+	size_t i = variant < bx->n ? variant : bx->n - 1;
+
+	if (name)
+	{
+		snprintf(bx->variants[i].name, CCFG_TOKEN_LENGTH + 2, "%s.%s", bx->namespace, name);
+	}
+	else
+	{
+		bx->variants[i].name[0] = '\0';
+	}
+
+	bx->variants[i].defaults = defaults;
+	bx->variants[i].resolved = defaults;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+void
+cbox_shape(cbox *bx, struct carea shape)
+{
+	GUARD(bx);
+
+	bx->shape = shape;
 }
 
 /************************************************************************************************************/
 /* STATIC ***************************************************************************************************/
 /************************************************************************************************************/
 
-static struct ccolor
-fetch_clr(ccfg *cfg, const char *group, const char *name, struct ccolor backup)
+static void
+apply_clr(ccfg *cfg, const char *name, const char *name_2, const char *prop, struct ccolor *dst)
 {
-	ccfg_fetch(cfg, group, name);
+	if (fetch(cfg, name, name_2, prop))
+	{
+		*dst = ccolor_from_str(ccfg_resource(cfg), nullptr);
+	}
+}
 
-	return ccfg_iterate(cfg) 
-	     ? ccolor_from_str(ccfg_resource(cfg), nullptr)
-	     : backup;
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+apply_len(ccfg *cfg, const char *name, const char *name_2, const char *prop, uint32_t *dst)
+{
+	if (fetch(cfg, name, name_2, prop))
+	{
+		*dst = cutil_str_to_long(ccfg_resource(cfg), 0, UINT32_MAX);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+config(ccfg *cfg, const char *name, struct cbox_variant *variant)
+{
+	struct cbox_style *defaults = &variant->defaults;
+	struct cbox_style *resolved = &variant->resolved;
+
+	*resolved = *defaults;
+
+	apply_len(cfg, variant->name, name, "pad",              &resolved->pad);
+	apply_len(cfg, variant->name, name, "border",           &resolved->border);
+	apply_len(cfg, variant->name, name, "outline",          &resolved->outline);
+	
+	apply_clr(cfg, variant->name, name, "background_color", &resolved->clr_bg);
+	apply_clr(cfg, variant->name, name, "border_color",     &resolved->clr_border);
+	apply_clr(cfg, variant->name, name, "outline_color",    &resolved->clr_outline);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static bool
+fetch(ccfg *cfg, const char *name, const char *name_2, const char *prop)
+{
+	ccfg_fetch(cfg, name, prop);
+	if (!ccfg_iterate(cfg))
+	{
+		ccfg_fetch(cfg, name_2, prop);
+		if (!ccfg_iterate(cfg))
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static uint32_t
-fetch_len(ccfg *cfg, const char *group, const char *name, uint32_t backup)
+offset(const cbox *bx)
 {
-	ccfg_fetch(cfg, group, name);
+	uint32_t l = 0;
 
-	return ccfg_iterate(cfg) 
-	     ? cutil_str_to_long(ccfg_resource(cfg), 0, UINT32_MAX)
-	     : backup;
+	if (bx->n > 0)
+	{
+		l  = bx->variants[bx->current].resolved.border;
+		l += bx->variants[bx->current].resolved.pad;
+	}
+
+	return l;
 }

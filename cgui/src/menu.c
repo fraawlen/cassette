@@ -25,7 +25,7 @@ static void ev_shape (struct menu *mn, struct cevent ev);
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static constexpr struct cbox2_style default_style =
+static constexpr struct cbox_style default_style =
 {
 	.striped     = true,
 	.pad         = 20,
@@ -43,12 +43,12 @@ menu_init(struct menu *mn)
 {
 	*mn = (struct menu){0};
 
-	if (!(mn->frame = cbox2_create("menu", 1)))
+	if (!(mn->frame = cbox_create("menu", 1)))
 	{
 		return false;
 	}
 
-	cbox2_setup(mn->frame, 0, default_style, "");
+	cbox_setup(mn->frame, 0, default_style, "");
 
 	return true;
 }
@@ -58,7 +58,7 @@ menu_init(struct menu *mn)
 void
 menu_kill(struct menu *mn)
 {
-	cbox2_destroy(mn->frame);
+	cbox_destroy(mn->frame);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -100,7 +100,7 @@ menu_send_event(struct menu *mn, struct cevent ev)
 static void
 ev_conf(struct menu *mn, struct cevent ev)
 {
-	cbox2_config(mn->frame, ev.config);
+	cbox_config(mn->frame, ev.config);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -113,7 +113,7 @@ ev_draw(struct menu *mn, struct cevent ev)
 		return;
 	}
 
-	cbox2_draw(mn->frame, ev.drawable);
+	cbox_draw(mn->frame, ev.drawable);
 	mn->damaged = false;
 }
 
@@ -122,6 +122,6 @@ ev_draw(struct menu *mn, struct cevent ev)
 static void
 ev_shape(struct menu *mn, struct cevent ev)
 {
-	cbox2_shape(mn->frame, ev.shape);
+	cbox_shape(mn->frame, ev.shape);
 	mn->damaged = true;
 }

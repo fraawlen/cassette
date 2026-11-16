@@ -11,5 +11,3 @@
 #include "cshell.h"
 
 #include "cgap.h"
-
-#include "cbox2.h"
