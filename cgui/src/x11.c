@@ -562,6 +562,7 @@ fail_surface:
 	xcb_free_gc(x11->connection, win->gc);
 	xcb_free_pixmap(x11->connection, win->buffer);
 	xcb_destroy_window(x11->connection, win->window);
+	inputs_ungrab(x11);
 fail_grab:
 	shell_send_event(event_error, target);
 }
@@ -838,8 +839,8 @@ move_popup(struct x11 *x11, uint32_t w, uint32_t h, int32_t *x, int32_t *y)
 	it = xcb_randr_get_monitors_monitors_iterator(rp2);
 	for (; it.rem; xcb_randr_monitor_info_next(&it))
 	{
-		if (*x > it.data->x && *x < it.data->x + it.data->width
-		 && *y > it.data->y && *y < it.data->y + it.data->height)
+		if (*x >= it.data->x && *x < it.data->x + it.data->width
+		 && *y >= it.data->y && *y < it.data->y + it.data->height)
 		{
 			dw1 = it.data->x + it.data->width  - *x;
 			dh1 = it.data->y + it.data->height - *y;
@@ -936,25 +937,22 @@ setup_render(struct x11 *x11)
 
 	ck = xcb_render_query_pict_formats(x11->connection);
 	if (!(rp = xcb_render_query_pict_formats_reply(x11->connection, ck, nullptr))
-	 || !(format = xcb_render_util_find_standard_format(rp, XCB_PICT_STANDARD_ARGB_32)))
+	 || !(format = xcb_render_util_find_standard_format(rp, XCB_PICT_STANDARD_ARGB_32))
+	 || !(it_screen = xcb_render_query_pict_formats_screens_iterator(rp)).rem)
 	{
 		goto done;
 	}
 
-	it_screen = xcb_render_query_pict_formats_screens_iterator(rp);
-	for (; it_screen.rem; xcb_render_pictscreen_next(&it_screen))
+	it_depth = xcb_render_pictscreen_depths_iterator(it_screen.data);
+	for (; it_depth.rem;  xcb_render_pictdepth_next(&it_depth))
 	{
-		it_depth = xcb_render_pictscreen_depths_iterator(it_screen.data);
-		for (; it_depth.rem;  xcb_render_pictdepth_next(&it_depth))
+		it_visual = xcb_render_pictdepth_visuals_iterator(it_depth.data);
+		for (; it_visual.rem; xcb_render_pictvisual_next(&it_visual))
 		{
-			it_visual = xcb_render_pictdepth_visuals_iterator(it_depth.data);
-			for (; it_visual.rem; xcb_render_pictvisual_next(&it_visual))
+			if (it_visual.data->format == format->id)
 			{
-				if (it_visual.data->format == format->id)
-				{
-					id = it_visual.data->visual;
-					goto done;
-				}
+				id = it_visual.data->visual;
+				goto done;
 			}
 		}
 	}
