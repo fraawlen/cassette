@@ -611,7 +611,8 @@ ev_conf(struct x11 *x11, xcb_configure_notify_event_t *ev)
 {
 	enum shell_target type = target(x11, ev->window);
 	struct x11_window *win = window(x11, ev->window);
-	struct cevent cev =
+	struct cevent cev2 = { .type = CEVENT_DAMAGE };
+	struct cevent cev1 =
 	{
 		.type  = CEVENT_SHAPE,
 		.shape = {0, 0, ev->width, ev->height},
@@ -628,7 +629,8 @@ ev_conf(struct x11 *x11, xcb_configure_notify_event_t *ev)
 	win->h        = ev->height;
 	win->w        = ev->width;
 
-	shell_send_event(cev, type);
+	shell_send_event(cev1, type);
+	shell_send_event(cev2, type);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -855,18 +857,20 @@ move_popup(struct x11 *x11, uint32_t w, uint32_t h, int32_t *x, int32_t *y)
 	*x -= dw1 >= w ? 0 : w - (dw2 >= w ? 0 : dw1);
 	*y -= dh1 >= h ? 0 : h - (dh2 >= h ? 0 : dh1);
 
-	/* send a shape event manually because override */
-	/* redirect windows get no configure events     */
+	/* send a damage and shape event manually because    */
+	/* override redirect windows get no configure events */
 
 skip_position:
 
-	struct cevent ev = 
+	struct cevent ev2 = { .type = CEVENT_DAMAGE };
+	struct cevent ev1 = 
 	{
 		.type  = CEVENT_SHAPE,
 		.shape = {0, 0, w, h},
 	};
 
-	shell_send_event(ev, SHELL_MENU);
+	shell_send_event(ev1, SHELL_MENU);
+	shell_send_event(ev2, SHELL_MENU);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

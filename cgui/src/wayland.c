@@ -141,7 +141,8 @@ static const struct xdg_wm_base_listener ear_xdg =
 void
 wayland_commit(struct wayland *wl, enum shell_target target)
 {
-	struct cevent ev = { .type = CEVENT_DRAW, };
+	struct cevent ev1 = { .type = CEVENT_DAMAGE, };
+	struct cevent ev2 = { .type = CEVENT_DRAW, };
 	struct wayland_window *win = target == SHELL_MAIN ? &wl->main : &wl->menu;
 	struct wayland_buffer *buf = nullptr;
 	struct wl_callback *cl;
@@ -164,7 +165,8 @@ wayland_commit(struct wayland *wl, enum shell_target target)
 		}
 	}
 
-	/* update selected buffer */
+	/* update selected buffer                         */
+	/* partial redraws on new buffers are not allowed */
 
 	if (buf && !buf->busy)
 	{
@@ -175,13 +177,19 @@ wayland_commit(struct wayland *wl, enum shell_target target)
 			return;
 		}
 
+		if (win->last_buffer != buf)
+		{
+			win->last_buffer = buf;
+			shell_send_event(ev1, target);
+		}
+
 		win->redraw = false;
 		win->commit = true;
 		win->wait   = true;
 		buf->busy   = true;
 
-		ev.drawable = buf->cairo;
-		shell_send_event(ev, target);
+		ev2.drawable = buf->cairo;
+		shell_send_event(ev2, target);
 		cairo_surface_flush(buf->surface);
 
 		wl_callback_add_listener(cl, &ear_frame, win);
@@ -417,12 +425,13 @@ wayland_show(struct wayland *wl, enum shell_target target, const char *tag, uint
 
 	/* set common properties */
 
-	win->redraw = false;
-	win->commit = false;
-	win->wait   = false;
-	win->init   = false;
-	win->w      = w;
-	win->h      = h;
+	win->last_buffer = nullptr;
+	win->redraw      = false;
+	win->commit      = false;
+	win->wait        = false;
+	win->init        = false;
+	win->w           = w;
+	win->h           = h;
 
 	xdg_surface_add_listener(win->base, &ear_base, win);
 
@@ -454,15 +463,15 @@ fail_surface:
 static void
 buffer_free(struct wayland_buffer *buf)
 {
+	cairo_destroy(buf->cairo);
+	cairo_surface_finish(buf->surface);
+	cairo_surface_destroy(buf->surface);
+
 	FREE(buf->handle, wl_buffer_destroy);
 	if (buf->pixels)
 	{
 		munmap(buf->pixels, buf->w * buf->h * 4);
 	}
-
-	cairo_destroy(buf->cairo);
-	cairo_surface_finish(buf->surface);
-	cairo_surface_destroy(buf->surface);
 
 	buf->handle = nullptr;
 	buf->pixels = nullptr;
@@ -685,11 +694,8 @@ ev_conf_pop(void *data, struct xdg_popup *pop, int x, int y, int w, int h)
 	(void)y;
 
 	struct wayland_window *win = data;
-	struct cevent ev =
-	{
-		.type  = CEVENT_SHAPE,
-		.shape = {0, 0, w, h},
-	};
+	struct cevent ev2 = { .type  = CEVENT_DAMAGE };
+	struct cevent ev1 = { .type  = CEVENT_SHAPE, .shape = {0, 0, w, h} };
 
 	if (!win->init)
 	{
@@ -701,7 +707,8 @@ ev_conf_pop(void *data, struct xdg_popup *pop, int x, int y, int w, int h)
 	win->w      = w;
 	win->h      = h;
 
-	shell_send_event(ev, SHELL_MENU);
+	shell_send_event(ev2, SHELL_MENU);
+	shell_send_event(ev1, SHELL_MENU);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -713,7 +720,8 @@ ev_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 	(void)states;
 
 	struct wayland_window *win = data;
-	struct cevent ev =
+	struct cevent ev2 = { .type = CEVENT_DAMAGE };
+	struct cevent ev1 =
 	{
 		.type  = CEVENT_SHAPE,
 		.shape =
@@ -732,10 +740,11 @@ ev_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 
 	win->redraw = true;
 	win->init   = true;
-	win->w      = ev.shape.w;
-	win->h      = ev.shape.h;
+	win->w      = ev1.shape.w;
+	win->h      = ev1.shape.h;
 
-	shell_send_event(ev, SHELL_MAIN);
+	shell_send_event(ev2, SHELL_MAIN);
+	shell_send_event(ev1, SHELL_MAIN);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

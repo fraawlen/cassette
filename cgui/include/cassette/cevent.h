@@ -29,6 +29,7 @@ enum cevent_type
 	CEVENT_SHAPE,
 	CEVENT_CONFIG,
 	CEVENT_DRAW,
+	CEVENT_DAMAGE,
 	CEVENT_BUTTON_PRESS,
 	CEVENT_BUTTON_RELEASE,
 };
@@ -55,10 +56,11 @@ struct cevent
 
 		ccfg *config;
 
-		/* CEVENT_CLOSE */
-		/* CEVENT_OPEN  */
-		/* CEVENT_FAIL  */
-		/* CEVENT_NONE  */
+		/* CEVENT_DAMAGE */
+		/* CEVENT_CLOSE  */
+		/* CEVENT_OPEN   */
+		/* CEVENT_FAIL   */
+		/* CEVENT_NONE   */
 
 		/* no fields for these events */
 	};

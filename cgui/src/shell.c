@@ -130,6 +130,7 @@ struct cshell
 /************************************************************************************************************/
 
 static void ev_button   (cshell *, struct cevent);
+static void ev_damage   (cshell *, struct cevent);
 static void ev_draw     (cshell *, struct cevent);
 static void ev_open     (cshell *);
 static void ev_redirect (cshell *, struct cevent);
@@ -577,6 +578,10 @@ shell_send_event(struct cevent ev, enum shell_target target)
 			ev_button(sh, ev);
 			break;
 
+		case CEVENT_DAMAGE:
+			ev_damage(sh, ev);
+			break;
+
 		case CEVENT_DRAW:
 			ev_draw(sh, ev);
 			break;
@@ -741,6 +746,19 @@ ev_button(cshell *sh, struct cevent ev)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
+ev_damage(cshell *sh, struct cevent ev)
+{
+	sh->damaged = true;
+
+	if (sh->focus)
+	{
+		grid_send_event(sh->focus, ev);
+	}
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 ev_draw(cshell *sh, struct cevent ev)
 {
 	if (sh->damaged)
@@ -807,7 +825,6 @@ ev_shape(cshell *sh, struct cevent ev)
 	sh->w       = ev.shape.w;
 	sh->h       = ev.shape.h;
 	sh->focus   = nullptr;
-	sh->damaged = true;
 
 	cbox_shape(sh->frame, ev.shape);
 	CREF_FOR_EACH(sh->grids, cgrid, gr, i)

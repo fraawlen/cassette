@@ -42,6 +42,7 @@ struct ccell
 /************************************************************************************************************/
 /************************************************************************************************************/
 
+static void ev_damage (ccell *, struct cevent);
 static void ev_draw   (ccell *, struct cevent);
 static void ev_shape  (ccell *, struct cevent);
 static void propagate (ccell *, struct cevent);
@@ -131,6 +132,10 @@ cell_send_event(ccell *cl, struct cevent ev)
 			ev_shape(cl, ev);
 			break;
 
+		case CEVENT_DAMAGE:
+			ev_damage(cl, ev);
+			break;
+
 		case CEVENT_DRAW:
 			ev_draw(cl, ev);
 			break;
@@ -146,9 +151,10 @@ cell_send_event(ccell *cl, struct cevent ev)
 /************************************************************************************************************/
 
 static void
-propagate(ccell *cl, struct cevent ev)
+ev_damage(ccell *cl, struct cevent ev)
 {
-	cl->cb_event.fn(cl, cl->cb_event.data, ev);
+	cl->damaged = true;
+	propagate(cl, ev);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -170,4 +176,12 @@ ev_shape(ccell *cl, struct cevent ev)
 {
 	cl->damaged = true;
 	propagate(cl, ev);
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
+propagate(ccell *cl, struct cevent ev)
+{
+	cl->cb_event.fn(cl, cl->cb_event.data, ev);
 }

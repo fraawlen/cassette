@@ -17,9 +17,10 @@
 /************************************************************************************************************/
 /************************************************************************************************************/
 
-static void ev_conf  (struct menu *mn, struct cevent ev);
-static void ev_draw  (struct menu *mn, struct cevent ev);
-static void ev_shape (struct menu *mn, struct cevent ev);
+static void ev_conf   (struct menu *mn, struct cevent ev);
+static void ev_damage (struct menu *mn, struct cevent ev);
+static void ev_draw   (struct menu *mn, struct cevent ev);
+static void ev_shape  (struct menu *mn, struct cevent ev);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -69,6 +70,10 @@ menu_send_event(struct menu *mn, struct cevent ev)
 	event_print(ev, "menu");
 	switch (ev.type)
 	{
+		case CEVENT_DAMAGE:
+			ev_damage(mn, ev);
+			break;
+
 		case CEVENT_DRAW:
 			ev_draw(mn, ev);
 			break;
@@ -106,6 +111,16 @@ ev_conf(struct menu *mn, struct cevent ev)
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
 static void
+ev_damage(struct menu *mn, struct cevent ev)
+{
+	mn->damaged = true;
+
+	(void)ev;
+}
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
+
+static void
 ev_draw(struct menu *mn, struct cevent ev)
 {
 	if (mn->damaged)
@@ -121,5 +136,4 @@ static void
 ev_shape(struct menu *mn, struct cevent ev)
 {
 	cbox_shape(mn->frame, ev.shape);
-	mn->damaged = true;
 }

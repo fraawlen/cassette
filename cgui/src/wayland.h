@@ -52,6 +52,7 @@ struct wayland_window
 	struct xdg_popup *pop;
 	struct zxdg_toplevel_decoration_v1 *ssd;
 	struct wayland_buffer buffers[WAYLAND_BUFFER_N];
+	struct wayland_buffer *last_buffer;
 
 	/* states */
 
