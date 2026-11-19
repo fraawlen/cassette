@@ -1094,7 +1094,7 @@ set_min_size(cshell *sh)
 		CREF_FOR_EACH(sh->grids, cgrid, gr, i)
 		{
 			w = w > grid_w(gr) ? grid_w(gr) : w;
-			h = h > grid_h(gr) ? grid_h(gr) : w;
+			h = h > grid_h(gr) ? grid_h(gr) : h;
 		}
 	
 		SERVER(sh, hint, w + FRAME_OFFSET(sh), h + FRAME_OFFSET(sh));

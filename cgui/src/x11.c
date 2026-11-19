@@ -217,7 +217,7 @@ x11_hint(struct x11 *x11, uint32_t w, uint32_t h)
 			&x11->main,
 			XCB_ATOM_WM_NORMAL_HINTS,
 			XCB_ATOM_WM_SIZE_HINTS,
-			sizeof(hints),
+			sizeof(hints) / 4,
 			&hints,
 			true);
 	}
@@ -535,8 +535,8 @@ x11_show(struct x11 *x11, enum shell_target target, const char *tag, uint32_t w,
 
 	/* finish */
 
-	win->w           = 0;
-	win->h           = 0;
+	win->w           = target == SHELL_MENU ? w : 0;
+	win->h           = target == SHELL_MENU ? h : 0;
 	win->sync_val.hi = 0;
 	win->sync_val.lo = 0;
 	win->serial      = 0;
@@ -744,7 +744,7 @@ inputs_grab(struct x11 *x11)
 	xcb_grab_pointer_reply_t  *rp2 = nullptr;
 	xcb_grab_keyboard_cookie_t ck1;
 	xcb_grab_pointer_cookie_t  ck2;
-	bool fail;
+	bool fail = false;
 
 	ck1 = xcb_grab_keyboard(
 		x11->connection,
@@ -768,9 +768,11 @@ inputs_grab(struct x11 *x11)
 	rp1 = xcb_grab_keyboard_reply(x11->connection, ck1, nullptr);
 	rp2 = xcb_grab_pointer_reply (x11->connection, ck2, nullptr);
 
-	if ((fail = !rp1 || !rp2))
+	if (!rp1 || rp1->status != XCB_GRAB_STATUS_SUCCESS
+	 || !rp2 || rp2->status != XCB_GRAB_STATUS_SUCCESS)
 	{
 		inputs_ungrab(x11);
+		fail = true;
 	}
 
 	free(rp1);
@@ -806,7 +808,7 @@ move_popup(struct x11 *x11, uint32_t w, uint32_t h, int32_t *x, int32_t *y)
 	ck1 = xcb_query_pointer(x11->connection, x11->screen->root);
 	if (!(rp1 = xcb_query_pointer_reply(x11->connection, ck1, nullptr)))
 	{
-		return;
+		goto skip_position;
 	}
 
 	*x = rp1->root_x;
@@ -817,7 +819,7 @@ move_popup(struct x11 *x11, uint32_t w, uint32_t h, int32_t *x, int32_t *y)
 
 	if (x11->opcode_randr == 0)
 	{
-		return;
+		goto skip_position;
 	}
 
 	/* locate the monitor the pointer is on */
@@ -829,7 +831,7 @@ move_popup(struct x11 *x11, uint32_t w, uint32_t h, int32_t *x, int32_t *y)
 	ck2 = xcb_randr_get_monitors(x11->connection, x11->screen->root, 1);
 	if (!(rp2 = xcb_randr_get_monitors_reply(x11->connection, ck2, nullptr)))
 	{
-		return;
+		goto skip_position;
 	}
 
 	it = xcb_randr_get_monitors_monitors_iterator(rp2);
@@ -853,8 +855,10 @@ move_popup(struct x11 *x11, uint32_t w, uint32_t h, int32_t *x, int32_t *y)
 	*x -= dw1 >= w ? 0 : w - (dw2 >= w ? 0 : dw1);
 	*y -= dh1 >= h ? 0 : h - (dh2 >= h ? 0 : dh1);
 
-	/* send a shape event manually                           */
-	/* because override redirect windows get no configure events */
+	/* send a shape event manually because override */
+	/* redirect windows get no configure events     */
+
+skip_position:
 
 	struct cevent ev = 
 	{
