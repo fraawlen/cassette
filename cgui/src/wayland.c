@@ -154,7 +154,7 @@ wayland_commit(struct wayland *wl, enum shell_target target)
 
 	/* grab free buffer to update */
 
-	if (win->redraw && !win->wait)
+	if (win->redraw && win->configured && !win->wait)
 	{
 		for (size_t i = 0; i < WAYLAND_BUFFER_N; i++)
 		{
@@ -426,6 +426,7 @@ wayland_show(struct wayland *wl, enum shell_target target, const char *tag, uint
 	/* set common properties */
 
 	win->last_buffer = nullptr;
+	win->configured  = false;
 	win->redraw      = false;
 	win->commit      = false;
 	win->wait        = false;
@@ -679,9 +680,11 @@ ev_close_top(void *data, struct xdg_toplevel *top)
 static void
 ev_conf_base(void *data, struct xdg_surface *base, uint32_t serial)
 {
-	(void)data;
+	struct wayland_window *win = data;
 
 	xdg_surface_ack_configure(base, serial);
+	
+	win->configured = true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -702,13 +705,14 @@ ev_conf_pop(void *data, struct xdg_popup *pop, int x, int y, int w, int h)
 		shell_send_event(event_open, SHELL_MENU);
 	}
 
-	win->redraw = true;
-	win->init   = true;
-	win->w      = w;
-	win->h      = h;
+	win->configured = false;
+	win->redraw     = true;
+	win->init       = true;
+	win->w          = w;
+	win->h          = h;
 
-	shell_send_event(ev2, SHELL_MENU);
 	shell_send_event(ev1, SHELL_MENU);
+	shell_send_event(ev2, SHELL_MENU);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -729,7 +733,7 @@ ev_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 			0,
 			0,
 			w == 0 ? (int)win->w : w,
-			h == 0 ? (int)win->h : h
+			h == 0 ? (int)win->h : h,
 		},
 	};
 
@@ -738,13 +742,14 @@ ev_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 		shell_send_event(event_open, SHELL_MAIN);
 	}
 
-	win->redraw = true;
-	win->init   = true;
-	win->w      = ev1.shape.w;
-	win->h      = ev1.shape.h;
+	win->configured = false;
+	win->redraw     = true;
+	win->init       = true;
+	win->w          = ev1.shape.w;
+	win->h          = ev1.shape.h;
 
-	shell_send_event(ev2, SHELL_MAIN);
 	shell_send_event(ev1, SHELL_MAIN);
+	shell_send_event(ev2, SHELL_MAIN);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

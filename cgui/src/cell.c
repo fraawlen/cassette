@@ -44,7 +44,6 @@ struct ccell
 
 static void ev_damage (ccell *, struct cevent);
 static void ev_draw   (ccell *, struct cevent);
-static void ev_shape  (ccell *, struct cevent);
 static void propagate (ccell *, struct cevent);
 
 /************************************************************************************************************/
@@ -128,16 +127,16 @@ cell_send_event(ccell *cl, struct cevent ev)
 	event_print(ev, "cell");
 	switch (ev.type)
 	{
-		case CEVENT_SHAPE:
-			ev_shape(cl, ev);
-			break;
-
 		case CEVENT_DAMAGE:
 			ev_damage(cl, ev);
 			break;
 
 		case CEVENT_DRAW:
 			ev_draw(cl, ev);
+			break;
+
+		case CEVENT_SHAPE:
+			propagate(cl, ev);
 			break;
 
 		default:
@@ -167,15 +166,6 @@ ev_draw(ccell *cl, struct cevent ev)
 		cl->damaged = false;
 		propagate(cl, ev);
 	}
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-static void
-ev_shape(ccell *cl, struct cevent ev)
-{
-	cl->damaged = true;
-	propagate(cl, ev);
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

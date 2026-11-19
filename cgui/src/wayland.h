@@ -58,6 +58,9 @@ struct wayland_window
 
 	uint32_t w;
 	uint32_t h;
+	uint32_t w2;
+	uint32_t h2;
+	bool configured;
 	bool commit;
 	bool redraw;
 	bool active;
