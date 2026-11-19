@@ -59,8 +59,8 @@ static void ev_unbind    (void *, struct wl_registry  *, uint32_t);
 static void buffer_free   (struct wayland_buffer *);
 static bool buffer_resize (struct wayland_buffer *, struct wayland *, uint32_t, uint32_t);
 static void flush         (struct wayland *);
-static void init_menu     (struct wayland *, struct wayland_window *);
-static void init_shell    (struct wayland *, struct wayland_window *, const char *);
+static bool init_menu     (struct wayland *, struct wayland_window *);
+static bool init_shell    (struct wayland *, struct wayland_window *, const char *);
 
 /************************************************************************************************************/
 /************************************************************************************************************/
@@ -145,7 +145,6 @@ wayland_commit(struct wayland *wl, enum shell_target target)
 	struct cevent ev2 = { .type = CEVENT_DRAW, };
 	struct wayland_window *win = target == SHELL_MAIN ? &wl->main : &wl->menu;
 	struct wayland_buffer *buf = nullptr;
-	struct wl_callback *cl;
 
 	if (!win->active)
 	{
@@ -171,7 +170,7 @@ wayland_commit(struct wayland *wl, enum shell_target target)
 	if (buf && !buf->busy)
 	{
 		if (!buffer_resize(buf, wl, win->w, win->h)
-		 || !(cl = wl_surface_frame(win->surface)))
+		 || !(win->cl = wl_surface_frame(win->surface)))
 		{
 			shell_send_event(event_error, SHELL_MAIN);
 			return;
@@ -192,7 +191,7 @@ wayland_commit(struct wayland *wl, enum shell_target target)
 		shell_send_event(ev2, target);
 		cairo_surface_flush(buf->surface);
 
-		wl_callback_add_listener(cl, &ear_frame, win);
+		wl_callback_add_listener(win->cl, &ear_frame, win);
 		wl_surface_attach(win->surface, buf->handle, 0, 0);
 		wl_surface_damage_buffer(win->surface, 0, 0, buf->w, buf->h);
 		xdg_surface_set_window_geometry(win->base, 0, 0, win->w, win->h);
@@ -247,6 +246,7 @@ wayland_hide(struct wayland *wl, enum shell_target target)
 		buffer_free(win->buffers + i);
 	}
 
+	FREE(win->cl, wl_callback_destroy);
 	FREE(win->ssd, zxdg_toplevel_decoration_v1_destroy);
 	FREE(win->top, xdg_toplevel_destroy);
 	FREE(win->pop, xdg_popup_destroy);
@@ -328,6 +328,7 @@ wayland_kill(struct wayland *wl)
 	FREE(wl->seat, wl_seat_destroy);
 	FREE(wl->compositor, wl_compositor_destroy);
 	FREE(wl->registry, wl_registry_destroy);
+	FREE(wl->pointer, wl_pointer_destroy);
 
 	wl_display_disconnect(wl->display);
 }
@@ -425,6 +426,7 @@ wayland_show(struct wayland *wl, enum shell_target target, const char *tag, uint
 
 	/* set common properties */
 
+	win->cl          = nullptr;
 	win->last_buffer = nullptr;
 	win->configured  = false;
 	win->redraw      = false;
@@ -438,16 +440,10 @@ wayland_show(struct wayland *wl, enum shell_target target, const char *tag, uint
 
 	/* finish with type specific inits */
 
-	if (target == SHELL_MAIN)
+	if (target == SHELL_MAIN ? init_shell(wl, win, tag) : init_menu(wl, win))
 	{
-		init_shell(wl, win, tag);
+		return;
 	}
-	else
-	{
-		init_menu(wl, win);
-	}
-
-	return;
 
 	/* errors */
 
@@ -502,7 +498,7 @@ buffer_resize(struct wayland_buffer *buf, struct wayland *wl, uint32_t w, uint32
 		return true;
 	}
 
-	if (ckd_mul(&stride, w, 4) || ckd_mul(&size, h, stride))
+	if (ckd_mul(&stride, w, 4) || ckd_mul(&size, h, stride) || size > INT32_MAX)
 	{
 		goto fail_math;
 	}
@@ -758,10 +754,13 @@ static void
 ev_frame(void *data, struct wl_callback *cl, uint32_t time)
 {
 	(void)time;
+	
+	struct wayland_window *win = data;
 
+	win->wait = false;
+	win->cl = nullptr;
+	
 	wl_callback_destroy(cl);
-
-	((struct wayland_window *)data)->wait = false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -805,7 +804,7 @@ ev_seat(void *data, struct wl_seat *seat, uint32_t can)
 {
 	struct wayland *wl = data;
 
-	if (can & WL_SEAT_CAPABILITY_POINTER)
+	if (!wl->pointer && (can & WL_SEAT_CAPABILITY_POINTER))
 	{
 		wl->pointer = wl_seat_get_pointer(seat);
 		wl_pointer_add_listener(wl->pointer, &ear_pointer, wl);
@@ -838,7 +837,7 @@ flush(struct wayland *wl)
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void
+static bool
 init_menu(struct wayland *wl, struct wayland_window *win)
 {
 	struct xdg_positioner *pos;
@@ -876,9 +875,7 @@ init_menu(struct wayland *wl, struct wayland_window *win)
 	wl_surface_commit(win->surface);
 	flush(wl);
 
-	win->active = true;
-
-	return;
+	return win->active = true;
 
 	/* errors */
 
@@ -886,12 +883,13 @@ fail_role:
 	xdg_positioner_destroy(pos);
 fail_pos:
 	xdg_surface_destroy(win->base);
-	shell_send_event(event_error, SHELL_MENU);
+
+	return false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
-static void
+static bool
 init_shell(struct wayland *wl, struct wayland_window *win, const char *tag)
 {
 	/* role */
@@ -924,9 +922,7 @@ skip_decor:
 	wl_surface_commit(win->surface);
 	flush(wl);
 	
-	win->active = true;
-
-	return;
+	return win->active = true;
 
 	/* errors */
 
@@ -934,7 +930,8 @@ fail_decor:
 	xdg_toplevel_destroy(win->top);
 fail_role:
 	xdg_surface_destroy(win->base);
-	shell_send_event(event_error, SHELL_MAIN);
+
+	return false;
 }
 
 /************************************************************************************************************/

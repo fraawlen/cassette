@@ -46,6 +46,7 @@ struct wayland_window
 {	
 	/* components */
 
+	struct wl_callback *cl;
 	struct wl_surface *surface;
 	struct xdg_surface *base;
 	struct xdg_toplevel *top;
