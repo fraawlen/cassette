@@ -33,21 +33,9 @@ struct call
 
 struct ccell
 {
-	/* state */
-
+	struct call cb_event;
 	enum cerr err;
 	bool damaged;
-
-	/* geometry */
-
-	uint32_t x;
-	uint32_t y;
-	uint32_t w;
-	uint32_t h;
-
-	/* propagates */
-
-	struct call cb_event;
 };
 
 /************************************************************************************************************/
@@ -85,10 +73,6 @@ ccell_create(void (*fn)(ccell *, void *, struct cevent), void *data)
 	cl->cb_event = (struct call){.fn = fn, .data = data};
 	cl->err      = CERR_NONE;
 	cl->damaged  = false;
-	cl->x        = 0;
-	cl->y        = 0;
-	cl->w        = 0;
-	cl->h        = 0;
 
 	return cl;
 }
@@ -131,46 +115,6 @@ enum cerr
 ccell_error(const ccell *cl)
 {
 	return cl ? cl->err : CERR_INVALID;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-uint32_t
-ccell_h(const ccell *cl)
-{
-	GUARD(cl, 0);
-
-	return cl->h;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-uint32_t
-ccell_w(const ccell *cl)
-{
-	GUARD(cl, 0);
-
-	return cl->w;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-uint32_t
-ccell_x(const ccell *cl)
-{
-	GUARD(cl, 0);
-
-	return cl->x;
-}
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
-
-uint32_t
-ccell_y(const ccell *cl)
-{
-	GUARD(cl, 0);
-
-	return cl->y;
 }
 
 /************************************************************************************************************/
@@ -224,11 +168,6 @@ ev_draw(ccell *cl, struct cevent ev)
 static void
 ev_shape(ccell *cl, struct cevent ev)
 {
-	cl->x = ev.shape.x;
-	cl->y = ev.shape.y;
-	cl->w = ev.shape.w;
-	cl->h = ev.shape.h;
-
 	cl->damaged = true;
 	propagate(cl, ev);
 }

@@ -43,14 +43,6 @@ void *ccell_data(const ccell *cl) [[reproducible]];
 
 enum cerr ccell_error(const ccell *cl) [[reproducible]];
 
-uint32_t ccell_h(const ccell *cl) [[reproducible]];
-
-uint32_t ccell_w(const ccell *cl) [[reproducible]];
-
-uint32_t ccell_x(const ccell *cl) [[reproducible]];
-
-uint32_t ccell_y(const ccell *cl) [[reproducible]];
-
 /************************************************************************************************************/
 /************************************************************************************************************/
 /************************************************************************************************************/

@@ -108,13 +108,11 @@ ev_conf(struct menu *mn, struct cevent ev)
 static void
 ev_draw(struct menu *mn, struct cevent ev)
 {
-	if (!mn->damaged)
+	if (mn->damaged)
 	{
-		return;
+		cbox_draw(mn->frame, ev.drawable);
+		mn->damaged = false;
 	}
-
-	cbox_draw(mn->frame, ev.drawable);
-	mn->damaged = false;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/

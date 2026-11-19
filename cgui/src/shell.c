@@ -41,7 +41,7 @@
 
 #define GUARD(SH, ...)   if (cerr_critical(cshell_error(SH))) { return __VA_OPT__(__VA_ARGS__); }
 #define GUARD_THREAD(SH) if (SH == thread_owner) { set_error(SH, CERR_CALL); return; }
-#define FRAME(SH)           (2 * cbox_offset(sh->frame))
+#define FRAME_OFFSET(SH) (2 * cbox_offset(sh->frame))
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
 
@@ -652,8 +652,8 @@ conf_grids(cshell *sh)
 		grid_send_event(gr, ev);
 		if (i == 0)
 		{
-			sh->w = grid_w(gr) + FRAME(sh);
-			sh->h = grid_h(gr) + FRAME(sh);
+			sh->w = grid_w(gr) + FRAME_OFFSET(sh);
+			sh->h = grid_h(gr) + FRAME_OFFSET(sh);
 		}
 	}
 }
@@ -743,11 +743,8 @@ ev_button(cshell *sh, struct cevent ev)
 static void
 ev_draw(cshell *sh, struct cevent ev)
 {
-	struct carea shape = {0, 0, sh->w, sh->h};
-
 	if (sh->damaged)
 	{	
-		cbox_shape(sh->frame, shape);
 		cbox_draw(sh->frame, ev.drawable);
 		sh->damaged = false;
 	}
@@ -812,10 +809,11 @@ ev_shape(cshell *sh, struct cevent ev)
 	sh->focus   = nullptr;
 	sh->damaged = true;
 
+	cbox_shape(sh->frame, ev.shape);
 	CREF_FOR_EACH(sh->grids, cgrid, gr, i)
 	{
-		if (grid_w(gr) + FRAME(sh) <= sh->w
-		 && grid_h(gr) + FRAME(sh) <= sh->h)
+		if (grid_w(gr) <= cbox_area(sh->frame).w 
+		 && grid_h(gr) <= cbox_area(sh->frame).h)
 		{
 			if (sh->focus)
 			{
@@ -831,11 +829,7 @@ ev_shape(cshell *sh, struct cevent ev)
 
 	if (sh->focus)
 	{
-		ev.shape.x += FRAME(sh) / 2;
-		ev.shape.y += FRAME(sh) / 2;
-		ev.shape.w -= FRAME(sh);
-		ev.shape.h -= FRAME(sh);
-
+		ev.shape = cbox_area(sh->frame);
 		grid_send_event(sh->focus, ev);
 	}
 }
@@ -1103,7 +1097,7 @@ set_min_size(cshell *sh)
 			h = h > grid_h(gr) ? grid_h(gr) : w;
 		}
 	
-		SERVER(sh, hint, w + FRAME(sh), h + FRAME(sh));
+		SERVER(sh, hint, w + FRAME_OFFSET(sh), h + FRAME_OFFSET(sh));
 	}
 }
 

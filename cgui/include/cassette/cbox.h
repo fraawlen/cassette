@@ -20,11 +20,11 @@ extern "C" {
 
 struct cbox_style
 {
-	/* dev-only configurable */
+	/* dev-only options */
 
 	bool striped;
 
-	/* end-user configurable */
+	/* end-user options */
 
 	uint32_t pad;
 	uint32_t border;
