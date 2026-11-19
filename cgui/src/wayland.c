@@ -716,7 +716,13 @@ ev_conf_top(void *data, struct xdg_toplevel *top, int w, int h, struct wl_array 
 	struct cevent ev =
 	{
 		.type  = CEVENT_SHAPE,
-		.shape = {0, 0, 0 ? (int)win->w : w, 0 ? (int)win->h : h},
+		.shape =
+		{
+			0,
+			0,
+			w == 0 ? (int)win->w : w,
+			h == 0 ? (int)win->h : h
+		},
 	};
 
 	if (!win->init)
