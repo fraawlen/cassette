@@ -89,6 +89,7 @@ x11_commit(struct x11 *x11, enum shell_target target)
 
 	if (win->damaged)
 	{
+		win->present = true;
 		win->damaged = false;
 		shell_send_event(ev, target);
 		cairo_surface_flush(win->surface);
@@ -164,7 +165,6 @@ x11_damage(struct x11 *x11, enum shell_target target)
 	struct x11_window *win = target == SHELL_MAIN ? &x11->main : &x11->menu;
 
 	win->damaged = true;
-	win->present = true;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -*/
@@ -624,10 +624,9 @@ ev_conf(struct x11 *x11, xcb_configure_notify_event_t *ev)
 		return;
 	}
 
-	win->resized  = true;
-	win->present |= ev->width  < win->w || ev->height  < win->h;
-	win->h        = ev->height;
-	win->w        = ev->width;
+	win->resized = true;
+	win->h       = ev->height;
+	win->w       = ev->width;
 
 	shell_send_event(cev1, type);
 	shell_send_event(cev2, type);
