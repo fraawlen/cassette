@@ -40,7 +40,6 @@ struct cbox
 
 	/* state */
 	
-	enum   cerr err;
 	struct carea shape;
 	size_t current;
 

@@ -16,7 +16,7 @@ struct app
 	cgrid *gr;
 	ccell *gap1;
 	ccell *gap2;
-	ccell *gap3;
+	ccell *text;
 };
 
 /************************************************************************************************************/
@@ -69,7 +69,7 @@ cb_close(cshell *sh, void *data)
 	cgrid_destroy(app->gr);
 	cgap_destroy(app->gap1);
 	cgap_destroy(app->gap2);
-	cgap_destroy(app->gap3);
+	cgap_destroy(app->text);
 	
 	printf("shell closed\n");
 }
@@ -92,9 +92,9 @@ cb_setup(cshell *sh, void *data)
 	struct app *app = data;
 
 	app->gr   = cgrid_create(3, 1);
+	app->text = clabel_create();
 	app->gap1 = cgap_create();
 	app->gap2 = cgap_create();
-	app->gap3 = cgap_create();
 
 	cgrid_flex_row(app->gr, 0, 1.0);
 	cgrid_flex_col(app->gr, 0, 1.0);
@@ -108,7 +108,7 @@ cb_setup(cshell *sh, void *data)
 
 	cgrid_assign_cell(app->gr, app->gap1, 0, 0, 0, 1, 1);
 	cgrid_assign_cell(app->gr, app->gap2, 0, 1, 0, 1, 1);
-	cgrid_assign_cell(app->gr, app->gap3, 0, 2, 0, 1, 1);
+	cgrid_assign_cell(app->gr, app->text, 0, 2, 0, 1, 1);
 
 	cshell_use_grid(sh, app->gr);
 }

@@ -9,5 +9,7 @@
 #include "ccell.h"
 #include "cgrid.h"
 #include "cshell.h"
+#include "ctext.h"
 
 #include "cgap.h"
+#include "clabel.h"
